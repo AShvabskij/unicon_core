@@ -1,0 +1,15 @@
+{
+    "name": "Socketserver",
+    "description": "Socketserver example",
+    "author": "basysKom <info@basyskom.com>",
+    "version": "0.0.1",
+    "dependencies": {
+        "express": "^4.16.4",
+        "faye-websocket": "0.7.x",
+        "node-fetch": "^2.6.1"
+    },
+    "scripts": {
+        "start": "start http://localhost:7000/model && node app.js"
+      },
+    "engine": "node 0.10.x"
+}

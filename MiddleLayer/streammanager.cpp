@@ -1,0 +1,51 @@
+#include "streammanager.h"
+
+#include <QTextStream>
+#include <cstdio>
+
+StreamManager::StreamManager()
+{
+
+}
+
+int StreamManager::stream(QJsonObject value)
+{
+    QJsonDocument doc(value);
+    QString strJson(doc.toJson(QJsonDocument::Compact));
+
+    for (QWebSocket *client : m_clients) {
+        client->sendTextMessage(strJson);
+    }
+
+    return 0;
+}
+
+void StreamManager::registerClient(QWebSocket *client)
+{
+    if (m_clients.contains(client)) {
+        return;
+    }
+
+    m_clients.append(client);
+}
+
+void StreamManager::unregisterClient(QWebSocket *client)
+{
+    if (!m_clients.contains(client)) {
+        return;
+    }
+
+    m_clients.removeOne(client);
+}
+
+int StreamManager::registerHandler(IReqHandler *handler)
+{
+    QMetaObject::Connection con = connect(handler, &IReqHandler::stream, this, &StreamManager::stream, Qt::QueuedConnection);
+    if (!con) {
+        QTextStream(stdout) << "connected! " << '\n';
+        return -1;
+    }
+
+    return 0;
+}
+

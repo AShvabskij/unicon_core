@@ -1,0 +1,340 @@
+#include "paramshandler.h"
+
+const QString CMD_PARAMS_HEADER = "param_header";
+const QString CMD_PARAMS_DATA = "param_data";
+
+int ParamsHandler::handle(const QJsonObject &request)
+{
+    QJsonObject cmdObj = request.value("cmd").toObject();
+    QString cmdName = cmdObj.value("name").toString();
+    QString cmdType = cmdObj.value("type").toString();
+
+    if (cmdName == CMD_PARAMS_HEADER && cmdType == "get") {
+        return handleGetHeader(request);
+
+    } else if (cmdName == CMD_PARAMS_DATA) {
+        if (cmdType == "get") {
+            return handleGetValue(request);
+
+        } else if (cmdType == "set") {
+            return handleSetValue(request);
+
+        } else if (cmdType == "open_stream") {
+            return handleOpenStream(request);
+
+        } else if (cmdType == "close_stream") {
+            return handleCloseStream(request);
+        }
+    }
+
+    return BaseReqHandler::handle(request);
+}
+
+int ParamsHandler::handleGetHeader(const QJsonObject &request)
+{
+    int requestId = request.value("request_id").toInt();
+    QJsonObject cmdBody = request.value("body").toObject();
+
+    if (requestId <= 0 || cmdBody.isEmpty()) {
+        return -1;
+    }
+
+    int deviceId = cmdBody.value("device_id").toInt();
+    int moduleId = cmdBody.value("module_id").toInt();
+    int paramId  = cmdBody.value("param_id").toInt();
+
+    ParamList params;
+    int ret = 0;
+
+    if (paramId == 0) {
+        ret = getParamHeaders(deviceId, moduleId, &params);
+    } else {
+        Param p;
+        ret = getParamHeader(deviceId, paramId, &p);
+        if (ret == 0) {
+            params << p;
+        }
+    }
+
+    QJsonObject response = createHeaderObj(requestId, params);
+    send(response);
+
+    return ret;
+}
+
+int ParamsHandler::handleGetValue(const QJsonObject &request)
+{
+    int requestId = request.value("request_id").toInt();
+    QJsonObject cmdBody = request.value("body").toObject();
+
+    if (requestId <= 0 || cmdBody.isEmpty()) {
+        return -1;
+    }
+
+    int deviceId = cmdBody.value("device_id").toInt();
+    int paramId  = cmdBody.value("param_id").toInt();
+
+    Param p;
+    int ret = getParamHeader(deviceId, paramId, &p);
+    if (ret != 0) {
+        return ret;
+    }
+
+    ParamValue val;
+    getParamValue(deviceId, paramId, &val);
+
+    QJsonObject response = createValueObj(requestId, p, val);
+    send(response);
+
+    return 0;
+}
+
+int ParamsHandler::handleSetValue(const QJsonObject &request)
+{
+    QJsonObject cmdBody = request.value("body").toObject();
+
+    return 0;
+}
+
+int ParamsHandler::handleOpenStream(const QJsonObject& request)
+{
+    int requestId = request.value("request_id").toInt();
+    QJsonObject cmdBody = request.value("body").toObject();
+
+    if (requestId <= 0 || cmdBody.isEmpty()) {
+        return -1;
+    }
+
+    m_requestId = requestId;
+    int deviceId = cmdBody.value("device_id").toInt();
+    int paramId  = cmdBody.value("param_id").toInt();
+
+    Param p;
+    int ret = getParamHeader(deviceId, paramId, &p);
+    if (ret != 0) {
+        return ret;
+    }
+
+    m_currParam = p;
+
+    ParamValue val;
+    getParamValue(deviceId, paramId, &val);
+
+    QJsonObject response = createValueObj(requestId, p, val);
+    send(response);
+
+    startEmulation();
+
+    return 0;
+}
+
+int ParamsHandler::handleCloseStream(const QJsonObject &request)
+{
+    int requestId = request.value("request_id").toInt();
+    QJsonObject cmdBody = request.value("body").toObject();
+
+    if (requestId <= 0 || cmdBody.isEmpty()) {
+        return -1;
+    }
+
+    if (m_requestId != requestId) {
+        return -1;
+    }
+
+    int deviceId = cmdBody.value("device_id").toInt();
+    int paramId  = cmdBody.value("param_id").toInt();
+
+    if (m_currParam.id != paramId || m_currParam.deviceId != deviceId) {
+        return -1;
+    }
+
+    m_currParam = Param();
+    m_requestId = 0;
+
+    stopEmulation();
+
+    return 0;
+}
+ParamValue ParamsHandler::valueFrom(const GLIO_ELEMENT_VALUE& el)
+{
+    if (el.deprecated) {
+        return ParamValue();
+    }
+
+    ParamValue res;
+    res.scale = el.scale;
+
+    switch (el.format) {
+    case FORMAT_INT:
+    {
+        res.value = el.ivalue;
+    }; break;
+    case FORMAT_FLOAT: {
+        res.value = el.fvalue;
+    }; break;
+    default: {
+        res.value = el.fvalue;
+    }
+    }
+
+    return res;
+}
+
+void ParamsHandler::startEmulation()
+{
+//  connect(this, SIGNAL(emulate()), this, SLOT(slotTimerAlarm()), Qt::QueuedConnection);
+
+    for (int i = 0; i <= 50; ++i) {
+
+        if (m_currParam.id == 0) {
+            break;
+        }
+
+        ParamValue val;
+        long res = getParamValue(m_currParam.deviceId, m_currParam.id, &val);
+
+        if (res < 0) {
+            continue;
+        }
+
+        QJsonObject response = createValueObj(m_requestId, m_currParam, val);
+        emit stream(response);
+        this->thread()->msleep(100);
+    }
+
+    ParamValue val;
+    long res = getParamValue(m_currParam.deviceId, m_currParam.id, &val);
+    val.value = -1;
+
+    QJsonObject response = createValueObj(m_requestId, m_currParam, val);
+    emit stream(response);
+
+}
+
+void ParamsHandler::stopEmulation()
+{
+//  disconnect(this, SIGNAL(emulate()), this, SLOT(slotTimerAlarm()));
+}
+
+void ParamsHandler::slotTimerAlarm()
+{
+//  stopEmulation();
+
+    ParamValue val;
+    getParamValue(m_currParam.deviceId, m_currParam.id, &val);
+
+    QJsonObject response = createValueObj(m_requestId, m_currParam, val);
+    send(response);
+}
+
+long ParamsHandler::getParamValue(int deviceId, int paramId, ParamValue* out)
+{
+    Q_ASSERT(out);
+
+    DDE_GET_PARAMS_DATA data;
+
+    data.device_ID = deviceId;
+    data.param_ID = paramId;
+
+    _dde_func_return_t res = m_dde->get_params_data(data);
+    if (res < 0) {
+        return res;
+    }
+
+    *out = valueFrom(data.el[0]);
+
+    return 0;
+}
+
+long ParamsHandler::getParamHeader(int deviceId, int paramId, Param *out)
+{
+    DDE_GET_PARAMS_HEADER header;
+    header.device_ID = deviceId;
+    header.elem_ID = paramId;
+
+    _dde_func_return_t res = m_dde->get_params_header(header);
+    if (res < 0) {
+        return res;
+    }
+
+    out->deviceId = deviceId;
+    out->id = paramId;
+
+    for (const GLIO_ELEMENT_DESCR& elem : header.el_descr) {
+        if (elem.id == paramId) {
+            out->name = elem.name;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)
+{
+    Q_ASSERT(out);
+
+    DDE_GET_PARAMS_HEADER header;
+    header.device_ID = deviceId;
+    header.elem_ID = moduleId;
+
+    _dde_func_return_t res = m_dde->get_params_header(header);
+    if (res < 0) {
+        return res;
+    }
+
+    for (int i = 1; i < header.el_count; ++i) {
+
+        GLIO_ELEMENT_DESCR& elem = header.el_descr[i];
+        if (elem.id == 0) {
+            continue;
+        }
+
+        Param p;
+        p.deviceId = deviceId;
+        p.moduleId = moduleId;
+        p.id = elem.id;
+        p.name = elem.name;
+
+        *out << p;
+    }
+
+    return -1;
+}
+
+QJsonObject ParamsHandler::createHeaderObj(int requestId, const ParamList& params)
+{
+    QJsonArray body;
+
+    for (const Param& param : params) {
+        QJsonObject obj;
+        obj["device_id"] = param.deviceId;
+        obj["module_id"] = param.moduleId;
+        obj["param_id"] = param.id;
+        obj["name"] = param.name;
+        obj["desc"] = param.desc;
+
+        body << obj;
+
+    }
+
+    QJsonObject res;
+    res["request_id"] = requestId;
+    res["body"] = body;
+
+    return res;
+}
+
+QJsonObject ParamsHandler::createValueObj(int requestId, const Param& param, const ParamValue& value)
+{
+    QJsonObject body;
+    body["device_id"] = param.deviceId;
+    body["module_id"] = param.moduleId;
+    body["param_id"] = param.id;
+    body["value"] = value.toJson();
+
+    QJsonObject res;
+    res["request_id"] = requestId;
+    res["body"] = body;
+    return res;
+}
