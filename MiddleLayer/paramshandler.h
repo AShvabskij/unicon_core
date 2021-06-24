@@ -34,6 +34,10 @@ struct Param
     QString name = "";
     QString desc = "";
 
+    bool operator == (const Param& p) const {
+        return this->id == p.id && this->deviceId == p.deviceId && this->moduleId == p.moduleId;
+    }
+
     ParamValue value;
 };
 typedef QVector<Param> ParamList;
@@ -69,10 +73,11 @@ private:
 
     void startPooling();
     void stopPooling();
-    long streamParamValue();
-    void stopStreamParamValue();
+    long streamParamsValue();
+    void stopStreamParamValue(const Param &param);
 
-    Param m_cupturedParam;
+    ParamList m_capturedParams;
+
     int m_streamValCount = 0;
     int m_requestId;
     QTimer* m_timer;
