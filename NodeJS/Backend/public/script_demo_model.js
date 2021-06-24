@@ -196,12 +196,21 @@ document.getElementById("stream_param_data").addEventListener('click', function(
      request.setRequestHeader("Content-Type", "application/json");
      request.addEventListener("load", function () {
         // получаем и парсим ответ сервера
+/*
+        let valStream = request.response.str;
+        valStream.on('data', chunk => {
+            console.log(`Received: ${chunk.toString()}`);
+          });
+*/
+   
+/*
         let res = JSON.parse(request.response);
         console.log(res);
 
         var paramValue = res;
         var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
         output(message);
+*/        
      });
 
      let deviceId = document.getElementById('get_param_data_deviceId').value;
@@ -232,8 +241,8 @@ dataSocket.onopen = function() {
       var obj = JSON.parse(message.data);
       var message = `device_id = ${obj.deviceId}, param_id = ${obj.paramId}, value = ${obj.value}`;
 
-      output(message);
-      console.log("data received: " + obj);
+//    output(message);
+      console.log("data received: " + message);
     };
 }
 

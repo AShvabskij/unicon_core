@@ -70,9 +70,10 @@ private:
     void startPooling();
     void stopPooling();
     long streamParamValue();
-    void stopStreamParamValue();
+    void stopStreamParamValue(const Param &param);
 
     Param m_cupturedParam;
+    ParamList m_cupturedParams;
     int m_streamValCount = 0;
     int m_requestId;
     QTimer* m_timer;

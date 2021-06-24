@@ -7,7 +7,7 @@ const { createServer } = require('http');
 const expressSrv = Express();
 const jsonParser = Express.json();
 
-const {Model, SysInterfacesEnum}  = require("./model.js");
+const {Model, SysInterfacesEnum}  = require("../Backend/model.js");
 let model = new Model();
 
 const apiController = require("./controllers/apicontroller.js");
@@ -38,7 +38,7 @@ expressSrv.post("/load", jsonParser, function (request, response) {
 
   model.clear();
 
-  model.init().then(result => {
+  model.load().then(result => {
     response.json(result); 
   }, error => {
     console.log(error);
@@ -136,9 +136,20 @@ expressSrv.post("/stream_param_data", jsonParser, async function (request, respo
   }
 
   let param = model.device(deviceId).param(paramId);
-  let result = await param.openValueStream();
-  console.log(result);
-  response.json(result);
+  
+  let resStream = await param.openValueStream();
+
+  resStream.on('data', chunk => {
+    let stringifiedRes = chunk.toString();
+//  console.log(`Received from stream: ${stringifiedRes}`);
+
+    if (frontWebSocket) {
+      frontWebSocket.send(stringifiedRes);
+    }
+  });
+
+// resStream.pipe(response);
+  return response.sendStatus(200);  
 });
 
 const server = createServer(expressSrv);
@@ -195,6 +206,7 @@ function initFrontWebSocket (request, socket, body) {
   }
 }
 
+/*
 Model.events.on('stream', function(value) {
   if (value.value == -1) {
     return;
@@ -204,3 +216,4 @@ Model.events.on('stream', function(value) {
     frontWebSocket.send(JSON.stringify(value));
   }
 });
+*/

@@ -5,9 +5,9 @@ const {DeviceProvider}  = require("../services/deviceprovider.js");
 let streamServerPort = 1237;
 let host =  'localhost';
 let streamSocketUrl = "ws://" + host + ":" + streamServerPort; 
-let streamSocket = new WebSocket.Client(streamSocketUrl);
+let streamSocket = new WebSocket.Client('ws://localhost:9999');
 
-let destWebSocket = new WebSocket.Client("ws://");
+let destWebSocket = new WebSocket.Client('ws://');
 
 let paramProvider = new ParamProvider();
 let deviceProvider = new DeviceProvider();
@@ -58,6 +58,7 @@ exports.getParamData = function(req, res) {
 
     let stream = undefined;
     if ("stream" in req.query) {
+        streamSocket = new WebSocket.Client(streamSocketUrl);
         stream = req.query.stream;
     }
 
@@ -108,10 +109,10 @@ streamSocket.on('open', function(event) {
 
 streamSocket.on('error', function(error) {
     console.log('Stream error: ' + error.message);
-    process.exit(1);
+//  process.exit(1);
 });
 
 streamSocket.on('close', function() {
     console.log('Stream closed.');
-    process.exit(1);
+//  process.exit(1);
 });

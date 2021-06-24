@@ -51,7 +51,7 @@ class _RequestHelper {
     
             this.m_events.once(cmd.request_id, function(response) {
                 let res = response.body
-                console.log("Received data: " + JSON.stringify(res));
+//              console.log("Received data: " + JSON.stringify(res));
 
                 res.status = 200; // ok
                 resolve(res);

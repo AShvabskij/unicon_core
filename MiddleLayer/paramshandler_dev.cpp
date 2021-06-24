@@ -125,6 +125,7 @@ int ParamsHandler::handleOpenStream(const QJsonObject& request)
     }
 
     m_cupturedParam = p;
+    m_cupturedParams << p;
 
     ParamValue val;
     getParamValue(deviceId, paramId, &val);
@@ -157,10 +158,19 @@ int ParamsHandler::handleCloseStream(const QJsonObject &request)
         return -1;
     }
 
+    for (const Param &p: m_cupturedParams) {
+        if (p.id == paramId && p.deviceId == deviceId) {
+            m_cupturedParams.removeAll(p);
+            break;
+        }
+    }
+
     m_cupturedParam = Param();
     m_requestId = 0;
 
-    stopPooling();
+    if (m_cupturedParams.isEmpty()) {
+        stopPooling();
+    }
 
     return 0;
 }
@@ -204,39 +214,43 @@ void ParamsHandler::startPooling()
 
 void ParamsHandler::stopPooling()
 {
+    m_timer->stop();
+
 //  disconnect(this, SIGNAL(requestStreamValue()), this, SLOT(slotTimerAlarm()));
     m_cupturedParam = Param();
 }
 
 long ParamsHandler::streamParamValue()
 {
-    if (m_cupturedParam.id == 0) {
+    if (m_cupturedParams.isEmpty()) {
         return -1;
     }
 
-    ParamValue val;
-    long res = getParamValue(m_cupturedParam.deviceId, m_cupturedParam.id, &val);
+    for (const Param &p : m_cupturedParams) {
+        ParamValue val;
+        long res = getParamValue(p.deviceId, p.id, &val);
 
-    if (res < 0) {
-        return res;
+        if (res < 0) {
+            return res;
+        }
+
+        QJsonObject response = createStreamValueObj(p, val);
+        emit stream(response);
     }
-
-    QJsonObject response = createStreamValueObj(m_cupturedParam, val);
-    emit stream(response);
 
     return 0;
 }
 
-void ParamsHandler::stopStreamParamValue()
+void ParamsHandler::stopStreamParamValue(const Param &param)
 {
-    if (m_cupturedParam.id == 0) {
+    if (param.id == 0) {
         return;
     }
 
     ParamValue val;
     val.value = -1;
 
-    QJsonObject response = createStreamValueObj(m_cupturedParam, val);
+    QJsonObject response = createStreamValueObj(param, val);
     emit stream(response);
 
     return;

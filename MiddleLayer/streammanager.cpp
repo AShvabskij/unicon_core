@@ -35,7 +35,7 @@ void StreamManager::unregisterClient(QWebSocket *client)
         return;
     }
 
-    m_clients.removeOne(client);
+    m_clients.removeAll(client);
 }
 
 int StreamManager::registerHandler(IReqHandler *handler)
