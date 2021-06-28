@@ -53,7 +53,7 @@ signals:
     void requestStreamValue();
 
 private slots:
-    void slotTimerAlarm();
+    void onStreamTimerAlarm();
 
 private:
     int handleGetHeader(const QJsonObject &request);
@@ -69,18 +69,19 @@ private:
     ParamValue valueFrom(const GLIO_ELEMENT_VALUE &el);
     QJsonObject createHeaderObj(int requestId, const ParamList &params);
     QJsonObject createValueObj(int requestId, const Param& param, const ParamValue& value);
-    QJsonObject createStreamValueObj(const Param& param, const ParamValue& value);
+    QJsonObject createStreamValueObj(const Param& param, const ParamValue& value, int error = 0);
 
     void startPooling();
     void stopPooling();
     long streamParamsValue();
+    void stopStreamsParamValue();
     void stopStreamParamValue(const Param &param);
 
     ParamList m_capturedParams;
 
     int m_streamValCount = 0;
     int m_requestId;
-    QTimer* m_timer;
+    QTimer* m_streamTimer;
 };
 
 #endif // PARAMSHANDLER_H

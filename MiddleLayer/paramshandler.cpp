@@ -7,9 +7,9 @@ const int TIMER_POOLING_INTERVAL_MSC = 50;
 
 ParamsHandler::ParamsHandler()
 {
-    m_timer = new QTimer(this);
-    m_timer->setTimerType(Qt::PreciseTimer);
-    connect(m_timer, &QTimer::timeout, this, &ParamsHandler::slotTimerAlarm);
+    m_streamTimer = new QTimer(this);
+    m_streamTimer->setTimerType(Qt::PreciseTimer);
+    connect(m_streamTimer, &QTimer::timeout, this, &ParamsHandler::onStreamTimerAlarm);
 }
 
 int ParamsHandler::handle(const QJsonObject &request)
@@ -199,8 +199,8 @@ void ParamsHandler::startPooling()
 
     m_streamValCount = 0;
 
-    m_timer->setInterval(TIMER_POOLING_INTERVAL_MSC);
-    m_timer->start();
+    m_streamTimer->setInterval(TIMER_POOLING_INTERVAL_MSC);
+    m_streamTimer->start();
 
     // connect(this, SIGNAL(requestStreamValue()), this, SLOT(slotTimerAlarm()), Qt::QueuedConnection);
     //  emit requestStreamValue();
@@ -208,9 +208,7 @@ void ParamsHandler::startPooling()
 
 void ParamsHandler::stopPooling()
 {
-    m_timer->stop();
-
-//  disconnect(this, SIGNAL(requestStreamValue()), this, SLOT(slotTimerAlarm()));
+    m_streamTimer->stop();
 }
 
 long ParamsHandler::streamParamsValue()
@@ -222,16 +220,24 @@ long ParamsHandler::streamParamsValue()
     for (const Param &p : m_capturedParams) {
         ParamValue val;
         long res = getParamValue(p.deviceId, p.id, &val);
+        QJsonObject response = createStreamValueObj(p, val, res);
 
-        if (res < 0) {
-            return res;
-        }
-
-        QJsonObject response = createStreamValueObj(p, val);
         emit stream(response);
     }
 
     return 0;
+}
+
+void ParamsHandler::stopStreamsParamValue()
+{
+    for (const Param &p : m_capturedParams) {
+        stopStreamParamValue(p);
+    }
+
+    m_capturedParams.clear();
+    m_streamTimer->stop();
+
+    return;
 }
 
 void ParamsHandler::stopStreamParamValue(const Param &param)
@@ -249,28 +255,20 @@ void ParamsHandler::stopStreamParamValue(const Param &param)
     return;
 }
 
-void ParamsHandler::slotTimerAlarm()
+void ParamsHandler::onStreamTimerAlarm()
 {
     m_streamValCount++;
+
     if (m_streamValCount > 5 ) {
-        for (const Param &p : m_capturedParams) {
-            stopStreamParamValue(p);
-        }
-        m_capturedParams.clear();
+        stopStreamsParamValue();
     }
 
     if (m_capturedParams.isEmpty()) {
-        m_timer->stop();
+        m_streamTimer->stop();
         return;
     }
 
-    long res = streamParamsValue();
-    if (res < 0) {
-        // error!
-        m_timer->stop();
-    }
-
-//  emit requestStreamValue();
+    streamParamsValue();
 }
 
 long ParamsHandler::getParamValue(int deviceId, int paramId, ParamValue* out)
@@ -385,12 +383,15 @@ QJsonObject ParamsHandler::createValueObj(int requestId, const Param& param, con
     return res;
 }
 
-QJsonObject ParamsHandler::createStreamValueObj(const Param& param, const ParamValue& value)
+QJsonObject ParamsHandler::createStreamValueObj(const Param& param, const ParamValue& value, int error)
 {
     QJsonObject res;
     res["d_id"] = param.deviceId;
     res["id"] = param.id;
     res["value"] = value.toJson();
+    if (error != 0) {
+        res["error"] = error;
+    }
 
     return res;
 }
