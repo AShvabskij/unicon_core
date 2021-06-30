@@ -2,6 +2,7 @@
 #include <QTimer>
 
 const QString CMD_PARAMS_HEADER = "param_header";
+const QString CMD_TYPE = "get";
 const QString CMD_PARAMS_DATA = "param_data";
 const int TIMER_POOLING_INTERVAL_MSC = 50;
 
@@ -18,7 +19,7 @@ int ParamsHandler::handle(const QJsonObject &request)
     QString cmdName = cmdObj.value("name").toString();
     QString cmdType = cmdObj.value("type").toString();
 
-    if (cmdName == CMD_PARAMS_HEADER && cmdType == "get") {
+    if (cmdName == CMD_PARAMS_HEADER && cmdType == CMD_TYPE) {
         return handleGetHeader(request);
 
     } else if (cmdName == CMD_PARAMS_DATA) {
@@ -259,7 +260,7 @@ void ParamsHandler::onStreamTimerAlarm()
 {
     m_streamValCount++;
 
-    if (m_streamValCount > 5 ) {
+    if (m_streamValCount > 100 ) {
         stopStreamsParamValue();
     }
 

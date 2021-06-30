@@ -10,7 +10,7 @@ import solcon.qmlmodels 1.0
 
 Window {
     id: main
-    width: 520
+    width: 720
     height: 770
     color: "#868482"
 
@@ -21,9 +21,11 @@ Window {
         id: model
         deviceId: deviceNum.text
         paramIndex: paramIndex.text
+        valueParamIndex: valueParamIndex.text
+
         onDataReceived: {
             dataLog.text += "\n" + msg
-
+            flickable.contentY = (flickable.contentHeight - flickable.height) > 0 ? flickable.contentHeight - flickable.height : flickable.contentY
         }
         onConnected: {
             main.connected = true;
@@ -36,6 +38,9 @@ Window {
 
     Column  {
         id: columnControls
+
+        leftPadding: 12
+
         states: [
             State {
                 name: "connected"
@@ -57,7 +62,11 @@ Window {
         state: main.connected ? "connected" : "disconnected"
 
         spacing: 20
-        anchors.fill: parent
+//      anchors.fill: parent
+        width: parent.width
+        anchors.top: parent.top
+
+
         anchors.margins: 10
         Row {
             spacing: 20
@@ -78,6 +87,8 @@ Window {
         }
 
         Row {
+            id: rowConnect
+
             spacing: 20
             width: parent.width
             height: 30
@@ -136,13 +147,12 @@ Window {
             width: parent.width
             anchors.margins: 5
 
-            Button {
-                id: btnDevice
-                width: 120
-                text: "Device"
-                onClicked: {
-                    model.receiveDeviceInfo()
-                }
+            Text {
+                height: 30
+                color: "#ffffff"
+                verticalAlignment: Text.AlignVCenter
+                text: "Device header, id:"
+                font.pointSize: 12
             }
 
             TextField {
@@ -158,13 +168,13 @@ Window {
                 font.pointSize: 12
             }
 
-            Text {
-                id: deviceName
-                height: 30
-                color: "#ffffff"
-                verticalAlignment: Text.AlignVCenter
-                text: model.deviceName
-                font.pointSize: 12
+            Button {
+                id: btnDevice
+                width: 120
+                text: "Get"
+                onClicked: {
+                    model.receiveDeviceInfo()
+                }
             }
         }
 
@@ -177,13 +187,13 @@ Window {
             spacing: 20
             width: parent.width
             anchors.margins: 5
-            Button {
-                id: btnParamInfo
-                width: 120
-                text: "Parameter"
-                onClicked: {
-                    model.receiveParamInfo();
-                }
+
+            Text {
+                height: 30
+                color: "white"
+                verticalAlignment: Text.AlignVCenter
+                text: "Param header, id:"
+                font.pointSize: 12
             }
 
             TextField {
@@ -199,13 +209,13 @@ Window {
                 font.pointSize: 12
             }
 
-            Text {
-                id: paramName
-                height: 30
-                color: "white"
-                verticalAlignment: Text.AlignVCenter
-                text: model.paramName
-                font.pointSize: 12
+            Button {
+                id: btnParamInfo
+                width: 120
+                text: "Get"
+                onClicked: {
+                    model.receiveParamInfo();
+                }
             }
         }
 
@@ -215,13 +225,13 @@ Window {
 
             width: parent.width
             anchors.margins: 5
-            Button {
-                id: btnParamValues
-                width: 120
-                text: "Get values"
-                onClicked: {
-                    model.receiveParamValues()
-                }
+
+            Text {
+                height: 30
+                color: "white"
+                verticalAlignment: Text.AlignVCenter
+                text: "Param value, id:  "
+                font.pointSize: 12
             }
 
             TextField {
@@ -237,42 +247,64 @@ Window {
                 font.pointSize: 12
             }
 
-            Text {
-                id: paramValue
-                height: 30
-                color: "white"
-                verticalAlignment: Text.AlignVCenter
-                text: model.paramValue
-                font.pointSize: 12
+            Button {
+                id: btnParamValues
+                width: 120
+                text: "Get"
+                onClicked: {
+                    model.receiveParamValues()
+                }
             }
+
+            Button {
+                id: btnParamStream
+                width: 120
+                text: "Stream"
+                onClicked: {
+                    model.streamParamValues()
+                }
+            }
+
         }
 
         Divider {
             label: "Data Log"
         }
+    } // column
 
-        Row {
-            spacing: 20
+
+    Flickable {
+        id: flickable
+        anchors.top: columnControls.bottom
+        anchors.topMargin: 10
+        height: parent.height - columnControls.height - 30
+        width: parent.width
+        flickableDirection: Flickable.VerticalFlick
+
+        TextArea.flickable: TextArea {
+
+            id: dataLog
             width: parent.width
-            anchors.margins: 5
+            color : "white"
+            font.pointSize: 12
+            font.bold: true
 
-            TextArea {
-                id: dataLog
-                height: 300
-                width: parent.width
-                color : "white"
-                font.pointSize: 10
-                background: Rectangle {
-                    border.color: "black"
-                    border.width: 2
-                    radius: 4
-                    color: "#868482"
-                }
+            leftPadding: 6
+            rightPadding: 6
+            topPadding: 6
+            bottomPadding: 6
 
-//              anchors.fill: parent
-                text: qsTr("Hello\nHello")
+            background: Rectangle {
+                border.color: "black"
+                border.width: 2
+                radius: 4
+                color: "#868482"
             }
-        }
-    }
 
+            text: qsTr("Hello\nHello")
+        }
+        ScrollBar.vertical: ScrollBar { id: scroll}
+    }
 }
+
+

@@ -14,58 +14,59 @@ public:
 
     Q_PROPERTY(QString deviceId READ deviceId WRITE setDeviceId NOTIFY deviceIdChanged)
     Q_PROPERTY(QString paramIndex READ paramIndex WRITE setParamIndex NOTIFY paramIndexChanged)
-    Q_PROPERTY(QString paramName READ paramName WRITE setParamName NOTIFY paramNameChanged)
-    Q_PROPERTY(QString deviceName READ deviceName WRITE setDeviceName NOTIFY deviceNameChanged)
-    Q_PROPERTY(QString paramValue READ paramValue  NOTIFY paramValueChanged)
+    Q_PROPERTY(QString valueParamIndex READ valueParamIndex WRITE setValueParamIndex NOTIFY valueParamIndexChanged)
 
     Q_INVOKABLE void start();
     Q_INVOKABLE void close();
     Q_INVOKABLE void receiveParamInfo();
     Q_INVOKABLE void receiveDeviceInfo();
     Q_INVOKABLE void receiveParamValues();
+    Q_INVOKABLE void streamParamValues();
 
     QString deviceId() const;
     void setDeviceId(QString deviceId);
 
     QString paramIndex() const;
     void setParamIndex(QString paramIndex);
-    void setParamValue(double value);
-
-    QString paramName() const;
-    QString deviceName() const;
-    QString paramValue() const;
+    QString valueParamIndex() const;
+    void setValueParamIndex(QString arg);
 
 public slots:
-    void setParamName(QString paramName);
-    void setDeviceName(QString deviceName);
+    QString paramObjToString(const QJsonObject &obj);
+    QString deviceObjToString(const QJsonObject &obj);
+    QString paramValueObjToString(const QJsonObject &obj);
+    QString streamParamValueObjToString(const QJsonObject &obj);
 
 signals:
     void paramIndexChanged(QString paramIndex);
+    void valueParamIndexChanged(QString arg);
     void deviceIdChanged(QString deviceId);
+
     void dataReceived(QString msg);
     void closed();
     void connected();
-
-    void paramNameChanged(QString paramName);
-    void deviceNameChanged(QString deviceName);
-    void paramValueChanged(QString paramValue);
 
 private slots:
     void onConnected();
     void onDisconnected();
 
+
     void onTextMessageReceived(QString message);
+    void onStreamTextMessageReceived(QString message);
     QJsonObject createCmd(QString name);
     QJsonObject createBody(QString name);
 
 private:
     QString m_deviceId;
     QString m_paramIndex;
-    QString m_paramName;
-    QString m_deviceName;
-    double m_paramValue = 0.0;
+    QString m_valueParamIndex;
 
     QWebSocket m_webSocket;
+    QWebSocket m_streamWebSocket;
+
+    QElapsedTimer m_perfomanceTimer;
+    int m_valCounter = 0;
+
 };
 
 // QML_DECLARE_TYPE(MainWindowVM);

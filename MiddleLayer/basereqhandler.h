@@ -17,9 +17,9 @@ public:
     void setResponseManager(ResponseManager* response);
 
 protected:
-    IReqHandler* m_next;
-    ResponseManager* m_response;
-    DDE_CAN* m_dde;
+    IReqHandler* m_next = nullptr;
+    ResponseManager* m_response = nullptr;
+    DDE_CAN* m_dde = nullptr;
 };
 
 #endif // BASEREQHANDLER_H
