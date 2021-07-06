@@ -1,7 +1,20 @@
-import QtQuick 2.12
-import QtQuick.Window 2.12
+/*
+import QtQuick 2.9
+import QtQuick.Window 2.0
+
+Window {
+    visible: true
+    width: 640
+    height: 480
+    title: qsTr("Hello World")
+}
+*/
+
+
+import QtQuick 2.1
+import QtQuick.Window 2.1
 import QtQuick.Controls 2.3
-import QtQuick.Controls.Material 2.0
+//import QtQuick.Controls.Material 2.0
 
 import QtQuick.Layouts 1.1
 
@@ -36,10 +49,11 @@ Window {
         }
     }
 
+
     Column  {
         id: columnControls
 
-        leftPadding: 12
+//      leftPadding: 12
 
         states: [
             State {
