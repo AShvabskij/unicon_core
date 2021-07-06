@@ -136,12 +136,11 @@ expressSrv.post("/stream_param_data", jsonParser, async function (request, respo
   }
 
   let param = model.device(deviceId).param(paramId);
-  
   let resStream = await param.openValueStream();
 
   resStream.on('data', chunk => {
     let stringifiedRes = chunk.toString();
-//  console.log(`Received from stream: ${stringifiedRes}`);
+    // console.log(`Received from stream: ${stringifiedRes}`);
 
     if (frontWebSocket) {
       frontWebSocket.send(stringifiedRes);

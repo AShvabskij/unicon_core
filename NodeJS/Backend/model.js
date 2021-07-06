@@ -126,13 +126,13 @@ class Model extends Events
             const isFinished = (pValue.value == -1);
 
             if (timeDelta >= 1000 || isFinished === true) {
-                console.log(`received size = ${byteCount} bytes, value count = ${msgCount} per ${timeDelta} ms`);
+                console.log(`Received ${byteCount} bytes, ${msgCount} items per ${timeDelta}ms`);
                 startTime = currTime;
             }
 
             if (isFinished === true) {
                 console.log(`The stream is finished`);
-                console.timeEnd(`The stream time(${timeLabel}):`);
+                console.timeEnd(`The stream elapsed time(${timeLabel}):`);
 
                 byteCount = 0;
                 msgCount = 0;
@@ -380,7 +380,7 @@ class Param
         try {
             timeLabel = new Date().getTime();
             startTime = new Date().getTime();
-            console.time(`The stream time(${timeLabel}):`);
+            console.time(`The stream elapsed time(${timeLabel}):`);
 
             let stream = "on";
             this.stream = new Readable({
