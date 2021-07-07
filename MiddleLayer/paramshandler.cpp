@@ -4,7 +4,8 @@
 const QString CMD_PARAMS_HEADER = "param_header";
 const QString CMD_TYPE = "get";
 const QString CMD_PARAMS_DATA = "param_data";
-const int TIMER_POOLING_INTERVAL_MSC = 50;
+const int TIMER_POOLING_INTERVAL_MSC = 1;
+const int STREAM_OBJECT_LIMIT = 10000;
 
 ParamsHandler::ParamsHandler()
 {
@@ -260,7 +261,7 @@ void ParamsHandler::onStreamTimerAlarm()
 {
     m_streamValCount++;
 
-    if (m_streamValCount > 100 ) {
+    if (m_streamValCount > STREAM_OBJECT_LIMIT ) {
         stopStreamsParamValue();
     }
 

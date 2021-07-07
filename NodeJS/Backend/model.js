@@ -136,6 +136,13 @@ class Model extends Events
 
                 byteCount = 0;
                 msgCount = 0;
+
+                let pValue = new ParamValue();
+                pValue.paramId = this.m_capturedParam.id;
+                pValue.deviceId = this.m_capturedParam.deviceId;
+                pValue.value = -1;
+    
+                this.m_capturedParam.stream.push(JSON.stringify(pValue));
                 this.m_capturedParam.stream.push(null);
                 this.m_capturedParam = new Param();
             }

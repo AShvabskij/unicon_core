@@ -40,5 +40,6 @@ void ResponseManager::unregisterClient(QWebSocket *client)
 int ResponseManager::registerHandler(IReqHandler *handler)
 {
     connect(handler, &IReqHandler::send, this, &ResponseManager::send, Qt::QueuedConnection);
+    return 0;
 }
 
