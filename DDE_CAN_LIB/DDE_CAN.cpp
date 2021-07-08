@@ -82,6 +82,8 @@ _dde_func_return_t DDE_CAN::get_params_header(DDE_GET_PARAMS_HEADER& p)
 					
 		
 	}
+
+    return 0;
 }
 
 _dde_func_return_t DDE_CAN::get_params_data(DDE_GET_PARAMS_DATA& p)
