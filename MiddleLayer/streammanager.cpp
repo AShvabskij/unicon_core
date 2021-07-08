@@ -15,6 +15,7 @@ int StreamManager::stream(QJsonObject value)
 
     for (QWebSocket *client : m_clients) {
         client->sendTextMessage(strJson);
+        client->flush();
     }
 
     return 0;
