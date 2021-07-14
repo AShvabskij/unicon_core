@@ -19,6 +19,7 @@ void MainWindowVM::start()
     url.setPort(1235);
 
     m_webSocket.open(QUrl(url));
+    m_webSocket.setReadBufferSize(1000);
 
     url.setPort(1237);
     m_streamWebSocket.open(QUrl(url));
@@ -229,7 +230,7 @@ QString MainWindowVM::streamParamValueObjToString(const QJsonObject &obj)
         int currMSec = QDateTime::currentMSecsSinceEpoch();
         int valueActuality = currMSec - valueTime;
         if (valueActuality > 10) {
-            res += QString("actuality = %1ms").arg(valueActuality);
+            res += QString(", actuality = %1ms").arg(valueActuality);
         }
 
         m_valCounter++;
@@ -300,6 +301,7 @@ void MainWindowVM::onStreamTextMessageReceived(QString message)
 {
     QJsonObject obj = QJsonDocument::fromJson(message.toUtf8()).object();
     QString output = streamParamValueObjToString(obj);
+    QTextStream(stdout) << output << "\n" ;
 
-    emit dataReceived(output);
+//  emit dataReceived(output);
 }

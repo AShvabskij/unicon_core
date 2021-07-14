@@ -47,6 +47,16 @@ struct GLIO_ELEMENT_DESCR
 
 };
 
+struct PARAMS_EMUL_SETTINGS
+{
+    uint16_t param_ID;
+
+    uint16_t amplitude = 0;
+    uint16_t frequency_hertz = 1;
+
+    bool isSinusoidal = true;
+};
+
 // all parameters of the device
 struct DEVICE_PARAMS	
 {
@@ -56,6 +66,11 @@ struct DEVICE_PARAMS
 
 	GLIO_ELEMENT_DESCR el_descr[PARAMS_ID_MAX + 1];
     GLIO_ELEMENT_VALUE el[PARAMS_ID_MAX + 1];
+};
+
+struct DEVICE_PARAMS_EMUL: public DEVICE_PARAMS
+{
+    PARAMS_EMUL_SETTINGS el_Settings[PARAMS_ID_MAX + 1];
 };
 
 struct DDE_GET_PARAMS_HEADER
@@ -102,16 +117,18 @@ protected:
 	void read_params(DDE_GET_PARAMS_DATA& get_params);
 	uint32_t overflow = 0;
 
-
 private:
 	std::thread*thr_params;
 	//std::queue <GLIO_ELEMENT> msg_queue;
 	std::list <DDE_GET_PARAMS_DATA> request_list;
 	int thread_proc();
-
+    inline time_t systemTime();
+    float generateValue(uint16_t device_ID, uint16_t param_ID, time_t t);
 
 public:
-	DEVICE_PARAMS device[64]; //not more than 64 devices
+
+    DEVICE_PARAMS_EMUL device[64]; //not more than 64 devices
+
 	uint32_t devices_count;
 
 	DDE_PARAMS();

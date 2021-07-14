@@ -7,7 +7,6 @@
 
 class DDE
 {
-
 protected: // Protected members are accessible in the class that defines them and in classes that inherit from that class.
 	//DDE_STATUS status;
 	DDE_PARAMS params;
@@ -16,8 +15,6 @@ protected: // Protected members are accessible in the class that defines them an
 
 private: // Private members are only accessible within the class defining them.
 	//DDE_SETTINGS settings;
-
-
 
 public:
 

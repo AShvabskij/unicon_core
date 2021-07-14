@@ -1,7 +1,7 @@
 console.log("I have runned!");
 
 var backendPort = 7000;
-var host = "192.168.1.1"; // location.hostname
+var host = "127.0.0.1"; // location.hostname
 
 var dataSocketUrl = "ws://" + host + ":" + backendPort;
 var dataSocket = new WebSocket(dataSocketUrl);

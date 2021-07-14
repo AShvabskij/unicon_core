@@ -1,7 +1,7 @@
-
 #include "DDE_PARAMS.h"
 #include <string>
-
+#include <cmath>
+#include <chrono>
 
 using namespace std;
 //------------------------------------------------------------------------------
@@ -13,7 +13,10 @@ DDE_PARAMS::DDE_PARAMS()
 	memset(device, 0, sizeof(device));
 
 	//2) fill with names devices
-	
+
+    static uint16_t amplitude = 10;
+    static uint16_t frequency_hertz = 1;
+
 	for (int ii = 1; ii < 33; ii=ii+11)
 	{
 		devices_count++;
@@ -41,17 +44,15 @@ DDE_PARAMS::DDE_PARAMS()
 				strcpy(device[ii].el_descr[param_ID].name, s1.c_str());
 				device[ii].el[param_ID].scale = 0;
 				device[ii].el[param_ID].timestamp = 0;
+
+                device[ii].el_Settings[param_ID].amplitude = ++amplitude;
+                device[ii].el_Settings[param_ID].frequency_hertz = ++frequency_hertz;
 			}
 		}
 	}
 
-
-
 	this->get_list_maxsize = 10; // fifo_size;
-
 }
-
-
 
 //------------------------------------------------------------------------------
 //
@@ -114,6 +115,7 @@ void DDE_PARAMS::read_params(DDE_GET_PARAMS_DATA& get_params)
 {
 	if (get_params.module_ID > PARAMS_ID_MAX) get_params.module_ID = PARAMS_ID_MAX;
 	
+    time_t system_time = systemTime();
 
 	//1) check if devs_ID requested
 	if (get_params.device_ID == 0 && get_params.module_ID == 0)
@@ -122,8 +124,6 @@ void DDE_PARAMS::read_params(DDE_GET_PARAMS_DATA& get_params)
 			//get_params.el_descr[ii].index = 0;
 			//get_params.el_descr[ii].sub_index = ii;
 			get_params.el[ii].ivalue = 0; // rand();
-			time_t system_time;
-			time(&system_time);
 			get_params.el[ii].timestamp = system_time;
 			get_params.el[ii].format = GLIO_ELEMENT_FORMAT::FORMAT_INT;
             get_params.el[ii].fvalue = 11.11;
@@ -137,9 +137,7 @@ void DDE_PARAMS::read_params(DDE_GET_PARAMS_DATA& get_params)
 		for (int ii = 1; ii < 16; ii++) {
 			//get_params.el[ii].index = ii;
 			get_params.el[ii].ivalue = 0; // rand();
-			time_t system_time;
-			time(&system_time);
-			get_params.el[ii].timestamp = system_time;
+            get_params.el[ii].timestamp = system_time;
 			//get_params.el[ii].format = 2;
 			get_params.el[ii].fvalue = 11.11;
 		}
@@ -151,8 +149,6 @@ void DDE_PARAMS::read_params(DDE_GET_PARAMS_DATA& get_params)
     if (get_params.param_ID == 0) {
         for (int ii = 0; ii < 16; ii++) {
             get_params.el[ii].ivalue = rand();
-            time_t system_time;
-            time(&system_time);
             get_params.el[ii].timestamp = system_time;
             get_params.el[ii].format = GLIO_ELEMENT_FORMAT::FORMAT_FLOAT;
             get_params.el[ii].fvalue = rand();
@@ -164,18 +160,41 @@ void DDE_PARAMS::read_params(DDE_GET_PARAMS_DATA& get_params)
         }
 
         get_params.el[0].ivalue = rand();
-        time_t system_time;
-        time(&system_time);
+
         get_params.el[0].timestamp = system_time;
         get_params.el[0].format = GLIO_ELEMENT_FORMAT::FORMAT_FLOAT;
-        get_params.el[0].fvalue = rand();
+        get_params.el[0].fvalue = generateValue(get_params.device_ID, get_params.param_ID, system_time);
         get_params.el[0].deprecated = false;
     }
 
 	//if (get_params.callback_func != NULL) get_params.callback_func();
-
 }
 
+inline time_t DDE_PARAMS::systemTime()
+{
+    time_t timeMsc = std::chrono::duration_cast< std::chrono::milliseconds >(
+        std::chrono::system_clock::now().time_since_epoch()
+    ).count();
+
+    // std::time(&system_time);
+    // std::cout << "time = " << timeMsc << "\n";
+
+    return timeMsc;
+}
+
+float DDE_PARAMS::generateValue(uint16_t device_ID, uint16_t param_ID, time_t timeMsc)
+{
+    const float f = device[device_ID].el_Settings[param_ID].frequency_hertz; // set freq heer (Гц)
+    const float a = device[device_ID].el_Settings[param_ID].amplitude; // set amplitude heer
+
+    const float pi = 3.14159274;
+    float w = (2 * pi * f);
+
+    float t = (timeMsc & 0xFFFF) * 0.001;
+    float res = a * sin(w * t);
+
+    return res;
+}
 
 
 
