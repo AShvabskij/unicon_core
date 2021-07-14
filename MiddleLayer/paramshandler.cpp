@@ -225,7 +225,6 @@ long ParamsHandler::streamParamsValue()
         QJsonObject response = createStreamValueObj(p, val, res);
 
         emit stream(response);
-//      qApp->processEvents();
     }
 
     return 0;

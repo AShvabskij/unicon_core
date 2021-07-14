@@ -1,4 +1,4 @@
-#include "DDE_PARAMS.h"
+#include "DDE_PARAMS_EMUL.h"
 #include <string>
 #include <cmath>
 #include <chrono>
@@ -7,7 +7,7 @@ using namespace std;
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-DDE_PARAMS::DDE_PARAMS()
+DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 {
 	//1) clear
 	memset(device, 0, sizeof(device));
@@ -44,8 +44,14 @@ DDE_PARAMS::DDE_PARAMS()
 				strcpy(device[ii].el_descr[param_ID].name, s1.c_str());
 				device[ii].el[param_ID].scale = 0;
 				device[ii].el[param_ID].timestamp = 0;
+
+                device[ii].el_Settings[param_ID].amplitude = amplitude + subix;
+                device[ii].el_Settings[param_ID].frequency_hertz = frequency_hertz;
+                device[ii].el_Settings[param_ID].isSinusoidal = true;
 			}
 		}
+        amplitude++;
+        frequency_hertz++;
 	}
 
 	this->get_list_maxsize = 10; // fifo_size;
@@ -54,14 +60,14 @@ DDE_PARAMS::DDE_PARAMS()
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-DDE_PARAMS::~DDE_PARAMS()
+DDE_PARAMS_EMUL::~DDE_PARAMS_EMUL()
 {
 
 }
 
-int DDE_PARAMS::init() {
+int DDE_PARAMS_EMUL::init() {
 
-	std::thread*thr_params = new std::thread(&DDE_PARAMS::thread_proc, this);
+    std::thread*thr_params = new std::thread(&DDE_PARAMS_EMUL::thread_proc, this);
 
 	//thr_params.join();
 	return 0;
@@ -70,12 +76,12 @@ int DDE_PARAMS::init() {
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-int DDE_PARAMS::get(DDE_GET_PARAMS_HEADER &p)
+int DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
 {
     return 0;
 }
 
-int DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
+int DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_DATA& p)
 {
 	int ii = 0;
 
@@ -101,7 +107,7 @@ int DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-int DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
+int DDE_PARAMS_EMUL::set(DDE_SET_PARAMS_DATA& p)
 {
 	return 0;
 }
@@ -113,7 +119,7 @@ int DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-void DDE_PARAMS::read_params(DDE_GET_PARAMS_DATA& get_params)
+void DDE_PARAMS_EMUL::read_params(DDE_GET_PARAMS_DATA& get_params)
 {
 	if (get_params.module_ID > PARAMS_ID_MAX) get_params.module_ID = PARAMS_ID_MAX;
 	
@@ -165,14 +171,14 @@ void DDE_PARAMS::read_params(DDE_GET_PARAMS_DATA& get_params)
 
         get_params.el[0].timestamp = system_time;
         get_params.el[0].format = GLIO_ELEMENT_FORMAT::FORMAT_FLOAT;
-        get_params.el[0].fvalue = rand();
+        get_params.el[0].fvalue = generateValue(get_params.device_ID, get_params.param_ID, system_time);
         get_params.el[0].deprecated = false;
     }
 
 	//if (get_params.callback_func != NULL) get_params.callback_func();
 }
 
-inline time_t DDE_PARAMS::systemTime()
+inline time_t DDE_PARAMS_EMUL::systemTime()
 {
     time_t timeMsc = std::chrono::duration_cast< std::chrono::milliseconds >(
         std::chrono::system_clock::now().time_since_epoch()
@@ -184,11 +190,26 @@ inline time_t DDE_PARAMS::systemTime()
     return timeMsc;
 }
 
+float DDE_PARAMS_EMUL::generateValue(uint16_t device_ID, uint16_t param_ID, time_t timeMsc)
+{
+    const float f = device[device_ID].el_Settings[param_ID].frequency_hertz; // set freq heer (Гц)
+    const float a = device[device_ID].el_Settings[param_ID].amplitude; // set amplitude heer
+
+    const float pi = 3.14159274;
+    float w = (2 * pi * f);
+
+    float t = (timeMsc & 0xFFFF) * 0.001;
+    float res = a * sin(w * t);
+
+    return res;
+}
+
+
 
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-//void DDE_PARAMS::proceed_response_queue()
+//void DDE_PARAMS_EMUL::proceed_response_queue()
 //{
 //	DDE_GET_PARAMS get_params;
 //
@@ -206,7 +227,7 @@ inline time_t DDE_PARAMS::systemTime()
 // ------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-void DDE_PARAMS::proceed_request_list()
+void DDE_PARAMS_EMUL::proceed_request_list()
 {
 	DDE_GET_PARAMS_DATA get_params;
 
@@ -239,7 +260,7 @@ void DDE_PARAMS::proceed_request_list()
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-int DDE_PARAMS::thread_proc() //TODO this may be splited to thread_process_tx & thread_process_rx to one CAN chanell
+int DDE_PARAMS_EMUL::thread_proc() //TODO this may be splited to thread_process_tx & thread_process_rx to one CAN chanell
 {
 
 
