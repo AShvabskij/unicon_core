@@ -1,8 +1,9 @@
 #include "basereqhandler.h"
+#include "../DDE_CAN_LIB/DDE_EMUL.h"
 
 BaseReqHandler::BaseReqHandler()
 {
-    m_dde = new DDE_CAN();
+    m_dde = new DDE_EMUL();
     m_dde->init(0); //run thread
 }
 

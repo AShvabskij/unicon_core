@@ -1,21 +1,21 @@
-#include "DDE_CAN.h"
+#include "DDE_EMUL.h"
 
 
-DDE_CAN::DDE_CAN()
+DDE_EMUL::DDE_EMUL()
 {
 }
 
-DDE_CAN::~DDE_CAN()
+DDE_EMUL::~DDE_EMUL()
 {
 }
 
 
-_dde_func_return_t DDE_CAN::init(int mode)
+_dde_func_return_t DDE_EMUL::init(int mode)
 {
 	return 0;
 }
 
-_dde_func_return_t DDE_CAN::get_params_header(DDE_GET_PARAMS_HEADER& p)
+_dde_func_return_t DDE_EMUL::get_params_header(DDE_GET_PARAMS_HEADER& p)
 {
 	//this func provices description for device, modules and params
 	
@@ -34,7 +34,7 @@ _dde_func_return_t DDE_CAN::get_params_header(DDE_GET_PARAMS_HEADER& p)
 
 		p.el_count = 0;// params.devices_count;
 		for (int ii = 0; ii < 64; ii++) {
-			if (params.device[ii].name[0] != 0) {		
+            if (params.device[ii].name[0] != 0) {
 				memcpy(&p.el_descr[p.el_count].name, &params.device[ii].name, DDE_PARAMS_NAME_LENGTH);
 				p.el_descr[p.el_count].id = ii;
 				p.el_count++;
@@ -86,34 +86,34 @@ _dde_func_return_t DDE_CAN::get_params_header(DDE_GET_PARAMS_HEADER& p)
     return 0;
 }
 
-_dde_func_return_t DDE_CAN::get_params_data(DDE_GET_PARAMS_DATA& p)
+_dde_func_return_t DDE_EMUL::get_params_data(DDE_GET_PARAMS_DATA& p)
 {
         return params.get(p);
 }
 
-_dde_func_return_t DDE_CAN::set_params_data(DDE_SET_PARAMS_DATA& p)
+_dde_func_return_t DDE_EMUL::set_params_data(DDE_SET_PARAMS_DATA& p)
 {
 	return 0;
 }
 
 
-_dde_func_return_t DDE_CAN::get_osc_header(DDE_GET_OSC_HEADER& p)
+_dde_func_return_t DDE_EMUL::get_osc_header(DDE_GET_OSC_HEADER& p)
 {
 	return 0;
 }
 
-_dde_func_return_t DDE_CAN::get_osc_data(DDE_GET_OSC_DATA& p)
+_dde_func_return_t DDE_EMUL::get_osc_data(DDE_GET_OSC_DATA& p)
 {
 	return 0;
 }
 
-_dde_func_return_t DDE_CAN::set_osc_data(DDE_SET_OSC_DATA& p) 
+_dde_func_return_t DDE_EMUL::set_osc_data(DDE_SET_OSC_DATA& p)
 {
 	return 0;
 }
 
 
-_dde_func_return_t DDE_CAN::get_evlog_header(DDE_GET_EVLOG_HEADER& p)
+_dde_func_return_t DDE_EMUL::get_evlog_header(DDE_GET_EVLOG_HEADER& p)
 {
 	p.overflow = 0;
 
@@ -130,7 +130,7 @@ _dde_func_return_t DDE_CAN::get_evlog_header(DDE_GET_EVLOG_HEADER& p)
 }
 
 
-_dde_func_return_t DDE_CAN::get_evlog_data(DDE_GET_EVLOG_DATA& p)
+_dde_func_return_t DDE_EMUL::get_evlog_data(DDE_GET_EVLOG_DATA& p)
 {
 	static uint32_t counter = 0;
 
@@ -148,7 +148,7 @@ _dde_func_return_t DDE_CAN::get_evlog_data(DDE_GET_EVLOG_DATA& p)
 	return 0;
 }
 
-_dde_func_return_t DDE_CAN::set_evlog_data(DDE_SET_EVLOG_DATA& p)
+_dde_func_return_t DDE_EMUL::set_evlog_data(DDE_SET_EVLOG_DATA& p)
 {
 	return 0;
 }

@@ -5,43 +5,53 @@
 
 //---------------------------------------------------------------------------
 
-class DDE
+class IDDE
 {
-
-protected: // Protected members are accessible in the class that defines them and in classes that inherit from that class.
-	//DDE_STATUS status;
-	DDE_PARAMS params;
-	DDE_OSC osc;
-	DDE_EVLOG evlog;
-
-private: // Private members are only accessible within the class defining them.
-	//DDE_SETTINGS settings;
-
-
-
 public:
 
-	//DDE();
-	virtual ~DDE();
-	
-	virtual _dde_func_return_t init(int mode) = 0;
+    virtual ~IDDE() {};
 
-	virtual _dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p) = 0;
-	virtual _dde_func_return_t get_params_data(DDE_GET_PARAMS_DATA& p) = 0;
-	virtual _dde_func_return_t set_params_data(DDE_SET_PARAMS_DATA& p) = 0;
+    virtual _dde_func_return_t init(int mode) = 0;
 
-	virtual _dde_func_return_t get_osc_header(DDE_GET_OSC_HEADER& p) = 0;
-	virtual _dde_func_return_t get_osc_data(DDE_GET_OSC_DATA& p) = 0;
-	virtual _dde_func_return_t set_osc_data(DDE_SET_OSC_DATA& p) = 0;
+    virtual _dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p) = 0;
+    virtual _dde_func_return_t get_params_data(DDE_GET_PARAMS_DATA& p) = 0;
+    virtual _dde_func_return_t set_params_data(DDE_SET_PARAMS_DATA& p) = 0;
 
-	virtual _dde_func_return_t get_evlog_header(DDE_GET_EVLOG_HEADER& p) = 0;
-	virtual _dde_func_return_t get_evlog_data(DDE_GET_EVLOG_DATA& p) = 0;
-	virtual _dde_func_return_t set_evlog_data(DDE_SET_EVLOG_DATA& p) = 0;
-	
+    virtual _dde_func_return_t get_osc_header(DDE_GET_OSC_HEADER& p) = 0;
+    virtual _dde_func_return_t get_osc_data(DDE_GET_OSC_DATA& p) = 0;
+    virtual _dde_func_return_t set_osc_data(DDE_SET_OSC_DATA& p) = 0;
+
+    virtual _dde_func_return_t get_evlog_header(DDE_GET_EVLOG_HEADER& p) = 0;
+    virtual _dde_func_return_t get_evlog_data(DDE_GET_EVLOG_DATA& p) = 0;
+    virtual _dde_func_return_t set_evlog_data(DDE_SET_EVLOG_DATA& p) = 0;
 };
 
+class DDE : public IDDE
+{
+public:
 
+    DDE();
+    virtual ~DDE();
 
+    virtual _dde_func_return_t init(int mode);
+
+    virtual _dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p);
+    virtual _dde_func_return_t get_params_data(DDE_GET_PARAMS_DATA& p);
+    virtual _dde_func_return_t set_params_data(DDE_SET_PARAMS_DATA& p);
+
+    virtual _dde_func_return_t get_osc_header(DDE_GET_OSC_HEADER& p);
+    virtual _dde_func_return_t get_osc_data(DDE_GET_OSC_DATA& p);
+    virtual _dde_func_return_t set_osc_data(DDE_SET_OSC_DATA& p);
+
+    virtual _dde_func_return_t get_evlog_header(DDE_GET_EVLOG_HEADER& p);
+    virtual _dde_func_return_t get_evlog_data(DDE_GET_EVLOG_DATA& p);
+    virtual _dde_func_return_t set_evlog_data(DDE_SET_EVLOG_DATA& p);
+
+protected: // Protected members are accessible in the class that defines them and in classes that inherit from that class.
+    DDE_PARAMS params;
+    DDE_OSC osc;
+    DDE_EVLOG evlog;
+};
 
 // ---------------- DISCUSSION LIST
 	//virtual void params_callback(int);// = 0;

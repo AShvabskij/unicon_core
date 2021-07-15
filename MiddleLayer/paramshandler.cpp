@@ -4,8 +4,8 @@
 const QString CMD_PARAMS_HEADER = "param_header";
 const QString CMD_TYPE = "get";
 const QString CMD_PARAMS_DATA = "param_data";
-const int TIMER_POOLING_INTERVAL_MSC = 1;
-const int STREAM_OBJECT_LIMIT = 10000;
+const int TIMER_POOLING_INTERVAL_MSC = 10;
+const int STREAM_OBJECT_LIMIT = 100;
 
 ParamsHandler::ParamsHandler()
 {
@@ -178,7 +178,7 @@ ParamValue ParamsHandler::valueFrom(const GLIO_ELEMENT_VALUE& el)
 
     ParamValue res;
     res.scale = el.scale;
-    res.timestamp = QDateTime::currentMSecsSinceEpoch();
+    res.timestamp = el.timestamp; //QDateTime::currentMSecsSinceEpoch();
 
     switch (el.format) {
     case FORMAT_INT:
@@ -269,7 +269,6 @@ void ParamsHandler::onStreamTimerAlarm()
         m_streamTimer->stop();
         return;
     }
-
     streamParamsValue();
 }
 
