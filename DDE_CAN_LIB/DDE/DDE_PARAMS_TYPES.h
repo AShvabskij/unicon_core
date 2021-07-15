@@ -1,4 +1,5 @@
 #pragma once
+
 #include "my_func.h"
 
 #define PARAMS_ID_MAX		0xfff

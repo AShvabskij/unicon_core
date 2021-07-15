@@ -1,11 +1,9 @@
 //---------------------------------------------------------------------------
 
-
 #include "DDE.h"
 
 #include "stdint.h"
 #include "stdlib.h"
-//#include "unistd.h"
 
 DDE::DDE()
 {
@@ -87,25 +85,14 @@ _dde_func_return_t DDE::set_evlog_data(DDE_SET_EVLOG_DATA&)
     return 0;
 }
 
-//void DDE::params_callback(int) { return ; }
-//void DDE::dlog_callback(int) { return ; }
-//void DDE::evlog_callback(int) { return ; }
-//void DDE::trend_callback(int) { return ; }
-
-_dde_func_return_t DDE::init(int mode)
+_dde_func_return_t DDE::init(int)
 {
-    //params = new DDE_PARAMS(NULL);
-    //evlog = new DDE_EVLOG(NULL);
+    // interface_can.init();
 
-    //interface_can.init();
 
-    //{
-    //	node
-    //	{
     //	params->init();
     //	evlog->init();
     //	osc->init(); }
-    //
-    //}
+
     return 0;
 }

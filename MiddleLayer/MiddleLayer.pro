@@ -61,7 +61,7 @@ win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../DDE_CAN_LIB
 else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../DDE_CAN_LIB/debug/libDDE_CAN_Lib.a
 else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../DDE_CAN_LIB/release/DDE_CAN_Lib.lib
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../DDE_CAN_LIB/debug/DDE_CAN_Lib.lib
-else:unix: PRE_TARGETDEPS += $$PWD/../DDE_CAN_LIB/DDE_CAN_Lib.a
+else:unix: PRE_TARGETDEPS += $$PWD/../DDE_CAN_LIB/libDDE_CAN_Lib.a
 
 SUBDIRS += \
     ../DDE_CAN_LIB/DDE_CAN_Lib.pro

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DDE_PARAMS_TYPES.h"
+#include "DDE_PARAMS_types.h"
 #include "my_func.h"
 
 #define PARAMS_ID_MAX		0xfff
@@ -23,7 +23,7 @@ struct DEVICE_PARAMS_EMUL: public DEVICE_PARAMS
     PARAMS_EMUL_SETTINGS el_Settings[PARAMS_ID_MAX + 1];
 };
 
-class DDE_PARAMS_EMUL : IDDE_PARAMS
+class DDE_PARAMS_EMUL : public IDDE_PARAMS
 {
 public:
     DDE_PARAMS_EMUL();
@@ -35,9 +35,6 @@ public:
 	
     virtual int init();
 
-    DEVICE_PARAMS_EMUL device[64]; //not more than 64 devices
-    uint32_t devices_count;
-
 protected:
     uint32_t get_list_maxsize;
     void proceed_request_list();
@@ -46,6 +43,8 @@ protected:
     uint32_t overflow = 0;
 
 private:
+    DEVICE_PARAMS_EMUL device[64]; //not more than 64 devices
+    uint32_t devices_count;
 
     std::thread*thr_params;
     //std::queue <GLIO_ELEMENT> msg_queue;

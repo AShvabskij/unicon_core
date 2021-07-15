@@ -1,5 +1,7 @@
 #include "core.h"
 
+#include <iostream>
+
 #include "../DDE_CAN_LIB/DDE_CAN.h"
 
 #include "requestmanager.h"

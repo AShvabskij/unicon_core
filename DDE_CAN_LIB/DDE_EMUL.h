@@ -1,7 +1,6 @@
 #pragma once
 
 #include "DDE/DDE.h"
-#include "DDE/DDE_PARAMS_EMUL.h"
 
 class DDE_EMUL : public IDDE
 {
@@ -26,10 +25,10 @@ public:
 	_dde_func_return_t set_evlog_data(DDE_SET_EVLOG_DATA& p);
 
 protected:
-    DDE_PARAMS_EMUL params;
+    IDDE_PARAMS *m_params;
 /*
-    DDE_OSC_EMUL osc;
-    DDE_EVLOG_EMUL evlog;
+    IDDE_OSC_EMUL *m_osc;
+    IDDE_EVLOG_EMUL *m_evlog;
 */
 private:
 

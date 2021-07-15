@@ -1,11 +1,8 @@
 #pragma once
 
-
-#include "DDE_PARAMS.h"
-#include "DDE_OSC.h"
-#include "DDE_EVLOG.h"
-
 //---------------------------------------------------------------------------
+#include <cstdint>
+#include <time.h>
 
 #define _dde_func_return_t long
 

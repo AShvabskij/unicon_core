@@ -1,21 +1,16 @@
 #include "DDE_EVLOG.h"
 #include "my_func.h"
 
-
-
 DDE_EVLOG::DDE_EVLOG()
 {
 	queue_max_size = 64;// fifo_size;
 
 }
 
-
 DDE_EVLOG::~DDE_EVLOG()
 {
 
 }
-
-
 
 int DDE_EVLOG::init() {
 	thr_evlog = new std::thread(&DDE_EVLOG::thread_proc,this);
@@ -23,8 +18,7 @@ int DDE_EVLOG::init() {
 	return 0;
 }
 
-
-int DDE_EVLOG::get(DDE_GET_EVLOG_HEADER& p)
+int DDE_EVLOG::get(DDE_GET_EVLOG_HEADER& /*p*/)
 {
 	int ii = 0;
 	
@@ -37,13 +31,13 @@ int DDE_EVLOG::get(DDE_GET_EVLOG_HEADER& p)
 		return 0;
 }
 
-int DDE_EVLOG::get(DDE_GET_EVLOG_DATA& p)
+int DDE_EVLOG::get(DDE_GET_EVLOG_DATA& /*p*/)
 {
 	return 0;
 
 }
 
-int DDE_EVLOG::set(DDE_SET_EVLOG_DATA& p)
+int DDE_EVLOG::set(DDE_SET_EVLOG_DATA& /*p*/)
 {
 	return 0;
 
@@ -52,7 +46,6 @@ int DDE_EVLOG::set(DDE_SET_EVLOG_DATA& p)
 
 void DDE_EVLOG::thread_proc()
 {
-
 	time_t system_time;
 
 	DDE_EVLOG_MSG msg;

@@ -1,4 +1,4 @@
-#include "DDE_PARAMS_EMUL.h"
+#include "DDE_PARAMS_emul.h"
 #include <string>
 #include <cmath>
 #include <chrono>
@@ -78,6 +78,69 @@ int DDE_PARAMS_EMUL::init() {
 //------------------------------------------------------------------------------
 int DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
 {
+    //this func provices description for device, modules and params
+
+
+    //check valid input
+    if (p.device_ID > 127 || p.elem_ID > PARAMS_ID_MAX ) {
+        memset(&p, 0, sizeof(DDE_GET_PARAMS_HEADER));
+        return -1;
+    }
+
+    uint8_t _index = (p.elem_ID>>6)&0x3f;
+    uint8_t _subindex = p.elem_ID & 0x3f;
+
+    //check level 1 request for device names
+    if (p.device_ID == 0) {
+
+        p.el_count = 0;// params.devices_count;
+        for (int ii = 0; ii < 64; ii++) {
+            if (device[ii].name[0] != 0) {
+                memcpy(&p.el_descr[p.el_count].name, &device[ii].name, DDE_PARAMS_NAME_LENGTH);
+                p.el_descr[p.el_count].id = ii;
+                p.el_count++;
+            }
+        }
+
+    }
+    else
+    {
+        //check level 2 (requiest for  modules names)
+        if (_index == 0)
+        {
+
+            p.el_count = 0; // params.device[p.device_ID].modules_count;
+            for (int ii = 0; ii < 64; ii++) {
+                int module_id = (ii<<6);
+                if (device[p.device_ID].el_descr[module_id].name[0] != 0) {
+                    memcpy(&p.el_descr[p.el_count], &device[p.device_ID].el_descr[module_id], sizeof(GLIO_ELEMENT_DESCR));
+                    p.el_descr[p.el_count].id = (ii << 6);
+                    p.el_count++;
+                }
+            }
+
+        }
+        else {
+            if (_subindex == 0)  //level 3 request for params names
+            {
+
+                p.el_count = 0;// params.device[p.device_ID].el_descr[p.param_ID].params_count;
+                for (int ii = p.elem_ID; ii < p.elem_ID + 64; ii++) {
+                    if (device[p.device_ID].el_descr[p.elem_ID + ii].name[0] != 0)
+                    {
+                        memcpy(&p.el_descr[p.el_count], &device[p.device_ID].el_descr[p.elem_ID + ii], sizeof(GLIO_ELEMENT_DESCR));
+                        p.el_descr[p.el_count].id = ii;
+                        p.el_count++;
+                    }
+                }
+            }
+            else //level 4 (request for individual param name - not used
+            {
+                p.el_count = 1;
+                memcpy(&p.el_descr[0], &device[p.device_ID].el_descr[p.elem_ID], sizeof(GLIO_ELEMENT_DESCR));
+            }
+        }
+    }
     return 0;
 }
 
