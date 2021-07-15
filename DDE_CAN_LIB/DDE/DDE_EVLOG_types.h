@@ -50,7 +50,7 @@ struct DDE_SET_EVLOG_DATA
 class IDDE_EVLOG
 {
 public:
-    ~IDDE_EVLOG();
+    ~IDDE_EVLOG() {};
 
     virtual int init() = 0;
     virtual int get(DDE_GET_EVLOG_HEADER&p) = 0;

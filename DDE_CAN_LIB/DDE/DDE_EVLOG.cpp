@@ -20,14 +20,15 @@ int DDE_EVLOG::init() {
 
 int DDE_EVLOG::get(DDE_GET_EVLOG_HEADER& /*p*/)
 {
-	int ii = 0;
-	
+    //	int ii = 0;
+
 	//while (!msg_queue.empty() || ii<256) {
 	//	p.msg[ii++] = msg_queue.front(); //copy to output queue but not more then 256 (MSG_MAX_NUMBER)
 	//}
 	//	
 	//	p->msg_num = ii;
 	//	p->overflow = overflow;
+
 		return 0;
 }
 

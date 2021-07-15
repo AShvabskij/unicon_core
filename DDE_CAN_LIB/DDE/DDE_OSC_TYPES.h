@@ -56,7 +56,7 @@ struct DDE_SET_OSC_DATA
 class IDDE_OSC
 {
 public:
-    ~IDDE_OSC();
+    ~IDDE_OSC() {};
 
     virtual int get(DDE_GET_OSC_HEADER& p, void* callback_func) = 0;
     virtual int get(DDE_GET_OSC_DATA& p, void* callback_func) = 0;
