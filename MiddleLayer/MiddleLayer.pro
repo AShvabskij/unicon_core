@@ -52,7 +52,7 @@ OTHER_FILES = \
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../DDE_CAN_LIB/release/ -lDDE_CAN_Lib
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../DDE_CAN_LIB/debug/ -lDDE_CAN_Lib
-else:unix: LIBS += -L$$PWD/../DDE_CAN_LIB/ -lDDE_CAN_Lib
+else:unix: LIBS += -L$$PWD/../DDE_CAN_LIB/debug/ -lDDE_CAN_Lib
 
 INCLUDEPATH += $$PWD/../DDE_CAN_LIB
 DEPENDPATH += $$PWD/../DDE_CAN_LIB
@@ -61,7 +61,7 @@ win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../DDE_CAN_LIB
 else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../DDE_CAN_LIB/debug/libDDE_CAN_Lib.a
 else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../DDE_CAN_LIB/release/DDE_CAN_Lib.lib
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../DDE_CAN_LIB/debug/DDE_CAN_Lib.lib
-else:unix: PRE_TARGETDEPS += $$PWD/../DDE_CAN_LIB/DDE_CAN_Lib.a
+else:unix: PRE_TARGETDEPS += $$PWD/../DDE_CAN_LIB/debug/libDDE_CAN_Lib.a
 
 SUBDIRS += \
     ../DDE_CAN_LIB/DDE_CAN_Lib.pro
