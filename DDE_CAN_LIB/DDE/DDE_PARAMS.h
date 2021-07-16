@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DDE_PARAMS_types.h"
+#include "DDE_PARAMS_TYPES.h"
 #include "my_func.h"
 
 #define PARAMS_ID_MAX		0xfff

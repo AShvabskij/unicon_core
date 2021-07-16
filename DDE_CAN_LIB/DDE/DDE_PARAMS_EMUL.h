@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DDE_PARAMS_types.h"
+#include "DDE_PARAMS_TYPES.h"
 #include "my_func.h"
 
 #define PARAMS_ID_MAX		0xfff
@@ -16,7 +16,6 @@ struct PARAMS_EMUL_SETTINGS
 
     bool isSinusoidal = true;
 };
-
 
 struct DEVICE_PARAMS_EMUL: public DEVICE_PARAMS
 {
