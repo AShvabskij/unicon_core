@@ -1,4 +1,4 @@
-#include "DDE_PARAMS_emul.h"
+#include "DDE_PARAMS_EMUL.h"
 #include <string>
 #include <cmath>
 #include <chrono>

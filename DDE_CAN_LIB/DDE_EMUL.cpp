@@ -1,6 +1,6 @@
 #include "DDE_EMUL.h"
 
-#include "DDE/DDE_PARAMS_emul.h"
+#include "DDE/DDE_PARAMS_EMUL.h"
 
 DDE_EMUL::DDE_EMUL()
 {
