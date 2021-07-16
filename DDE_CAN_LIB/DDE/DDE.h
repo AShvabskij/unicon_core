@@ -1,10 +1,10 @@
 #pragma once
 //---------------------------------------------------------------------------
 
-#include "DDE_types.h"
-#include "DDE_PARAMS_types.h"
-#include "DDE_OSC_types.h"
-#include "DDE_EVLOG_types.h"
+#include "DDE_TYPES.h"
+#include "DDE_PARAMS_TYPES.h"
+#include "DDE_OSC_TYPES.h"
+#include "DDE_EVLOG_TYPES.h"
 
 //---------------------------------------------------------------------------
 

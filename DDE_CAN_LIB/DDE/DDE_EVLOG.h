@@ -3,7 +3,7 @@
 #include <queue>
 #include <thread>
 
-#include "DDE_EVLOG_types.h"
+#include "DDE_EVLOG_TYPES.h"
 
 class DDE_EVLOG : public IDDE_EVLOG
 {

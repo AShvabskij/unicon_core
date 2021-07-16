@@ -1,7 +1,7 @@
 #pragma once
 
-#include "DDE_types.h"
-#include "DDE_OSC_types.h"
+#include "DDE_TYPES.h"
+#include "DDE_OSC_TYPES.h"
 
 class DDE_OSC : public IDDE_OSC
 {
