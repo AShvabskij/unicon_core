@@ -1,4 +1,4 @@
-const RequestHelper = require("../requesthelper.js");
+const RequestHelper = require("./requesthelper.js");
 
 const REQ_GET_DEVICES = "GET_DEVICE"
 const REQ_GET_STATUS = "GET_STATUS"

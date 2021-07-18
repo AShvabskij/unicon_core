@@ -7,7 +7,7 @@ const { createServer } = require('http');
 const expressSrv = Express();
 const jsonParser = Express.json();
 
-const {Model, SysInterfacesEnum}  = require("../Backend/model.js");
+const {Model, SysInterfacesEnum}  = require("./data_model/model.js");
 let model = new Model();
 
 const apiController = require("./controllers/apicontroller.js");

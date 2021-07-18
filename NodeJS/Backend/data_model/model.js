@@ -1,7 +1,7 @@
 const Events = require("events");
 
-const {ParamProvider}  = require("./services/paramprovider.js");
-const {DeviceProvider}  = require("./services/deviceprovider.js");
+const {ParamProvider}  = require("../services/paramprovider.js");
+const {DeviceProvider}  = require("../services/deviceprovider.js");
 
 const {Readable} = require('stream'); 
 const WebSocket = require('faye-websocket');

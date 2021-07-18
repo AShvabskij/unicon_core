@@ -1,4 +1,4 @@
-const RequestHelper = require("../requesthelper.js");
+const RequestHelper = require("./requesthelper.js");
 const WebSocket = require('faye-websocket');
 
 const REQ_GET_PARAMS = "GET_PARAMS"
