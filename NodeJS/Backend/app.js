@@ -7,9 +7,6 @@ const { createServer } = require('http');
 const expressSrv = Express();
 const jsonParser = Express.json();
 
-const {Model, SysInterfacesEnum}  = require("./data_model/model.js");
-let model = new Model();
-
 const apiController = require("./controllers/apicontroller.js");
 
 let listenPort = process.argv[2] || 7000;
@@ -18,6 +15,7 @@ const WebSocket = require('faye-websocket');
 const { stringify } = require('querystring');
 
 expressSrv.use(Express.static(path.join(__dirname, '/public')));
+expressSrv.use(Express.static(path.join(__dirname, '/node_modules')));
 
 expressSrv.get("/api", function (request, response) {
 
@@ -29,127 +27,6 @@ expressSrv.get("/model", function (request, response) {
   response.sendFile(__dirname + "/public/demo_model.html");
 });
 
-expressSrv.post("/load", jsonParser, function (request, response) {
-  console.log(request.body);
-
-  if (!request.body) {
-    return response.sendStatus(400);
-  }
-
-  model.clear();
-
-  model.load().then(result => {
-    response.json(result); 
-  }, error => {
-    console.log(error);
-    response.json(error);
-  });
-});
-
-expressSrv.get("/get_devices", jsonParser, function (request, response) {
-  console.log(request.body);
-
-  if (!request.body) {
-    return response.sendStatus(400);
-  }
-
-  let res = model.devices(SysInterfacesEnum.Can)
-  response.json(res);
-});
-
-expressSrv.post("/get_device_header", jsonParser, function (request, response) {
-  console.log(request.body);
-
-  if (!request.body) {
-    return response.sendStatus(400);
-  }
-
-  let res = model.device(request.body.deviceId)
-  response.json(res);
-});
-
-expressSrv.post("/get_module_header", jsonParser, function (request, response) {
-  console.log(request.body);
-
-  if (!request.body) {
-    return response.sendStatus(400);
-  }
-
-  let res = model.device(request.body.deviceId).module(request.body.moduleId)
-  response.json(res);
-});
-
-expressSrv.post("/get_params", jsonParser, function (request, response) {
-  console.log(request.body);
-
-  let deviceId = request.body.deviceId;
-  let moduleId = request.body.moduleId;
-
-  if (deviceId == undefined || moduleId == undefined) {
-    return response.sendStatus(400);
-  }
-
-  let module = model.device(deviceId).module(moduleId);
-  let res = module.params;
-  response.json(res);
-});
-
-expressSrv.post("/get_param_header", jsonParser, function (request, response) {
-  console.log(request.body);
-
-  let deviceId = request.body.deviceId;
-  let paramId = request.body.paramId;
-
-  if (deviceId == undefined || paramId == undefined) {
-    return response.sendStatus(400);
-  }
-
-  let res = model.device(deviceId).param(paramId);
-  response.json(res);
-});
-
-expressSrv.post("/get_param_data", jsonParser, function (request, response) {
-  console.log(request.body);
-
-  let deviceId = request.body.deviceId;
-  let paramId = request.body.paramId;
-
-  if (deviceId == undefined || paramId == undefined) {
-    return response.sendStatus(400);
-  }
-
-  model.device(deviceId).param(paramId).lastValue().then(result => {
-    response.json(result);
-  }, error => {
-    return response.status(500).send(error);
-  });
-});
-
-expressSrv.post("/stream_param_data", jsonParser, async function (request, response) {
-  console.log(request.body);
-
-  let deviceId = request.body.deviceId;
-  let paramId = request.body.paramId;
-
-  if (deviceId == undefined || paramId == undefined) {
-    return response.sendStatus(400);
-  }
-
-  let param = model.device(deviceId).param(paramId);
-  let resStream = await param.openValueStream();
-
-  resStream.on('data', chunk => {
-    let stringifiedRes = chunk.toString();
-    // console.log(`Received from stream: ${stringifiedRes}`);
-
-    if (frontWebSocket) {
-      frontWebSocket.send(stringifiedRes);
-    }
-  });
-
-// resStream.pipe(response);
-  return response.sendStatus(200);  
-});
 
 const server = createServer(expressSrv);
 

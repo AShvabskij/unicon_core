@@ -1,10 +1,12 @@
-const Events = require("events");
+// import Events from 'events';
 
-const {ParamProvider}  = require("../services/paramprovider.js");
-const {DeviceProvider}  = require("../services/deviceprovider.js");
+// import {ParamProvider} from "./services/fr_paramprovider.mjs"
+// import {DeviceProvider} from "./services/fr_deviceprovider.mjs"
 
-const {Readable} = require('stream'); 
-const WebSocket = require('faye-websocket');
+const {ParamProvider}  = require("./services/fr_paramprovider.mjs");
+const {DeviceProvider}  = require("./services/fr_deviceprovider.mjs");
+
+const Stream = require('stream-browserify');
 
 const STATUS_OK = 200;
 const ERROR_RESPONSE = {
@@ -12,7 +14,7 @@ const ERROR_RESPONSE = {
     msg: ""
 }
 
-class SysInterfacesEnum
+export class SysInterfacesEnum
 {
     static Can = 1;
     static CanOpen = 2;
@@ -46,14 +48,12 @@ let startTime = new Date().getTime();
 
 const RECEIVED_DATA_ERROR = "Received data error!";
 
-class Model extends Events
+export class Model
 {
-    static events = new Events();
+//  static events = new Events();
 
     constructor() 
     {
-        super();
-
         this.m_name = 'Unicon';
         this.m_devices = [];
         this.m_trends= [];
@@ -62,8 +62,6 @@ class Model extends Events
 
         this.paramProvider = new ParamProvider();
         this.deviceProvider = new DeviceProvider();
-
-        this.init();
     }
 
     init() 
@@ -71,28 +69,36 @@ class Model extends Events
         if (this.m_inited) {
             return;
         }
-        this.streamSocket = new WebSocket.Client(streamSocketUrl);
-
-        this.streamSocket.on('open', event => {
-            console.log('Stream socket opened successfully.');
-        });
-
-        this.streamSocket.on('error', function(error) {
-            console.log('Stream error: ' + error.message);
-            process.exit(1);
-        });
         
-        this.streamSocket.on('close', function() {
-            console.log('Stream closed.');
-            process.exit(1);
-        });
+        this.streamSocket = new WebSocket(streamSocketUrl);
 
-        this.streamSocket.on('message', message => {
+        this.streamSocket.onopen = event => {
+            console.log('Stream socket opened successfully.');
+        };
+
+        this.streamSocket.onerror = function(error) {
+            console.log('Stream error: ' + error.message);
+        };
+        
+        this.streamSocket.onclose = function() {
+            console.log('Stream closed.');
+        };
+
+        this.streamSocket.onmessage = message => {
             var messageData = JSON.parse(message.data);
+            console.log(message.data);
+
             let deviceId = messageData.d_id;
-            let paramId = messageData.id;
+            let paramId = messageData.p_id;
 
             if (this.m_capturedParam.id != paramId || this.m_capturedParam.deviceId != deviceId) {
+                console.log("devices = " + this.m_devices.length);
+
+                let device = this.device(deviceId);
+                if (device == undefined || device == null) {
+                    console.warn(`device ${deviceId} error!`)
+                    return;
+                }
 
                 this.m_capturedParam = this.device(deviceId).param(paramId);
             }
@@ -100,7 +106,7 @@ class Model extends Events
             let valueData = messageData.value;
             if (valueData === undefined) {
                 console.log(RECEIVED_DATA_ERROR);
-                Model.events.emit('error', RECEIVED_DATA_ERROR);
+//              Model.events.emit('error', RECEIVED_DATA_ERROR);
                 return;
             }
 
@@ -147,11 +153,9 @@ class Model extends Events
                 this.m_capturedParam = new Param();
             }
 
-//          Model.events.emit('stream', pValue);
 //          console.log(`Received: ${JSON.stringify(pValue)}`);
             this.m_capturedParam.stream.push(JSON.stringify(pValue));
-
-        });        
+        };        
 
         this.m_inited = true;
     }
@@ -197,7 +201,11 @@ class Model extends Events
     
                     this.m_devices.push(device)
                 }
+
+                console.log("loaded devices  = " + this.m_devices.length);
+
                 resolve({ result:'true', status:200});
+
             } catch(err) {
                 console.log(err);
                 reject(err);
@@ -215,12 +223,12 @@ class Model extends Events
             let status = await this.deviceProvider.reqStatus();
             if (status == StatusEnum.Changed) {
                 this.clear()
-                Model.events.emit(status);
+//              Model.events.emit(status);
             }
 
             if (status == StatusEnum.Cancelled) {
                 this.clear()
-                Model.events.emit(status);
+//              Model.events.emit(status);
             }
 
         }, 5000)
@@ -353,15 +361,18 @@ class Param
         this.name = '';
         this.desc = '';
         this.value = new ParamValue();
-        this.stream = new Readable({
+        
+        this.stream = new Stream.Readable({
             read() {}
         });
+        
         this.lastError = 0;
 
         this.paramProvider = new ParamProvider();
     }
 
     async lastValue() {
+        
         setTimeout(() => {
            this.currentValue(); 
         }, 0)
@@ -377,7 +388,7 @@ class Param
             this.lastError = 0;
         } catch(err) {
             this.value = new ParamValue()
-            this.lastError = error;
+            this.lastError = err;
         }
 
         return this.value;
@@ -390,13 +401,14 @@ class Param
             console.time(`The stream elapsed time(${timeLabel}):`);
 
             let stream = "on";
-            this.stream = new Readable({
+            this.stream = new Stream.Readable({
                 read() {}
             });
 
+            this.lastError = 0;
             let valueData = await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream);
             this.value = Param.paramValueFromJson(valueData);
-            this.lastError = 0;
+
         } catch(error) {
             this.value = new ParamValue()
             this.lastError = error;
@@ -447,7 +459,9 @@ class ParamValue
     }
 }
 
+/*
 module.exports = {
     Model,
     SysInterfacesEnum
 };
+*/

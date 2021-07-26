@@ -4,7 +4,7 @@ import { SciChartSurface } from "scichart/Charting/Visuals/SciChartSurface";
 import { NumericAxis } from "scichart/Charting/Visuals/Axis/NumericAxis";
 import { FastLineRenderableSeries } from "scichart/Charting/Visuals/RenderableSeries/FastLineRenderableSeries";
 import { XyDataSeries } from "scichart/Charting/Model/XyDataSeries";
-import {ZoomPanModifier} from "scichart/Charting/ChartModifiers/ZoomPanModifier";
+import { ZoomPanModifier } from "scichart/Charting/ChartModifiers/ZoomPanModifier";
 import { RubberBandXyZoomModifier } from "scichart/Charting/ChartModifiers/RubberBandXyZoomModifier";
 import { MouseWheelZoomModifier } from "scichart/Charting/ChartModifiers/MouseWheelZoomModifier";
 import { XAxisDragModifier } from "scichart/Charting/ChartModifiers/XAxisDragModifier";
@@ -17,6 +17,8 @@ import { NumberRange } from "scichart/Core/NumberRange";
 import Webix from './Webix';
 import * as webix from 'webix/webix.js';
 
+import { Model } from "./data_model/fr_model.mjs";
+import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 
 // import classes from "../../../../Examples/Examples.module.scss";
 // import image from "./javascript-line-chart.jpg";
@@ -29,126 +31,126 @@ const intervalAddPoint = 40;
 const suffixChartID = "scichart-root2";
 
 
-async function initSciChart(chartID , onAddFunction = () => {}) {
-    // Below find a trial / BETA key for SciChart.js.
-    // This Expires in 30 days - or 14th November 2020
-    // Set this license key once in your app before calling SciChartSurface.create, e.g.
-    const divElementId = chartID+"_"+suffixChartID;
-    SciChartSurface.setRuntimeLicenseKey(
-      LICENSE_KEY
-    );
-  
-    // Create the SciChartSurface in the div 'scichart-root'
-    // The SciChartSurface, and webassembly context 'wasmContext' are paired. This wasmContext
-    // instance must be passed to other types that exist on the same surface.
-    const { sciChartSurface, wasmContext } = await SciChartSurface.create(
-      divElementId
-    );
-  
-    // Create an X,Y Axis and add to the chart
-    const xAxis = new NumericAxis(wasmContext,{ autoRange: EAutoRange.Once });
-    //xAxis.autoRange = EAutoRange.Once;
-    //xAxis.visibleRangeLimit = new NumberRange(1, 10000);
-
-   
-    const yAxis = new NumericAxis(wasmContext,{ autoRange: EAutoRange.Always });
-
-    //const xAxis = new NumericAxis(wasmContext);
-    //const yAxis = new NumericAxis(wasmContext);
-    sciChartSurface.xAxes.add(xAxis);
-    sciChartSurface.yAxes.add(yAxis);
-
-
-
-    sciChartSurface.chartModifiers.add(
-      new RubberBandXyZoomModifier(),
-      new MouseWheelZoomModifier(),
-      new XAxisDragModifier({ dragMode: EDragMode.Panning }),
-      new YAxisDragModifier({ dragMode: EDragMode.Panning }),
-      new ZoomExtentsModifier()
+async function initSciChart(chartID, onAddFunction = () => { }) {
+  // Below find a trial / BETA key for SciChart.js.
+  // This Expires in 30 days - or 14th November 2020
+  // Set this license key once in your app before calling SciChartSurface.create, e.g.
+  const divElementId = chartID + "_" + suffixChartID;
+  SciChartSurface.setRuntimeLicenseKey(
+    LICENSE_KEY
   );
-  
+
+  // Create the SciChartSurface in the div 'scichart-root'
+  // The SciChartSurface, and webassembly context 'wasmContext' are paired. This wasmContext
+  // instance must be passed to other types that exist on the same surface.
+  const { sciChartSurface, wasmContext } = await SciChartSurface.create(
+    divElementId
+  );
+
+  // Create an X,Y Axis and add to the chart
+  const xAxis = new NumericAxis(wasmContext, { autoRange: EAutoRange.Once });
+  //xAxis.autoRange = EAutoRange.Once;
+  //xAxis.visibleRangeLimit = new NumberRange(1, 10000);
+
+
+  const yAxis = new NumericAxis(wasmContext, { autoRange: EAutoRange.Always });
+
+  //const xAxis = new NumericAxis(wasmContext);
+  //const yAxis = new NumericAxis(wasmContext);
+  sciChartSurface.xAxes.add(xAxis);
+  sciChartSurface.yAxes.add(yAxis);
+
+
+
+  sciChartSurface.chartModifiers.add(
+    new RubberBandXyZoomModifier(),
+    new MouseWheelZoomModifier(),
+    new XAxisDragModifier({ dragMode: EDragMode.Panning }),
+    new YAxisDragModifier({ dragMode: EDragMode.Panning }),
+    new ZoomExtentsModifier()
+  );
+
+  const lineSeries = new FastLineRenderableSeries(wasmContext, {
+    stroke: "orange",
+  });
+
+  const lineSeries1 = new FastLineRenderableSeries(wasmContext, {
+    stroke: "blue",
+    strokeThickness: 2,
+  });
+
+  lineSeries.strokeThickness = 3;
+  sciChartSurface.renderableSeries.add(lineSeries);
+  sciChartSurface.renderableSeries.add(lineSeries1);
+  //const xds = XyDataSeries;
+  const xds = new XyDataSeries(wasmContext);
+  const xds1 = new XyDataSeries(wasmContext);
+  let counter = 0;
+  //xds.appendRange([0, 50], [0, 150]);
+  xds.append(0, 0);
+  xds.append(1, 1);
+  // xds.append(200, 0);
+  lineSeries.dataSeries = xds;
+  lineSeries1.dataSeries = xds1;
+  // lineSeries.dataSeries = new XyDataSeries(wasmContext, {
+  //   xValues: [150, 700, 9050],
+  //   yValues: [150, 700, 1050],
+  // });
+  // console.log(lineSeries);
+  console.log("lineSeries");
+  console.log(lineSeries);
+  //lineSeries.dataSeries[0].appendRange(1000,900)
+
+  // Create 100 dataseries, each with 10k points
+  for (let seriesCount = 0; seriesCount < 0; seriesCount++) {
+    const xyDataSeries = new XyDataSeries(wasmContext);
+
+    const opacity = ((1 - ((seriesCount / 120))) * 0.5).toFixed(2);
+
+    // Populate with some data
+    for (let i = 0; i < 10000; i++) {
+      xyDataSeries.append(i, Math.sin(i * 0.01) * Math.exp(i * (0.00001 * (seriesCount + 1))));
+    }
+
+    // Add and create a line series with this data to the chart
+    // Create a line series        
     const lineSeries = new FastLineRenderableSeries(wasmContext, {
-      stroke: "orange",
+      dataSeries: xyDataSeries,
+      stroke: `rgba(006,096,222,${opacity})`,
+      strokeThickness: 1
     });
-
-    const lineSeries1 = new FastLineRenderableSeries(wasmContext, {
-      stroke: "blue",
-      strokeThickness: 2,
-    });
-
-    lineSeries.strokeThickness = 3;
+    // console.log("xyDataSeries-----------------------------------------");
+    // console.log(xyDataSeries);
     sciChartSurface.renderableSeries.add(lineSeries);
-    sciChartSurface.renderableSeries.add(lineSeries1);
-    //const xds = XyDataSeries;
-    const xds = new XyDataSeries(wasmContext);
-    const xds1 = new XyDataSeries(wasmContext);
-    let counter = 0;
-    //xds.appendRange([0, 50], [0, 150]);
-    xds.append(0, 0);
-    xds.append(1, 1);
-    // xds.append(200, 0);
-    lineSeries.dataSeries = xds;
-    lineSeries1.dataSeries = xds1;
-    // lineSeries.dataSeries = new XyDataSeries(wasmContext, {
-    //   xValues: [150, 700, 9050],
-    //   yValues: [150, 700, 1050],
-    // });
-    // console.log(lineSeries);
-    console.log("lineSeries");
-    console.log(lineSeries);
-    //lineSeries.dataSeries[0].appendRange(1000,900)
-  
-    // Create 100 dataseries, each with 10k points
-    for (let seriesCount = 0; seriesCount < 0; seriesCount++) {        
-      const xyDataSeries = new XyDataSeries(wasmContext);
-
-      const opacity = ((1 - ((seriesCount / 120)))*0.5).toFixed(2);
-
-      // Populate with some data
-      for(let i = 0; i < 10000; i++) {
-          xyDataSeries.append(i, Math.sin(i* 0.01) * Math.exp(i*(0.00001*(seriesCount+1))));
-      }
-
-      // Add and create a line series with this data to the chart
-      // Create a line series        
-      const lineSeries = new FastLineRenderableSeries(wasmContext, {
-          dataSeries: xyDataSeries, 
-          stroke: `rgba(006,096,222,${opacity})`,
-          strokeThickness:1
-      });
-      // console.log("xyDataSeries-----------------------------------------");
-      // console.log(xyDataSeries);
-      sciChartSurface.renderableSeries.add(lineSeries);
   }
 
-    //sciChartSurface.chartModifiers.add(new ZoomPanModifier());
-  
-    // That's it! You just created your first SciChartSurface!
+  //sciChartSurface.chartModifiers.add(new ZoomPanModifier());
 
-    const stopDemo = () => {
-      console.log("stopDemo");
-      clearInterval(timerId);
-      xAxis.autoRange = EAutoRange.Once;
-      // console.log("sciChartSurface.renderableSeries");
-      // console.log(sciChartSurface.renderableSeries.items[0].isVisible);
-      // sciChartSurface.renderableSeries.items[0].isVisible = ! sciChartSurface.renderableSeries.items[0].isVisible;
+  // That's it! You just created your first SciChartSurface!
+
+  const stopDemo = () => {
+    console.log("stopDemo");
+    clearInterval(timerId);
+    xAxis.autoRange = EAutoRange.Once;
+    // console.log("sciChartSurface.renderableSeries");
+    // console.log(sciChartSurface.renderableSeries.items[0].isVisible);
+    // sciChartSurface.renderableSeries.items[0].isVisible = ! sciChartSurface.renderableSeries.items[0].isVisible;
   };
 
   const addPoint = () => {
     const step = 100;
-    
-    for(let i = counter; i < (counter+step); i++) {
+
+    for (let i = counter; i < (counter + step); i++) {
       // console.log("i="+i);
-      let v= onAddFunction(i);
+      let v = onAddFunction(i);
       xds.append(i, v);
-      xds1.append(i, Math.cos(i* 0.01)*Math.sin((i+150)* 0.01)*(1+0.5*Math.random()));
-      if (i>1000000) {
+      xds1.append(i, Math.cos(i * 0.01) * Math.sin((i + 150) * 0.01) * (1 + 0.5 * Math.random()));
+      if (i > 1000000) {
         xds.removeAt(0);
       }
     }
-    xAxis.visibleRange = new NumberRange(counter-visiblePoints, counter+step);
-    counter = counter +step;
+    xAxis.visibleRange = new NumberRange(counter - visiblePoints, counter + step);
+    counter = counter + step;
   }
 
   const startDemo = () => {
@@ -160,10 +162,10 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     //counter = 0;
     //xAxis.autoRange = EAutoRange.Always;
     timerId = setInterval(addPoint, intervalAddPoint);
-    
-  //   for(let i = 0; i < 10000; i++) {
-  //     xds.append(i, Math.sin(i* 0.01));
-  // }
+
+    //   for(let i = 0; i < 10000; i++) {
+    //     xds.append(i, Math.sin(i* 0.01));
+    // }
     // xds.append(0, 0);
     // xds.append(50, 50);
     // xds.append(150, 150);
@@ -172,14 +174,53 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     //sciChartSurface.renderableSeries.add(lineSeries);
   };
 
+  let model = new Model();
 
-  const addLine = () => {
-    sciChartSurface.renderableSeries.items[0].isVisible = true;
+  async function loaderDataModel() {
+
+    console.log("try to load data model...");
+
+    model.clear();
+
+    model.load().then(result => {
+      console.log(result);
+    }, error => {
+      console.log(error);
+    });
   }
 
-  const removeLine = () => {
-    console.log("removeLine");
-    sciChartSurface.renderableSeries.items[0].isVisible = false
+  async function getValue(deviceId, paramId) {
+
+    console.log("try to get value...");
+
+    model.device(deviceId).param(paramId).lastValue().then(result => {
+      var paramValue = result;
+      var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
+      console.log(message);
+
+    });
+
+    let param = model.device(deviceId).param(paramId);
+    let resStream = await param.openValueStream();
+  
+    resStream.on('data', chunk => {
+      let stringifiedRes = chunk.toString();
+      console.log(`Received from stream: ${stringifiedRes}`);
+    });
+  }
+
+  const addLine = async () => {
+    await loaderDataModel();
+//  sciChartSurface.renderableSeries.items[0].isVisible = true;
+  }
+
+  const removeLine = async () => {
+    const deviceId = 12;
+    const paramId = 65;
+
+    await getValue(deviceId, paramId);
+
+//  sciChartSurface.renderableSeries.items[0].isVisible = false
   }
 
   const removeLine1 = () => {
@@ -187,72 +228,73 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     // sciChartSurface.renderableSeries.items[0].isVisible = false
   }
 
-    return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addLine, removeLine } };
-  }
+  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addLine, removeLine } };
+}
 
-  const webixButton = () => {
-    
+const webixButton = () => {
+
   return (
     {
-      view:"button", 
+      view: "button",
       // id:"my_button", 
-      value:"Button", 
-      css:"webix_primary", 
+      value: "Button",
+      css: "webix_primary",
       //inputWidth:100 ,
-      click:function(id,event){
+      click: function (id, event) {
         console.log("webixButton");
         console.log(this.onclickMessage);
         this.onclickMessage();
       }
       // click: props.removeLine
-      
-  }
+
+    }
   )
 }
 
 const WebixButton12 = () => {
   // webix.ui({ view:"button", click:handler })
-  return ( {
-    view:"button" })
+  return ({
+    view: "button"
+  })
 }
 
 
 
 export default function Chart(props) {
-  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addLine: () =>{}, removeLine: () =>{} });
+  const [controls, setControls] = React.useState({ startDemo: () => { }, stopDemo: () => { }, addLine: () => { }, removeLine: () => { } });
 
   React.useEffect(() => {
     (async () => {
-        const res = await initSciChart(props.id,props.addFunction);
-        scs = res.sciChartSurface;
-        setControls(res.controls);
-        //autoStartTimerId = setTimeout(res.controls.startDemo, 3000);
+      const res = await initSciChart(props.id, props.addFunction);
+      scs = res.sciChartSurface;
+      setControls(res.controls);
+      //autoStartTimerId = setTimeout(res.controls.startDemo, 3000);
     })();
     // Delete sciChartSurface on unmount component to prevent memory leak
     return () => {
-       // controls.stopDemo();
-       // clearTimeout(timerId);
-       // clearTimeout(autoStartTimerId);
-        //scs?.delete();
+      // controls.stopDemo();
+      // clearTimeout(timerId);
+      // clearTimeout(autoStartTimerId);
+      //scs?.delete();
     };
-}, []);
+  }, []);
 
-    let currentChartID = props.id+"_"+suffixChartID;
-    return (
-        <Row id={props.id}  style={{ visibility:"hidden" }} >
-              <Col className = "c1" xs={10}  > 
-              {props.title}
-              <div id={currentChartID} style={{ width:"auto", height: 300, margin: "auto"}} ></div>
-              </Col>
-              <Col className = "c2" xs={2}   > 
-              <div>&nbsp;</div>
-                <Webix ui={webixButton()} data="Start" click={controls.startDemo} />
-                <Webix ui={webixButton()} data="Stop" click={controls.stopDemo} />
-                <Webix ui={webixButton()} data="Add line" click={controls.addLine} />
-                <Webix ui={webixButton()} data="Remove line" click={controls.removeLine} />
-                
-              </Col>
-              
-        </Row>
-    );
+  let currentChartID = props.id + "_" + suffixChartID;
+  return (
+    <Row id={props.id} style={{ visibility: "hidden" }} >
+      <Col className="c1" xs={10}  >
+        {props.title}
+        <div id={currentChartID} style={{ width: "auto", height: 300, margin: "auto" }} ></div>
+      </Col>
+      <Col className="c2" xs={2}   >
+        <div>&nbsp;</div>
+        <Webix ui={webixButton()} data="Start" click={controls.startDemo} />
+        <Webix ui={webixButton()} data="Stop" click={controls.stopDemo} />
+        <Webix ui={webixButton()} data="Add line" click={controls.addLine} />
+        <Webix ui={webixButton()} data="Remove line" click={controls.removeLine} />
+
+      </Col>
+
+    </Row>
+  );
 }

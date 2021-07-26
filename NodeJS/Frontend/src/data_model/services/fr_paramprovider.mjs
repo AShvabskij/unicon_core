@@ -1,48 +1,17 @@
-const RequestHelper = require("../requesthelper.js");
-const WebSocket = require('faye-websocket');
+// import {RequestHelper} from "./fr_requesthelper.mjs"
+const RequestHelper = require("./fr_requesthelper.js");
 
 const REQ_GET_PARAMS = "GET_PARAMS"
 const REQ_GET_PARAMS_DATA = "GET_PARAMS_DATA"
 const REQ_GET_PARAMS_STREAM_OPEN = "GET_PARAMS_STREAM_OPEN"
 const REQ_GET_PARAMS_STREAM_CLOSE = "GET_PARAMS_STREAM_CLOSE"
 
-let streamServerPort = 1237;
-let host =  'localhost';
-let streamSocketUrl = "ws://" + host + ":" + streamServerPort; 
-
-class ParamProvider
+export class ParamProvider
 {
-//      static streamSocket = new WebSocket.Client(streamSocketUrl);
         static streamIdList = [];
 
     constructor() 
     {
-/*        
-        ParamProvider.streamSocket.on('open', function(event) {
-            console.log("Connected to stream data server");
-        
-            ParamProvider.streamSocket.on('message', function(message) {
-                var messageData = JSON.parse(message.data);
-                
-                var strObj = JSON.stringify(messageData.body);
-                console.log("Recevied on stream socket: " + strObj);
-        
-                if (ParamProvider.streamIdList.indexOf(messageData.request_id) != -1) {
-                    return;
-                }
-            });
-        });
-        
-        ParamProvider.streamSocket.on('error', function(error) {
-            console.log('Stream error: ' + error.message);
-            process.exit(1);
-        });
-        
-        ParamProvider.streamSocket.on('close', function() {
-            console.log('Stream closed.');
-            process.exit(1);
-        });
-        */
     }
 
     async reqParams(deviceId, moduleId) 
@@ -152,7 +121,8 @@ class ParamProvider
         return res;
     }    
 }
-
+/*
 module.exports = {
     ParamProvider: ParamProvider
 };
+*/

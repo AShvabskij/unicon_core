@@ -1,5 +1,5 @@
 // import {RequestHelper} from "./requesthelper.mjs"
-const RequestHelper = require("./requesthelper.js");
+const RequestHelper = require("./fr_requesthelper.mjs");
 
 const REQ_GET_PARAMS = "GET_PARAMS"
 const REQ_GET_PARAMS_DATA = "GET_PARAMS_DATA"
