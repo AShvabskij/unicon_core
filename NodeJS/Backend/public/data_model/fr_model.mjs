@@ -1,4 +1,4 @@
-// import Events from 'events';
+const Events = require ('events');
 
 // import {ParamProvider} from "./services/paramprovider.mjs"
 // import {DeviceProvider} from "./services/deviceprovider.mjs"
@@ -32,6 +32,7 @@ class StatusEnum
 {
     static Changed = 'DATA_CHANGED';
     static Cancelled = 'DATA_CANCELLED';
+    static UnChanged = 'DATA_UNCHANGED';
 }
 
 let checkstatusIntervalId = 0;
@@ -48,12 +49,12 @@ let startTime = new Date().getTime();
 
 const RECEIVED_DATA_ERROR = "Received data error!";
 
-class Model
+class Model extends Events
 {
-//  static events = new Events();
-
     constructor() 
     {
+        super();
+
         this.m_name = 'Unicon';
         this.m_devices = [];
         this.m_trends= [];
@@ -106,7 +107,7 @@ class Model
             let valueData = messageData.value;
             if (valueData === undefined) {
                 console.log(RECEIVED_DATA_ERROR);
-//              Model.events.emit('error', RECEIVED_DATA_ERROR);
+                this.emit('error', RECEIVED_DATA_ERROR);
                 return;
             }
 
@@ -220,16 +221,16 @@ class Model
         }
 
         checkstatusIntervalId = setInterval(async () => {
-            let status = await this.deviceProvider.reqStatus();
-            if (status == StatusEnum.Changed) {
+            let res = await this.deviceProvider.reqStatus();
+            if (res.system_status == StatusEnum.Changed) {
                 this.clear()
-//              Model.events.emit(status);
             }
 
-            if (status == StatusEnum.Cancelled) {
+            if (res.system_status == StatusEnum.Cancelled) {
                 this.clear()
-//              Model.events.emit(status);
             }
+
+            this.emit('system_status', res.system_status);
 
         }, 5000)
     }
@@ -422,6 +423,8 @@ class Param
         try {
             let stream = "off";
             await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream)
+            this.stream.push(null);
+
             this.lastError = 0;
         } catch(error) {
             this.lastError = error;

@@ -184,9 +184,15 @@ async function initSciChart(chartID, onAddFunction = () => { }) {
 
     model.load().then(result => {
       console.log(result);
+      model.enablePeriodicCheck();      
     }, error => {
       console.log(error);
     });
+
+    model.on('system_status', function(res) {
+      console.log(`System status chnaged to ${res}`);
+    });
+    
   }
 
   async function getValue(deviceId, paramId) {
@@ -201,6 +207,7 @@ async function initSciChart(chartID, onAddFunction = () => { }) {
     });
 
     let param = model.device(deviceId).param(paramId);
+    await param.closeValueStream();
     let resStream = await param.openValueStream();
   
     resStream.on('data', chunk => {

@@ -69,6 +69,11 @@ class DeviceProvider
                 name : "device_header",
                 type : "get"
             };
+        } else if (reqName == REQ_GET_STATUS) {
+            res = {
+                name : "system_status",
+                type : "get"
+            };
         }
 
         return res;

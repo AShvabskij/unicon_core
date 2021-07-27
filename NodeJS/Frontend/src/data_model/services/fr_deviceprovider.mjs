@@ -1,6 +1,5 @@
-// import {RequestHelper} from "./fr_requesthelper.mjs"
-
-const RequestHelper = require("./fr_requesthelper.js");
+// import {RequestHelper} from "./requesthelper.mjs"
+const RequestHelper = require("./fr_requesthelper.mjs");
 
 const REQ_GET_DEVICES = "GET_DEVICE"
 const REQ_GET_STATUS = "GET_STATUS"
@@ -70,6 +69,11 @@ export class DeviceProvider
                 name : "device_header",
                 type : "get"
             };
+        } else if (reqName == REQ_GET_STATUS) {
+            res = {
+                name : "system_status",
+                type : "get"
+            };
         }
 
         return res;
@@ -84,6 +88,7 @@ export class DeviceProvider
         return res;
     }
 }
+
 /*
 module.exports = {
     DeviceProvider: DeviceProvider

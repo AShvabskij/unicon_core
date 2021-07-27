@@ -4,8 +4,8 @@
 const QString CMD_PARAMS_HEADER = "param_header";
 const QString CMD_TYPE = "get";
 const QString CMD_PARAMS_DATA = "param_data";
-const int TIMER_POOLING_INTERVAL_MSC = 10;
-const int STREAM_OBJECT_LIMIT = 100;
+const int TIMER_POOLING_INTERVAL_MSC = 100;
+const int STREAM_OBJECT_LIMIT = 10;
 
 ParamsHandler::ParamsHandler()
 {
@@ -170,6 +170,7 @@ int ParamsHandler::handleCloseStream(const QJsonObject &request)
 
     return 0;
 }
+
 ParamValue ParamsHandler::valueFrom(const GLIO_ELEMENT_VALUE& el)
 {
     if (el.deprecated) {
@@ -388,7 +389,7 @@ QJsonObject ParamsHandler::createStreamValueObj(const Param& param, const ParamV
 {
     QJsonObject res;
     res["d_id"] = param.deviceId;
-    res["id"] = param.id;
+    res["p_id"] = param.id;
     res["value"] = value.toJson();
     if (error != 0) {
         res["error"] = error;

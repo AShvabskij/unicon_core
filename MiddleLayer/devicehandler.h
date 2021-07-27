@@ -30,6 +30,11 @@ struct Module
     QVector<int> params;
 };
 
+struct SystemStatus
+{
+    bool isChanged = false;
+};
+
 class DeviceHandler : public BaseReqHandler
 {
 public:
@@ -38,8 +43,10 @@ public:
 
 private:
     int handleGetHeader(const QJsonObject &request);
+    int handleSystemStatus(const QJsonObject& request);
     QJsonObject createResponse(int requestId, const DeviceList& devices);
     QJsonObject createResponse(int requestId, const Module& module);
+    QJsonObject createResponse(int requestId, const SystemStatus& status);
 
     int requestDevices(int requestId);
     int requestDeviceHeader(int deviceId, int requestId);

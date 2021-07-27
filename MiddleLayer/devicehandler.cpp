@@ -1,6 +1,7 @@
 #include "devicehandler.h"
 
 const QString CMD_DEVICE_HEADER = "device_header";
+const QString CMD_SYSTEM_STATUS = "system_status";
 const QString CMD_TYPE = "get";
 
 int DeviceHandler::handle(const QJsonObject &request)
@@ -11,6 +12,8 @@ int DeviceHandler::handle(const QJsonObject &request)
 
     if (cmdName == CMD_DEVICE_HEADER && cmdType == CMD_TYPE) {
         return handleGetHeader(request);
+    } else if (cmdName == CMD_SYSTEM_STATUS && cmdType == CMD_TYPE) {
+        return handleSystemStatus(request);
     }
 
     return BaseReqHandler::handle(request);
@@ -36,6 +39,23 @@ int DeviceHandler::handleGetHeader(const QJsonObject& request)
         requestModuleHeader(deviceId, moduleId, requestId);
     }
 
+    return 0;
+}
+
+int DeviceHandler::handleSystemStatus(const QJsonObject& request)
+{
+    int requestId = request.value("request_id").toInt();
+    QJsonObject cmdBody = request.value("body").toObject();
+
+    if (requestId <= 0) {
+        return -1;
+    }
+
+    SystemStatus status;
+    status.isChanged = true;
+    QJsonObject response = createResponse(requestId, status);
+
+    send(response);
     return 0;
 }
 
@@ -184,6 +204,22 @@ QJsonObject DeviceHandler::createResponse(int requestId, const Module& module)
     }
 
     body["params"] = params;
+
+    QJsonObject res;
+    res["request_id"] = requestId;
+    res["body"] = body;
+
+    return res;
+}
+
+QJsonObject DeviceHandler::createResponse(int requestId, const SystemStatus& status)
+{
+    QJsonObject body;
+    if (status.isChanged) {
+        body["system_status"] = "DATA_CHANGED";
+    } else  {
+        body["system_status"] = "DATA_UNCHANGED";
+    }
 
     QJsonObject res;
     res["request_id"] = requestId;

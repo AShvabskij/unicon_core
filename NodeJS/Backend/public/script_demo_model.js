@@ -10,6 +10,10 @@ const {Model, SysInterfacesEnum}  = require("./data_model/fr_model.mjs");
 
 let model = new Model();
 
+model.on('system_status', function(res) {
+    console.log(`System status chnaged to ${res}`);
+});
+
 function output(message) {
     var item = document.createElement('li');
     item.textContent = message;
@@ -24,6 +28,7 @@ document.getElementById("model_load").addEventListener('click', function (e) {
 
     model.load().then(result => {
         console.log(result);
+        model.enablePeriodicCheck();
     }, error => {
         console.log(error);
     });
