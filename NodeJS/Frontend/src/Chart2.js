@@ -190,9 +190,10 @@ async function initSciChart(chartID, onAddFunction = () => { }) {
     });
 
     model.on('system_status', function(res) {
-      console.log(`System status chnaged to ${res}`);
+      console.log(`System status changed to ${res}`);
+      model.disablePeriodicCheck();      
     });
-    
+
   }
 
   async function getValue(deviceId, paramId) {

@@ -223,7 +223,7 @@ class Model extends Events
         checkstatusIntervalId = setInterval(async () => {
             let res = await this.deviceProvider.reqStatus();
             if (res.system_status == StatusEnum.Changed) {
-                this.clear()
+//              this.clear()
             }
 
             if (res.system_status == StatusEnum.Cancelled) {
