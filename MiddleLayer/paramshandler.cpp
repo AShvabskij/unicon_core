@@ -4,8 +4,8 @@
 const QString CMD_PARAMS_HEADER = "param_header";
 const QString CMD_TYPE = "get";
 const QString CMD_PARAMS_DATA = "param_data";
-const int TIMER_POOLING_INTERVAL_MSC = 100;
-const int STREAM_OBJECT_LIMIT = 10;
+const int TIMER_POOLING_INTERVAL_MSC = 1;
+const int STREAM_OBJECT_LIMIT = 1000;
 
 ParamsHandler::ParamsHandler()
 {
