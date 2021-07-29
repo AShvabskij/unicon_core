@@ -15,12 +15,34 @@ import DataView from './DataView';
 // import MenuInfo from './MenuInfo';
 // import MenuDemo from './MenuDemo';
 
+/* const {Model, SysInterfacesEnum}  = require("./data_model/model.js");
+let model = new Model();
+
+const deviceId = 12;
+const paramId = 65;
+
+async function loaderDataModel() {
+  
+  let param = model.device(deviceId).param(paramId);
+  let resStream = await param.openValueStream();
+
+  resStream.on('data', chunk => {
+    let stringifiedRes = chunk.toString();
+    console.log(`Received from stream: ${stringifiedRes}`);
+
+    // if (frontWebSocket) {
+    //   frontWebSocket.send(stringifiedRes);
+    // }
+  });
+}  */
+
 function App() {
   // React.useEffect(() => {
   //   console.log("on load");
   //   //initSciChart();
   // }, []);
-  
+  //loaderDataModel();
+  window.chartEvents = [];
  return (
     
     <div className="App">

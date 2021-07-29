@@ -37,7 +37,7 @@ class StatusEnum
 
 let checkstatusIntervalId = 0;
 let streamServerPort = 1237;
-let host =  'localhost';
+let host =  '192.168.7.111';
 let streamSocketUrl = "ws://" + host + ":" + streamServerPort; 
 
 // Переменные для измерения производительности
@@ -87,10 +87,11 @@ export class Model extends Events
 
         this.streamSocket.onmessage = message => {
             var messageData = JSON.parse(message.data);
-            console.log(message.data);
+            // console.log(message.data);
 
             let deviceId = messageData.d_id;
             let paramId = messageData.p_id;
+            // let paramId = messageData.id;     
 
             if (this.m_capturedParam.id != paramId || this.m_capturedParam.deviceId != deviceId) {
                 console.log("devices = " + this.m_devices.length);

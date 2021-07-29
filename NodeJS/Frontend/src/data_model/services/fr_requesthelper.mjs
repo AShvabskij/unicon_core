@@ -1,6 +1,6 @@
 
 let dataServerPort = 1235;
-let host =  'localhost';
+let host =  '192.168.7.111';
 let socketUrl = "ws://" + host + ":" + dataServerPort; 
 
 class _RequestHelper {

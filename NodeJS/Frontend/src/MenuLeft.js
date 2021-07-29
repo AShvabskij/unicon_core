@@ -3,6 +3,48 @@ import Webix from './Webix';
 import React from "react";
 
 
+var devices = {
+  // view:"layout", // необязательно
+  // id:"devices", 
+  // rows:[
+  //     { height:10 },
+  //     { responsive:"devices", 
+      margin:10, padding:0, type:"wide",
+    view:"flexlayout",
+      
+      
+      cols:[ // родительский лейаут для компонента 
+            { //view:"button", value:"Device 1", minWidth: 120, align:"center" ,
+              view:"toggle", label:"Device 1", minWidth: 120,
+              click:function(id,event){
+              }
+            },
+            { view:"button", value:"Device 2", minWidth: 120, align:"center" ,
+              click:function(id,event){
+              }
+            }, // компонент будет перемещен в лейаут "devices"
+            { view:"button", value:"Device 3", minWidth: 150, align:"center" ,
+              click:function(id,event){
+              }
+            }, // компонент будет перемещен в лейаут "devices"
+            { view:"button", value:"Device 4", minWidth: 150, align:"center" ,
+              click:function(id,event){
+              }
+          }, // компонент будет перемещен в лейаут "devices"
+          { view:"button", value:"Device 5", minWidth: 150, align:"center" ,
+            click:function(id,event){
+            }
+          } 
+        ]
+    //     },
+    //     { height:10 }
+    // ],
+
+    // },
+    // { width:20 }
+  
+};
+
 function getUI(select){
   return {
     view:"slider"
@@ -88,7 +130,7 @@ function getUI2(select){
         console.log(" onAfterSelect ->>>>>>>>>>>");
         //select(id);
       }
-    }
+    },
   };
 }
 
@@ -139,7 +181,8 @@ var menuaccordeon ={
     { header:"Graphic trends", body: ""},
     { header:"PLC", body: "" },
     { header:"Logs", body: ""},
-    { header:"Devices", body: getUI2("") },
+    { header:"Devices", body: devices},
+   // { header:"Devices", body: getUI2("") },
     // { header:"Device1", body: menu_acc },
     // { header:"Device 2", body: menu_acc2 },
     // { header:"Device 3", body: ""}

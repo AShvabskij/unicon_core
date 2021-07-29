@@ -8,6 +8,63 @@ import Chart2 from './Chart2';
 import ChartList from './ChartList';
 import DataView from './DataView';
 
+import { Model } from "./data_model/fr_model.mjs";
+import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
+
+
+let model = new Model();
+
+  async function loadDataModel() {
+
+    console.log("try to load data model...");
+
+    model.clear();
+
+    model.load().then(result => {
+      console.log(result);
+      // model.enablePeriodicCheck();      
+    }, error => {
+      console.log(error);
+    });
+
+    model.on('system_status', function(res) {
+      console.log(`System status changed to ${res}`);
+      model.disablePeriodicCheck();      
+    });
+
+  }
+
+async function getValue(deviceId, paramId) {
+
+    console.log("try to get value...");
+    let startDate = new Date();
+    
+    model.device(deviceId).param(paramId).lastValue().then(result => {
+      var paramValue = result;
+      var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
+      console.log(message);
+
+    });
+
+    let param = model.device(deviceId).param(paramId);
+    await param.closeValueStream();
+    let resStream = await param.openValueStream();
+  
+    resStream.on('data', chunk => {
+      let stringifiedRes = chunk.toString();
+      // console.log(`Received from stream: ${stringifiedRes}`);
+      let value = JSON.parse(stringifiedRes);
+      // let xValue = (value.valueTime & 0xFFFF) * 0.05;
+      let xValue = value.valueTime - startDate.getTime();
+      let yValue = value.value;
+      console.log (startDate.getTime());
+      // console.log (xValue +","+ yValue);
+      if (yValue != -1) {
+        window.chartEvents["chart3"].addVarPoint(xValue,yValue);
+      }
+    });
+  }
+
 
 const paramData = [
 	{ id:9, num: "1", name:"Parameter 1 (2110)", value:"1.008", dimension:"W", time:"11:56",chart:"+",numchart:1},
@@ -192,12 +249,45 @@ const toolBar = () => {
       
         },
         { view:"button", value:"Remove Chart", autowidth: true, align:"center" ,
-        click:function(id,event){
-          removeButtonClick();
-        } 
-      },
-        
-      
+          click:function(id,event){
+            removeButtonClick();
+          } 
+        },
+        { view:"button", value:"Start", autowidth: true, align:"center" ,
+          click:function(id,event){
+            console.log(window.chartEvents);
+            for (var chart in window.chartEvents) {
+              // console.log(chart);
+              window.chartEvents[chart].startDemo();
+            }
+          } 
+        },
+        { view:"button", value:"Stop", autowidth: true, align:"center" ,
+          click:function(id,event){
+            console.log(window.chartEvents);
+            for (var chart in window.chartEvents) {
+              // console.log(chart);
+              window.chartEvents[chart].stopDemo();
+            }
+          } 
+        },
+
+        { view:"button", value:"Load data", autowidth: true, align:"center" ,
+          click:function(){
+            console.log("Load data");
+            loadDataModel();
+          } 
+        },
+
+        { view:"button", value:"Get values", autowidth: true, align:"center" ,
+          click:function(id,event){
+            console.log("Get values");
+            let deviceId = 12;
+            let paramId = 65;
+            getValue(deviceId, paramId);
+          } 
+        },
+     
       ]
 }
 }
