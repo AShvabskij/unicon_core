@@ -57,7 +57,6 @@ async function getValue(deviceId, paramId) {
       // let xValue = (value.valueTime & 0xFFFF) * 0.05;
       let xValue = value.valueTime - startDate.getTime();
       let yValue = value.value;
-      console.log (startDate.getTime());
       // console.log (xValue +","+ yValue);
       if (yValue != -1) {
         window.chartEvents["chart3"].addVarPoint(xValue,yValue);
