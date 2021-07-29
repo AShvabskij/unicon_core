@@ -1,3 +1,6 @@
+// import { createRequire } from "module";
+// const require = createRequire(import.meta.url);
+
 const Events = require ('events');
 
 // import {ParamProvider} from "./services/paramprovider.mjs"

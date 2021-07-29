@@ -14,7 +14,7 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 
 	//2) fill with names devices
 
-    static uint16_t amplitude = 10;
+    static uint16_t amplitude = 5;
     static uint16_t frequency_hertz = 1;
 
 	for (int ii = 1; ii < 33; ii=ii+11)
