@@ -12,7 +12,8 @@ import { Model } from "./data_model/fr_model.mjs";
 import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 
 
-let model = new Model();
+let model = new Model('192.168.7.113');
+model.init();
 
   async function loadDataModel() {
 

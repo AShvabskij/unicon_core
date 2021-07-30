@@ -1,5 +1,5 @@
 // import {RequestHelper} from "./requesthelper.mjs"
-const RequestHelper = require("./fr_requesthelper.mjs");
+const { RequestHelper } = require("./fr_requesthelper.mjs");
 
 const REQ_GET_DEVICES = "GET_DEVICE"
 const REQ_GET_STATUS = "GET_STATUS"

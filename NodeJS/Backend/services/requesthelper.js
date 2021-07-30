@@ -31,12 +31,10 @@ class _RequestHelper {
 
         socket.on('error', function(error) {
             console.log('Connection error: ' + error.message);
-            process.exit(1);
         });
         
         socket.on('close', function() {
             console.log('Connection closed.');
-            process.exit(1);
         });         
     }
 
