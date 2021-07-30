@@ -59,8 +59,8 @@ export class Model extends Events {
         this.m_inited = false;
         this.m_host = srvHost;
 
-        this.paramProvider = new ParamProvider();
-        this.deviceProvider = new DeviceProvider();
+        this.paramProvider = new ParamProvider(RequestHelper);
+        this.deviceProvider = new DeviceProvider(RequestHelper);
     }
 
     init() {

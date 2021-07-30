@@ -6,36 +6,51 @@ const REQ_GET_STATUS = "GET_STATUS"
 
 export class DeviceProvider
 {
-    constructor() 
+    m_reqHelper = null;
+
+    constructor(reqHelper = RequestHelper) 
     {
+        this.m_reqHelper = reqHelper;
+    }
+
+    requestHelper() {
+        return this.m_reqHelper;
+    }
+    
+    setRequestHelper(reqHelper = RequestHelper) {
+        this.m_reqHelper = reqHelper;
+    }
+
+    request(cmd) {
+        return this.requestHelper().request(cmd);
     }
 
     async requestDevice(deviceId, moduleId) 
     {
         let reqCmd = this._createDeviceReqCmd(REQ_GET_DEVICES, deviceId, moduleId);
 
-        return RequestHelper.request(reqCmd);
+        return this.request(reqCmd);
     };
 
     async reqDevices() 
     {
         let reqCmd = this._createDeviceReqCmd(REQ_GET_DEVICES, 0);
 
-        return RequestHelper.request(reqCmd);
+        return this.request(reqCmd);
     };
 
     async reqModule(deviceId, moduleId) 
     {
         let reqCmd = this._createDeviceReqCmd(REQ_GET_DEVICES, deviceId, moduleId);
 
-        return RequestHelper.request(reqCmd);
+        return this.request(reqCmd);
     };
 
     async reqStatus() 
     {
         let reqCmd = this._createDeviceReqCmd(REQ_GET_STATUS);
 
-        return RequestHelper.request(reqCmd);
+        return this.request(reqCmd);
     };
 
     _createDeviceReqCmd(reqName, deviceId, moduleId) {
