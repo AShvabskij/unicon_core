@@ -109,69 +109,24 @@ export class Model extends Events {
                 this.emit('error', RECEIVED_DATA_ERROR);
                 return;
             }
-    
+
             byteCount += message.data.length;
             msgCount++;
-    
-            this.pushValue(deviceId, paramId, valueData);
+
+            this._streamParamValue(deviceId, paramId, valueData);
         };
 
         this.m_inited = true;
     }
 
-    pushValue(deviceId, paramId, valueData) {
+    _streamParamValue(deviceId, paramId, valueData) {
 
         if (this.m_capturedParam.id != paramId || this.m_capturedParam.deviceId != deviceId) {
-            console.log("devices = " + this.m_devices.length);
-
             let device = this.device(deviceId);
-            if (device == undefined || device == null) {
-                console.warn(`device ${deviceId} error!`)
-                return;
-            }
-
-            this.m_capturedParam = this.device(deviceId).param(paramId);
+            this.m_capturedParam = device.param(paramId);
         }
 
-        let pValue = new ParamValue();
-        pValue.paramId = this.m_capturedParam.id;
-        pValue.deviceId = this.m_capturedParam.deviceId;
-        pValue.value = valueData.value;
-        pValue.valueFormat = valueData.format;
-        pValue.valueTime = valueData.time;
-        pValue.scale = valueData.scale;
-
-        let currTime = new Date().getTime();
-        let pValueDeltaTime = pValue.valueTime > 0 ? currTime - pValue.valueTime : 0
-
-        if (pValueDeltaTime > 50) {
-            console.warn(`Param value actuality = ${pValueDeltaTime}`)
-        }
-
-        const timeDelta = currTime - startTime;
-        const isFinished = (pValue.value == -1);
-
-        if (timeDelta >= 1000 || isFinished === true) {
-            console.log(`Received ${byteCount} bytes, ${msgCount} items per ${timeDelta}ms`);
-            startTime = currTime;
-        }
-
-        if (isFinished === true) {
-            console.log(`The stream is finished`);
-            console.timeEnd(`The stream elapsed time(${timeLabel}):`);
-
-            byteCount = 0;
-            msgCount = 0;
-
-            this.m_capturedParam.stream.push(null);
-            this.m_capturedParam.stream.destroy();
-
-            this.m_capturedParam = new Param();
-            return;
-        }
-
-        //          console.log(`Received: ${JSON.stringify(pValue)}`);
-        this.m_capturedParam.stream.push(JSON.stringify(pValue));        
+        this.m_capturedParam._streamValue(valueData);
     }
 
     async load() {
@@ -426,6 +381,41 @@ class Param {
         } catch (error) {
             this.lastError = error;
         }
+    }
+
+    _streamValue(valueData) {
+
+        let pValue = new ParamValue();
+        pValue.paramId = this.id;
+        pValue.deviceId = this.deviceId;
+        pValue.value = valueData.value;
+        pValue.valueFormat = valueData.format;
+        pValue.valueTime = valueData.time;
+        pValue.scale = valueData.scale;
+
+        let currTime = new Date().getTime();
+        let pValueDeltaTime = pValue.valueTime > 0 ? currTime - pValue.valueTime : 0
+
+        if (pValueDeltaTime > 50) {
+            console.warn(`Param value actuality = ${pValueDeltaTime}`)
+        }
+
+        const isFinished = (pValue.value == -1);
+
+        if (isFinished === true) {
+            console.log(`The param stream is finished, param id = ${this.id}, ${this.deviceId}`);
+            console.timeEnd(`The stream elapsed time(${timeLabel}):`);
+
+            byteCount = 0;
+            msgCount = 0;
+
+            this.stream.push(null);
+            this.stream.destroy();
+            return;
+        }
+
+        //          console.log(`Received: ${JSON.stringify(pValue)}`);
+        this.stream.push(JSON.stringify(pValue));        
     }
 
     lastError() {
