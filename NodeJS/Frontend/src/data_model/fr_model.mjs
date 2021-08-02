@@ -37,15 +37,9 @@ class StatusEnum {
 }
 
 let checkstatusIntervalId = 0;
+let _messageDataLength = 0
+
 const STREAM_SERVER_PORT = 1237;
-
-// Переменные для измерения производительности
-let byteCount = 0;
-let msgCount = 0;
-
-let timeLabel = new Date().getTime();
-let startTime = new Date().getTime();
-
 const RECEIVED_DATA_ERROR = "Received data error!";
 
 export class Model extends Events {
@@ -55,9 +49,10 @@ export class Model extends Events {
         this.m_name = 'Unicon';
         this.m_devices = [];
         this.m_trends = [];
-        this.m_capturedParam = new Param();
         this.m_inited = false;
         this.m_host = srvHost;
+
+        this._capturedParams = [];
 
         this.paramProvider = new ParamProvider(RequestHelper);
         this.deviceProvider = new DeviceProvider(RequestHelper);
@@ -99,19 +94,12 @@ export class Model extends Events {
         this.streamSocket.onmessage = (message) => {
             var messageData = JSON.parse(message.data);
             // console.log(message.data);
-    
+
             let valueData = messageData.value;
             let deviceId = messageData.d_id;
             let paramId = messageData.p_id;
 
-            if (valueData === undefined || deviceId === undefined || paramId === undefined) {
-                console.log(RECEIVED_DATA_ERROR);
-                this.emit('error', RECEIVED_DATA_ERROR);
-                return;
-            }
-
-            byteCount += message.data.length;
-            msgCount++;
+            _messageDataLength = message.data.length;
 
             this._streamParamValue(deviceId, paramId, valueData);
         };
@@ -120,13 +108,24 @@ export class Model extends Events {
     }
 
     _streamParamValue(deviceId, paramId, valueData) {
+        let param = this._capturedParams.find((item) => {
+            return item.id === paramId && item.deviceId === deviceId
+        });
 
-        if (this.m_capturedParam.id != paramId || this.m_capturedParam.deviceId != deviceId) {
-            let device = this.device(deviceId);
-            this.m_capturedParam = device.param(paramId);
+        if (param === undefined) {
+            param = this.device(deviceId).param(paramId);
+            if (param !== undefined) {
+                this._capturedParams.push(param);
+            }
         }
 
-        this.m_capturedParam._streamValue(valueData);
+        if (param === undefined || valueData == undefined) {
+            console.log(RECEIVED_DATA_ERROR);
+            this.emit('error', RECEIVED_DATA_ERROR);
+            return;
+        }
+
+        param.streamValue(valueData);
     }
 
     async load() {
@@ -137,7 +136,7 @@ export class Model extends Events {
                     let err = "The data model is not inited yet. Will be inited now."
                     console.warn(err);
                     this.init();
-//                  reject({ status: 500, msg: err });
+                    //                  reject({ status: 500, msg: err });
                 }
 
                 let devices = await this.deviceProvider.reqDevices();
@@ -322,6 +321,12 @@ class Param {
         this.lastError = 0;
 
         this.paramProvider = new ParamProvider();
+
+        // Переменные для измерения производительности
+        this._byteCount = 0;
+        this._msgCount = 0;
+
+        this._timeLabel = new Date().getTime();
     }
 
     async lastValue() {
@@ -349,9 +354,8 @@ class Param {
 
     async openValueStream() {
         try {
-            timeLabel = new Date().getTime();
-            startTime = new Date().getTime();
-            console.time(`The stream elapsed time(${timeLabel}):`);
+            this._timeLabel = new Date().getTime();
+            console.time(`The stream elapsed time(${this._timeLabel})`);
 
             this.stream = new Stream.Readable({
                 read() { }
@@ -383,7 +387,7 @@ class Param {
         }
     }
 
-    _streamValue(valueData) {
+    streamValue(valueData) {
 
         let pValue = new ParamValue();
         pValue.paramId = this.id;
@@ -403,11 +407,11 @@ class Param {
         const isFinished = (pValue.value == -1);
 
         if (isFinished === true) {
-            console.log(`The param stream is finished, param id = ${this.id}, ${this.deviceId}`);
-            console.timeEnd(`The stream elapsed time(${timeLabel}):`);
+            console.log(`The param stream is finished, device id = ${this.deviceId}, param id = ${this.id}, received items = ${this._msgCount}, bytes = ${this._byteCount}`);
+            console.timeEnd(`The stream elapsed time(${this._timeLabel})`);
 
-            byteCount = 0;
-            msgCount = 0;
+            this._byteCount = 0;
+            this._msgCount = 0;
 
             this.stream.push(null);
             this.stream.destroy();
@@ -415,7 +419,10 @@ class Param {
         }
 
         //          console.log(`Received: ${JSON.stringify(pValue)}`);
-        this.stream.push(JSON.stringify(pValue));        
+        this._byteCount += _messageDataLength;
+        this._msgCount++;
+
+        this.stream.push(JSON.stringify(pValue));
     }
 
     lastError() {
