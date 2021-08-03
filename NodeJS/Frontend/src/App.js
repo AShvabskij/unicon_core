@@ -46,16 +46,30 @@ function App() {
  return (
     
     <div className="App">
-      <Row >
-              <Col className = "c1" xs={3}  > 
+      <div className="c1">
+          <MenuLeft />
+      </div>
+
+      <div className="c2">
+          <MenuTop />
+      </div>
+
+      {/* <div className="c3">
+
+          123
+      </div>
+       */}
+      
+     {/*  <Row >
+              <Col className = "c1" xs={2}  > 
                   <MenuLeft />
               </Col>
-              <Col className = "c2" xs={9}   > 
+              <Col className = "c2" xs={10}   > 
               <MenuTop />
               </Col>
               
         </Row>
-
+ */}
      
       
     </div>

@@ -64,6 +64,36 @@ async function getValue(deviceId, paramId) {
     });
   }
 
+async function getValue2(deviceId, paramId) {
+
+    console.log("try to get value...");
+    let startDate = new Date();
+    
+    model.device(deviceId).param(paramId).lastValue().then(result => {
+      var paramValue = result;
+      var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
+      console.log(message);
+
+    });
+
+    let param = model.device(deviceId).param(paramId);
+    await param.closeValueStream();
+    let resStream = await param.openValueStream();
+  
+    resStream.on('data', chunk => {
+      let stringifiedRes = chunk.toString();
+      // console.log(`Received from stream: ${stringifiedRes}`);
+      let value = JSON.parse(stringifiedRes);
+      // let xValue = (value.valueTime & 0xFFFF) * 0.05;
+      let xValue = value.valueTime - startDate.getTime();
+      let yValue = value.value;
+      // console.log (xValue +","+ yValue);
+      if (yValue != -1) {
+        window.chartEvents["chart3"].addVarPoint2(xValue,yValue);
+      }
+    });
+  }
+
 
 const paramData = [
 	{ id:9, num: "1", name:"Parameter 1 (2110)", value:"1.008", dimension:"W", time:"11:56",chart:"+",numchart:1},
@@ -196,7 +226,7 @@ function tabview1(props) {
             showChart("chart2","memo1");
             showElementChart("chart3");
             showElementChart("chart4")
-          
+            showElementChart("chart5")
           }
 
           if (id=="controlContent") {
@@ -284,6 +314,19 @@ const toolBar = () => {
             let deviceId = 12;
             let paramId = 65;
             getValue(deviceId, paramId);
+            // paramId = 66;
+            // getValue(deviceId, paramId);
+          } 
+        },
+
+        { view:"button", value:"Get values 2", autowidth: true, align:"center" ,
+          click:function(id,event){
+            console.log("Get values 2");
+            let deviceId = 12;
+            let paramId = 66;
+            getValue2(deviceId, paramId);
+            // paramId = 66;
+            // getValue(deviceId, paramId);
           } 
         },
      
@@ -336,24 +379,23 @@ export default class MenuTop extends React.Component {
   render() {
     return(
         <div>
-        <Webix ui={tabview1(this.props)} data={this.props} />
-        <div id="chart2">
-{/*             
-            <Webix ui={webixButton({width:"150"})} data="Add Chart" click={addButtonClick} />
-            <Webix ui={webixButton({width:"150"})} data="Remove Chart" click={removeButtonClick} /> */}
-            <Chart2 id="chart3" title="demo chart 3" addFunction={addFunction}/>
-            <Chart2 id="chart4" title="demo chart 4" addFunction={addFunction1}/>
-        </div>
-        
-        <Chart/>
-        <ChartList/>
-      <div id="memo1">Memo 1
-            <Webix ui={toolBar()} data="Add Chart" click={addButtonClick}  />
-      </div>
-      <div id="memo2">Memo 2</div>
-      <div id="memo3">Memo 3</div>
-      <div id="memo4">Memo 4</div>
-        <DataView/>
+            <Webix ui={tabview1(this.props)} data={this.props} />
+            <div id="chart2">
+
+                <Chart2 id="chart3" /* title="demo chart 3" */ addFunction={addFunction}/>
+                <Chart2 id="chart4" title="&nbsp;" addFunction={addFunction1}/>
+                <Chart2 id="chart5" title="&nbsp;" addFunction={addFunction1}/>
+            </div>
+            
+              <Chart/>
+              <ChartList/>
+            <div id="memo1">Memo 1
+                  <Webix ui={toolBar()} data="Add Chart" click={addButtonClick}  />
+            </div>
+            <div id="memo2">Memo 2</div>
+            <div id="memo3">Memo 3</div>
+            <div id="memo4">Memo 4</div>
+              <DataView/>
         </div>
     )
   }

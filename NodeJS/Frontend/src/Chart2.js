@@ -156,9 +156,13 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
   }
 
   const addVarPoint = (x,y) => {
-    xds.append(x, y);
-    xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
+      xds.append(x, y);
+      xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
+  }
 
+  const addVarPoint2 = (x,y) => {
+        xds1.append(x, y);
+        xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
   }
 
   const startDemo = () => {
@@ -201,7 +205,7 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     // sciChartSurface.renderableSeries.items[0].isVisible = false
   }
 
-    return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addLine, removeLine, addVarPoint } };
+    return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addLine, removeLine, addVarPoint, addVarPoint2 } };
   }
 
   const webixButton = () => {
@@ -233,7 +237,7 @@ const WebixButton12 = () => {
 
 
 export default function Chart(props) {
-  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addLine: () =>{}, removeLine: () =>{} , addVarPoint: () =>{} });
+  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addLine: () =>{}, removeLine: () =>{} , addVarPoint: () =>{}, addVarPoint2: () =>{}});
 
   React.useEffect(() => {
     (async () => {
@@ -258,11 +262,11 @@ export default function Chart(props) {
     let currentChartID = props.id+"_"+suffixChartID;
     return (
         <Row id={props.id}  style={{ visibility:"hidden" }} >
-              <Col className = "c1" xs={10}  > 
+              <Col className = "chart1" xs={10}  > 
               {props.title}
-              <div id={currentChartID} style={{ width:"auto", height: 300, margin: "auto"}} ></div>
+              <div id={currentChartID} style={{ width:"auto", height: 200, margin: "auto"}} ></div>
               </Col>
-              <Col className = "c2" xs={2}   > 
+              <Col className = "chart2" xs={2}   > 
               <div>&nbsp;</div>
                 <Webix ui={webixButton()} data="Start" click={controls.startDemo} />
                 <Webix ui={webixButton()} data="Stop" click={controls.stopDemo} />

@@ -38,22 +38,42 @@
 }
 
 .leftMenu {
-    width: 30%;
-    height: 350px;
+    /* width: 20%; */
     /* background-color: red; */
     float: left;
 }
 
 .mainMenu {
-    width: 70%;
+    /* width: 80%; */
     /* background-color: rgb(206, 178, 178); */
     float: left;
 }
 
 .c1 {
     /* background-color: red; */
+    width: 23%;
+    float: left;
 }
 
 .c2 {
     /* background-color: saddlebrown; */
+    width: 77%;
+    float: right;
+}
+
+.c3 {
+    background-color: #9a9a9a;
+    height: 50px;
+}
+
+.chart1 {
+    /* background-color: red; */
+    /* width: 23%;
+    float: left; */
+}
+
+.chart2 {
+    /* background-color: saddlebrown; */
+    /* width: 77%;
+    float: right; */
 }
