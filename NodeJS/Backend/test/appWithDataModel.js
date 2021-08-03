@@ -8,7 +8,7 @@ const expressSrv = Express();
 const jsonParser = Express.json();
 
 const {Model, SysInterfacesEnum}  = require("./data_model/model.js");
-let model = new Model();
+let model = new Model('127.0.0.1');
 
 const apiController = require("./controllers/apicontroller.js");
 

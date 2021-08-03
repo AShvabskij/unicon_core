@@ -6,9 +6,10 @@ let msgCounter_ = 0;
 // import { Model } from "./data_model/fr_model.mjs";
 // import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 
-const {Model, SysInterfacesEnum}  = require("./data_model/fr_model.mjs");
+const  {Model, SysInterfacesEnum}  = require("./data_model/fr_model.mjs");
 
-let model = new Model();
+let model = new Model('127.0.0.1');
+model.init();
 
 model.on('system_status', function(res) {
     console.log(`System status chnaged to ${res}`);
@@ -27,8 +28,7 @@ document.getElementById("model_load").addEventListener('click', function (e) {
     model.clear();
 
     model.load().then(result => {
-        console.log(result);
-        model.enablePeriodicCheck();
+        console.log(result)//        model.enablePeriodicCheck();
     }, error => {
         console.log(error);
     });
@@ -142,7 +142,7 @@ document.getElementById("get_param_data").addEventListener('click', function (e)
     });
 });
 
-document.getElementById("stream_param_data").addEventListener('click', function (e) {
+document.getElementById("stream_param_data").addEventListener('click', async function (e) {
     e.preventDefault();
 
     startTime_ = new Date().getTime();
@@ -160,7 +160,7 @@ document.getElementById("stream_param_data").addEventListener('click', function 
     console.time(`The front streaming elapsed time(${startTime}):`);
 
     let param = model.device(deviceId).param(paramId);
-    let resStream = param.openValueStream();
+    let resStream = await param.openValueStream();
 
     resStream.on('data', chunk => {
         let stringifiedRes = chunk.toString();
@@ -170,11 +170,21 @@ document.getElementById("stream_param_data").addEventListener('click', function 
         var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
         output(message);
 
-        if (paramValue.value == -1) {
-            console.log(`The front streaming is finished. Received ${msgCounter_} objects.`);
-            console.timeEnd(`The front streaming elapsed time(${startTime}):`);
-        }
-
         msgCounter_++;
     });
+
+    resStream.on('end', () => {
+        console.log(`The front streaming is finished. Received ${msgCounter_} objects.`);
+        console.timeEnd(`The front streaming elapsed time(${startTime}):`);
+    });
+
+    resStream.on('close', () => {
+        console.log(`The front streaming is closed. `);
+    });
+
+    resStream.on('error', error => {
+        console.log(`Error while value streaming: ${error}`);
+        console.timeEnd(`The front streaming elapsed time(${startTime}):`);
+    });
+    
 });

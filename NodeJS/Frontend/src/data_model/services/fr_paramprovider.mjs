@@ -1,5 +1,5 @@
 // import {RequestHelper} from "./fr_requesthelper.mjs"
-const RequestHelper = require("./fr_requesthelper.mjs");
+   const { RequestHelper } = require("./fr_requesthelper.mjs");
 
 const REQ_GET_PARAMS = "GET_PARAMS"
 const REQ_GET_PARAMS_DATA = "GET_PARAMS_DATA"
@@ -10,22 +10,35 @@ export class ParamProvider
 {
         static streamIdList = [];
 
-    constructor() 
+    constructor(reqHelper = RequestHelper) 
     {
+        this.m_reqHelper = reqHelper;
+    }
+
+    requestHelper() {
+        return this.m_reqHelper;
+    }
+
+    setRequestHelper(reqHelper = RequestHelper) {
+        this.m_reqHelper = reqHelper;
+    }
+
+    request(cmd) {
+        return this.requestHelper().request(cmd);
     }
 
     async reqParams(deviceId, moduleId) 
     {
         let reqCmd = this._createParamReqCmd(REQ_GET_PARAMS, deviceId, moduleId);
     
-        return RequestHelper.request(reqCmd);
+        return this.request(reqCmd);
     };
 
     async reqParam(deviceId, moduleId, paramId) 
     {
         let reqCmd = this._createParamReqCmd(REQ_GET_PARAMS, deviceId, moduleId, paramId);
     
-        return RequestHelper.request(reqCmd);
+        return this.request(reqCmd);
     };
     
     async reqParamValue(deviceId, moduleId, paramId, stream) 
@@ -53,7 +66,7 @@ export class ParamProvider
             }
         }
     
-        return RequestHelper.request(reqCmd);
+        return this.request(reqCmd);
     };
     
     _createParamReqCmd(reqName, deviceId, moduleId, paramId) 
