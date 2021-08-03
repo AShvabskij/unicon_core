@@ -106,10 +106,11 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
       const opacity = ((1 - ((seriesCount / 120)))*0.5).toFixed(2);
 
       // Populate with some data
+/*      
       for(let i = 0; i < 10000; i++) {
           xyDataSeries.append(i, Math.sin(i* 0.01) * Math.exp(i*(0.00001*(seriesCount+1))));
       }
-
+*/
       // Add and create a line series with this data to the chart
       // Create a line series        
       const lineSeries = new FastLineRenderableSeries(wasmContext, {
@@ -201,7 +202,7 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     // sciChartSurface.renderableSeries.items[0].isVisible = false
   }
 
-    return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addLine, removeLine, addVarPoint } };
+    return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addLine, addPoint, removeLine, addVarPoint } };
   }
 
   const webixButton = () => {

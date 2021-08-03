@@ -55,11 +55,12 @@ export class _RequestHelper {
             this.m_socket.send(cmdStr);
             console.log('sended cmd = ' + cmdStr);
 
-            setTimeout(() => reject({ status: 500, msg: "Request time out" }), 1000)
+            setTimeout(() => reject({ status: 500, msg: `Request time out for cmd = ${cmdStr}` }), 1000)
 
             this.m_socket.onmessage = (message) => {
                 var messageData = JSON.parse(message.data);
                 if (messageData.request_id !== cmd.request_id) {
+                    reject({ status: 500, msg: `Inappropriate response is recevied for the cmd = ${cmdStr}` });
                     return;
                 }
 

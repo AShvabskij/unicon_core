@@ -11,7 +11,7 @@ import DataView from './DataView';
 import { Model } from "./data_model/fr_model.mjs";
 import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 
-let model = new Model('192.168.7.113');
+let model = new Model('127.0.0.1'/*'192.168.7.113'*/);
 model.init();
 
 async function loadDataModel() {
@@ -43,27 +43,84 @@ async function getValue(deviceId, paramId) {
     var paramValue = result;
     var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
     console.log(message);
+  });
 
+  let param = model.device(deviceId).param(paramId);
+  await param.closeValueStream();
+
+  let resStream = await param.openValueStream();
+  if (resStream === undefined || resStream === null) {
+    console.error("Что-то пошло не так...");
+  }
+
+
+  let c3 = window.chartEvents["chart3"];
+  let c4 = window.chartEvents["chart4"];
+
+/*  
+  const intervalAddPoint = 40;
+
+  setInterval(c3.addPoint, intervalAddPoint);
+  setInterval(c4.addPoint, intervalAddPoint);
+*/
+  let i = 0;
+  resStream.on('data', chunk => {
+
+/*    
+    i++;
+    let xValue = i;
+    let yValue = Math.cos(i * 0.01) * Math.sin((i + 150) * 0.01) * (1 + 0.5 * Math.random());
+    c3.addVarPoint(xValue, yValue);
+    c4.addVarPoint(xValue, yValue);
+*/
+        //  console.log(`Received from stream: ${JSON.stringify(chunk)}`);
+        let value = chunk;
+        // let xValue = (value.valueTime & 0xFFFF) * 0.05;
+        let xValue = value.valueTime - startDate.getTime();
+        let yValue = value.value;
+//      console.log (xValue +","+ yValue);
+
+        if (yValue != -1) {
+            c3.addVarPoint(xValue, yValue);
+            c3.addVarPoint2(xValue, yValue);
+
+//          c4.addVarPoint(xValue, yValue);
+        }
+        
+  });
+}
+
+
+async function getValue2(deviceId, paramId) {
+
+  console.log("try to get value...");
+  let startDate = new Date();
+
+  model.device(deviceId).param(paramId).lastValue().then(result => {
+    var paramValue = result;
+    var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
+    console.log(message);
   });
 
   let param = model.device(deviceId).param(paramId);
   await param.closeValueStream();
   let resStream = await param.openValueStream();
+  if (resStream === undefined || resStream === null) {
+    console.error("Что-то пошло не так...");
+  }
 
   resStream.on('data', chunk => {
-    let stringifiedRes = chunk.toString();
-    // console.log(`Received from stream: ${stringifiedRes}`);
-    let value = JSON.parse(stringifiedRes);
+    //  console.log(`Received from stream: ${JSON.stringify(chunk)}`);
+    let value = chunk;
     // let xValue = (value.valueTime & 0xFFFF) * 0.05;
     let xValue = value.valueTime - startDate.getTime();
     let yValue = value.value;
     // console.log (xValue +","+ yValue);
     if (yValue != -1) {
-      window.chartEvents["chart3"].addVarPoint(xValue, yValue);
+      window.chartEvents["chart4"].addVarPoint(xValue, yValue);
     }
   });
 }
-
 
 const paramData = [
   { id: 9, num: "1", name: "Parameter 1 (2110)", value: "1.008", dimension: "W", time: "11:56", chart: "+", numchart: 1 },
@@ -285,14 +342,32 @@ const toolBar = () => {
 
       {
         view: "button", value: "Get values", autowidth: true, align: "center",
-        click: function (id, event) {
+        click: async function (id, event) {
+          console.log("Get values");
+          let deviceId = 1;
+          let paramId = 65;
+          await getValue(deviceId, paramId);
+          //          await getValue(1, 66);
+          //          await getValue(1, 67);
+
+          //          await getValue2(12, 65);
+          //          await getValue(12, 66);
+          //          await getValue(12, 67);
+
+          //          await getValue(23, 65);
+          //          await getValue(23, 66);
+          //          await getValue(23, 67);
+        }
+      },
+      {
+        view: "button", value: "Get values2", autowidth: true, align: "center",
+        click: async function (id, event) {
           console.log("Get values");
           let deviceId = 12;
           let paramId = 65;
-          getValue(deviceId, paramId);
+          await getValue2(deviceId, paramId);
         }
       },
-
     ]
   }
 }
