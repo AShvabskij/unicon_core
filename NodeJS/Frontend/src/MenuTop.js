@@ -34,16 +34,14 @@ async function loadDataModel() {
 
 }
 
-async function getValue(deviceId, paramId) {
+async function stopValues(deviceId, paramId) {
+  let param = model.device(deviceId).param(paramId);
+  await param.closeValueStream();
+}
 
-  console.log("try to get value...");
+async function startValues(deviceId, paramId, line) {
+  console.log("try to get value streams...");
   let startDate = new Date();
-
-  model.device(deviceId).param(paramId).lastValue().then(result => {
-    var paramValue = result;
-    var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
-    console.log(message);
-  });
 
   let param = model.device(deviceId).param(paramId);
   await param.closeValueStream();
@@ -53,73 +51,47 @@ async function getValue(deviceId, paramId) {
     console.error("Что-то пошло не так...");
   }
 
-
-  let c3 = window.chartEvents["chart3"];
-  let c4 = window.chartEvents["chart4"];
-
-/*  
-  const intervalAddPoint = 40;
-
-  setInterval(c3.addPoint, intervalAddPoint);
-  setInterval(c4.addPoint, intervalAddPoint);
-*/
-  let i = 0;
   resStream.on('data', chunk => {
 
-/*    
-    i++;
-    let xValue = i;
-    let yValue = Math.cos(i * 0.01) * Math.sin((i + 150) * 0.01) * (1 + 0.5 * Math.random());
-    c3.addVarPoint(xValue, yValue);
-    c4.addVarPoint(xValue, yValue);
-*/
-        //  console.log(`Received from stream: ${JSON.stringify(chunk)}`);
-        let value = chunk;
-        // let xValue = (value.valueTime & 0xFFFF) * 0.05;
-        let xValue = value.valueTime - startDate.getTime();
-        let yValue = value.value;
-//      console.log (xValue +","+ yValue);
+    let values = chunk;
+    let xValues = [];
+    let yValues = [];
 
-        if (yValue != -1) {
-            c3.addVarPoint(xValue, yValue);
-            c3.addVarPoint2(xValue, yValue);
+    for (var j = 0; j < values.length; j++) {
+      let value = values[j];
 
-//          c4.addVarPoint(xValue, yValue);
-        }
-        
+      let xValue = value.valueTime - startDate.getTime();
+      let yValue = value.value;
+
+      if (yValue == -1) {
+        break;
+      }
+
+      xValues.push(xValue);
+      yValues.push(yValue);
+    }
+
+    if (xValues.length == 0 || yValues.length == 0) {
+      return;
+    }
+
+    drawValueRange(window.chartEvents["chart3"], xValues, yValues, line);
+    drawValueRange(window.chartEvents["chart4"], xValues, yValues, line)
+    drawValueRange(window.chartEvents["chart5"], xValues, yValues, line)
+
   });
 }
 
-
-async function getValue2(deviceId, paramId) {
-
-  console.log("try to get value...");
-  let startDate = new Date();
-
-  model.device(deviceId).param(paramId).lastValue().then(result => {
-    var paramValue = result;
-    var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
-    console.log(message);
-  });
-
-  let param = model.device(deviceId).param(paramId);
-  await param.closeValueStream();
-  let resStream = await param.openValueStream();
-  if (resStream === undefined || resStream === null) {
-    console.error("Что-то пошло не так...");
-  }
-
-  resStream.on('data', chunk => {
-    //  console.log(`Received from stream: ${JSON.stringify(chunk)}`);
-    let value = chunk;
-    // let xValue = (value.valueTime & 0xFFFF) * 0.05;
-    let xValue = value.valueTime - startDate.getTime();
-    let yValue = value.value;
-    // console.log (xValue +","+ yValue);
-    if (yValue != -1) {
-      window.chartEvents["chart4"].addVarPoint(xValue, yValue);
+let _interval = 5;
+function drawValueRange(graph, xValues, yValues, line) {
+  _interval = _interval >= 15 ? 5 : _interval + 5;
+  setTimeout(() => {
+    if (line == 1) {
+      graph.addVarPointRange(xValues, yValues)
+    } else {
+      graph.addVarPointRange2(xValues, yValues)
     }
-  });
+  }, _interval);
 }
 
 const paramData = [
@@ -253,7 +225,7 @@ function tabview1(props) {
             showChart("chart2", "memo1");
             showElementChart("chart3");
             showElementChart("chart4")
-
+            showElementChart("chart5")
           }
 
           if (id == "controlContent") {
@@ -323,12 +295,26 @@ const toolBar = () => {
       },
       {
         view: "button", value: "Stop", autowidth: true, align: "center",
-        click: function (id, event) {
+        click: async function (id, event) {
           console.log(window.chartEvents);
           for (var chart in window.chartEvents) {
             // console.log(chart);
+            let deviceId = 1;
+            let paramId = 65;
             window.chartEvents[chart].stopDemo();
+            await stopValues(deviceId, paramId);
           }
+        }
+      },
+
+      {
+        view: "button", value: "Start values", autowidth: true, align: "center",
+        click: async function (id, event) {
+          console.log("Start values");
+          let deviceId = 1;
+          let paramId = 65;
+          startValues(deviceId, paramId, 1);
+          startValues(23, paramId + 1, 2);
         }
       },
 
@@ -340,34 +326,6 @@ const toolBar = () => {
         }
       },
 
-      {
-        view: "button", value: "Get values", autowidth: true, align: "center",
-        click: async function (id, event) {
-          console.log("Get values");
-          let deviceId = 1;
-          let paramId = 65;
-          await getValue(deviceId, paramId);
-          //          await getValue(1, 66);
-          //          await getValue(1, 67);
-
-          //          await getValue2(12, 65);
-          //          await getValue(12, 66);
-          //          await getValue(12, 67);
-
-          //          await getValue(23, 65);
-          //          await getValue(23, 66);
-          //          await getValue(23, 67);
-        }
-      },
-      {
-        view: "button", value: "Get values2", autowidth: true, align: "center",
-        click: async function (id, event) {
-          console.log("Get values");
-          let deviceId = 12;
-          let paramId = 65;
-          await getValue2(deviceId, paramId);
-        }
-      },
     ]
   }
 }
@@ -419,11 +377,10 @@ export default class MenuTop extends React.Component {
       <div>
         <Webix ui={tabview1(this.props)} data={this.props} />
         <div id="chart2">
-          {/*             
-            <Webix ui={webixButton({width:"150"})} data="Add Chart" click={addButtonClick} />
-            <Webix ui={webixButton({width:"150"})} data="Remove Chart" click={removeButtonClick} /> */}
-          <Chart2 id="chart3" title="demo chart 3" addFunction={addFunction} />
-          <Chart2 id="chart4" title="demo chart 4" addFunction={addFunction1} />
+
+          <Chart2 id="chart3" /* title="demo chart 3" */ addFunction={addFunction} />
+          <Chart2 id="chart4" title="&nbsp;" addFunction={addFunction1} />
+          <Chart2 id="chart5" title="&nbsp;" addFunction={addFunction1} />
         </div>
 
         <Chart />
@@ -438,7 +395,7 @@ export default class MenuTop extends React.Component {
       </div>
     )
   }
-}
+};
 
 
 // export default MenuCenter;

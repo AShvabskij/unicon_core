@@ -10,28 +10,28 @@ var devices = {
   //     { height:10 },
   //     { responsive:"devices", 
       margin:10, padding:0, type:"wide",
+      // height: 0,
     view:"flexlayout",
-      
-      
+     
       cols:[ // родительский лейаут для компонента 
             { //view:"button", value:"Device 1", minWidth: 120, align:"center" ,
-              view:"toggle", label:"Device 1", minWidth: 120,
+              view:"toggle", label:"Device 1", minWidth: 90,
               click:function(id,event){
               }
             },
-            { view:"button", value:"Device 2", minWidth: 120, align:"center" ,
+            { view:"button", value:"Device 2", minWidth: 90, align:"center" ,
               click:function(id,event){
               }
             }, // компонент будет перемещен в лейаут "devices"
-            { view:"button", value:"Device 3", minWidth: 150, align:"center" ,
+            { view:"button", value:"Device 3", minWidth: 90, align:"center" ,
               click:function(id,event){
               }
             }, // компонент будет перемещен в лейаут "devices"
-            { view:"button", value:"Device 4", minWidth: 150, align:"center" ,
+            { view:"button", value:"Device 4", minWidth: 90, align:"center" ,
               click:function(id,event){
               }
           }, // компонент будет перемещен в лейаут "devices"
-          { view:"button", value:"Device 5", minWidth: 150, align:"center" ,
+          { view:"button", value:"Device 5", minWidth: 90, align:"center" ,
             click:function(id,event){
             }
           } 
@@ -45,94 +45,6 @@ var devices = {
   
 };
 
-function getUI(select){
-  return {
-    view:"slider"
-  };
-}
-
-function getUI1(props){
-  const cells = [
-    { header:"<span class='webix_icon mdi mdi-file-video'></span>List", body:{
-      view:"list",
-      template:"#rank#. #title# <div style='padding-left:18px'> Year:#year#, votes:#votes# </div>",
-      type:{
-        height:60
-      },
-      select:true
-      
-    }},
-    { header:"<span class='webix_icon mdi mdi-comment'></span>Form", body:{
-      template:"Place for the form control"
-    }},
-    { header:"<span class='webix_icon mdi mdi-help-circle'></span>About", body:{
-      template:"About the app"
-    }}
-  ];
-
-  const data = {
-    cells:[
-      {
-        id:"listView",
-        view:"list",
-        template:"#rank#. #title# <div style='padding-left:18px'> Year:#year#, votes:#votes# </div>",
-        type:{
-          height:60
-        },
-        select:true,
-       
-      },
-      {
-        id:"formView",
-        template:"Place for the form control"
-      },
-      {
-        id:"aboutView",
-        template:"About the app"
-      }
-    ]
-  };
-  
-    return {
-
-        "view": "tabbar",
-        // "id" : "top:toolbar1",
-        "options": [
-          { value:"Parameters 1", id:"data3",  icon:"wxi-pencil" },
-          { value:"Оscilloscope", id:"chart3",  icon:"wxi-pencil" },
-          { value:"Control", id:"device_manage",  icon:"wxi-pencil" },
-          { value:"Info", id:"data_m",  icon:"wxi-pencil" },
-        ],
-        cells:cells,
-        on:{
-          
-          onChange: function(newValue, oldValue, config){
-            // config is {yourProperty: "yourValue"}
-            console.log("onChange ->>>>>>>>>>>");
-            console.log(newValue);
-            props.onClickMenu("3");
-            //avp.updateDevice(newValue);
-            // avp.baseTableUpdate();
-          }
-        }
-  }
-}
-
-function getUI2(select){
-  return {
-    view:"datatable", scroll:false, width:0, autoheight:true, select:true, columns:[
-      { id:"name", header:"name" },
-      // { id:"email", fillspace:1 },
-      // { id:"age", width: 50 }
-    ],
-    on:{
-      onAfterSelect:function(id){
-        console.log(" onAfterSelect ->>>>>>>>>>>");
-        //select(id);
-      }
-    },
-  };
-}
 
 var menu_acc = {
   view:"menu", 
@@ -175,6 +87,9 @@ var menuaccordeon ={
  // id:"top:accordion", 
   // type:"wide",
   width: 0,
+  // height: 0,
+  minHeight:400,
+  maxHeight:0,
   multi : false,
   collapsed:true,
   rows:[
@@ -195,26 +110,12 @@ var menuaccordeon ={
 function getUI3(props){
 
   const cells = [
-    { header:"<span class='webix_icon mdi mdi-file-video'></span>Can",
-    id:"can",
-
+    { header:"<span class='webix_icon mdi mdi-file-video'></span>UNICON",
+    id:"unicon",
+    maxwidth: "25%",
     body: 
       menuaccordeon
-    
-      
-      
-    },
-    { header:"<span class='webix_icon mdi mdi-comment'></span>MBus", 
-    id:"can2",
-    body:{
-      template:"Place for the form control"
-    }},
-    { header:"<span class='webix_icon mdi mdi-help-circle'></span>FO", 
-    id:"can3",
-    body:{
-      template:"About the app",
-      select:true
-    }}
+    }
   ];
 
 
@@ -228,13 +129,6 @@ function getUI3(props){
   }
 
 }
-const LeftMenu = ({ data, select }) => (
-  <Webix ui={getUI2(select)} data={data} />
-)
-const LeftMenu1 = ({ data }) => (
-  <Webix ui={getUI1()} data={data} />
-)
-
 
 
 export default class MenuLeft extends React.Component {

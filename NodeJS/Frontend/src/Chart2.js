@@ -14,6 +14,8 @@ import { ZoomExtentsModifier } from "scichart/Charting/ChartModifiers/ZoomExtent
 import { ENumericFormat } from "scichart/types/NumericFormat";
 import { EAutoRange } from "scichart/types/AutoRange";
 import { NumberRange } from "scichart/Core/NumberRange";
+import { WaveAnimation } from "scichart/Charting/Visuals/RenderableSeries/Animations/WaveAnimation";
+
 import Webix from './Webix';
 import * as webix from 'webix/webix.js';
 
@@ -47,7 +49,7 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     // Create an X,Y Axis and add to the chart
     const xAxis = new NumericAxis(wasmContext,{ autoRange: EAutoRange.Once });
     //xAxis.autoRange = EAutoRange.Once;
-    //xAxis.visibleRangeLimit = new NumberRange(1, 10000);
+    // xAxis.visibleRangeLimit = new NumberRange(1, 10000);
 
    
     const yAxis = new NumericAxis(wasmContext,{ autoRange: EAutoRange.Always });
@@ -66,18 +68,20 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
       new YAxisDragModifier({ dragMode: EDragMode.Panning }),
       new ZoomExtentsModifier()
   );
-  
+
     const lineSeries = new FastLineRenderableSeries(wasmContext, {
       stroke: "orange",
       strokeThickness: 4,
+      animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
     });
 
     const lineSeries1 = new FastLineRenderableSeries(wasmContext, {
-      stroke: "blue",
-      strokeThickness: 2,
+      stroke: "red",
+      strokeThickness: 4,
+      animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
     });
 
-    lineSeries.strokeThickness = 3;
+    lineSeries.strokeThickness = 4;
     sciChartSurface.renderableSeries.add(lineSeries);
     sciChartSurface.renderableSeries.add(lineSeries1);
     //const xds = XyDataSeries;
@@ -157,10 +161,24 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
   }
 
   const addVarPoint = (x,y) => {
-    xds.append(x, y);
-    xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
-
+      xds.append(x, y);
+      xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
   }
+
+  const addVarPointRange = (xValues = [], yValues = []) => {
+    xds.appendRange(xValues, yValues);
+    xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
+}
+
+  const addVarPoint2 = (x,y) => {
+        xds1.append(x, y);
+//      xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
+  }
+
+  const addVarPointRange2 = (xValues = [], yValues = []) => {
+    xds1.appendRange(xValues, yValues);
+//  xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
+}
 
   const startDemo = () => {
     console.log("startDemo");
@@ -202,7 +220,7 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     // sciChartSurface.renderableSeries.items[0].isVisible = false
   }
 
-    return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addLine, addPoint, removeLine, addVarPoint } };
+    return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addLine, removeLine, addVarPoint, addVarPoint2, addVarPointRange, addVarPointRange2 } };
   }
 
   const webixButton = () => {
@@ -234,7 +252,7 @@ const WebixButton12 = () => {
 
 
 export default function Chart(props) {
-  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addLine: () =>{}, removeLine: () =>{} , addVarPoint: () =>{} });
+  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addLine: () =>{}, removeLine: () =>{} , addVarPoint: () =>{}, addVarPoint2: () =>{}});
 
   React.useEffect(() => {
     (async () => {
@@ -259,11 +277,11 @@ export default function Chart(props) {
     let currentChartID = props.id+"_"+suffixChartID;
     return (
         <Row id={props.id}  style={{ visibility:"hidden" }} >
-              <Col className = "c1" xs={10}  > 
+              <Col className = "chart1" xs={10}  > 
               {props.title}
-              <div id={currentChartID} style={{ width:"auto", height: 300, margin: "auto"}} ></div>
+              <div id={currentChartID} style={{ width:"auto", height: 200, margin: "auto"}} ></div>
               </Col>
-              <Col className = "c2" xs={2}   > 
+              <Col className = "chart2" xs={2}   > 
               <div>&nbsp;</div>
                 <Webix ui={webixButton()} data="Start" click={controls.startDemo} />
                 <Webix ui={webixButton()} data="Stop" click={controls.stopDemo} />
