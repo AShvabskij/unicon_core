@@ -18,6 +18,8 @@ const ERROR_RESPONSE = {
     msg: ""
 }
 
+let _g = 0;
+
 export class SysInterfacesEnum {
     static Can = 1;
     static CanOpen = 2;
@@ -41,7 +43,7 @@ let _messageDataLength = 0
 
 const STREAM_SERVER_PORT = 1237;
 const RECEIVED_DATA_ERROR = "Received data error!";
-const STREAM_BUFFER_OBJECTS = 1;
+const STREAM_BUFFER_OBJECTS = 50;
 const CAPTURED_PARAMS_MAX = 12;
 
 export class Model extends Events {
@@ -94,6 +96,11 @@ export class Model extends Events {
         };
 
         this.streamSocket.onmessage = (message) => {
+            if (!this.loaded()) {
+                console.warn("The model is not loaded!");
+                return;
+            }
+
             var messageData = JSON.parse(message.data);
             // console.log(message.data);
 
@@ -189,6 +196,11 @@ export class Model extends Events {
             }
         });
     }
+
+    loaded() {
+        return this.m_devices.length > 0;
+    }
+
 
     enablePeriodicCheck() {
         if (checkstatusIntervalId > 0) {
@@ -327,6 +339,8 @@ class Param {
         this.value = new ParamValue();
 
         this.stream = null;
+        this.buffer = [];
+        this.buffIndex = 0;
 
         this.lastError = 0;
 
@@ -370,6 +384,12 @@ class Param {
             this._byteCount = 0;
             this._msgCount = 0;
 
+            this.buffIndex = 0;
+            this.buffer = [];
+            for (var i = 0; i < STREAM_BUFFER_OBJECTS; i++) {
+                this.buffer[i] = new ParamValue();
+            }
+
             this.stream = new Stream.Readable({
                 highWaterMark: STREAM_BUFFER_OBJECTS,
                 objectMode: true,
@@ -381,6 +401,7 @@ class Param {
             this.value = new ParamValue()
 
             await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream);
+            
         } catch (error) {
             this.value = new ParamValue()
             this.lastError = error;
@@ -419,7 +440,7 @@ class Param {
             return;
         }
 
-        let pValue = new ParamValue();
+        let pValue = this.buffer[this.buffIndex];//new ParamValue();
         pValue.paramId = this.id;
         pValue.deviceId = this.deviceId;
         pValue.value = valueData.value;
@@ -440,19 +461,25 @@ class Param {
             console.log(`The param stream is finished, device id = ${this.deviceId}, param id = ${this.id}, received items = ${this._msgCount}, bytes = ${this._byteCount}`);
             console.timeEnd(`The stream elapsed time(${this._timeLabel})`);
 
+            this.buffer.splice(this.buffIndex)
+            this.stream.push(this.buffer);
             this.stream.push(null);
             this.stream.destroy();
 
             return;
         }
 
-        //          console.log(`Received: ${JSON.stringify(pValue)}`);
+        // console.log(`Received: ${JSON.stringify(pValue)}`);
         this._byteCount += _messageDataLength;
         this._msgCount++;
 
-        // this.stream.push(JSON.stringify(pValue));
-        this.stream.push(pValue);
+//      this.buffer[this.buffIndex] = pValue;
+        this.buffIndex++;
 
+        if (this.buffIndex >= STREAM_BUFFER_OBJECTS) {
+            this.stream.push(this.buffer);
+            this.buffIndex = 0;
+        }
     }
 
     lastError() {

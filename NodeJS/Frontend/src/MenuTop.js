@@ -83,13 +83,13 @@ async function startValues(deviceId, paramId, line) {
 }
 
 let _interval = 5;
-function drawValueRange(graph, xValues, yValues, line) {
+function drawValueRange(chart, xValues, yValues, line) {
   _interval = _interval >= 15 ? 5 : _interval + 5;
   setTimeout(() => {
     if (line == 1) {
-      graph.addVarPointRange(xValues, yValues)
+      chart.addVarPointRange(xValues, yValues)
     } else {
-      graph.addVarPointRange2(xValues, yValues)
+      chart.addVarPointRange2(xValues, yValues)
     }
   }, _interval);
 }
