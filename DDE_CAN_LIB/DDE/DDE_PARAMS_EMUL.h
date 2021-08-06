@@ -7,12 +7,27 @@
 #define PARAMS_REQUEST_TIMOUT_MS	1000
 #define DDE_PARAMS_NAME_LENGTH 64
 
+struct DEVICE_EMUL_SETTINGS
+{
+    DEVICE_EMUL_SETTINGS() {}
+    DEVICE_EMUL_SETTINGS(int a, int f, float n)
+    {
+        amplitude = a;
+        frequency_hertz = f;
+        noise = n;
+    }
+    int dev_ID;
+
+    int amplitude = 0;
+    int frequency_hertz = 1;
+    float noise = 0;
+};
+
 struct PARAMS_EMUL_SETTINGS
 {
-    uint16_t param_ID;
-
-    uint16_t amplitude = 0;
-    uint16_t frequency_hertz = 1;
+    int amplitude = 0;
+    int frequency_hertz = 1;
+    float noise = 0;
 
     bool isSinusoidal = true;
 };
@@ -45,7 +60,7 @@ private:
     DEVICE_PARAMS_EMUL device[64]; //not more than 64 devices
     uint32_t devices_count;
 
-    std::thread*thr_params;
+    std::thread* thr_params;
     //std::queue <GLIO_ELEMENT> msg_queue;
     std::list <DDE_GET_PARAMS_DATA> request_list;
     int thread_proc();
