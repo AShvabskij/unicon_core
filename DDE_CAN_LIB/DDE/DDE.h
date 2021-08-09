@@ -53,6 +53,7 @@ public:
 protected: // Protected members are accessible in the class that defines them and in classes that inherit from that class.
     IDDE_PARAMS *m_params;
     IDDE_OSC *m_osc;
+    IDDE_OSC *m_mvcp;
     IDDE_EVLOG *m_evlog;
 };
 
