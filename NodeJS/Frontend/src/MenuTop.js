@@ -12,7 +12,6 @@ import DataView from './DataView';
 import { Model } from "./data_model/fr_model.mjs";
 import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 
-
 let model = new Model('192.168.7.113');
 model.init();
 
@@ -51,66 +50,65 @@ async function loadDataModel() {
 
 }
 
-async function getValue(deviceId, paramId) {
+async function stopValues(deviceId, paramId) {
+  let param = model.device(deviceId).param(paramId);
+  await param.closeValueStream();
+}
 
-  console.log("try to get value...");
+async function startValues(deviceId, paramId, line) {
+  console.log("try to get value streams...");
   let startDate = new Date();
-
-  model.device(deviceId).param(paramId).lastValue().then(result => {
-    var paramValue = result;
-    var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
-    console.log(message);
-
-  });
 
   let param = model.device(deviceId).param(paramId);
   await param.closeValueStream();
+
   let resStream = await param.openValueStream();
+  if (resStream === undefined || resStream === null) {
+    console.error("Что-то пошло не так...");
+  }
 
   resStream.on('data', chunk => {
-    let stringifiedRes = chunk.toString();
-    // console.log(`Received from stream: ${stringifiedRes}`);
-    let value = JSON.parse(stringifiedRes);
-    // let xValue = (value.valueTime & 0xFFFF) * 0.05;
-    let xValue = value.valueTime - startDate.getTime();
-    let yValue = value.value;
-    // console.log (xValue +","+ yValue);
-    if (yValue != -1) {
-      window.chartEvents["chart3"].addVarPoint(xValue, yValue);
+
+    let values = chunk;
+    let xValues = [];
+    let yValues = [];
+
+    for (var j = 0; j < values.length; j++) {
+      let value = values[j];
+
+      let xValue = value.valueTime - startDate.getTime();
+      let yValue = value.value;
+
+      if (yValue == -1) {
+        break;
+      }
+
+      xValues.push(xValue);
+      yValues.push(yValue);
     }
+
+    if (xValues.length == 0 || yValues.length == 0) {
+      return;
+    }
+
+    drawValueRange(window.chartEvents["chart3"], xValues, yValues, line);
+    drawValueRange(window.chartEvents["chart4"], xValues, yValues, line)
+    drawValueRange(window.chartEvents["chart5"], xValues, yValues, line)
+
   });
 }
 
-async function getValue2(deviceId, paramId) {
-
-    console.log("try to get value...");
-    let startDate = new Date();
-    
-    model.device(deviceId).param(paramId).lastValue().then(result => {
-      var paramValue = result;
-      var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
-      console.log(message);
-
-    });
-
-    let param = model.device(deviceId).param(paramId);
-    await param.closeValueStream();
-    let resStream = await param.openValueStream();
-  
-    resStream.on('data', chunk => {
-      let stringifiedRes = chunk.toString();
-      // console.log(`Received from stream: ${stringifiedRes}`);
-      let value = JSON.parse(stringifiedRes);
-      // let xValue = (value.valueTime & 0xFFFF) * 0.05;
-      let xValue = value.valueTime - startDate.getTime();
-      let yValue = value.value;
-      // console.log (xValue +","+ yValue);
-      if (yValue != -1) {
-        window.chartEvents["chart3"].addVarPoint2(xValue,yValue);
-      }
-    });
-  }
-
+let _interval = 5;
+function drawValueRange(chart, xValues, yValues, line) {
+  _interval = _interval >= 15 ? 5 : _interval + 5;
+  setTimeout(() => {
+    if (line == 1) {
+      chart.addVarPointRange(xValues, yValues)
+    } else {
+      chart.addVarPointRange2(xValues, yValues)
+    }
+  }, _interval);
+}
 
 // const paramData = [
 //   { id: 9, num: "1", name: "Parameter 1 (2110)", value: "1.008", dimension: "W", time: "11:56", chart: "+", numchart: 1 },
@@ -336,37 +334,29 @@ const toolBar = () => {
       },
       {
         view: "button", value: "Stop", autowidth: true, align: "center",
-        click: function (id, event) {
+        click: async function (id, event) {
           console.log(window.chartEvents);
           for (var chart in window.chartEvents) {
             // console.log(chart);
+            let deviceId = 1;
+            let paramId = 65;
             window.chartEvents[chart].stopDemo();
+            await stopValues(deviceId, paramId);
           }
         }
       },
 
-        { view:"button", value:"Get values", autowidth: true, align:"center" ,
-          click:function(id,event){
-            console.log("Get values");
-            let deviceId = 12;
-            let paramId = 65;
-            getValue(deviceId, paramId);
-            // paramId = 66;
-            // getValue(deviceId, paramId);
-          } 
-        },
+      {
+        view: "button", value: "Start values", autowidth: true, align: "center",
+        click: async function (id, event) {
+          console.log("Start values");
+          let deviceId = 1;
+          let paramId = 65;
+          startValues(deviceId, paramId, 1);
+          startValues(23, paramId + 1, 2);
+        }
+      },
 
-        { view:"button", value:"Get values 2", autowidth: true, align:"center" ,
-          click:function(id,event){
-            console.log("Get values 2");
-            let deviceId = 12;
-            let paramId = 66;
-            getValue2(deviceId, paramId);
-            // paramId = 66;
-            // getValue(deviceId, paramId);
-          } 
-        },
-    
       {
         view: "button", value: "Load data", autowidth: true, align: "center",
         click: function () {
@@ -440,9 +430,7 @@ export default class MenuTop extends React.Component {
 
   };
   render() {
-
-    
-    
+   
     const leftMenuInfo = () => {
       // arr_devices = loadDataInterface([]);
       let arr_devices = [];
@@ -500,6 +488,11 @@ export default class MenuTop extends React.Component {
             <div id="memo4">Memo 4</div>
               <DataView data={this.state.dt}/>
         </div>
+        <div id="memo2">Memo 2</div>
+        <div id="memo3">Memo 3</div>
+        <div id="memo4">Memo 4</div>
+        <DataView />
+      </div>
     )
   }
 };

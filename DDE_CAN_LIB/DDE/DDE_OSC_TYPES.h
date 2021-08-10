@@ -14,16 +14,16 @@ struct OSC_CHANNEL_DESCR
 };
 struct OSC_CH_DATA
 {
-    uint32_t buff[0xffff];
+    float buff[0x10000];
 };
 
 struct OSC_SETTING
 {
     //OSC_CHANNEL_DESCR ch[32];
     uint32_t time_resolution_ns; // 1000 = 1us
-    uint32_t triger_mode;
+    uint32_t triger_mode; //single, continues, stream
     uint32_t reason;
-    tm trig_time;
+    tm trig_time; // osc starting time
 };
 
 #define OSC_MODE_BUFFERING
@@ -35,16 +35,16 @@ struct DDE_GET_OSC_HEADER
     OSC_SETTING settings;
 
     uint16_t page_size;		//
-    uint16_t page_number;	//bytes
+    uint16_t page_number;	// bytes
     uint32_t ready;			//
 };
 
 struct DDE_GET_OSC_DATA
 {
-    uint32_t header_updated;		//if flag is set update the header, clear screen and draw data
-    uint16_t data_length;		// сколько данных запрашиваем
-    uint16_t overflow;			// TODO consider log
-    bool next_ready; // готовность следующего фрейма данных
+    uint32_t header_updated;    //if flag is set update the header, clear screen and draw data
+    uint16_t data_length;   // The length of a data in OSC_CH_DATA
+    uint16_t overflow;  // flag if  buffer is overflowed (for debugging only)
+    bool next_ready;    // flag if next data frame is ready
     OSC_CH_DATA ch_data[32];
 };
 
@@ -58,8 +58,8 @@ class IDDE_OSC
 public:
     ~IDDE_OSC() {};
 
-    virtual int get(DDE_GET_OSC_HEADER& p, void* callback_func) = 0;
-    virtual int get(DDE_GET_OSC_DATA& p, void* callback_func) = 0;
-    virtual int set(DDE_SET_OSC_DATA& p, void* callback_func) = 0;
+    virtual int get(DDE_GET_OSC_HEADER& p) = 0;
+    virtual int get(DDE_GET_OSC_DATA& p) = 0;
+    virtual int set(DDE_GET_OSC_HEADER& p) = 0;
 };
 

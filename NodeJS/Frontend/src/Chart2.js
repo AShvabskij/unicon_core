@@ -14,6 +14,8 @@ import { ZoomExtentsModifier } from "scichart/Charting/ChartModifiers/ZoomExtent
 import { ENumericFormat } from "scichart/types/NumericFormat";
 import { EAutoRange } from "scichart/types/AutoRange";
 import { NumberRange } from "scichart/Core/NumberRange";
+import { WaveAnimation } from "scichart/Charting/Visuals/RenderableSeries/Animations/WaveAnimation";
+
 import Webix from './Webix';
 import * as webix from 'webix/webix.js';
 
@@ -47,7 +49,7 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     // Create an X,Y Axis and add to the chart
     const xAxis = new NumericAxis(wasmContext,{ autoRange: EAutoRange.Once });
     //xAxis.autoRange = EAutoRange.Once;
-    //xAxis.visibleRangeLimit = new NumberRange(1, 10000);
+    // xAxis.visibleRangeLimit = new NumberRange(1, 10000);
 
    
     const yAxis = new NumericAxis(wasmContext,{ autoRange: EAutoRange.Always });
@@ -66,18 +68,20 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
       new YAxisDragModifier({ dragMode: EDragMode.Panning }),
       new ZoomExtentsModifier()
   );
-  
+
     const lineSeries = new FastLineRenderableSeries(wasmContext, {
       stroke: "orange",
       strokeThickness: 4,
+      animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
     });
 
     const lineSeries1 = new FastLineRenderableSeries(wasmContext, {
-      stroke: "blue",
-      strokeThickness: 2,
+      stroke: "red",
+      strokeThickness: 4,
+      animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
     });
 
-    lineSeries.strokeThickness = 3;
+    lineSeries.strokeThickness = 4;
     sciChartSurface.renderableSeries.add(lineSeries);
     sciChartSurface.renderableSeries.add(lineSeries1);
     //const xds = XyDataSeries;
@@ -106,10 +110,11 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
       const opacity = ((1 - ((seriesCount / 120)))*0.5).toFixed(2);
 
       // Populate with some data
+/*      
       for(let i = 0; i < 10000; i++) {
           xyDataSeries.append(i, Math.sin(i* 0.01) * Math.exp(i*(0.00001*(seriesCount+1))));
       }
-
+*/
       // Add and create a line series with this data to the chart
       // Create a line series        
       const lineSeries = new FastLineRenderableSeries(wasmContext, {
@@ -160,10 +165,20 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
       xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
   }
 
+  const addVarPointRange = (xValues = [], yValues = []) => {
+    xds.appendRange(xValues, yValues);
+    xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
+}
+
   const addVarPoint2 = (x,y) => {
         xds1.append(x, y);
-        xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
+//      xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
   }
+
+  const addVarPointRange2 = (xValues = [], yValues = []) => {
+    xds1.appendRange(xValues, yValues);
+//  xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
+}
 
   const startDemo = () => {
     console.log("startDemo");
@@ -205,7 +220,7 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     // sciChartSurface.renderableSeries.items[0].isVisible = false
   }
 
-    return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addLine, removeLine, addVarPoint, addVarPoint2 } };
+    return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addLine, removeLine, addVarPoint, addVarPoint2, addVarPointRange, addVarPointRange2 } };
   }
 
   const webixButton = () => {

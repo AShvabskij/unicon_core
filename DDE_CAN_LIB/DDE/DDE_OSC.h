@@ -9,11 +9,10 @@ public:
 	DDE_OSC();
 	~DDE_OSC();
 
-	virtual int get(DDE_GET_OSC_HEADER& p, void* callback_func);
-	virtual int get(DDE_GET_OSC_DATA& p, void* callback_func);
-	virtual int set(DDE_SET_OSC_DATA& p, void* callback_func);
+    virtual int get(DDE_GET_OSC_HEADER& p);
+    virtual int get(DDE_GET_OSC_DATA& p);
+    virtual int set(DDE_GET_OSC_HEADER& p);
 
 private:
 
 };
-

@@ -14,23 +14,26 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 
 	//2) fill with names devices
 
-    static uint16_t amplitude = 5;
-    static uint16_t frequency_hertz = 1;
+    int devices_count = 6;
+    int devices_step = 11;
 
-	for (int ii = 1; ii < 33; ii=ii+11)
-	{
-		devices_count++;
+    DEVICE_EMUL_SETTINGS dev_settings[64];
+    dev_settings[1] = {15, 5, 0.0001};
+    dev_settings[12] = {10, 25, 0.0001};
+    dev_settings[23] = {10, 50, 0.00005};
+    dev_settings[34] = {20, 7, 0.00005};
+    dev_settings[45] = {25, 1, 0.0000001};
+    dev_settings[56] = {25, 1, 0.0000001};
+
+    for (int ii = 1; ii < devices_count * devices_step; ii = ii + devices_step)	{
 		device[ii].device_ID = ii;
 		sprintf(device[ii].name, "Device Power Unit Type %d", ii);
 		
-		
 		string s;
-
 		int param_count = 2;// (rand() / RAND_MAX) * 60 + 3;
 
 		//fill device with random params
-		for (int jj = 0; jj <=param_count; jj++)
-		{
+        for (int jj = 0; jj <= param_count; jj++) {
 			s = "module_" + to_string(jj);
 			for (int subix = 0; subix < 4; subix++) {
 				int param_ID = (jj << 6) + subix;
@@ -39,19 +42,19 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 				device[ii].el[param_ID].format = GLIO_ELEMENT_FORMAT::FORMAT_INT;
 				device[ii].el[param_ID].ivalue = -1;
 				device[ii].el[param_ID].fvalue = -1;
+
 				string s1;
 				s1 = s + "_param_"+ to_string(subix);
 				strcpy(device[ii].el_descr[param_ID].name, s1.c_str());
 				device[ii].el[param_ID].scale = 0;
 				device[ii].el[param_ID].timestamp = 0;
 
-                device[ii].el_Settings[param_ID].amplitude = amplitude + subix;
-                device[ii].el_Settings[param_ID].frequency_hertz = frequency_hertz;
+                device[ii].el_Settings[param_ID].amplitude = dev_settings[ii].amplitude + subix;
+                device[ii].el_Settings[param_ID].frequency_hertz = dev_settings[ii].frequency_hertz;
+                device[ii].el_Settings[param_ID].noise = dev_settings[ii].noise;
                 device[ii].el_Settings[param_ID].isSinusoidal = true;
 			}
 		}
-        amplitude++;
-        frequency_hertz++;
 	}
 
 	this->get_list_maxsize = 10; // fifo_size;
@@ -257,13 +260,16 @@ float DDE_PARAMS_EMUL::generateValue(uint16_t device_ID, uint16_t param_ID, time
 {
     const float f = device[device_ID].el_Settings[param_ID].frequency_hertz; // set freq heer (Гц)
     const float a = device[device_ID].el_Settings[param_ID].amplitude; // set amplitude heer
+    float noise = device[device_ID].el_Settings[param_ID].noise;
 
     const float pi = 3.14159274;
     float w = (2 * pi * f);
 
     float t = (timeMsc & 0xFFFF) * 0.001;
-    float res = a * sin(w * t);
+    float rnd = 1 + noise*((rand()%100)/(100*1.0));
+    float res = /*cos(++g * 0.00001) */ a * sin((w * t * rnd));
 
+    // Math.cos(_g * 0.01) * Math.sin((_g + 150) * 0.01) * (1 + 0.5 * Math.random()); //;
     return res;
 }
 

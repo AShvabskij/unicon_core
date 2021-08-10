@@ -18,8 +18,6 @@ const ERROR_RESPONSE = {
     msg: ""
 }
 
-let _g = 0;
-
 export class SysInterfacesEnum {
     static Can = 1;
     static CanOpen = 2;
@@ -39,12 +37,16 @@ class StatusEnum {
 }
 
 let checkstatusIntervalId = 0;
-let _messageDataLength = 0
-
 const STREAM_SERVER_PORT = 1237;
+
+// Переменные для измерения производительности
+let byteCount = 0;
+let msgCount = 0;
+
+let timeLabel = new Date().getTime();
+let startTime = new Date().getTime();
+
 const RECEIVED_DATA_ERROR = "Received data error!";
-const STREAM_BUFFER_OBJECTS = 50;
-const CAPTURED_PARAMS_MAX = 12;
 
 export class Model extends Events {
     constructor(srvHost) {
@@ -53,10 +55,9 @@ export class Model extends Events {
         this.m_name = 'Unicon';
         this.m_devices = [];
         this.m_trends = [];
+        this.m_capturedParam = new Param();
         this.m_inited = false;
         this.m_host = srvHost;
-
-        this._capturedParams = [];
 
         this.paramProvider = new ParamProvider(RequestHelper);
         this.deviceProvider = new DeviceProvider(RequestHelper);
@@ -96,50 +97,81 @@ export class Model extends Events {
         };
 
         this.streamSocket.onmessage = (message) => {
-            if (!this.loaded()) {
-                console.warn("The model is not loaded!");
-                return;
-            }
-
             var messageData = JSON.parse(message.data);
             // console.log(message.data);
-
+    
             let valueData = messageData.value;
             let deviceId = messageData.d_id;
             let paramId = messageData.p_id;
 
-            _messageDataLength = message.data.length;
-
-            this._streamParamValue(deviceId, paramId, valueData);
+            if (valueData === undefined || deviceId === undefined || paramId === undefined) {
+                console.log(RECEIVED_DATA_ERROR);
+                this.emit('error', RECEIVED_DATA_ERROR);
+                return;
+            }
+    
+            byteCount += message.data.length;
+            msgCount++;
+    
+            this.pushValue(deviceId, paramId, valueData);
         };
 
         this.m_inited = true;
     }
 
-    _streamParamValue(deviceId, paramId, valueData) {
-        let param = this._capturedParams.find((item) => {
-            return item.id === paramId && item.deviceId === deviceId
-        });
+    pushValue(deviceId, paramId, valueData) {
 
-        if (param === undefined) {
-            param = this.device(deviceId).param(paramId);
-            if (param !== undefined) {
-                if (this._capturedParams.length > CAPTURED_PARAMS_MAX) {
-                    console.info("Clearing captured params cache");
-                    this._capturedParams = [];
-                }
+        if (this.m_capturedParam.id != paramId || this.m_capturedParam.deviceId != deviceId) {
+            console.log("devices = " + this.m_devices.length);
 
-                this._capturedParams.push(param);
+            let device = this.device(deviceId);
+            if (device == undefined || device == null) {
+                console.warn(`device ${deviceId} error!`)
+                return;
             }
+
+            this.m_capturedParam = this.device(deviceId).param(paramId);
         }
 
-        if (param === undefined || valueData == undefined) {
-            console.log(RECEIVED_DATA_ERROR);
-            this.emit('error', RECEIVED_DATA_ERROR);
+        let pValue = new ParamValue();
+        pValue.paramId = this.m_capturedParam.id;
+        pValue.deviceId = this.m_capturedParam.deviceId;
+        pValue.value = valueData.value;
+        pValue.valueFormat = valueData.format;
+        pValue.valueTime = valueData.time;
+        pValue.scale = valueData.scale;
+
+        let currTime = new Date().getTime();
+        let pValueDeltaTime = pValue.valueTime > 0 ? currTime - pValue.valueTime : 0
+
+        if (pValueDeltaTime > 50) {
+            console.warn(`Param value actuality = ${pValueDeltaTime}`)
+        }
+
+        const timeDelta = currTime - startTime;
+        const isFinished = (pValue.value == -1);
+
+        if (timeDelta >= 1000 || isFinished === true) {
+            console.log(`Received ${byteCount} bytes, ${msgCount} items per ${timeDelta}ms`);
+            startTime = currTime;
+        }
+
+        if (isFinished === true) {
+            console.log(`The stream is finished`);
+            console.timeEnd(`The stream elapsed time(${timeLabel}):`);
+
+            byteCount = 0;
+            msgCount = 0;
+
+            this.m_capturedParam.stream.push(null);
+            this.m_capturedParam.stream.destroy();
+
+            this.m_capturedParam = new Param();
             return;
         }
 
-        param.streamValue(valueData);
+        //          console.log(`Received: ${JSON.stringify(pValue)}`);
+        this.m_capturedParam.stream.push(JSON.stringify(pValue));        
     }
 
     async load() {
@@ -150,7 +182,7 @@ export class Model extends Events {
                     let err = "The data model is not inited yet. Will be inited now."
                     console.warn(err);
                     this.init();
-                    //                  reject({ status: 500, msg: err });
+//                  reject({ status: 500, msg: err });
                 }
 
                 let devices = await this.deviceProvider.reqDevices();
@@ -197,11 +229,6 @@ export class Model extends Events {
         });
     }
 
-    loaded() {
-        return this.m_devices.length > 0;
-    }
-
-
     enablePeriodicCheck() {
         if (checkstatusIntervalId > 0) {
             return;
@@ -223,10 +250,6 @@ export class Model extends Events {
     }
 
     disablePeriodicCheck() {
-        if (checkstatusIntervalId === 0) {
-            return;
-        }
-
         clearInterval(checkstatusIntervalId);
         checkstatusIntervalId = 0;
     }
@@ -236,7 +259,6 @@ export class Model extends Events {
 
         this.m_devices = [];
         this.m_trends = [];
-        this._capturedParams = [];
     }
 
     device(id) {
@@ -338,19 +360,13 @@ class Param {
         this.desc = '';
         this.value = new ParamValue();
 
-        this.stream = null;
-        this.buffer = [];
-        this.buffIndex = 0;
+        this.stream = new Stream.Readable({
+            read() { }
+        });
 
         this.lastError = 0;
 
         this.paramProvider = new ParamProvider();
-
-        // Переменные для измерения производительности
-        this._byteCount = 0;
-        this._msgCount = 0;
-
-        this._timeLabel = new Date().getTime();
     }
 
     async lastValue() {
@@ -378,21 +394,11 @@ class Param {
 
     async openValueStream() {
         try {
-
-            this._timeLabel = new Date().getTime();
-            console.time(`The stream elapsed time(${this._timeLabel})`);
-            this._byteCount = 0;
-            this._msgCount = 0;
-
-            this.buffIndex = 0;
-            this.buffer = [];
-            for (var i = 0; i < STREAM_BUFFER_OBJECTS; i++) {
-                this.buffer[i] = new ParamValue();
-            }
+            timeLabel = new Date().getTime();
+            startTime = new Date().getTime();
+            console.time(`The stream elapsed time(${timeLabel}):`);
 
             this.stream = new Stream.Readable({
-                highWaterMark: STREAM_BUFFER_OBJECTS,
-                objectMode: true,
                 read() { }
             });
 
@@ -401,11 +407,10 @@ class Param {
             this.value = new ParamValue()
 
             await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream);
-            
         } catch (error) {
             this.value = new ParamValue()
             this.lastError = error;
-            console.error(error);
+            console.log(error);
         }
 
         return this.stream;
@@ -413,72 +418,13 @@ class Param {
 
     async closeValueStream() {
         try {
-
             let stream = "off";
-
             await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream)
+            this.stream.push(null);
 
-            if (this.stream === null) {
-                return;
-            }
-
-            if (!this.stream.destroyed) {
-                this.stream.push(null);
-                this.stream.destroy();
-            }
             this.lastError = 0;
-
         } catch (error) {
             this.lastError = error;
-        }
-    }
-
-    streamValue(valueData) {
-
-        if (this.stream === null || this.stream.destroyed) {
-            console.warn(`Receiving value error. The param stream is deactivated now. Device id = ${this.deviceId}, param id = ${this.id}, value = ${JSON.stringify(valueData)}`);
-            return;
-        }
-
-        let pValue = this.buffer[this.buffIndex];//new ParamValue();
-        pValue.paramId = this.id;
-        pValue.deviceId = this.deviceId;
-        pValue.value = valueData.value;
-        pValue.valueFormat = valueData.format;
-        pValue.valueTime = valueData.time;
-        pValue.scale = valueData.scale;
-
-        let currTime = new Date().getTime();
-        let pValueDeltaTime = pValue.valueTime > 0 ? currTime - pValue.valueTime : 0
-
-        if (pValueDeltaTime > 50) {
-            console.warn(`Param value actuality = ${pValueDeltaTime}`)
-        }
-
-        const isFinished = (pValue.value == -1);
-
-        if (isFinished === true) {
-            console.log(`The param stream is finished, device id = ${this.deviceId}, param id = ${this.id}, received items = ${this._msgCount}, bytes = ${this._byteCount}`);
-            console.timeEnd(`The stream elapsed time(${this._timeLabel})`);
-
-            this.buffer.splice(this.buffIndex)
-            this.stream.push(this.buffer);
-            this.stream.push(null);
-            this.stream.destroy();
-
-            return;
-        }
-
-        // console.log(`Received: ${JSON.stringify(pValue)}`);
-        this._byteCount += _messageDataLength;
-        this._msgCount++;
-
-//      this.buffer[this.buffIndex] = pValue;
-        this.buffIndex++;
-
-        if (this.buffIndex >= STREAM_BUFFER_OBJECTS) {
-            this.stream.push(this.buffer);
-            this.buffIndex = 0;
         }
     }
 
