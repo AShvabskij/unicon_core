@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import logo from "./logo.svg";
 import "./App.css";
@@ -9,32 +9,10 @@ import Home from './Home';
 import MenuTop from './MenuTop';
 import MenuLeft from './MenuLeft';
 import DataView from './DataView';
+import { accordionInit } from './data/config.js';
 // import Chart from './ChartInteract';
 // import Chart2 from './Chart2';
-// import MenuTest from './MenuTest';
-// import MenuInfo from './MenuInfo';
-// import MenuDemo from './MenuDemo';
 
-/* const {Model, SysInterfacesEnum}  = require("./data_model/model.js");
-let model = new Model();
-
-const deviceId = 12;
-const paramId = 65;
-
-async function loaderDataModel() {
-  
-  let param = model.device(deviceId).param(paramId);
-  let resStream = await param.openValueStream();
-
-  resStream.on('data', chunk => {
-    let stringifiedRes = chunk.toString();
-    console.log(`Received from stream: ${stringifiedRes}`);
-
-    // if (frontWebSocket) {
-    //   frontWebSocket.send(stringifiedRes);
-    // }
-  });
-}  */
 
 function App() {
   // React.useEffect(() => {
@@ -43,17 +21,20 @@ function App() {
   // }, []);
   //loaderDataModel();
   window.chartEvents = [];
+
+  // const [name, setName] = useState("");
+  const [devicesD, setDevicesName] = useState(accordionInit);
+
  return (
-    
-    <div className="App">
+  <div className="App">
       <div className="c1">
-          <MenuLeft />
+          <div><span class='webix_icon mdi mdi-file-video'></span>UNICON</div>
+          <MenuLeft devtitle={devicesD}/>
       </div>
 
       <div className="c2">
-          <MenuTop />
+          <MenuTop updateDevices={setDevicesName}/>
       </div>
-
       {/* <div className="c3">
 
           123
@@ -70,7 +51,6 @@ function App() {
               
         </Row>
  */}
-     
       
     </div>
   );

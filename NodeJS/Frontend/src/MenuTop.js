@@ -1,5 +1,6 @@
 import 'webix/webix.css';
 import Webix from './Webix';
+import {$$} from 'webix';
 import * as webix from 'webix/webix.js';
 // import Chart from "./Chart2";
 import React from "react";
@@ -11,8 +12,22 @@ import DataView from './DataView';
 import { Model } from "./data_model/fr_model.mjs";
 import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 
+
 let model = new Model('192.168.7.113');
 model.init();
+
+function loadDataInterface(devices) {
+  let res = [];
+  devices.forEach(device => {
+    res.push(device.name);
+  });
+  // console.log("try to load data model...");
+  return (
+    //  [1243,7088,9624,130,1162,11814,116]
+    res
+  )
+
+}
 
 async function loadDataModel() {
 
@@ -21,7 +36,9 @@ async function loadDataModel() {
   model.clear();
 
   model.load().then(result => {
-    console.log(result);
+    console.log("loadDataModel result");
+    console.log(model.m_devices);
+    // loadDataInterface(model.m_devices);
     // model.enablePeriodicCheck();      
   }, error => {
     console.log(error);
@@ -95,12 +112,35 @@ async function getValue2(deviceId, paramId) {
   }
 
 
-const paramData = [
-  { id: 9, num: "1", name: "Parameter 1 (2110)", value: "1.008", dimension: "W", time: "11:56", chart: "+", numchart: 1 },
-  { id: 10, num: "2", name: "Parameter 2 (2120)", value: "2.7896", dimension: "A", time: "11:56", chart: "+", numchart: 1 },
-  { id: 11, num: "3", name: "Parameter 3 (2130)", value: "8", dimension: "kHz", time: "11:00", chart: "+", numchart: "2" },
-  { id: 7, num: "4", name: "Parameter 4 (2140)", value: "356", dimension: "NO/NC", time: "11:20", chart: "–", numchart: "" }
-];
+// const paramData = [
+//   { id: 9, num: "1", name: "Parameter 1 (2110)", value: "1.008", dimension: "W", time: "11:56", chart: "+", numchart: 1 },
+//   { id: 10, num: "2", name: "Parameter 2 (2120)", value: "2.7896", dimension: "A", time: "11:56", chart: "+", numchart: 1 },
+//   { id: 11, num: "3", name: "Parameter 3 (2130)", value: "8", dimension: "kHz", time: "11:00", chart: "+", numchart: "2" },
+//   { id: 7, num: "4", name: "Parameter 4 (2140)", value: "356", dimension: "NO/NC", time: "11:20", chart: "–", numchart: "" }
+// ];
+
+
+function devicesWebix(devicesArr) {
+  console.log("devicesWebix");
+    console.log(devicesArr);
+  let  devices = { margin:10, padding:0, type:"wide",
+  view:"flexlayout",cols:[]};
+  devicesArr.forEach(function(item, index, array) {
+    console.log(item, index);
+    devices.cols.push( { view:"toggle", label:item, minWidth: 90, css: "webix_primary", 
+      click:function(id,event){
+          // console.log($$(id));
+          let s = $$(id).getParentView();
+          // console.log(s._cells[5]);
+          s._cells.forEach(element => {
+              element.setValue(0);
+          });
+      }
+    })
+  });
+  return devices;
+};
+
 
 function disableEnableElement(id, show) {
   const elem = document.getElementById(id);
@@ -375,15 +415,73 @@ function addFunction1(x) {
   return Math.sin(x * 0.01) * Math.cos(x * 0.01) * (1 + 0.5 * Math.random());
 }
 
+function dataViewtable(params) {
+  let data = [
+    { id:9, num: "1", name:"Parameter 1 (2110)", value:"1.008", dimension:"W", time:"11:56",chart:"+",numchart:1},
+    { id:10, num: "2", name:"Parameter 2 (2120)", value:"2.7896", dimension:"A", time:"11:56",chart:"+",numchart:1},
+    { id:11, num: "3", name:"Parameter 3 (2130)", value:"8", dimension:"kHz", time:"11:00",chart:"+",numchart:"2"},
+    { id:7, num: "4", name:"Parameter 4 (2140)", value:"356", dimension:"NO/NC", time:"11:20",chart:"–",numchart:""}
+  ];
+  return data
+}
+
 export default class MenuTop extends React.Component {
   constructor(props) {
     super(props);
     this.title = "first title"
-    this.state = { title: "state title" };
+    this.state = { title: "state title" , dt:[]};
+    this.updateDevices =  props.updateDevices;
+    this.dataViewtable1 = [];
+
+    model.on('system_status', function (res) {
+      console.log(`System status changed to ${res}`);
+      model.disablePeriodicCheck();
+    });
+
   };
   render() {
+
+    
+    
+    const leftMenuInfo = () => {
+      // arr_devices = loadDataInterface([]);
+      let arr_devices = [];
+      console.log("model.m_devices");
+      console.log(model.m_devices);
+      arr_devices = loadDataInterface(model.m_devices);
+      
+      return (
+          [
+              { header:"Graphic trends", body: ""},
+              { header:"PLC", body: "" },
+              { header:"Logs", body: ""},
+              { header:"Devices", id:"Devices", body: devicesWebix(arr_devices) },
+          ]
+      )
+    }
+    // const leftMenuInfo = [
+    //   { header:"Graphic trends", body: ""},
+    //   { header:"PLC", body: "" },
+    //   { header:"Logs", body: ""},
+    //   { header:"Devices", id:"Devices", body: devicesWebix([1,2,3,4,5,6,7,8,9,10,112,114,116,118,145,1323])}];
+    
     return(
         <div>
+            <Webix ui={webixButton(150)} id="q1" data="Get Devices" click={() => {
+                this.updateDevices(leftMenuInfo());
+                let dt1 = [
+                  { id:9, num: "1", name:"Parameter 1 (2110)", value:"1.008", dimension:"W", time:"11:56",chart:"+",numchart:1},
+                  { id:10, num: "2", name:"Parameter 2 (2120)", value:"2.7896", dimension:"A", time:"11:56",chart:"+",numchart:1},
+                  { id:11, num: "3", name:"Parameter 3 (2130)", value:"8", dimension:"kHz", time:"11:00",chart:"+",numchart:"2"},
+                  { id:7, num: "4", name:"Parameter 4 (2140)", value:"356", dimension:"NO/NC", time:"11:20",chart:"–",numchart:""}
+                ];
+                this.setState((state, props) => ({
+                  dt: dt1
+                }));
+                
+                }
+              }/>
+          
             <Webix ui={tabview1(this.props)} data={this.props} />
             <div id="chart2">
 
@@ -400,7 +498,7 @@ export default class MenuTop extends React.Component {
             <div id="memo2">Memo 2</div>
             <div id="memo3">Memo 3</div>
             <div id="memo4">Memo 4</div>
-              <DataView/>
+              <DataView data={this.state.dt}/>
         </div>
     )
   }
