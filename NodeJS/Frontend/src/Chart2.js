@@ -254,7 +254,7 @@ const WebixButton12 = () => {
 
 
 export default function Chart(props) {
-  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addLine: () =>{}, removeLine: () =>{} , addVarPoint: () =>{}, addVarPoint2: () =>{}});
+  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addLine: () =>{}, removeLine: () =>{} , addVarPoint: () =>{}, addVarPoint2: () =>{}, addVarPointRange: () =>{}, addVarPointRange2: () =>{} });
 
   React.useEffect(() => {
     (async () => {
