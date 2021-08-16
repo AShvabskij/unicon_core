@@ -13,8 +13,11 @@ import { YAxisDragModifier } from "scichart/Charting/ChartModifiers/YAxisDragMod
 import { ZoomExtentsModifier } from "scichart/Charting/ChartModifiers/ZoomExtentsModifier";
 import { ENumericFormat } from "scichart/types/NumericFormat";
 import { EAutoRange } from "scichart/types/AutoRange";
-import { NumberRange } from "scichart/Core/NumberRange";
-import { WaveAnimation } from "scichart/Charting/Visuals/RenderableSeries/Animations/WaveAnimation";
+import { SciChartLegend } from "scichart/Charting/Visuals/Legend/SciChartLegend";
+import { LegendModifier } from "scichart/Charting/ChartModifiers/LegendModifier";
+import { ELegendOrientation, ELegendPlacement } from "scichart/Charting/Visuals/Legend/SciChartLegendBase";
+
+import { NumberRange } from "scichart/Core/NumberRange";import { WaveAnimation } from "scichart/Charting/Visuals/RenderableSeries/Animations/WaveAnimation";
 
 import Webix from './Webix';
 import * as webix from 'webix/webix.js';
@@ -49,7 +52,7 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     // Create an X,Y Axis and add to the chart
     const xAxis = new NumericAxis(wasmContext,{ autoRange: EAutoRange.Once });
     //xAxis.autoRange = EAutoRange.Once;
-    // xAxis.visibleRangeLimit = new NumberRange(1, 10000);
+    //xAxis.visibleRangeLimit = new NumberRange(1, 10000);
 
    
     const yAxis = new NumericAxis(wasmContext,{ autoRange: EAutoRange.Always });
@@ -68,7 +71,7 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
       new YAxisDragModifier({ dragMode: EDragMode.Panning }),
       new ZoomExtentsModifier()
   );
-
+  
     const lineSeries = new FastLineRenderableSeries(wasmContext, {
       stroke: "orange",
       strokeThickness: 4,
@@ -76,7 +79,7 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     });
 
     const lineSeries1 = new FastLineRenderableSeries(wasmContext, {
-      stroke: "red",
+      stroke: "blue",
       strokeThickness: 4,
       animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
     });
@@ -110,11 +113,10 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
       const opacity = ((1 - ((seriesCount / 120)))*0.5).toFixed(2);
 
       // Populate with some data
-/*      
-      for(let i = 0; i < 10000; i++) {
+      /* for(let i = 0; i < 10000; i++) {
           xyDataSeries.append(i, Math.sin(i* 0.01) * Math.exp(i*(0.00001*(seriesCount+1))));
-      }
-*/
+      } */
+
       // Add and create a line series with this data to the chart
       // Create a line series        
       const lineSeries = new FastLineRenderableSeries(wasmContext, {
@@ -172,7 +174,7 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
 
   const addVarPoint2 = (x,y) => {
         xds1.append(x, y);
-//      xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
+        // xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
   }
 
   const addVarPointRange2 = (xValues = [], yValues = []) => {
@@ -259,6 +261,16 @@ export default function Chart(props) {
         const res = await initSciChart(props.id,props.addFunction);
         scs = res.sciChartSurface;
         setControls(res.controls);
+        const lm = new LegendModifier({
+          placement: ELegendPlacement.TopLeft,
+          orientation: ELegendOrientation.Vertical,
+          showLegend: true,
+          showCheckboxes: true,
+          showSeriesMarkers: true
+        });
+
+        res.sciChartSurface.chartModifiers.add(lm);
+        
         // if (props.id) { 
         //   this.id = props.id
            window.chartEvents[props.id] = res.controls;

@@ -7,21 +7,27 @@ import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
 
 function getUImainMenu(props) {
-	return { view:"datatable", 
+	return { view:"treetable", // "datatable"
 			// width:0,
 			// height:0,
-			id: "dataview",
+			// id: "dataview",
+      id: "parametersGrid",
 			height:353,
 			columns:[
-				{id:"num", header:"Number"},
-				{id:"name", header:"Name", width:"300"},
-				{id:"value", header:"Value", width:"130"},
+				{id:"programmInt", header:"PI", width:"130",
+          template:"{common.treetable()} #programmInt#"},
+        {id:"num", header:"Nº", width:"40"},
+        // {id:"device", header:"deviceID", width:"70"},
+        {id:"modul", header:"modulID", width:"70"},
+        {id:"idP", header:"ID", width:"50"},
+        {id:"name", header:"Name", fillspace:true}, //width:"250"
+				{id:"value", header:"Value", width:"90"},
 				{id:"dimension", header:"Dimension"},
 				{id:"time", header:"Time"},
-				{id:"chart", header:"Show on chart", width:"150"},
-				{id:"numchart", header:"Number of chart", width:"200"}
+				{id:"chart", header:"Show on chart", width:"130"},
+				{id:"numchart", header:"Number of chart", width:"130"}
 			],
-			autoConfig:true, 
+			// autoConfig:true, 
       // css:"webix_shadow_medium" 
 			};
 	// this.ui.$$("tree").parse(data.tree());

@@ -36,7 +36,7 @@ async function loadDataModel() {
 
   model.load().then(result => {
     console.log("loadDataModel result");
-    console.log(model.m_devices);
+    // console.log(model.m_devices);
     // loadDataInterface(model.m_devices);
     // model.enablePeriodicCheck();      
   }, error => {
@@ -49,6 +49,7 @@ async function loadDataModel() {
   });
 
 }
+
 
 async function stopValues(deviceId, paramId) {
   let param = model.device(deviceId).param(paramId);
@@ -110,6 +111,67 @@ function drawValueRange(chart, xValues, yValues, line) {
   }, _interval);
 }
 
+
+async function getValue(deviceId, paramId) {
+
+  console.log("try to get value...");
+  let startDate = new Date();
+
+  model.device(deviceId).param(paramId).lastValue().then(result => {
+    var paramValue = result;
+    var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
+    console.log(message);
+
+  });
+
+  let param = model.device(deviceId).param(paramId);
+  await param.closeValueStream();
+  let resStream = await param.openValueStream();
+
+  resStream.on('data', chunk => {
+    let stringifiedRes = chunk.toString();
+    // console.log(`Received from stream: ${stringifiedRes}`);
+    let value = JSON.parse(stringifiedRes);
+    // let xValue = (value.valueTime & 0xFFFF) * 0.05;
+    let xValue = value.valueTime - startDate.getTime();
+    let yValue = value.value;
+    // console.log (xValue +","+ yValue);
+    if (yValue != -1) {
+      window.chartEvents["chart3"].addVarPoint(xValue, yValue);
+    }
+  });
+}
+
+async function getValue2(deviceId, paramId) {
+
+    console.log("try to get value...");
+    let startDate = new Date();
+    
+    model.device(deviceId).param(paramId).lastValue().then(result => {
+      var paramValue = result;
+      var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
+      console.log(message);
+
+    });
+
+    let param = model.device(deviceId).param(paramId);
+    await param.closeValueStream();
+    let resStream = await param.openValueStream();
+  
+    resStream.on('data', chunk => {
+      let stringifiedRes = chunk.toString();
+      // console.log(`Received from stream: ${stringifiedRes}`);
+      let value = JSON.parse(stringifiedRes);
+      // let xValue = (value.valueTime & 0xFFFF) * 0.05;
+      let xValue = value.valueTime - startDate.getTime();
+      let yValue = value.value;
+      // console.log (xValue +","+ yValue);
+      if (yValue != -1) {
+        window.chartEvents["chart3"].addVarPoint2(xValue,yValue);
+      }
+    });
+  }
+
 // const paramData = [
 //   { id: 9, num: "1", name: "Parameter 1 (2110)", value: "1.008", dimension: "W", time: "11:56", chart: "+", numchart: 1 },
 //   { id: 10, num: "2", name: "Parameter 2 (2120)", value: "2.7896", dimension: "A", time: "11:56", chart: "+", numchart: 1 },
@@ -118,21 +180,47 @@ function drawValueRange(chart, xValues, yValues, line) {
 // ];
 
 
-function devicesWebix(devicesArr) {
-  console.log("devicesWebix");
-    console.log(devicesArr);
+function devicesWebix(devicesArr, component) {
+  // console.log("devicesWebix");
+  //   console.log(devicesArr);
   let  devices = { margin:10, padding:0, type:"wide",
   view:"flexlayout",cols:[]};
   devicesArr.forEach(function(item, index, array) {
-    console.log(item, index);
-    devices.cols.push( { view:"toggle", label:item, minWidth: 90, css: "webix_primary", 
+    // console.log(item, index);
+    devices.cols.push( { view:"toggle", label:item.name, minWidth: 90, height: 70, css: "webix_primary", modules: item.modules,
       click:function(id,event){
+          // console.log(id,event);
           // console.log($$(id));
-          let s = $$(id).getParentView();
-          // console.log(s._cells[5]);
-          s._cells.forEach(element => {
+          let s = $$(id);
+          console.log(s.config.modules);
+          let dt1 = [];
+          let dtt = [];
+          let i = 1;
+          let j = 1;
+          s.config.modules.forEach(function(item, index, array) {
+            console.log(item.params);
+            dtt = [];
+              item.params.forEach(function(itemP, indexP, array) {
+                // if(=="Can")
+                dtt.push({id: i, programmInt:itemP.deviceId, idP:itemP.id, num: i, modul: itemP.moduleId, name:itemP.name, 
+                value:"1.008", dimension:"W", time:"11:56", chart:"+", numchart:1})
+                i++;
+              });
+            dt1.push({"id":"modul"+j,"programmInt":item.id, "open":"true", "data":dtt});
+            j++;
+          });
+           console.log(dt1);
+          //  console.log(component);
+
+          component.setState((state, props) => ({
+                  dt: [{"id":"can","programmInt":"Can", "open":"false", "data":dt1}]
+                }));
+
+          let s1 = $$(id).getParentView();
+          s1._cells.forEach(element => {
               element.setValue(0);
           });
+          
       }
     })
   });
@@ -188,7 +276,7 @@ function showChart(chartID, parentID) {
   if (sc.parentElement.id != parentID) {
     m.appendChild(sc)
   }
-  console.log(sc.parentElement);
+  // console.log(sc.parentElement);
 
 }
 
@@ -274,8 +362,8 @@ function tabview1(props) {
         },
         onChange: function (newValue, oldValue, config) {
           // config is {yourProperty: "yourValue"}
-          console.log(this);
-          console.log("----->>>>>>" + this.getValue());
+          // console.log(this);
+          // console.log("----->>>>>>" + this.getValue());
           // var chart1 = document.getElementById("wwwqqq");
           // console.log(chart1);
           //avp.updateDevice();
@@ -286,8 +374,8 @@ function tabview1(props) {
       onChange: function (newValue, oldValue, config) {
         // config is {yourProperty: "yourValue"}
         //console.log(this);
-        console.log("!!!!!----->>>>>>" + newValue);
-        console.log("!!!!!----->>>>>>" + oldValue);
+        // console.log("!!!!!----->>>>>>" + newValue);
+        // console.log("!!!!!----->>>>>>" + oldValue);
         // var chart1 = document.getElementById("wwwqqq");
         // console.log(chart1);
         //avp.updateDevice();
@@ -360,7 +448,7 @@ const toolBar = () => {
       {
         view: "button", value: "Load data", autowidth: true, align: "center",
         click: function () {
-          console.log("Load data");
+          // console.log("Load data");
           loadDataModel();
         }
       },
@@ -377,8 +465,8 @@ const webixButton = (props = { width: "100" }) => {
       css: "webix_primary",
       inputWidth: props.width,
       click: function (id, event) {
-        console.log("webixButton");
-        console.log(this.onclickMessage);
+        // console.log("webixButton");
+        // console.log(this.onclickMessage);
         this.onclickMessage();
       }
     }
@@ -386,12 +474,12 @@ const webixButton = (props = { width: "100" }) => {
 }
 
 const addButtonClick = () => {
-  console.log("addButtonClick");
+  // console.log("addButtonClick");
   showElementChart("chart4");
 }
 
 const removeButtonClick = () => {
-  console.log("addButtonClick");
+  // console.log("addButtonClick");
   showElementChart("chart4", "hidden");
 }
 
@@ -409,10 +497,8 @@ function dataViewtable(params) {
   let data = [
     { id:9, num: "1", name:"Parameter 1 (2110)", value:"1.008", dimension:"W", time:"11:56",chart:"+",numchart:1},
     { id:10, num: "2", name:"Parameter 2 (2120)", value:"2.7896", dimension:"A", time:"11:56",chart:"+",numchart:1},
-    { id:11, num: "3", name:"Parameter 3 (2130)", value:"8", dimension:"kHz", time:"11:00",chart:"+",numchart:"2"},
-    { id:7, num: "4", name:"Parameter 4 (2140)", value:"356", dimension:"NO/NC", time:"11:20",chart:"–",numchart:""}
   ];
-  return data
+  return { title: "state title" , dt:params}
 }
 
 export default class MenuTop extends React.Component {
@@ -420,30 +506,35 @@ export default class MenuTop extends React.Component {
     super(props);
     this.title = "first title"
     this.state = { title: "state title" , dt:[]};
+    // this.state = dataViewtable([]);
     this.updateDevices =  props.updateDevices;
     this.dataViewtable1 = [];
 
-    model.on('system_status', function (res) {
-      console.log(`System status changed to ${res}`);
-      model.disablePeriodicCheck();
-    });
+    // model.on('system_status', function (res) {
+    //   console.log(`System status changed to ${res}`);
+    //   model.disablePeriodicCheck();
+    // });
 
   };
   render() {
-   
+
+    let component = this;
+    
     const leftMenuInfo = () => {
       // arr_devices = loadDataInterface([]);
       let arr_devices = [];
-      console.log("model.m_devices");
-      console.log(model.m_devices);
-      arr_devices = loadDataInterface(model.m_devices);
+      // console.log("model.m_devices");
+      // console.log(model.m_devices);
+      // console.log(model);
+      
+      // arr_devices = loadDataInterface(model.m_devices);
       
       return (
           [
               { header:"Graphic trends", body: ""},
               { header:"PLC", body: "" },
               { header:"Logs", body: ""},
-              { header:"Devices", id:"Devices", body: devicesWebix(arr_devices) },
+              { header:"Devices", id:"Devices", body: devicesWebix(model.m_devices, component) },
           ]
       )
     }
@@ -458,14 +549,15 @@ export default class MenuTop extends React.Component {
             <Webix ui={webixButton(150)} id="q1" data="Get Devices" click={() => {
                 this.updateDevices(leftMenuInfo());
                 let dt1 = [
-                  { id:9, num: "1", name:"Parameter 1 (2110)", value:"1.008", dimension:"W", time:"11:56",chart:"+",numchart:1},
-                  { id:10, num: "2", name:"Parameter 2 (2120)", value:"2.7896", dimension:"A", time:"11:56",chart:"+",numchart:1},
+                  { id:9, num: "1", name:"Parameter 10 (2110)", value:"1.008", dimension:"W", time:"11:56",chart:"+",numchart:1},
+                  { id:10, num: "2", name:"Parameter 20 (2120)", value:"2.7896", dimension:"A", time:"11:56",chart:"+",numchart:1},
                   { id:11, num: "3", name:"Parameter 3 (2130)", value:"8", dimension:"kHz", time:"11:00",chart:"+",numchart:"2"},
                   { id:7, num: "4", name:"Parameter 4 (2140)", value:"356", dimension:"NO/NC", time:"11:20",chart:"–",numchart:""}
                 ];
-                this.setState((state, props) => ({
-                  dt: dt1
-                }));
+                console.log("webixButton click");
+                // this.setState((state, props) => ({
+                //   dt: dt1
+                // }));
                 
                 }
               }/>
@@ -480,7 +572,7 @@ export default class MenuTop extends React.Component {
             
               <Chart/>
               <ChartList/>
-            <div id="memo1">Memo 1
+            <div id="memo1">{/* Memo 1 */}
                   <Webix ui={toolBar()} data="Add Chart" click={addButtonClick}  />
             </div>
             <div id="memo2">Memo 2</div>
@@ -488,11 +580,6 @@ export default class MenuTop extends React.Component {
             <div id="memo4">Memo 4</div>
               <DataView data={this.state.dt}/>
         </div>
-        <div id="memo2">Memo 2</div>
-        <div id="memo3">Memo 3</div>
-        <div id="memo4">Memo 4</div>
-        <DataView />
-      </div>
     )
   }
 };
