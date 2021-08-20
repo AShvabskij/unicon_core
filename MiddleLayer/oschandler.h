@@ -119,8 +119,8 @@ private:
     OscHeader m_capturedOsc;
     int m_streamValCount = 0;
     QTimer* m_streamTimer;
-    DDE_GET_OSC_DATA* m_oscRawDataBuff;
-    OscData* m_oscDataBuff;
+    DDE_GET_OSC_DATA* m_oscRawDataBuff; // buffer to receive data from osc
+    OscData* m_oscDataBuff; // buffer to keep data from osc
     int m_dataCounter = 0;
 };
 

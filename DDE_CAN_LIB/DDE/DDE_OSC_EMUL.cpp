@@ -8,16 +8,6 @@ const int BUFFER_MAX = 500;
 const int DATA_YELD_INTERVAL_MSC = 50;
 const int RESOLUTION_NS = (DATA_YELD_INTERVAL_MSC * 1000) / BUFFER_MAX;
 
-DDE_OSC_EMUL::DDE_OSC_EMUL()
-{
-
-}
-
-DDE_OSC_EMUL::~DDE_OSC_EMUL()
-{
-
-}
-
 int DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
 {
     if (p.device_ID != 1) {
@@ -76,9 +66,6 @@ inline time_t DDE_OSC_EMUL::systemTime()
     time_t timeMsc = std::chrono::duration_cast< std::chrono::milliseconds >(
         std::chrono::system_clock::now().time_since_epoch()
     ).count();
-
-    // std::time(&system_time);
-    // std::cout << "time = " << timeMsc << "\n";
 
     return timeMsc;
 }
