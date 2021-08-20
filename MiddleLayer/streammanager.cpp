@@ -16,8 +16,8 @@ int StreamManager::stream(QJsonObject value)
     for (QWebSocket *client : m_clients) {
 
         client->sendTextMessage(strJson);
-//      int bytes = client->bytesToWrite();
-//      QTextStream(stdout) << " bytes to write = " << bytes << "\n" ;
+        int bytes = client->bytesToWrite();
+        QTextStream(stdout) << " bytes to write = " << bytes << "\n" ;
 
         client->flush();
     }

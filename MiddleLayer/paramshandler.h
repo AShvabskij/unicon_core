@@ -80,7 +80,6 @@ private:
     ParamList m_capturedParams;
 
     int m_streamValCount = 0;
-    int m_requestId;
     QTimer* m_streamTimer;
 };
 

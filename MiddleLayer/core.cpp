@@ -8,10 +8,10 @@
 #include "responsemanager.h"
 #include "paramshandler.h"
 #include "devicehandler.h"
+#include "oschandler.h"
 
 Core::Core()
 {
-
 }
 
 Core::~Core()
@@ -25,12 +25,16 @@ void Core::start()
 
     ParamsHandler* params = new ParamsHandler();
     DeviceHandler* device = new DeviceHandler();
+    OscHandler* osc = new OscHandler();
 
     RequestManager::instance()->registerHandler(device);
     RequestManager::instance()->registerHandler(params);
+    RequestManager::instance()->registerHandler(osc);
     ResponseManager::instance()->registerHandler(device);
     ResponseManager::instance()->registerHandler(params);
+    ResponseManager::instance()->registerHandler(osc);
     StreamManager::instance()->registerHandler(params);
+    StreamManager::instance()->registerHandler(osc);
 
     m_cmdServer = new SocketServer(1235);
     m_cmdServer->setRequestManager(RequestManager::instance());

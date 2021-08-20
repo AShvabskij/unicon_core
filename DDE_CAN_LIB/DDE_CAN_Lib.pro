@@ -13,6 +13,7 @@ SOURCES += \
     DDE/DDE.cpp \
     DDE/DDE_EVLOG.cpp \
     DDE/DDE_OSC.cpp \
+    DDE/DDE_OSC_EMUL.cpp \
     DDE/DDE_PARAMS.cpp \
     DDE/DDE_PARAMS_EMUL.cpp \
     DDE_EMUL.cpp \
@@ -24,6 +25,7 @@ HEADERS += \
     DDE/DDE_EVLOG.h \
     DDE/DDE_EVLOG_TYPES.h \
     DDE/DDE_OSC.h \
+    DDE/DDE_OSC_EMUL.h \
     DDE/DDE_OSC_TYPES.h \
     DDE/DDE_PARAMS.h \
     DDE/DDE_PARAMS_EMUL.h \

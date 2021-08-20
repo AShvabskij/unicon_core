@@ -31,6 +31,8 @@ struct OSC_SETTING
 
 struct DDE_GET_OSC_HEADER
 {
+    uint16_t device_ID;
+
     OSC_CHANNEL_DESCR ch_descr[32];
     OSC_SETTING settings;
 
@@ -41,6 +43,8 @@ struct DDE_GET_OSC_HEADER
 
 struct DDE_GET_OSC_DATA
 {
+    uint16_t device_ID;
+
     uint32_t header_updated;    //if flag is set update the header, clear screen and draw data
     uint16_t data_length;   // The length of a data in OSC_CH_DATA
     uint16_t overflow;  // flag if  buffer is overflowed (for debugging only)

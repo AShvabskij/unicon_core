@@ -86,6 +86,21 @@ void MainWindowVM::streamParamValues()
     m_webSocket.sendTextMessage(strJson);
 }
 
+void MainWindowVM::oscParamValues()
+{
+    QJsonObject req;
+    req["request_id"] = PARAM_VALUE_REQUEST_ID;
+    req["cmd"] = createCmd("OSC_PARAM_DATA");
+    req["body"] = createBody("OSC_PARAM_DATA");
+
+    QJsonDocument doc(req);
+//  QByteArray bytes = doc.toJson();
+    QString strJson(doc.toJson(QJsonDocument::Compact));
+
+    m_perfomanceTimer.start();
+    m_webSocket.sendTextMessage(strJson);
+}
+
 QJsonObject MainWindowVM::createCmd(QString name)
 {
     QJsonObject res;
@@ -101,6 +116,9 @@ QJsonObject MainWindowVM::createCmd(QString name)
     } else if (name == "STREAM_PARAM_DATA") {
         res["name"] = "param_data";
         res["type"] = "open_stream";
+    }  else if (name == "OSC_PARAM_DATA") {
+        res["name"] = "osc_data";
+        res["type"] = "open_stream";
     }
 
     return res;
@@ -115,6 +133,9 @@ QJsonObject MainWindowVM::createBody(QString name)
     } else if (name == "GET_PARAM_DATA" || name == "STREAM_PARAM_DATA") {
         res["device_id"] = m_deviceId.toInt();
         res["param_id"] = m_valueParamIndex.toInt();
+    } else if (name == "OSC_PARAM_DATA") {
+        res["device_id"] = m_deviceId.toInt();
+        res["osc_id"] = m_valueParamIndex.toInt();
     } else if (name == "GET_DEVICE") {
         res["device_id"] = m_deviceId.toInt();
     }
@@ -245,6 +266,22 @@ QString MainWindowVM::streamParamValueObjToString(const QJsonObject &obj)
     return res;
 }
 
+QString MainWindowVM::oscDataObjToString(const QJsonObject &obj)
+{
+    QJsonArray values = obj.value("values").toArray();
+    QStringList dvalList;
+    for (const QJsonValueRef& el : values) {
+        QJsonArray valBuffer = el.toArray();
+        double dval = valBuffer[0].toDouble();
+        dvalList << QString("%1").arg(dval);
+    }
+
+    QString res("");
+    res = dvalList.join(" ");
+
+    return res;
+}
+
 void MainWindowVM::onConnected()
 {
     QString msg = "WebSocket connected to " + m_webSocket.peerAddress().toString() + " : " + QString("%1").arg(m_webSocket.peerPort());
@@ -300,7 +337,13 @@ void MainWindowVM::onTextMessageReceived(QString message)
 void MainWindowVM::onStreamTextMessageReceived(QString message)
 {
     QJsonObject obj = QJsonDocument::fromJson(message.toUtf8()).object();
-    QString output = streamParamValueObjToString(obj);
+    QString output("");
+    if (obj.contains("values")) {
+        output = oscDataObjToString(obj);
+    } else {
+        output = streamParamValueObjToString(obj);
+    }
+
     QTextStream(stdout) << output << "\n" ;
 
 //  emit dataReceived(output);

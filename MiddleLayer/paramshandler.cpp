@@ -4,7 +4,7 @@
 const QString CMD_PARAMS_HEADER = "param_header";
 const QString CMD_TYPE = "get";
 const QString CMD_PARAMS_DATA = "param_data";
-const int TIMER_POOLING_INTERVAL_MSC = 5;
+const int DATA_YELD_INTERVAL_MSC = 5;
 const int STREAM_OBJECT_LIMIT = 6000;//*100;
 
 ParamsHandler::ParamsHandler()
@@ -116,7 +116,6 @@ int ParamsHandler::handleOpenStream(const QJsonObject& request)
         return -1;
     }
 
-    m_requestId = requestId;
     int deviceId = cmdBody.value("device_id").toInt();
     int paramId  = cmdBody.value("param_id").toInt();
 
@@ -148,10 +147,6 @@ int ParamsHandler::handleCloseStream(const QJsonObject &request)
         return -1;
     }
 
-    if (m_requestId != requestId) {
-        return -1;
-    }
-
     int deviceId = cmdBody.value("device_id").toInt();
     int paramId  = cmdBody.value("param_id").toInt();
 
@@ -161,8 +156,6 @@ int ParamsHandler::handleCloseStream(const QJsonObject &request)
             break;
         }
     }
-
-    m_requestId = 0;
 
     if (m_capturedParams.isEmpty()) {
         stopPooling();
@@ -202,7 +195,7 @@ void ParamsHandler::startPooling()
 
     m_streamValCount = 0;
 
-    m_streamTimer->setInterval(TIMER_POOLING_INTERVAL_MSC);
+    m_streamTimer->setInterval(DATA_YELD_INTERVAL_MSC);
     m_streamTimer->start();
 
     // connect(this, SIGNAL(requestStreamValue()), this, SLOT(slotTimerAlarm()), Qt::QueuedConnection);

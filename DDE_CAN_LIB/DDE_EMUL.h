@@ -26,10 +26,10 @@ public:
 
 protected:
     IDDE_PARAMS *m_params;
-/*
-    IDDE_OSC_EMUL *m_osc;
-    IDDE_EVLOG_EMUL *m_evlog;
-*/
+
+    IDDE_OSC *m_osc;
+//  IDDE_EVLOG *m_evlog;
+
 private:
 
 };
