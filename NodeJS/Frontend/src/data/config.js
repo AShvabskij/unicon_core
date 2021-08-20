@@ -1,7 +1,7 @@
 export const accordionInit = [
 		{ header:"Graphic trends", body: ""},
         { header:"PLC", body: "" },
-        { header:"Logs", body: ""},
+        { header:"CPLotWeb", body: ""},
         { header:"Devices", body: "" }
 ];
 

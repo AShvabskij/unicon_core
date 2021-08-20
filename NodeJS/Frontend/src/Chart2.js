@@ -19,6 +19,11 @@ import { ELegendOrientation, ELegendPlacement } from "scichart/Charting/Visuals/
 
 import { NumberRange } from "scichart/Core/NumberRange";import { WaveAnimation } from "scichart/Charting/Visuals/RenderableSeries/Animations/WaveAnimation";
 
+// import { EllipsePointMarker } from "scichart/Charting/Visuals/PointMarkers/EllipsePointMarker";
+import { RolloverModifier } from "scichart/Charting/ChartModifiers/RolloverModifier";
+// import { TSciChart } from "scichart/types/TSciChart";
+// import { IXyDataSeriesOptions} from "scichart/Charting/Model/XyDataSeries";
+
 import Webix from './Webix';
 import * as webix from 'webix/webix.js';
 
@@ -31,6 +36,7 @@ let scs: SciChartSurface;
 const visiblePoints = 1000;
 const intervalAddPoint = 40;
 const suffixChartID = "scichart-root2";
+let chartControls = [];
 
 async function initSciChart(chartID , onAddFunction = () => {}) {
     // Below find a trial / BETA key for SciChart.js.
@@ -62,31 +68,55 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     sciChartSurface.xAxes.add(xAxis);
     sciChartSurface.yAxes.add(yAxis);
 
-
-
+    
     sciChartSurface.chartModifiers.add(
       new RubberBandXyZoomModifier(),
       new MouseWheelZoomModifier(),
       new XAxisDragModifier({ dragMode: EDragMode.Panning }),
       new YAxisDragModifier({ dragMode: EDragMode.Panning }),
-      new ZoomExtentsModifier()
+      new ZoomExtentsModifier(),
+      // new RolloverModifier()
   );
-  
+
+  sciChartSurface.chartModifiers.add(new RolloverModifier());
+
+  const firstSeriesData = createDataSeries(wasmContext, 0, { dataSeriesName: "Sinewave A" });
+  const secondSeriesData = createDataSeries(wasmContext, 1);
+
+
     const lineSeries = new FastLineRenderableSeries(wasmContext, {
       stroke: "orange",
       strokeThickness: 4,
+      dataSeries: firstSeriesData,
       animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
     });
 
     const lineSeries1 = new FastLineRenderableSeries(wasmContext, {
       stroke: "blue",
       strokeThickness: 4,
+      dataSeries: secondSeriesData,
       animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
     });
 
+    lineSeries.rolloverModifierProps.markerColor = colorsArr[0];
+    lineSeries.rolloverModifierProps.tooltipColor = colorsArr[0];
+    
+    lineSeries1.rolloverModifierProps.tooltipTitle = "Series 2";
+    lineSeries1.rolloverModifierProps.tooltipLabelX = "X";
+    lineSeries1.rolloverModifierProps.tooltipLabelY = "Y";
+    lineSeries1.rolloverModifierProps.tooltipColor = colorsArr[1];
+    lineSeries1.rolloverModifierProps.markerColor = colorsArr[1];
+    // lineSeries1.rolloverModifierProps.tooltipTextColor = "black";
+ 
+    
     lineSeries.strokeThickness = 4;
     sciChartSurface.renderableSeries.add(lineSeries);
     sciChartSurface.renderableSeries.add(lineSeries1);
+
+    lineSeries.rolloverModifierProps.showRollover = true;
+    // lineSeries1.rolloverModifierProps.showRollover = true;
+   
+
     //const xds = XyDataSeries;
     const xds = new XyDataSeries(wasmContext);
     const xds1 = new XyDataSeries(wasmContext);
@@ -118,12 +148,15 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
       } */
 
       // Add and create a line series with this data to the chart
-      // Create a line series        
-      const lineSeries = new FastLineRenderableSeries(wasmContext, {
-          dataSeries: xyDataSeries, 
-          stroke: `rgba(006,096,222,${opacity})`,
-          strokeThickness:1
-      });
+      // Create a line series    
+
+      // const lineSeries = new FastLineRenderableSeries(wasmContext, {
+      //     // dataSeries: xyDataSeries,
+      //     dataSeries: firstSeriesData,
+      //     stroke: `rgba(006,096,222,${opacity})`,
+      //     strokeThickness:1
+      // });
+
       // console.log("xyDataSeries-----------------------------------------");
       // console.log(xyDataSeries);
       sciChartSurface.renderableSeries.add(lineSeries);
@@ -225,7 +258,21 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
     return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addLine, removeLine, addVarPoint, addVarPoint2, addVarPointRange, addVarPointRange2 } };
   }
 
-  const webixButton = () => {
+
+const createDataSeries = (wasmContext: TSciChart, index: number, options?: IXyDataSeriesOptions) => {
+    const sigma = Math.pow(0.6, index);
+    const dataSeries = new XyDataSeries(wasmContext, options);
+    for (let i = 0; i < 100; i++) {
+        const grow = 1 + i / 99;
+        dataSeries.append(i, Math.sin((Math.PI * i) / 15) * grow * sigma);
+    }
+    return dataSeries;
+};
+
+const colorsArr = ["orange", "blue", "#368BC1", "#eeeeee", "#228B22", "#be0000", "#ff6600", "#ff0000"];
+
+
+const webixButton = () => {
     
   return (
     {
@@ -261,6 +308,7 @@ export default function Chart(props) {
         const res = await initSciChart(props.id,props.addFunction);
         scs = res.sciChartSurface;
         setControls(res.controls);
+        chartControls[props.id] = res.controls;
         const lm = new LegendModifier({
           placement: ELegendPlacement.TopLeft,
           orientation: ELegendOrientation.Vertical,
@@ -305,3 +353,9 @@ export default function Chart(props) {
         </Row>
     );
 }
+
+function ChartControls() {
+  return chartControls;
+}
+
+export { ChartControls }

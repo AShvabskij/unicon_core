@@ -14,18 +14,14 @@ function getUImainMenu(props) {
       id: "parametersGrid",
 			height:353,
 			columns:[
-				{id:"programmInt", header:"PI", width:"130",
-          template:"{common.treetable()} #programmInt#"},
-        {id:"num", header:"Nº", width:"40"},
-        // {id:"device", header:"deviceID", width:"70"},
-        {id:"modul", header:"modulID", width:"70"},
-        {id:"idP", header:"ID", width:"50"},
+				{id:"modul", header:"Modul", width:"250",
+          template:"{common.treetable()} #modul#"},
         {id:"name", header:"Name", fillspace:true}, //width:"250"
 				{id:"value", header:"Value", width:"90"},
 				{id:"dimension", header:"Dimension"},
 				{id:"time", header:"Time"},
-				{id:"chart", header:"Show on chart", width:"130"},
-				{id:"numchart", header:"Number of chart", width:"130"}
+				{id:"chart", header:"Show on trend", width:"130"},
+				{id:"numchart", header:"Number of trend", width:"130"}
 			],
 			// autoConfig:true, 
       // css:"webix_shadow_medium" 

@@ -6,6 +6,7 @@ import * as webix from 'webix/webix.js';
 import React from "react";
 import Chart from './ChartInteract';
 import Chart2 from './Chart2';
+import { ChartControls } from './Chart2';
 import ChartList from './ChartList';
 import DataView from './DataView';
 
@@ -14,6 +15,16 @@ import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 
 let model = new Model('192.168.7.113');
 model.init();
+setTimeout(() => {
+    model.load();
+}, 1000);
+
+// const interfaceName = new Map([
+//   [1, 'Can'],
+//   [2, 'MBus'],
+//   [3, 'FO']
+// ]);
+const interfaceName = {1: 'Can', 2: 'MBus', 3: 'FO'};
 
 function loadDataInterface(devices) {
   let res = [];
@@ -92,9 +103,14 @@ async function startValues(deviceId, paramId, line) {
       return;
     }
 
-    drawValueRange(window.chartEvents["chart3"], xValues, yValues, line);
-    drawValueRange(window.chartEvents["chart4"], xValues, yValues, line)
-    drawValueRange(window.chartEvents["chart5"], xValues, yValues, line)
+    let charts = ChartControls();
+    for (var chart in charts) {
+      drawValueRange(charts[chart], xValues, yValues, line);
+    }
+
+    // drawValueRange(window.chartEvents["chart3"], xValues, yValues, line);
+    // drawValueRange(window.chartEvents["chart4"], xValues, yValues, line)
+    // drawValueRange(window.chartEvents["chart5"], xValues, yValues, line)
 
   });
 }
@@ -183,11 +199,14 @@ async function getValue2(deviceId, paramId) {
 function devicesWebix(devicesArr, component) {
   // console.log("devicesWebix");
   //   console.log(devicesArr);
+  console.log("interfaceName");
+  // console.log(model);
+  console.log(interfaceName);
   let  devices = { margin:10, padding:0, type:"wide",
   view:"flexlayout",cols:[]};
   devicesArr.forEach(function(item, index, array) {
     // console.log(item, index);
-    devices.cols.push( { view:"toggle", label:item.name, minWidth: 90, height: 70, css: "webix_primary", modules: item.modules,
+    devices.cols.push( { view:"toggle", label:item.name + "</br>Chanal: " + interfaceName[item.interface], minWidth: 110, height: 70, css: "webix_primary", modules: item.modules,
       click:function(id,event){
           // console.log(id,event);
           // console.log($$(id));
@@ -197,23 +216,29 @@ function devicesWebix(devicesArr, component) {
           let dtt = [];
           let i = 1;
           let j = 1;
+          let infoCurrentDivice = item.name;
           s.config.modules.forEach(function(item, index, array) {
             console.log(item.params);
             dtt = [];
               item.params.forEach(function(itemP, indexP, array) {
+                infoCurrentDivice = infoCurrentDivice + " [" + itemP.deviceId + "]" + "</br>Chanal: " + interfaceName[item.interface];
                 // if(=="Can")
-                dtt.push({id: i, programmInt:itemP.deviceId, idP:itemP.id, num: i, modul: itemP.moduleId, name:itemP.name, 
+                dtt.push({id: i, modul: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
+                name:itemP.name + " [" + itemP.id + "]", 
                 value:"1.008", dimension:"W", time:"11:56", chart:"+", numchart:1})
                 i++;
               });
-            dt1.push({"id":"modul"+j,"programmInt":item.id, "open":"true", "data":dtt});
+            dt1.push({"id":"modul"+j, "modul":"[" + item.deviceId + "] " + item.name + " [" + item.id + "]",
+              "open":false, "data":dtt 
+              });
             j++;
           });
            console.log(dt1);
           //  console.log(component);
 
           component.setState((state, props) => ({
-                  dt: [{"id":"can","programmInt":"Can", "open":"false", "data":dt1}]
+                  // dt: [{"id":"can","programmInt":"Can", "open":"false", "data":dt1}]
+                  dt: {"id":"can","data":dt1}
                 }));
 
           let s1 = $$(id).getParentView();
@@ -445,13 +470,13 @@ const toolBar = () => {
         }
       },
 
-      {
-        view: "button", value: "Load data", autowidth: true, align: "center",
-        click: function () {
-          // console.log("Load data");
-          loadDataModel();
-        }
-      },
+      // {
+      //   view: "button", value: "Load data", autowidth: true, align: "center",
+      //   click: function () {
+      //     // console.log("Load data");
+      //     loadDataModel();
+      //   }
+      // },
 
     ]
   }
@@ -501,6 +526,7 @@ function dataViewtable(params) {
   return { title: "state title" , dt:params}
 }
 
+
 export default class MenuTop extends React.Component {
   constructor(props) {
     super(props);
@@ -510,16 +536,6 @@ export default class MenuTop extends React.Component {
     this.updateDevices =  props.updateDevices;
     this.dataViewtable1 = [];
 
-    // model.on('system_status', function (res) {
-    //   console.log(`System status changed to ${res}`);
-    //   model.disablePeriodicCheck();
-    // });
-
-  };
-  render() {
-
-    let component = this;
-    
     const leftMenuInfo = () => {
       // arr_devices = loadDataInterface([]);
       let arr_devices = [];
@@ -533,16 +549,33 @@ export default class MenuTop extends React.Component {
           [
               { header:"Graphic trends", body: ""},
               { header:"PLC", body: "" },
-              { header:"Logs", body: ""},
-              { header:"Devices", id:"Devices", body: devicesWebix(model.m_devices, component) },
+              { header:"CPLotWeb", body: ""},
+              { header:"Devices", id:"Devices", body: devicesWebix(model.m_devices, this) },
           ]
       )
     }
+    setTimeout(() => {
+      this.updateDevices(this.leftMenuInfo());
+    }, 2000);
+    
+    // model.on('system_status', function (res) {
+    //   console.log(`System status changed to ${res}`);
+    //   model.disablePeriodicCheck();
+    // });
+
+  };
+  
+  render() {
+
+    let component = this;
+    
+    
     // const leftMenuInfo = [
     //   { header:"Graphic trends", body: ""},
     //   { header:"PLC", body: "" },
     //   { header:"Logs", body: ""},
     //   { header:"Devices", id:"Devices", body: devicesWebix([1,2,3,4,5,6,7,8,9,10,112,114,116,118,145,1323])}];
+    
     
     return(
         <div>
