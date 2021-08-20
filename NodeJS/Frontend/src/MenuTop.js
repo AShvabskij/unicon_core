@@ -5,6 +5,8 @@ import * as webix from 'webix/webix.js';
 import React from "react";
 import Chart from './ChartInteract';
 import Chart2 from './Chart2';
+import { ChartControls } from './Chart2';
+
 import ChartList from './ChartList';
 import DataView from './DataView';
 
@@ -13,6 +15,8 @@ import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 
 let model = new Model('127.0.0.1'/*'192.168.7.113'*/);
 model.init();
+
+let startDate = new Date();
 
 async function loadDataModel() {
 
@@ -27,7 +31,7 @@ async function loadDataModel() {
     console.log(error);
   });
 
-  model.on('system_status', function (res) {
+  model.on('system_status', (res) => {
     console.log(`System status changed to ${res}`);
     model.disablePeriodicCheck();
   });
@@ -75,9 +79,10 @@ async function startValues(deviceId, paramId, line) {
       return;
     }
 
-    drawValueRange(window.chartEvents["chart3"], xValues, yValues, line);
-    drawValueRange(window.chartEvents["chart4"], xValues, yValues, line)
-    drawValueRange(window.chartEvents["chart5"], xValues, yValues, line)
+    let charts = ChartControls();
+    for (var chart in charts) {
+      drawValueRange(charts[chart], xValues, yValues, line);
+    }
 
   });
 }
@@ -93,6 +98,70 @@ function drawValueRange(chart, xValues, yValues, line) {
     }
   }, _interval);
 }
+
+async function startOsc(deviceId, line) {
+  console.log("try to get osc streams...");
+
+  // let param = device.param(deviceId + 1);
+  let streamSocketUrl = "ws://" + "127.0.0.1" + ":" + 1237;
+  let streamSocket = new WebSocket(streamSocketUrl);
+
+  let startDate = new Date();
+
+  let osc = model.device(deviceId).osc;
+
+  streamSocket.onopen = async (event) => {
+    console.log(`Stream socket ${streamSocket.url} opened successfully.`);
+    osc.openDataStream();
+    startDate = new Date();
+  };
+
+  streamSocket.onmessage = (message) => {
+
+    var messageData = JSON.parse(message.data);
+    let res = osc.parse(messageData, 0);
+    if (res < 0) {
+      return;
+    }
+
+    let chNum = 0;
+    let charts = ChartControls();
+    let endOfData = false;
+    for (var chart in charts) {
+      for (var i = 1; i <= 2; ++i) {
+        let values = osc.parse(messageData, chNum++);
+        if (values == null) {
+          endOfData = true;
+          continue;
+        }
+
+        let xValues = values.map(valObj => { return valObj.time });
+        let yValues = values.map(valObj => { return valObj.val });
+
+        if (i == 1) {
+          // console.log("values() = " + JSON.stringify(values));
+        }
+
+        drawValueRange(charts[chart], xValues, yValues, i);
+      }
+
+      if (chart == 'chart3') {
+        break;
+      }
+
+    }
+
+    if (endOfData) {
+      streamSocket.close();
+      let endDate = new Date();
+
+      var diff = (endDate.getTime() - startDate.getTime())
+      console.log("The work time is = " + diff);
+    }
+  }
+
+  //  console.log(output + "\n");
+};
 
 const paramData = [
   { id: 9, num: "1", name: "Parameter 1 (2110)", value: "1.008", dimension: "W", time: "11:56", chart: "+", numchart: 1 },
@@ -286,22 +355,22 @@ const toolBar = () => {
       {
         view: "button", value: "Start", autowidth: true, align: "center",
         click: function (id, event) {
-          console.log(window.chartEvents);
-          for (var chart in window.chartEvents) {
+          let charts = ChartControls();
+          for (var chart in charts) {
             // console.log(chart);
-            window.chartEvents[chart].startDemo();
+            charts[chart].startDemo();
           }
         }
       },
       {
         view: "button", value: "Stop", autowidth: true, align: "center",
         click: async function (id, event) {
-          console.log(window.chartEvents);
-          for (var chart in window.chartEvents) {
+          let charts = ChartControls();
+          for (var chart in charts) {
             // console.log(chart);
             let deviceId = 1;
             let paramId = 65;
-            window.chartEvents[chart].stopDemo();
+            charts[chart].stopDemo();
             await stopValues(deviceId, paramId);
           }
         }
@@ -315,6 +384,15 @@ const toolBar = () => {
           let paramId = 65;
           startValues(deviceId, paramId, 1);
           startValues(23, paramId + 1, 2);
+        }
+      },
+      {
+        view: "button", value: "Start osc", autowidth: true, align: "center",
+        click: async function (id, event) {
+          console.log("Start values");
+          let deviceId = 1;
+          let paramId = 65;
+          startOsc(deviceId, 1);
         }
       },
 

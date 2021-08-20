@@ -28,6 +28,8 @@ let scs: SciChartSurface;
 const visiblePoints = 1000;
 const intervalAddPoint = 40;
 const suffixChartID = "scichart-root2";
+let chartControls = [];
+
 
 async function initSciChart(chartID , onAddFunction = () => {}) {
     // Below find a trial / BETA key for SciChart.js.
@@ -71,17 +73,17 @@ async function initSciChart(chartID , onAddFunction = () => {}) {
 
     const lineSeries = new FastLineRenderableSeries(wasmContext, {
       stroke: "orange",
-      strokeThickness: 4,
-      animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
+      strokeThickness: 1,
+//    animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
     });
 
     const lineSeries1 = new FastLineRenderableSeries(wasmContext, {
       stroke: "red",
-      strokeThickness: 4,
-      animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
+      strokeThickness: 1,
+//    animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
     });
 
-    lineSeries.strokeThickness = 4;
+    lineSeries.strokeThickness = 1;
     sciChartSurface.renderableSeries.add(lineSeries);
     sciChartSurface.renderableSeries.add(lineSeries1);
     //const xds = XyDataSeries;
@@ -261,7 +263,7 @@ export default function Chart(props) {
         setControls(res.controls);
         // if (props.id) { 
         //   this.id = props.id
-           window.chartEvents[props.id] = res.controls;
+        chartControls[props.id] = res.controls;
         // }
         //autoStartTimerId = setTimeout(res.controls.startDemo, 3000);
     })();
@@ -293,3 +295,9 @@ export default function Chart(props) {
         </Row>
     );
 }
+
+function ChartControls() {
+  return chartControls;
+}
+
+export { ChartControls }

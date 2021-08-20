@@ -42,7 +42,6 @@ function App() {
   //   //initSciChart();
   // }, []);
   //loaderDataModel();
-  window.chartEvents = [];
  return (
     
     <div className="App">

@@ -18,7 +18,7 @@ const ERROR_RESPONSE = {
     msg: ""
 }
 
-let _g = 0;
+const OSC_MAX_CHANNELS = 5;
 
 export class SysInterfacesEnum {
     static Can = 1;
@@ -52,6 +52,7 @@ export class Model extends Events {
 
         this.m_name = 'Unicon';
         this.m_devices = [];
+        this.m_oscs = [];
         this.m_trends = [];
         this.m_inited = false;
         this.m_host = srvHost;
@@ -70,7 +71,7 @@ export class Model extends Events {
         RequestHelper.initConnection(this.m_host);
 
         let streamSocketUrl = "ws://" + this.m_host + ":" + STREAM_SERVER_PORT;
-
+/*
         this.streamSocket = new WebSocket(streamSocketUrl);
 
         this.streamSocket.onopen = (event) => {
@@ -102,17 +103,19 @@ export class Model extends Events {
             }
 
             var messageData = JSON.parse(message.data);
-            // console.log(message.data);
 
-            let valueData = messageData.value;
-            let deviceId = messageData.d_id;
             let paramId = messageData.p_id;
+            if (paramId != undefined) {
+                let valueData = messageData.value;
+                let deviceId = messageData.d_id;
 
-            _messageDataLength = message.data.length;
+                _messageDataLength = message.data.length;
 
-            this._streamParamValue(deviceId, paramId, valueData);
+                this._streamParamValue(deviceId, paramId, valueData);
+                return;
+            }
         };
-
+*/
         this.m_inited = true;
     }
 
@@ -182,6 +185,14 @@ export class Model extends Events {
 
                         device.modules.push(module);
                     }
+
+                    let oscHeader = await this.deviceProvider.reqOsc(device.id);
+
+                    device.osc.id = oscHeader.id;
+                    device.osc.deviceId = oscHeader.device_id;
+                    device.osc.name = oscHeader.name;
+                    device.osc.resolution_ns = oscHeader.resolution_ns;
+                    device.osc.desc = oscHeader.desc;
 
                     this.m_devices.push(device)
                 }
@@ -288,7 +299,7 @@ export class Model extends Events {
     }
 }
 
-class Device {
+export class Device {
     constructor() {
         this.id = ''
         this.name = ''
@@ -301,21 +312,88 @@ class Device {
     }
 
     module(moduleId) {
-        let result = this.modules.find(item => item.id == moduleId);
-        return result;
+        let res = this.modules.find(item => item.id == moduleId);
+        return res;
     }
 
     param(paramId) {
-        let result = this.params.find(item => item.id == paramId);
-        return result;
+        let res = this.params.find(item => item.id == paramId);
+        return res;
     }
 }
 
-class Osciloscope {
+export class Osciloscope {
     constructor() {
-        this.id = ''
+        this.id = 0
+        this.deviceId = 0
         this.name = ''
         this.desc = ''
+        this.resolution_ns = 0;
+        this.lastError = 0;
+
+        this.deviceProvider = new DeviceProvider();
+
+        // Переменные для измерения производительности
+        this._byteCount = 0;
+        this._msgCount = 0;
+        this._timeLabel = new Date().getTime();
+    }
+
+    async openDataStream() {
+        this._byteCount = 0;
+        this._msgCount = 0;
+        this._timeLabel = new Date().getTime();
+        console.time(`The stream elapsed time(${this._timeLabel})`);
+
+        try {
+            let openStream = true;
+            await this.deviceProvider.reqDataStream(this.deviceId, this.id, openStream);
+        } catch (error) {
+            this.lastError = error;
+            console.error(error);
+        }
+    }
+
+    async closeDataStream() {
+        try {
+            let openStream = false;
+            await this.deviceProvider.reqDataStream(this.deviceId, this.id, openStream);
+        } catch (error) {
+            this.lastError = error;
+            console.error(error);
+        }
+    }
+
+    parse(socketData, ch) {
+        if (socketData.values == undefined) {
+            return -1;
+        }
+
+        let chValues = socketData.values[ch];
+
+        if (socketData.error === 2 || chValues.length === 0) {
+            if (ch == OSC_MAX_CHANNELS) {
+                console.log(`The osc stream is finished, device id = ${this.deviceId}, received items = ${this._msgCount}, bytes = ${this._byteCount}`);
+                console.timeEnd(`The stream elapsed time(${this._timeLabel})`);
+            }
+            return null;
+        }
+
+        if (ch == OSC_MAX_CHANNELS) {
+            let receivedBytes = JSON.stringify(chValues[0]).length * chValues.length * socketData.values.length;
+            this._byteCount += receivedBytes;
+            console.log('Received bytes = ' + receivedBytes);
+        }
+
+        this._msgCount += 1;
+
+        let time_ns = socketData.time - chValues.length * this.resolution_ns;
+        return chValues.map(val => {
+            let time = time_ns * 0.001 - this._timeLabel;
+            time_ns += this.resolution_ns;
+
+            return { val, time };
+        })
     }
 }
 
@@ -401,7 +479,7 @@ class Param {
             this.value = new ParamValue()
 
             await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream);
-            
+
         } catch (error) {
             this.value = new ParamValue()
             this.lastError = error;
@@ -473,7 +551,7 @@ class Param {
         this._byteCount += _messageDataLength;
         this._msgCount++;
 
-//      this.buffer[this.buffIndex] = pValue;
+        //      this.buffer[this.buffIndex] = pValue;
         this.buffIndex++;
 
         if (this.buffIndex >= STREAM_BUFFER_OBJECTS) {
@@ -510,6 +588,7 @@ class ParamValue {
         this.value = -1.0;
     }
 }
+
 /*
 module.exports = {
     Model,
