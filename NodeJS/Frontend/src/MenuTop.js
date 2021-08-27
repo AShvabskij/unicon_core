@@ -536,6 +536,22 @@ export default class MenuTop extends React.Component {
     this.updateDevices =  props.updateDevices;
     this.dataViewtable1 = [];
 
+    // setTimeout(() => {
+    //   this.updateDevices(this.leftMenuInfo());
+    // }, 2000);
+    
+    // model.on('system_status', function (res) {
+    //   console.log(`System status changed to ${res}`);
+    //   model.disablePeriodicCheck();
+    // });
+
+  };
+  
+  
+  render() {
+
+    let component = this;
+    
     const leftMenuInfo = () => {
       // arr_devices = loadDataInterface([]);
       let arr_devices = [];
@@ -550,25 +566,10 @@ export default class MenuTop extends React.Component {
               { header:"Graphic trends", body: ""},
               { header:"PLC", body: "" },
               { header:"CPLotWeb", body: ""},
-              { header:"Devices", id:"Devices", body: devicesWebix(model.m_devices, this) },
+              { header:"Devices", id:"Devices", body: devicesWebix(model.m_devices, component) },
           ]
       )
     }
-    setTimeout(() => {
-      this.updateDevices(this.leftMenuInfo());
-    }, 2000);
-    
-    // model.on('system_status', function (res) {
-    //   console.log(`System status changed to ${res}`);
-    //   model.disablePeriodicCheck();
-    // });
-
-  };
-  
-  render() {
-
-    let component = this;
-    
     
     // const leftMenuInfo = [
     //   { header:"Graphic trends", body: ""},
