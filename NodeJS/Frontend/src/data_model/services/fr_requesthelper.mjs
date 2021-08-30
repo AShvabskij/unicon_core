@@ -40,7 +40,7 @@ export class _RequestHelper {
             }, 5000);
         };
 
-        this.m_connected = true;        
+        //this.m_connected = true;        
     }
 
     request(cmd) {
@@ -50,13 +50,14 @@ export class _RequestHelper {
             if (!this.m_connected) {
                 reject({ status: 500, msg: "The web socket is not connected now." });
             }
-
-            let cmdStr = JSON.stringify(cmd);
-            this.m_socket.send(cmdStr);
-            console.log('sended cmd = ' + cmdStr);
-
-            setTimeout(() => reject({ status: 500, msg: `Request time out for cmd = ${cmdStr}` }), 1000)
-
+            let cmdStr;
+            if (this.m_connected) {
+                cmdStr = JSON.stringify(cmd);
+                this.m_socket.send(cmdStr);
+                console.log('sended cmd = ' + cmdStr);
+           
+                setTimeout(() => reject({ status: 500, msg: `Request time out for cmd = ${cmdStr}` }), 1000)
+            }
             this.m_socket.onmessage = (message) => {
                 var messageData = JSON.parse(message.data);
                 if (messageData.request_id !== cmd.request_id) {

@@ -12,11 +12,20 @@ import DataView from './DataView';
 
 import { Model } from "./data_model/fr_model.mjs";
 import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
+import {AddCounter,Info} from "./Context"
 
-let model = new Model('192.168.7.113');
+let model = new Model('79.120.39.75');
 model.init();
 setTimeout(() => {
-    model.load();
+    model.load().then(result => {
+      console.log("loadDataModel result");
+      console.log(model.m_devices);
+      // Info.actions.setDevicesName(leftMenuInfo1());
+      // loadDataInterface(model.m_devices);
+      // model.enablePeriodicCheck();      
+    }, error => {
+      console.log(error);
+    });
 }, 1000);
 
 // const interfaceName = new Map([
@@ -88,7 +97,8 @@ async function startValues(deviceId, paramId, line) {
     for (var j = 0; j < values.length; j++) {
       let value = values[j];
 
-      let xValue = value.valueTime - startDate.getTime();
+      // let xValue = value.valueTime - startDate.getTime();
+      let xValue = value.valueTime - Info.startTime;
       let yValue = value.value;
 
       if (yValue == -1) {
@@ -197,7 +207,7 @@ async function getValue2(deviceId, paramId) {
 
 
 function devicesWebix(devicesArr, component) {
-  // console.log("devicesWebix");
+  console.log("devicesWebix");
   //   console.log(devicesArr);
   console.log("interfaceName");
   // console.log(model);
@@ -223,7 +233,7 @@ function devicesWebix(devicesArr, component) {
               item.params.forEach(function(itemP, indexP, array) {
                 infoCurrentDivice = infoCurrentDivice + " [" + itemP.deviceId + "]" + "</br>Chanal: " + interfaceName[item.interface];
                 // if(=="Can")
-                dtt.push({id: i, modul: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
+                dtt.push({id: "m"+i, modul: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
                 name:itemP.name + " [" + itemP.id + "]", 
                 value:"1.008", dimension:"W", time:"11:56", chart:"+", numchart:1})
                 i++;
@@ -236,14 +246,14 @@ function devicesWebix(devicesArr, component) {
            console.log(dt1);
           //  console.log(component);
 
-          component.setState((state, props) => ({
+          Info.elements.menuTop.setState((state, props) => ({
                   // dt: [{"id":"can","programmInt":"Can", "open":"false", "data":dt1}]
                   dt: {"id":"can","data":dt1}
                 }));
 
           let s1 = $$(id).getParentView();
           s1._cells.forEach(element => {
-              element.setValue(0);
+             element.setValue(0);
           });
           
       }
@@ -526,6 +536,24 @@ function dataViewtable(params) {
   return { title: "state title" , dt:params}
 }
 
+const leftMenuInfo1 = () => {
+  // arr_devices = loadDataInterface([]);
+  let arr_devices = [];
+  // console.log("model.m_devices");
+  // console.log(model.m_devices);
+  // console.log(model);
+  
+  // arr_devices = loadDataInterface(model.m_devices);
+  
+  return (
+      [
+          { header:"Graphic trends", body: ""},
+          { header:"PLC", body: "" },
+          { header:"CPLotWeb", body: ""},
+          { header:"Devices", id:"DeviceInit", body: devicesWebix(model.m_devices, this) },
+      ]
+  )
+}
 
 export default class MenuTop extends React.Component {
   constructor(props) {
@@ -551,7 +579,7 @@ export default class MenuTop extends React.Component {
   render() {
 
     let component = this;
-    
+    Info.elements = {...Info.elements, menuTop: this };
     const leftMenuInfo = () => {
       // arr_devices = loadDataInterface([]);
       let arr_devices = [];
@@ -581,7 +609,9 @@ export default class MenuTop extends React.Component {
     return(
         <div>
             <Webix ui={webixButton(150)} id="q1" data="Get Devices" click={() => {
-                this.updateDevices(leftMenuInfo());
+                // Info.actions.setDevicesName(leftMenuInfo())
+                Info.actions.updateLeftMenu(model.m_devices);
+                // this.updateDevices(leftMenuInfo());
                 let dt1 = [
                   { id:9, num: "1", name:"Parameter 10 (2110)", value:"1.008", dimension:"W", time:"11:56",chart:"+",numchart:1},
                   { id:10, num: "2", name:"Parameter 20 (2120)", value:"2.7896", dimension:"A", time:"11:56",chart:"+",numchart:1},

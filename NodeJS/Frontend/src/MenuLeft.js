@@ -1,7 +1,7 @@
 import 'webix/webix.css';
 import WebixComponent from './WebixComponent';
 import React from "react";
-
+import {$$} from 'webix';
 
 function devicesWebix(devicesArr) {
   // console.log("devicesWebix");
@@ -130,8 +130,16 @@ function devicesWebix(devicesArr) {
     collapsed:true,
     select:true,
     rows:[],
-    onAfterExpand:function(id,event){
-      console.log("onAfterExpand");
+    on:{
+      onChange: function(newValue, oldValue, config){
+          console.log(newValue)
+      },
+      onAfterExpand:function(id){
+          console.log("onAfterExpand")
+          console.log(id)
+          console.log($$(id))
+          
+      }
     }
   }
 }

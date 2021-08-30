@@ -12,7 +12,10 @@ function UpdateItems(current,dataList) {
                 { view:"accordionitem",
                   header: element.header, 
                   body: element.body, 
-                  // id:element.id 
+                  id:element.id,
+                  onAfterExpand:function(id,event){
+                    console.log("onAfterExpand");
+                  } 
               }
             );
    });
