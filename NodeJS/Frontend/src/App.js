@@ -156,8 +156,9 @@ function App() {
         <Button1/>
           <MenuLeft devtitle={devicesD}/>
       </div>
-        <Route exact path="/" component={DevicesPage} />   
-        <Route exact path="/CPLotWebPage" component={CPLotWebPage} /> 
+        <DevicesPage/>
+        {/* <Route exact path="/" component={DevicesPage} />   
+        <Route exact path="/CPLotWebPage" component={CPLotWebPage} />  */}
       </Router>
       
     </div>

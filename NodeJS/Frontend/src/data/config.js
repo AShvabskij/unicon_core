@@ -2,8 +2,7 @@ export const accordionInit = [
 		{ header:"Graphic trends", body: ""},
         { header:"PLC", body: "" },
         { header:"CPLotWeb", body: ""},
-        { header:"Devices", id:"DeviceInit" ,body: {
-			view: "button", value: "Add Chart",  align: "left"} }
+        { header:"Devices", id:"DeviceInit" ,body: "" }
 ];
 
 

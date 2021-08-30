@@ -15,12 +15,16 @@ import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 import {AddCounter,Info} from "./Context"
 
 let model = new Model('79.120.39.75');
+Info.model = model;
 model.init();
+
 setTimeout(() => {
     model.load().then(result => {
       console.log("loadDataModel result");
       console.log(model.m_devices);
       // Info.actions.setDevicesName(leftMenuInfo1());
+      
+      Info.actions.updateLeftMenu();
       // loadDataInterface(model.m_devices);
       // model.enablePeriodicCheck();      
     }, error => {
@@ -35,18 +39,7 @@ setTimeout(() => {
 // ]);
 const interfaceName = {1: 'Can', 2: 'MBus', 3: 'FO'};
 
-function loadDataInterface(devices) {
-  let res = [];
-  devices.forEach(device => {
-    res.push(device.name);
-  });
-  // console.log("try to load data model...");
-  return (
-    //  [1243,7088,9624,130,1162,11814,116]
-    res
-  )
 
-}
 
 async function loadDataModel() {
 
@@ -55,9 +48,10 @@ async function loadDataModel() {
   model.clear();
 
   model.load().then(result => {
-    console.log("loadDataModel result");
+    // console.log("loadDataModel1 result");
     // console.log(model.m_devices);
-    // loadDataInterface(model.m_devices);
+    // // loadDataInterface(model.m_devices);
+    // Info.actions.updateLeftMenu(model.m_devices);
     // model.enablePeriodicCheck();      
   }, error => {
     console.log(error);
@@ -328,22 +322,6 @@ function tabview1(props) {
           id: "parametersContent",
           view: "htmlform",
           content: "dataview",
-
-          // view:"datatable",
-          // scroll:"y",
-          // select:true,
-          // height:400,
-          // hover:"myhover",
-          // columns:[
-          //   {id:"num", header:"Number"},
-          //   {id:"name", header:"Name", width:"300"},
-          //   {id:"value", header:"Value", width:"130"},
-          //   {id:"dimension", header:"Dimension"},
-          //   {id:"time", header:"Time"},
-          //   {id:"chart", header:"Show on chart", width:"150"},
-          //   {id:"numchart", header:"Number of chart", width:"200"}           
-          // ]
-          // template:"<div id='f1'>Form Content<div>"     
         }
       },
       {
@@ -418,6 +396,8 @@ function tabview1(props) {
     }
   }
 }
+
+
 
 const MenuCenter1 = ({ data }) => (
   <div>
@@ -626,7 +606,8 @@ export default class MenuTop extends React.Component {
                 }
               }/>
           
-            <Webix ui={tabview1(this.props)} data={this.props} />
+            <Webix ui={tabview1(this.props)} />
+            
             <div id="chart2">
 
                 <Chart2 id="chart3" /* title="demo chart 3" */ addFunction={addFunction}/>
