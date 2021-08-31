@@ -53,6 +53,7 @@
     /* background-color: red; */
     width: 23%;
     float: left;
+    font-size: 10px;
 }
 
 .c2 {
@@ -76,4 +77,12 @@
     /* background-color: saddlebrown; */
     /* width: 77%;
     float: right; */
+}
+
+.devices {
+    font-size: 5px;
+}
+
+.webix_segment_0 {
+    font-size: 5px !important;
 }

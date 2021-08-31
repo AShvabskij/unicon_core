@@ -1,9 +1,24 @@
 import 'webix/webix.css';
-import Webix from './Webix';
+import WebixComponent from './WebixComponent';
 import React from "react";
+import {$$} from 'webix';
 
+function devicesWebix(devicesArr) {
+  // console.log("devicesWebix");
+  //   console.log(devicesArr);
+  let  devices = { margin:10, padding:0, type:"wide",
+  view:"flexlayout",cols:[]};
+  devicesArr.forEach(function(item, index, array) {
+    // console.log(item, index);
+    devices.cols.push( { view:"toggle", label:item, minWidth: 90,
+      click:function(id,event){
+      }
+    })
+  });
+  return devices;
+}
 
-var devices = {
+/* var devices = {
   // view:"layout", // необязательно
   // id:"devices", 
   // rows:[
@@ -43,133 +58,101 @@ var devices = {
     // },
     // { width:20 }
   
-};
+}; */
 
-
-var menu_acc = {
-  view:"menu", 
-  id:"top:menu_acc", 
-  css:"app_menu",
-  width:0, layout:"y", 
-  select:true,
-  template:"<span class='webix_icon #icon#'>123</span> #value# ",
-  // data: avp.getDeviceFromJSON(mainDataJsonString),
-  on:{
-    onMenuItemClick: function(id, e, node){
-      // config is {yourProperty: "yourValue"}
-      console.log("onMenuItemClick");
-      console.log(node);
-      // baseTableUpdate();
-    }
-    }
-};
-
-var menu_acc2 = {
-  view:"menu", 
-  id:"top:menu_acc2", 
-  css:"app_menu",
-  
-  select:true,
-  template:"<span class='webix_icon #icon#'></span> #value# ",
-  //data: avp.getDeviceFromJSON(mainDataJsonString),
-  on:{
-    onMenuItemClick: function(id, e, node){
-      // config is {yourProperty: "yourValue"}
-      console.log("onMenuItemClick");
-      console.log(node);
-      // baseTableUpdate();
-    }
-    }
-};
-
-var menuaccordeon ={
-  view:"accordion",
- // id:"top:accordion", 
-  // type:"wide",
-  width: 0,
-  // height: 0,
-  minHeight:400,
-  maxHeight:0,
-  multi : false,
-  collapsed:true,
-  rows:[
-    { header:"Graphic trends", body: ""},
-    { header:"PLC", body: "" },
-    { header:"Logs", body: ""},
-    { header:"Devices", body: devices},
-   // { header:"Devices", body: getUI2("") },
-    // { header:"Device1", body: menu_acc },
-    // { header:"Device 2", body: menu_acc2 },
-    // { header:"Device 3", body: ""}
+// function menuaccordion(params) {
     
-  ]
-}
+//   return {
+//     view:"accordion",
+//     // id:"top:accordion", 
+//     // type:"wide",
+//     // css:"app_menu",
+//     width: 0,
+//     // height: 0,
+//     minHeight:400,
+//     maxHeight:0,
+//     multi : false,
+//     collapsed:true,
+//     select:true,
+//     rows:[
+//       { header:"Graphic trends", body: ""},
+//       { header:"PLC", body: "" },
+//       { header:"Logs", body: ""},
+//       { header:"Devices", body: devicesWebix(params)},
+//     // { header:"Devices", body: getUI2("") },
+//       // { header:"Device1", body: menu_acc },
+//       // { header:"Device 2", body: menu_acc2 },
+//       // { header:"Device 3", body: ""}
+//     ],
+//     on:{
+//       onMenuItemClick: function(id, e, node){
+//         // config is {yourProperty: "yourValue"}
+//         // console.log("onMenuItemClick");
+//         // console.log(node);
+//         // baseTableUpdate();
+//       }
+//     }
+//   }
+// }
 
 
+// function getUI3(props){
 
-function getUI3(props){
-
-  const cells = [
-    { header:"<span class='webix_icon mdi mdi-file-video'></span>UNICON",
-    id:"unicon",
-    maxwidth: "25%",
-    body: 
-      menuaccordeon
-    }
-  ];
+//   const cells = [
+//     { header:"<span class='webix_icon mdi mdi-file-video'></span>UNICON",
+//     id:"unicon",
+//     maxwidth: "25%",
+//     body: 
+//       menuaccordion(props)
+//     }
+//   ];
 
 
+//   return {
+//     view:"tabview",
+//     height: 0,
+//     // width: 0,
+//     // tabbar:{ options:["A","B","C"]}, 
+//     animate:false,
+//     cells:cells
+//   }
+
+// }
+
+
+ function accordion() {
   return {
-    view:"tabview",
-    height: 0,
+    view:"accordion",
     width: 0,
-    // tabbar:{ options:["A","B","C"]}, 
-    animate:false,
-    cells:cells
+    minHeight:400,
+    maxHeight:0,
+    multi : false,
+    collapsed:true,
+    select:true,
+    rows:[],
+    on:{
+      onChange: function(newValue, oldValue, config){
+          console.log(newValue)
+      },
+      onAfterExpand:function(id){
+          console.log("onAfterExpand")
+          console.log(id)
+          console.log($$(id))
+          
+      }
+    }
   }
-
 }
 
 
-export default class MenuLeft extends React.Component {
-   constructor(props) { 
-     super(props);
-     this.title = "first title"
-     this.state = { title: "state title" };
-   };
- 
-   componentDidMount = () => {
-     /**
-       * Обязательная регистрация компонента с параметрами вызова
-     */
-     //this.props.ButtonStore.registration(this.props);
-   };
- 
-   componentWillUnmount = () => {
-    // this.props.ButtonStore.unmount(this.props.name);
-   };
-
-  //  handleClick() {
-  //    this.title = "click";
-  //    console.log("handleClick "+this.title )
-  //    this.setState({ title: "handleClick state title" });
-  //  }
-
+ function MenuLeft(props) {
+  // console.log("MenuLeft ");
+  // console.log(props.devtitle);
   
- 
-   render() {
-    //  const {
-    //    ButtonStore,
-    //    disabled,
-    //    name,
-    //    text,
-      
-    //  } = this.props;
+  return ( 
+      // <Webix ui={getUI3(props.devtitle)} data={props.devtitle}/>
+      <WebixComponent ui={accordion()} data={props.devtitle} />
+  );
+}
 
-     console.log("render CustomButton");
-     return (
-           <Webix ui={getUI3(this.props)} />
-       
-     );
-   }
- }
+export default MenuLeft;

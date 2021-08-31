@@ -1,22 +1,45 @@
 import 'webix/webix.css';
 import Webix from './Webix';
+import {$$} from 'webix';
 import * as webix from 'webix/webix.js';
 // import Chart from "./Chart2";
 import React from "react";
 import Chart from './ChartInteract';
 import Chart2 from './Chart2';
 import { ChartControls } from './Chart2';
-
 import ChartList from './ChartList';
 import DataView from './DataView';
 
 import { Model } from "./data_model/fr_model.mjs";
 import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
+import {AddCounter,Info} from "./Context"
 
-let model = new Model('127.0.0.1'/*'192.168.7.113'*/);
+let model = new Model('127.0.0.1');
+Info.model = model;
 model.init();
 
-let startDate = new Date();
+setTimeout(() => {
+    model.load().then(result => {
+      console.log("loadDataModel result");
+      console.log(model.m_devices);
+      // Info.actions.setDevicesName(leftMenuInfo1());
+      
+      Info.actions.updateLeftMenu();
+      // loadDataInterface(model.m_devices);
+      // model.enablePeriodicCheck();      
+    }, error => {
+      console.log(error);
+    });
+}, 1000);
+
+// const interfaceName = new Map([
+//   [1, 'Can'],
+//   [2, 'MBus'],
+//   [3, 'FO']
+// ]);
+const interfaceName = {1: 'Can', 2: 'MBus', 3: 'FO'};
+
+
 
 async function loadDataModel() {
 
@@ -25,7 +48,10 @@ async function loadDataModel() {
   model.clear();
 
   model.load().then(result => {
-    console.log(result);
+    // console.log("loadDataModel1 result");
+    // console.log(model.m_devices);
+    // // loadDataInterface(model.m_devices);
+    // Info.actions.updateLeftMenu(model.m_devices);
     // model.enablePeriodicCheck();      
   }, error => {
     console.log(error);
@@ -37,6 +63,7 @@ async function loadDataModel() {
   });
 
 }
+
 
 async function stopValues(deviceId, paramId) {
   let param = model.device(deviceId).param(paramId);
@@ -64,7 +91,8 @@ async function startValues(deviceId, paramId, line) {
     for (var j = 0; j < values.length; j++) {
       let value = values[j];
 
-      let xValue = value.valueTime - startDate.getTime();
+      // let xValue = value.valueTime - startDate.getTime();
+      let xValue = value.valueTime - Info.startTime;
       let yValue = value.value;
 
       if (yValue == -1) {
@@ -83,7 +111,6 @@ async function startValues(deviceId, paramId, line) {
     for (var chart in charts) {
       drawValueRange(charts[chart], xValues, yValues, line);
     }
-
   });
 }
 
@@ -163,12 +190,62 @@ async function startOsc(deviceId, line) {
   //  console.log(output + "\n");
 };
 
-const paramData = [
-  { id: 9, num: "1", name: "Parameter 1 (2110)", value: "1.008", dimension: "W", time: "11:56", chart: "+", numchart: 1 },
-  { id: 10, num: "2", name: "Parameter 2 (2120)", value: "2.7896", dimension: "A", time: "11:56", chart: "+", numchart: 1 },
-  { id: 11, num: "3", name: "Parameter 3 (2130)", value: "8", dimension: "kHz", time: "11:00", chart: "+", numchart: "2" },
-  { id: 7, num: "4", name: "Parameter 4 (2140)", value: "356", dimension: "NO/NC", time: "11:20", chart: "–", numchart: "" }
-];
+function devicesWebix(devicesArr, component) {
+  console.log("devicesWebix");
+  //   console.log(devicesArr);
+  console.log("interfaceName");
+  // console.log(model);
+  console.log(interfaceName);
+  let  devices = { margin:10, padding:0, type:"wide",
+  view:"flexlayout",cols:[]};
+  devicesArr.forEach(function(item, index, array) {
+    // console.log(item, index);
+    devices.cols.push( { view:"toggle", label:item.name + "</br>Chanal: " + interfaceName[item.interface], minWidth: 110, height: 70, css: "webix_primary", modules: item.modules,
+      click:function(id,event){
+          // console.log(id,event);
+          // console.log($$(id));
+          let s = $$(id);
+          console.log(s.config.modules);
+          let dt1 = [];
+          let dtt = [];
+          let i = 1;
+          let j = 1;
+          let infoCurrentDivice = item.name;
+          s.config.modules.forEach(function(item, index, array) {
+            console.log(item.params);
+            dtt = [];
+              item.params.forEach(function(itemP, indexP, array) {
+                infoCurrentDivice = infoCurrentDivice + " [" + itemP.deviceId + "]" + "</br>Chanal: " + interfaceName[item.interface];
+                // if(=="Can")
+                dtt.push({id: "m"+i, modul: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
+                name:itemP.name + " [" + itemP.id + "]", 
+                value:"1.008", dimension:"W", time:"11:56", chart:"+", numchart:1})
+                i++;
+              });
+            dt1.push({"id":"modul"+j, "modul":"[" + item.deviceId + "] " + item.name + " [" + item.id + "]",
+              "open":false, "data":dtt 
+              });
+            j++;
+          });
+           console.log(dt1);
+          //  console.log(component);
+
+          Info.elements.menuTop.setState((state, props) => ({
+                  // dt: [{"id":"can","programmInt":"Can", "open":"false", "data":dt1}]
+                  dt: {"id":"can","data":dt1}
+                }));
+
+          let s1 = $$(id).getParentView();
+          s1._cells.forEach(element => {
+             element.setValue(0);
+          });
+          
+      }
+    })
+  });
+  return devices;
+};
+
 
 function disableEnableElement(id, show) {
   const elem = document.getElementById(id);
@@ -218,7 +295,7 @@ function showChart(chartID, parentID) {
   if (sc.parentElement.id != parentID) {
     m.appendChild(sc)
   }
-  console.log(sc.parentElement);
+  // console.log(sc.parentElement);
 
 }
 
@@ -235,22 +312,6 @@ function tabview1(props) {
           id: "parametersContent",
           view: "htmlform",
           content: "dataview",
-
-          // view:"datatable",
-          // scroll:"y",
-          // select:true,
-          // height:400,
-          // hover:"myhover",
-          // columns:[
-          //   {id:"num", header:"Number"},
-          //   {id:"name", header:"Name", width:"300"},
-          //   {id:"value", header:"Value", width:"130"},
-          //   {id:"dimension", header:"Dimension"},
-          //   {id:"time", header:"Time"},
-          //   {id:"chart", header:"Show on chart", width:"150"},
-          //   {id:"numchart", header:"Number of chart", width:"200"}           
-          // ]
-          // template:"<div id='f1'>Form Content<div>"     
         }
       },
       {
@@ -304,8 +365,8 @@ function tabview1(props) {
         },
         onChange: function (newValue, oldValue, config) {
           // config is {yourProperty: "yourValue"}
-          console.log(this);
-          console.log("----->>>>>>" + this.getValue());
+          // console.log(this);
+          // console.log("----->>>>>>" + this.getValue());
           // var chart1 = document.getElementById("wwwqqq");
           // console.log(chart1);
           //avp.updateDevice();
@@ -316,8 +377,8 @@ function tabview1(props) {
       onChange: function (newValue, oldValue, config) {
         // config is {yourProperty: "yourValue"}
         //console.log(this);
-        console.log("!!!!!----->>>>>>" + newValue);
-        console.log("!!!!!----->>>>>>" + oldValue);
+        // console.log("!!!!!----->>>>>>" + newValue);
+        // console.log("!!!!!----->>>>>>" + oldValue);
         // var chart1 = document.getElementById("wwwqqq");
         // console.log(chart1);
         //avp.updateDevice();
@@ -325,6 +386,8 @@ function tabview1(props) {
     }
   }
 }
+
+
 
 const MenuCenter1 = ({ data }) => (
   <div>
@@ -392,17 +455,17 @@ const toolBar = () => {
           console.log("Start values");
           let deviceId = 1;
           let paramId = 65;
-          startOsc(deviceId, 1);
+          startOsc(deviceId, paramId);
         }
       },
 
-      {
-        view: "button", value: "Load data", autowidth: true, align: "center",
-        click: function () {
-          console.log("Load data");
-          loadDataModel();
-        }
-      },
+      // {
+      //   view: "button", value: "Load data", autowidth: true, align: "center",
+      //   click: function () {
+      //     // console.log("Load data");
+      //     loadDataModel();
+      //   }
+      // },
 
     ]
   }
@@ -416,8 +479,8 @@ const webixButton = (props = { width: "100" }) => {
       css: "webix_primary",
       inputWidth: props.width,
       click: function (id, event) {
-        console.log("webixButton");
-        console.log(this.onclickMessage);
+        // console.log("webixButton");
+        // console.log(this.onclickMessage);
         this.onclickMessage();
       }
     }
@@ -425,12 +488,12 @@ const webixButton = (props = { width: "100" }) => {
 }
 
 const addButtonClick = () => {
-  console.log("addButtonClick");
+  // console.log("addButtonClick");
   showElementChart("chart4");
 }
 
 const removeButtonClick = () => {
-  console.log("addButtonClick");
+  // console.log("addButtonClick");
   showElementChart("chart4", "hidden");
 }
 
@@ -444,33 +507,123 @@ function addFunction1(x) {
   return Math.sin(x * 0.01) * Math.cos(x * 0.01) * (1 + 0.5 * Math.random());
 }
 
+function dataViewtable(params) {
+  let data = [
+    { id:9, num: "1", name:"Parameter 1 (2110)", value:"1.008", dimension:"W", time:"11:56",chart:"+",numchart:1},
+    { id:10, num: "2", name:"Parameter 2 (2120)", value:"2.7896", dimension:"A", time:"11:56",chart:"+",numchart:1},
+  ];
+  return { title: "state title" , dt:params}
+}
+
+const leftMenuInfo1 = () => {
+  // arr_devices = loadDataInterface([]);
+  let arr_devices = [];
+  // console.log("model.m_devices");
+  // console.log(model.m_devices);
+  // console.log(model);
+  
+  // arr_devices = loadDataInterface(model.m_devices);
+  
+  return (
+      [
+          { header:"Graphic trends", body: ""},
+          { header:"PLC", body: "" },
+          { header:"CPLotWeb", body: ""},
+          { header:"Devices", id:"DeviceInit", body: devicesWebix(model.m_devices, this) },
+      ]
+  )
+}
+
 export default class MenuTop extends React.Component {
   constructor(props) {
     super(props);
     this.title = "first title"
-    this.state = { title: "state title" };
+    this.state = { title: "state title" , dt:[]};
+    // this.state = dataViewtable([]);
+    this.updateDevices =  props.updateDevices;
+    this.dataViewtable1 = [];
+
+    // setTimeout(() => {
+    //   this.updateDevices(this.leftMenuInfo());
+    // }, 2000);
+    
+    // model.on('system_status', function (res) {
+    //   console.log(`System status changed to ${res}`);
+    //   model.disablePeriodicCheck();
+    // });
+
   };
+  
+  
   render() {
-    return (
-      <div>
-        <Webix ui={tabview1(this.props)} data={this.props} />
-        <div id="chart2">
 
-          <Chart2 id="chart3" /* title="demo chart 3" */ addFunction={addFunction} />
-          <Chart2 id="chart4" title="&nbsp;" addFunction={addFunction1} />
-          <Chart2 id="chart5" title="&nbsp;" addFunction={addFunction1} />
-        </div>
+    let component = this;
+    Info.elements = {...Info.elements, menuTop: this };
+    const leftMenuInfo = () => {
+      // arr_devices = loadDataInterface([]);
+      let arr_devices = [];
+      // console.log("model.m_devices");
+      // console.log(model.m_devices);
+      // console.log(model);
+      
+      // arr_devices = loadDataInterface(model.m_devices);
+      
+      return (
+          [
+              { header:"Graphic trends", body: ""},
+              { header:"PLC", body: "" },
+              { header:"CPLotWeb", body: ""},
+              { header:"Devices", id:"Devices", body: devicesWebix(model.m_devices, component) },
+          ]
+      )
+    }
+    
+    // const leftMenuInfo = [
+    //   { header:"Graphic trends", body: ""},
+    //   { header:"PLC", body: "" },
+    //   { header:"Logs", body: ""},
+    //   { header:"Devices", id:"Devices", body: devicesWebix([1,2,3,4,5,6,7,8,9,10,112,114,116,118,145,1323])}];
+    
+    
+    return(
+        <div>
+            <Webix ui={webixButton(150)} id="q1" data="Get Devices" click={() => {
+                // Info.actions.setDevicesName(leftMenuInfo())
+                Info.actions.updateLeftMenu(model.m_devices);
+                // this.updateDevices(leftMenuInfo());
+                let dt1 = [
+                  { id:9, num: "1", name:"Parameter 10 (2110)", value:"1.008", dimension:"W", time:"11:56",chart:"+",numchart:1},
+                  { id:10, num: "2", name:"Parameter 20 (2120)", value:"2.7896", dimension:"A", time:"11:56",chart:"+",numchart:1},
+                  { id:11, num: "3", name:"Parameter 3 (2130)", value:"8", dimension:"kHz", time:"11:00",chart:"+",numchart:"2"},
+                  { id:7, num: "4", name:"Parameter 4 (2140)", value:"356", dimension:"NO/NC", time:"11:20",chart:"–",numchart:""}
+                ];
+                console.log("webixButton click");
+                // this.setState((state, props) => ({
+                //   dt: dt1
+                // }));
+                
+                }
+              }/>
+          
+            <Webix ui={tabview1(this.props)} />
+            
+            <div id="chart2">
 
-        <Chart />
-        <ChartList />
-        <div id="memo1">Memo 1
-          <Webix ui={toolBar()} data="Add Chart" click={addButtonClick} />
+                <Chart2 id="chart3" /* title="demo chart 3" */ addFunction={addFunction}/>
+                <Chart2 id="chart4" title="&nbsp;" addFunction={addFunction1}/>
+                <Chart2 id="chart5" title="&nbsp;" addFunction={addFunction1}/>
+            </div>
+            
+              <Chart/>
+              <ChartList/>
+            <div id="memo1">{/* Memo 1 */}
+                  <Webix ui={toolBar()} data="Add Chart" click={addButtonClick}  />
+            </div>
+            <div id="memo2">Memo 2</div>
+            <div id="memo3">Memo 3</div>
+            <div id="memo4">Memo 4</div>
+              <DataView data={this.state.dt}/>
         </div>
-        <div id="memo2">Memo 2</div>
-        <div id="memo3">Memo 3</div>
-        <div id="memo4">Memo 4</div>
-        <DataView />
-      </div>
     )
   }
 };
