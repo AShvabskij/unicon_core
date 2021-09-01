@@ -52,8 +52,6 @@ struct Param
 
         return "";
     }
-
-    ParamValue value;
 };
 typedef QVector<Param> ParamList;
 

@@ -7,8 +7,9 @@ enum ChannelType
 {
     Undefined = 0,
     CAN,
-    FO,
-    MBUS
+    CAN_OPEN,
+    MOD_BUS,
+    FO
 };
 
 struct Device
@@ -20,7 +21,6 @@ struct Device
     QVector<int> modules;
 };
 typedef QVector<Device> DeviceList;
-
 
 struct Module
 {
