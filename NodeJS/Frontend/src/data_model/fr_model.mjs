@@ -306,6 +306,7 @@ export class Model extends Events {
         res.id = paramInfo.param_id;
         res.name = paramInfo.name;
         res.desc = paramInfo.desc;
+        res.unit = paramInfo.value_unit;
 
         return res;
     }
@@ -427,6 +428,7 @@ class Param {
         this.moduleId = 0;
         this.name = '';
         this.desc = '';
+        this.unit = '';
         this.value = new ParamValue();
 
         this.stream = null;

@@ -14,9 +14,6 @@ DDE_PARAMS::DDE_PARAMS()
 
 	//2) fill with names devices
 
-    static uint16_t amplitude = 10;
-    static uint16_t frequency_hertz = 1;
-
 	for (int ii = 1; ii < 33; ii=ii+11)
 	{
 		devices_count++;
@@ -36,7 +33,7 @@ DDE_PARAMS::DDE_PARAMS()
 				int param_ID = (jj << 6) + subix;
 				device[ii].el_descr[param_ID].id = param_ID; // (jj << 6) + subix;
 
-				device[ii].el[param_ID].format = GLIO_ELEMENT_FORMAT::FORMAT_INT;
+				device[ii].el[param_ID].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT;
 				device[ii].el[param_ID].ivalue = -1;
 				device[ii].el[param_ID].fvalue = -1;
 				string s1;
@@ -127,7 +124,7 @@ void DDE_PARAMS::read_params(DDE_GET_PARAMS_DATA& get_params)
 			//get_params.el_descr[ii].sub_index = ii;
 			get_params.el[ii].ivalue = 0; // rand();
 			get_params.el[ii].timestamp = system_time;
-			get_params.el[ii].format = GLIO_ELEMENT_FORMAT::FORMAT_INT;
+			get_params.el[ii].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT;
             get_params.el[ii].fvalue = 11.11;
 		}
 		return;
@@ -152,7 +149,7 @@ void DDE_PARAMS::read_params(DDE_GET_PARAMS_DATA& get_params)
         for (int ii = 0; ii < 16; ii++) {
             get_params.el[ii].ivalue = rand();
             get_params.el[ii].timestamp = system_time;
-            get_params.el[ii].format = GLIO_ELEMENT_FORMAT::FORMAT_FLOAT;
+            get_params.el[ii].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
             get_params.el[ii].fvalue = rand();
         }
     } else {
@@ -164,7 +161,7 @@ void DDE_PARAMS::read_params(DDE_GET_PARAMS_DATA& get_params)
         get_params.el[0].ivalue = rand();
 
         get_params.el[0].timestamp = system_time;
-        get_params.el[0].format = GLIO_ELEMENT_FORMAT::FORMAT_FLOAT;
+        get_params.el[0].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
         get_params.el[0].fvalue = rand();
         get_params.el[0].deprecated = false;
     }

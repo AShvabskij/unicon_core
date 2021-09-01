@@ -40,15 +40,17 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 				int param_ID = (jj << 6) + subix;
 				device[ii].el_descr[param_ID].id = param_ID; // (jj << 6) + subix;
 
-				device[ii].el[param_ID].format = GLIO_ELEMENT_FORMAT::FORMAT_INT;
+                device[ii].el[param_ID].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
+
 				device[ii].el[param_ID].ivalue = -1;
 				device[ii].el[param_ID].fvalue = -1;
 
 				string s1;
-                s1 = (subix == 0) ? s : "param_"+ to_string(subix);
+                s1 = (subix != 0) ? "param_"+ to_string(subix) : s;
 				strcpy(device[ii].el_descr[param_ID].name, s1.c_str());
                 s1 = s + " param "+ to_string(subix);
                 strcpy(device[ii].el_descr[param_ID].descr, s1.c_str());
+                device[ii].el_descr[param_ID].value_unit = (subix != 0) ? GLIO_ELEMENT_UNIT_ENUM::UNIT_AMPERE : GLIO_ELEMENT_UNIT_ENUM::UNIT_UNDEFINED;
                 device[ii].el[param_ID].scale = 0;
 				device[ii].el[param_ID].timestamp = 0;
 
@@ -73,7 +75,7 @@ DDE_PARAMS_EMUL::~DDE_PARAMS_EMUL()
 
 int DDE_PARAMS_EMUL::init() {
 
-    std::thread*thr_params = new std::thread(&DDE_PARAMS_EMUL::thread_proc, this);
+    std::thread* thr_params = new std::thread(&DDE_PARAMS_EMUL::thread_proc, this);
 
 	//thr_params.join();
 	return 0;
@@ -103,7 +105,7 @@ int DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
         for (int ii = 0; ii < 64; ii++) {
             if (device[ii].name[0] != 0) {
                 memcpy(&p.el_descr[p.el_count].name, &device[ii].name, DDE_PARAMS_NAME_LENGTH);
-                memcpy(&p.el_descr[p.el_count].descr, &device[ii].descr, 256);
+                memcpy(&p.el_descr[p.el_count].descr, &device[ii].descr, DDE_PARAMS_DESCR_LENGTH);
                 p.el_descr[p.el_count].id = ii;
                 p.el_count++;
             }
@@ -153,8 +155,6 @@ int DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
 
 int DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_DATA& p)
 {
-	int ii = 0;
-
 	//TODO - add check that requiest is not already in the queue. If it is do not push it. 
 
 	//0) set timeout counter to 0	
@@ -203,7 +203,7 @@ void DDE_PARAMS_EMUL::read_params(DDE_GET_PARAMS_DATA& get_params)
 			//get_params.el_descr[ii].sub_index = ii;
 			get_params.el[ii].ivalue = 0; // rand();
 			get_params.el[ii].timestamp = system_time;
-			get_params.el[ii].format = GLIO_ELEMENT_FORMAT::FORMAT_INT;
+            get_params.el[ii].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
             get_params.el[ii].fvalue = 11.11;
 		}
 		return;
@@ -216,8 +216,8 @@ void DDE_PARAMS_EMUL::read_params(DDE_GET_PARAMS_DATA& get_params)
 			//get_params.el[ii].index = ii;
 			get_params.el[ii].ivalue = 0; // rand();
             get_params.el[ii].timestamp = system_time;
-			//get_params.el[ii].format = 2;
-			get_params.el[ii].fvalue = 11.11;
+            get_params.el[ii].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
+            get_params.el[ii].fvalue = 11.11;
 		}
 
 		return;
@@ -228,7 +228,7 @@ void DDE_PARAMS_EMUL::read_params(DDE_GET_PARAMS_DATA& get_params)
         for (int ii = 0; ii < 16; ii++) {
             get_params.el[ii].ivalue = rand();
             get_params.el[ii].timestamp = system_time;
-            get_params.el[ii].format = GLIO_ELEMENT_FORMAT::FORMAT_FLOAT;
+            get_params.el[ii].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
             get_params.el[ii].fvalue = rand();
         }
     } else {
@@ -240,7 +240,7 @@ void DDE_PARAMS_EMUL::read_params(DDE_GET_PARAMS_DATA& get_params)
         get_params.el[0].ivalue = rand();
 
         get_params.el[0].timestamp = system_time;
-        get_params.el[0].format = GLIO_ELEMENT_FORMAT::FORMAT_FLOAT;
+        get_params.el[0].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
         get_params.el[0].fvalue = generateValue(get_params.device_ID, get_params.param_ID, system_time);
         get_params.el[0].deprecated = false;
     }

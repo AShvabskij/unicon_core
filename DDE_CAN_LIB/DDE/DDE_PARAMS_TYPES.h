@@ -12,7 +12,7 @@
 #define DDE_PARAMS_NAME_LENGTH 64
 #define DDE_PARAMS_DESCR_LENGTH 256
 
-enum GLIO_ELEMENT_FORMAT
+enum GLIO_ELEMENT_FORMAT_ENUM
 {
 	 FORMAT_UNDEFINED =0,
 	 FORMAT_INT,
@@ -22,13 +22,23 @@ enum GLIO_ELEMENT_FORMAT
 	 FORMAT_TEXT
 };
 
+enum GLIO_ELEMENT_UNIT_ENUM
+{
+    UNIT_UNDEFINED =0,
+    UNIT_AMPERE,
+    INT_VOLTS,
+    UNIT_WATT,
+    UNIT_CELSIUS,
+    UNIT_SEC
+};
+
 struct GLIO_ELEMENT_VALUE {
     uint16_t id;
 	int32_t ivalue;
 	float	fvalue;
 	//uint8_t text[8];
 	time_t timestamp;
-	GLIO_ELEMENT_FORMAT format;  // 0 - not defined 1-int 2-float 3-BIT /оепевхякемхъ
+    GLIO_ELEMENT_FORMAT_ENUM format;  // 0 - not defined 1-int 2-float 3-BIT
     float scale = 1;
     bool deprecated = false;
 };
@@ -41,6 +51,7 @@ struct GLIO_ELEMENT_DESCR
 	//uint8_t params_count;
 	char name[DDE_PARAMS_NAME_LENGTH];
     char descr[DDE_PARAMS_DESCR_LENGTH];
+    GLIO_ELEMENT_UNIT_ENUM value_unit;
 
 	//GLIO_ELEMENT el;
 

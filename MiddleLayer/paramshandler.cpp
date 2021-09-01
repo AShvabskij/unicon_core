@@ -302,6 +302,7 @@ long ParamsHandler::getParamHeader(int deviceId, int paramId, Param *out)
     for (const GLIO_ELEMENT_DESCR& elem : header.el_descr) {
         if (elem.id == paramId) {
             out->name = elem.name;
+            out->valueUnit = elem.value_unit;
             return 0;
         }
     }
@@ -335,6 +336,7 @@ long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)
         p.id = elem.id;
         p.name = elem.name;
         p.desc = elem.descr;
+        p.valueUnit = elem.value_unit;
 
         *out << p;
     }
@@ -353,6 +355,7 @@ QJsonObject ParamsHandler::createHeaderObj(int requestId, const ParamList& param
         obj["param_id"] = param.id;
         obj["name"] = param.name;
         obj["desc"] = param.desc;
+        obj["value_unit"] = Param::valueUnitToString(param.valueUnit);
 
         body << obj;
 
