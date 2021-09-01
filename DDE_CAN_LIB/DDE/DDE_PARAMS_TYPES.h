@@ -39,6 +39,8 @@ struct GLIO_ELEMENT_DESCR
 	//uint8_t sub_index;			//SUB_INDEX_MAX max = 64
 	//uint8_t params_count;
 	char name[DDE_PARAMS_NAME_LENGTH];
+    char descr[256];
+
 	//GLIO_ELEMENT el;
 
 };
@@ -49,6 +51,7 @@ struct DEVICE_PARAMS
 	uint8_t device_ID; //INDEX_MAX max = 64
 	//uint8_t modules_count;
 	char name[DDE_PARAMS_NAME_LENGTH];
+    char descr[256];
 
 	GLIO_ELEMENT_DESCR el_descr[PARAMS_ID_MAX + 1];
     GLIO_ELEMENT_VALUE el[PARAMS_ID_MAX + 1];

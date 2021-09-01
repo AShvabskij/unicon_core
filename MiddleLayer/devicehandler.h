@@ -3,8 +3,9 @@
 
 #include "basereqhandler.h"
 
-enum InterfaceType
+enum ChannelType
 {
+    Undefined = 0,
     CAN,
     FO,
     MBUS
@@ -15,7 +16,7 @@ struct Device
     int id = 0;
     QString name;
     QString desc;
-    InterfaceType interface = CAN;
+    ChannelType channel = CAN;
     QVector<int> modules;
 };
 typedef QVector<Device> DeviceList;

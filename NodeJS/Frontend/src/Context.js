@@ -4,7 +4,6 @@ import * as webix from 'webix/webix.js';
 
 export const Context = React.createContext();
 let startDate = new Date();
-const interfaceName = {1: 'Can', 2: 'MBus', 3: 'FO'};
 
 const updateLeftMenuBase = (devicesArr) => {
     let options = [];
@@ -33,7 +32,7 @@ const updateLeftMenuBase = (devicesArr) => {
     view:"flexlayout",cols:[]};
     devicesArr.forEach(function(item, index, array) {
         // console.log(item, index);
-        devices.cols.push( { view:"toggle", label:item.name + "</br>Chanal: " + interfaceName[item.interface], minWidth: 110, height: 70, css: "webix_primary", modules: item.modules,
+        devices.cols.push( { view:"toggle", label:item.name + "</br>Channel: " + item.interfaceName, minWidth: 110, height: 70, css: "webix_primary", modules: item.modules,
         click:function(id,event){
             // console.log(id,event);
             // console.log($$(id));
@@ -48,7 +47,7 @@ const updateLeftMenuBase = (devicesArr) => {
                 console.log(item.params);
                 dtt = [];
                 item.params.forEach(function(itemP, indexP, array) {
-                    infoCurrentDivice = infoCurrentDivice + " [" + itemP.deviceId + "]" + "</br>Chanal: " + interfaceName[item.interface];
+                    infoCurrentDivice = infoCurrentDivice + " [" + itemP.deviceId + "]" + "</br>Chanal: " + item.interfaceName;
                     // if(=="Can")
                     dtt.push({id: "m"+i, modul: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
                     name:itemP.name + " [" + itemP.id + "]", 
