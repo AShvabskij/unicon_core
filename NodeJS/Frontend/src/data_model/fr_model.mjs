@@ -25,6 +25,15 @@ export class SysInterfacesEnum {
     static CanOpen = 2;
     static ModBus = 3;
     static FO = 4;
+
+    static toString(arg) {
+        switch (arg)  {
+            case SysInterfacesEnum.Can: return 'Can';
+            case SysInterfacesEnum.CanOpen: return 'CanOpen';
+            case SysInterfacesEnum.ModBus: return 'ModBus';
+            case SysInterfacesEnum.FO: return 'FO';
+        }
+    }
 }
 
 class ValueFormatEnum {
@@ -162,9 +171,12 @@ export class Model extends Events {
 
                     let item = devices[i];
                     let device = new Device();
+
                     device.name = item.name;
                     device.id = item.id;
                     device.desc = item.desc;
+                    device.interface = item.channel;
+                    device.interfaceName = SysInterfacesEnum.toString(item.channel);
 
                     for (var ii = 0; ii < item.modules.length; ii++) {
                         let moduleId = item.modules[ii];
@@ -260,14 +272,14 @@ export class Model extends Events {
             return this.m_devices;
         }
 
-        let result = this.m_devices.filter(item => item.interface === sysInterface);
+        let result = this.m_devices.filter(item => item.interfaceName === sysInterface);
         return result;
     }
 
     sysInterfaces() {
         let result = this.m_devices.reduce((res, current) => {
-            if (!(current.interface in res)) {
-                res.push(current.interface);
+            if (!(current.interfaceName in res)) {
+                res.push(current.interfaceName);
             }
         }, []);
 
@@ -307,6 +319,7 @@ export class Device {
         this.image = 0
         this.osc = new Osciloscope()
         this.interface = SysInterfacesEnum.Can
+        this.interfaceName = 'Can';
         this.modules = []
         this.params = []
     }

@@ -67,7 +67,7 @@ export class DeviceProvider {
         let req = {
             request_id: this._genReqId(deviceId, moduleId),
             cmd: this._deviceCmd(reqName),
-            body: this._deviceBody(deviceId)
+            body: this._deviceBody(deviceId, moduleId)
         };
 
         return req;

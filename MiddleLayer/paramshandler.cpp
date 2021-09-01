@@ -334,6 +334,7 @@ long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)
         p.moduleId = moduleId;
         p.id = elem.id;
         p.name = elem.name;
+        p.desc = elem.descr;
 
         *out << p;
     }

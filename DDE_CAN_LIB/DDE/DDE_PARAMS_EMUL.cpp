@@ -27,14 +27,15 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 
     for (int ii = 1; ii < devices_count * devices_step; ii = ii + devices_step)	{
 		device[ii].device_ID = ii;
-		sprintf(device[ii].name, "Device Power Unit Type %d", ii);
-		
+        sprintf(device[ii].name, "Device PUT %d", ii);
+        sprintf(device[ii].descr, "Device Power Unit Type %d", ii);
+
 		string s;
-		int param_count = 2;// (rand() / RAND_MAX) * 60 + 3;
+        int module_count = 2;// (rand() / RAND_MAX) * 60 + 3;
 
 		//fill device with random params
-        for (int jj = 0; jj <= param_count; jj++) {
-			s = "module_" + to_string(jj);
+        for (int jj = 0; jj <= module_count; jj++) {
+            s = "module " + to_string(jj);
 			for (int subix = 0; subix < 4; subix++) {
 				int param_ID = (jj << 6) + subix;
 				device[ii].el_descr[param_ID].id = param_ID; // (jj << 6) + subix;
@@ -44,9 +45,11 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 				device[ii].el[param_ID].fvalue = -1;
 
 				string s1;
-				s1 = s + "_param_"+ to_string(subix);
+                s1 = (subix == 0) ? s : "param_"+ to_string(subix);
 				strcpy(device[ii].el_descr[param_ID].name, s1.c_str());
-				device[ii].el[param_ID].scale = 0;
+                s1 = s + " param "+ to_string(subix);
+                strcpy(device[ii].el_descr[param_ID].descr, s1.c_str());
+                device[ii].el[param_ID].scale = 0;
 				device[ii].el[param_ID].timestamp = 0;
 
                 device[ii].el_Settings[param_ID].amplitude = dev_settings[ii].amplitude + subix;
@@ -100,6 +103,7 @@ int DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
         for (int ii = 0; ii < 64; ii++) {
             if (device[ii].name[0] != 0) {
                 memcpy(&p.el_descr[p.el_count].name, &device[ii].name, DDE_PARAMS_NAME_LENGTH);
+                memcpy(&p.el_descr[p.el_count].descr, &device[ii].descr, 256);
                 p.el_descr[p.el_count].id = ii;
                 p.el_count++;
             }
@@ -129,9 +133,9 @@ int DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
 
                 p.el_count = 0;// params.device[p.device_ID].el_descr[p.param_ID].params_count;
                 for (int ii = p.elem_ID; ii < p.elem_ID + 64; ii++) {
-                    if (device[p.device_ID].el_descr[p.elem_ID + ii].name[0] != 0)
+                    if (device[p.device_ID].el_descr[ii].name[0] != 0)
                     {
-                        memcpy(&p.el_descr[p.el_count], &device[p.device_ID].el_descr[p.elem_ID + ii], sizeof(GLIO_ELEMENT_DESCR));
+                        memcpy(&p.el_descr[p.el_count], &device[p.device_ID].el_descr[ii], sizeof(GLIO_ELEMENT_DESCR));
                         p.el_descr[p.el_count].id = ii;
                         p.el_count++;
                     }
