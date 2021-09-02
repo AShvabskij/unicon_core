@@ -80,7 +80,7 @@ export class Model extends Events {
         RequestHelper.initConnection(this.m_host);
 
         let streamSocketUrl = "ws://" + this.m_host + ":" + STREAM_SERVER_PORT;
-/*
+
         this.streamSocket = new WebSocket(streamSocketUrl);
 
         this.streamSocket.onopen = (event) => {
@@ -124,7 +124,7 @@ export class Model extends Events {
                 return;
             }
         };
-*/
+
         this.m_inited = true;
     }
 
