@@ -9,16 +9,18 @@ import Chart2 from './Chart2';
 import { ChartControls } from './Chart2';
 import ChartList from './ChartList';
 import DataView from './DataView';
-
+import Config from './.config.js';
 import { Model } from "./data_model/fr_model.mjs";
 import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 import { AddCounter, Info } from "./Context"
 
-let model = new Model('127.0.0.1');
+let model = new Model(Config.ip);
 Info.model = model;
 model.init();
 
 setTimeout(() => {
+  console.log("setTimeout result");
+  console.log(model.load);
   model.load().then(result => {
     console.log("loadDataModel result");
     console.log(model.m_devices);
@@ -28,6 +30,7 @@ setTimeout(() => {
     // loadDataInterface(model.m_devices);
     // model.enablePeriodicCheck();      
   }, error => {
+    console.log("loadDataModel error");
     console.log(error);
   });
 }, 1000);
