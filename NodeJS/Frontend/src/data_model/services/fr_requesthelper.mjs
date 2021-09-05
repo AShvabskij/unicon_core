@@ -3,7 +3,7 @@ let DATA_SERVER_PORT = 1235;
 export class _RequestHelper {
 
     m_connected = false;
-    m_socketUrl = "ws://" + "127.0.0.1" + ":" + DATA_SERVER_PORT;
+    m_socketUrl = "ws://" + "192.168.7.113" + ":" + DATA_SERVER_PORT;
     m_socket = new WebSocket(this.m_socketUrl);
 
     constructor() {
