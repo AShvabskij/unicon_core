@@ -5,8 +5,73 @@ import React from "react";
 import 'webix/webix.css';
 import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
+import {$$} from 'webix';
+import { Info } from './Context';
+
+
+async function getValue(param,rowId) {
+  console.log("try to get param value...");
+  await param.closeValueStream();
+  let resStream = await param.openValueStream();
+  resStream.on("data", chunk => {
+    let stringifiedRes = chunk.toString();
+    // console.log(`Received from stream: ${stringifiedRes}`);
+    let value = JSON.parse(stringifiedRes);
+    // let xValue = (value.valueTime & 0xFFFF) * 0.05;
+    let xValue = value.valueTime - Info.startTime;
+    let yValue = value.value;
+    // console.log (xValue +“,”+ yValue);
+    if (yValue != -1) {
+      let grid = $$("parametersGrid");
+      let item = grid.getItem(rowId);
+      item.value = yValue;
+      item.time = xValue;
+      // grid.refresh();
+      grid.updateItem(rowId,item);
+    }
+  });
+}
+
+async function getValue1(deviceId = 1, paramId = 65) {
+  console.log("try to get value...");
+  let startDate = new Date();
+  Info.model.device(deviceId).param(paramId).lastValue().then(result => {
+    var paramValue = result;
+    var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
+    console.log(message);
+  });
+  let param = Info.model.device(deviceId).param(paramId);
+  await param.closeValueStream();
+  let resStream = await param.openValueStream();
+  resStream.on("data", chunk => {
+    let stringifiedRes = chunk.toString();
+    // console.log(`Received from stream: ${stringifiedRes}`);
+    let value = JSON.parse(stringifiedRes);
+    // let xValue = (value.valueTime & 0xFFFF) * 0.05;
+    let xValue = value.valueTime - Info.startTime;
+    let yValue = value.value;
+    // console.log (xValue +“,”+ yValue);
+    if (yValue != -1) {
+      console.log(yValue);
+    }
+  });
+}
+
+
+function getItems(tree,rowId) {
+  let row = tree.getFirstChildId(rowId);
+  let rowsList = [];
+  if (row) {
+    rowsList.push({"id":row,"row":tree.getItem(row)});
+    while ( row = tree.getNextSiblingId(row)) {
+      rowsList.push({"id":row,"row":tree.getItem(row)});
+    }
+  }
+  return rowsList;
+}
 
 function getUImainMenu(props) {
+  
 	return { view:"treetable", // "datatable"
 			// width:0,
 			// height:0,
@@ -23,93 +88,38 @@ function getUImainMenu(props) {
 				{id:"chart", header:"Show on trend", width:"130"},
 				{id:"numchart", header:"Number of trend", width:"130"}
 			],
-			// autoConfig:true, 
-      // css:"webix_shadow_medium" 
-			};
-	// this.ui.$$("tree").parse(data.tree());
+      on : {
+        onAfterClose :function(id){
+          let tree = $$("parametersGrid");
+          let rows = getItems(tree,id);
+          rows.forEach(function(item, index, array) {
+               item.row.param.closeValueStream();
+          });
+        },
+        onAfterOpen :function(id){
+          let tree = $$("parametersGrid");
+          let rows = getItems(tree,id);
+          console.log("onAfterOpen="+id);
+          let arr = tree.getOpenItems();
+          let index = arr.indexOf(id);
+          arr.splice(index,1);
+          arr.forEach(function(item, index, array) {
+            tree.close(item);
+          });
+          rows.forEach(function(item, index, array) {
+            // getValue(item.row.param,item.id);
+          });
+        } 
+      }
+		}
 }
 
-function getTable(params) {
-	return {
-    view:"datatable", 
-    id:"film_list",
-    scroll:"y",
-    select:true,
-    height:300,
-    hover:"myhover",
-    columns:[
-        { id:"rank", header:"", width:50, css:"rank"},
-        { id:"title", header:"Film title", fillspace:true},
-        { id:"year",  header:"Released", width:100},
-        { id:"votes", header:"Votes", width:100},
-        { id:"rating", header:"Rating", width:100}
-    ]
-}
-	
-}
-
-function getTable2(params) {
-	return {
-    "view": "tabbar",
-    "options": [
-      { value:"Parameters", id:"dataview",  icon:"wxi-pencil" },
-      { value:"Оscilloscope ", id:"scichart-root",  icon:"wxi-pencil" },
-      { value:"Control", id:"device_manage",  icon:"wxi-pencil" },
-      { value:"Info", id:"data_m",  icon:"wxi-pencil" },
-    ],
-	}
-}
-// export default class DataView extends JetView{
-// 	config(){
-// 		return { view:"datatable", 
-// 			// width:0,
-// 			// height:0,
-// 			id: "dataview",
-// 			columns:[
-// 				{id:"num", header:"Number"},
-// 				{id:"name", header:"Name", width:"300"},
-// 				{id:"value", header:"Value", width:"130"},
-// 				{id:"dimension", header:"Dimension"},
-// 				{id:"time", header:"Time"},
-// 				{id:"chart", header:"Show on chart", width:"150"},
-// 				{id:"numchart", header:"Number of chart", width:"200"}
-// 			],
-// 			autoConfig:true, css:"webix_shadow_medium" };
-// 	}
-// 	init(view){
-// 		view.parse(device1);
-// 	}
-// }
-
-
-// export default class DataView extends React.Component {
-//   constructor(props) { 
-//     super(props);
-//     this.title = "first title"
-//     this.state = { title: "state title" };
-// 	this.data = [
-// 	{ id:9, num: "1", name:"Parameter 1 (2110)", value:"1.008", dimension:"W", time:"11:56",chart:"+",numchart:1},
-// 	{ id:10, num: "2", name:"Parameter 2 (2120)", value:"2.7896", dimension:"A", time:"11:56",chart:"+",numchart:1},
-// 	{ id:11, num: "3", name:"Parameter 3 (2130)", value:"8", dimension:"kHz", time:"11:00",chart:"+",numchart:"2"},
-// 	{ id:7, num: "4", name:"Parameter 4 (2140)", value:"356", dimension:"NO/NC", time:"11:20",chart:"–",numchart:""}
-// ];
-//   };
-//   render() {
-	
-//     return(
-//         <div id="dataview">
-//         <Webix  ui={getUImainMenu(this.props)} data={this.data} />
-//         </div>
-//     )
-//   }
-// }
 
 function DataView(props) {
   // console.log("MenuLeft ");
   // console.log(props.devtitle);
 
   return ( 
-      // <Webix ui={getUI3(props.devtitle)} data={props.devtitle}/>
       <div id="dataview">
         <WebixComponent ui={getUImainMenu(props)} data={props.data} />
       </div> 

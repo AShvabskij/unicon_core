@@ -19,48 +19,17 @@ Info.model = model;
 model.init();
 
 setTimeout(() => {
-  console.log("setTimeout result");
-  console.log(model.load);
+  // console.log("setTimeout result");
+  // console.log(model.load);
   model.load().then(result => {
     console.log("loadDataModel result");
-    console.log(model.m_devices);
-    // Info.actions.setDevicesName(leftMenuInfo1());
-
+    // console.log(model.m_devices);
     Info.actions.updateLeftMenu();
-    // loadDataInterface(model.m_devices);
-    // model.enablePeriodicCheck();      
   }, error => {
     console.log("loadDataModel error");
     console.log(error);
   });
 }, 1000);
-
-const interfaceName = { 1: 'Can', 2: 'MBus', 3: 'FO' };
-
-
-
-async function loadDataModel() {
-
-  console.log("try to load data model...");
-
-  model.clear();
-
-  model.load().then(result => {
-    // console.log("loadDataModel1 result");
-    // console.log(model.m_devices);
-    // // loadDataInterface(model.m_devices);
-    // Info.actions.updateLeftMenu(model.m_devices);
-    // model.enablePeriodicCheck();      
-  }, error => {
-    console.log(error);
-  });
-
-  model.on('system_status', (res) => {
-    console.log(`System status changed to ${res}`);
-    model.disablePeriodicCheck();
-  });
-
-}
 
 
 async function stopValues(deviceId, paramId) {
@@ -128,7 +97,7 @@ async function startOsc(deviceId, line) {
   console.log("try to get osc streams...");
 
   // let param = device.param(deviceId + 1);
-  let streamSocketUrl = "ws://" + "127.0.0.1" + ":" + 1237;
+  let streamSocketUrl = "ws://" + Config.ip + ":" + 1237;
   let streamSocket = new WebSocket(streamSocketUrl);
 
   let startDate = new Date();
@@ -188,69 +157,6 @@ async function startOsc(deviceId, line) {
   //  console.log(output + "\n");
 };
 
-function devicesWebix(devicesArr, component) {
-  console.log("devicesWebix");
-  //   console.log(devicesArr);
-  console.log("interfaceName");
-  // console.log(model);
-  console.log(interfaceName);
-  let devices = {
-    margin: 10, padding: 0, type: "wide",
-    view: "flexlayout", cols: []
-  };
-  devicesArr.forEach(function (item, index, array) {
-    // console.log(item, index);
-    devices.cols.push({
-      view: "toggle", label: item.name + "</br>Chanal: " + interfaceName[item.interface], minWidth: 110, height: 70, css: "webix_primary", modules: item.modules,
-      click: function (id, event) {
-        // console.log(id,event);
-        // console.log($$(id));
-        let s = $$(id);
-        console.log(s.config.modules);
-        let dt1 = [];
-        let dtt = [];
-        let i = 1;
-        let j = 1;
-        let infoCurrentDivice = item.name;
-        s.config.modules.forEach(function (item, index, array) {
-          console.log(item.params);
-          dtt = [];
-          item.params.forEach(function (itemP, indexP, array) {
-            infoCurrentDivice = infoCurrentDivice + " [" + itemP.deviceId + "]" + "</br>Chanal: " + interfaceName[item.interface];
-            // if(=="Can")
-            dtt.push({
-              id: "m" + i, modul: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
-              name: itemP.name + " [" + itemP.id + "]",
-              value: "1.008", dimension: "W", time: "11:56", chart: "+", numchart: 1
-            })
-            i++;
-          });
-          dt1.push({
-            "id": "modul" + j, "modul": "[" + item.deviceId + "] " + item.name + " [" + item.id + "]",
-            "open": false, "data": dtt
-          });
-          j++;
-        });
-        console.log(dt1);
-        //  console.log(component);
-
-        Info.elements.menuTop.setState((state, props) => ({
-          // dt: [{"id":"can","programmInt":"Can", "open":"false", "data":dt1}]
-          dt: { "id": "can", "data": dt1 }
-        }));
-
-        let s1 = $$(id).getParentView();
-        s1._cells.forEach(element => {
-          element.setValue(0);
-        });
-
-      }
-    })
-  });
-  return devices;
-};
-
-
 function disableEnableElement(id, show) {
   const elem = document.getElementById(id);
   if (elem != null) {
@@ -259,31 +165,6 @@ function disableEnableElement(id, show) {
     } else {
       elem.style.display = 'none';
     }
-  }
-}
-
-function getUImainMenu(props) {
-  return {
-    "view": "tabbar",
-    "options": [
-      { value: "Parameters", id: "dataview", icon: "wxi-pencil" },
-      { value: "Оscilloscope ", id: "scichart-root", icon: "wxi-pencil" },
-      { value: "Control", id: "device_manage", icon: "wxi-pencil" },
-      { value: "Info", id: "data_m", icon: "wxi-pencil" },
-    ],
-
-    on: {
-      onChange: function (newValue, oldValue, config) {
-        // config is {yourProperty: "yourValue"} 
-        console.log(this);
-        console.log(oldValue + " " + newValue);
-        console.log(props);
-        const elem = document.getElementById(newValue);
-        disableEnableElement(oldValue, false);
-        disableEnableElement(newValue, true);
-      }
-    }
-
   }
 }
 
@@ -350,11 +231,6 @@ function tabview1(props) {
       on: {
 
         onAfterTabClick: function (id, ev) {
-          // webix.message("tab was clicked 12345"+this.getValue());
-          // console.log("----->>>>>>111111");
-          // console.log("onAfterTabClick 123"); 
-          // console.log(id)
-          // console.log("onAfterTabClick 5"); 
           if (id == "oscilloscopeContent") {
             showChart("chart2", "memo1");
             showElementChart("chart3");
@@ -379,13 +255,7 @@ function tabview1(props) {
     },
     on: {
       onChange: function (newValue, oldValue, config) {
-        // config is {yourProperty: "yourValue"}
-        //console.log(this);
-        // console.log("!!!!!----->>>>>>" + newValue);
-        // console.log("!!!!!----->>>>>>" + oldValue);
-        // var chart1 = document.getElementById("wwwqqq");
-        // console.log(chart1);
-        //avp.updateDevice();
+        
       }
     }
   }
@@ -452,15 +322,6 @@ const toolBar = () => {
           startOsc(deviceId, paramId);
         }
       },
-
-      // {
-      //   view: "button", value: "Load data", autowidth: true, align: "center",
-      //   click: function () {
-      //     // console.log("Load data");
-      //     loadDataModel();
-      //   }
-      // },
-
     ]
   }
 }
@@ -501,26 +362,7 @@ function addFunction1(x) {
   return Math.sin(x * 0.01) * Math.cos(x * 0.01) * (1 + 0.5 * Math.random());
 }
 
-const leftMenuInfo1 = () => {
-  // arr_devices = loadDataInterface([]);
-  let arr_devices = [];
-  // console.log("model.m_devices");
-  // console.log(model.m_devices);
-  // console.log(model);
-
-  // arr_devices = loadDataInterface(model.m_devices);
-
-  return (
-    [
-      { header: "Graphic trends", body: "" },
-      { header: "PLC", body: "" },
-      { header: "CPLotWeb", body: "" },
-      { header: "Devices", id: "DeviceInit", body: devicesWebix(model.m_devices, this) },
-    ]
-  )
-}
-
-export default class MenuTop extends React.Component {
+export default class DevicesView extends React.Component {
   constructor(props) {
     super(props);
     this.title = "first title"
@@ -535,37 +377,15 @@ export default class MenuTop extends React.Component {
 
     let component = this;
     Info.elements = { ...Info.elements, menuTop: this };
-    const leftMenuInfo = () => {
-      // arr_devices = loadDataInterface([]);
-      let arr_devices = [];
-      // console.log("model.m_devices");
-      // console.log(model.m_devices);
-      // console.log(model);
-
-      // arr_devices = loadDataInterface(model.m_devices);
-
-      return (
-        [
-          { header: "Graphic trends", body: "" },
-          { header: "PLC", body: "" },
-          { header: "CPLotWeb", body: "" },
-          { header: "Devices", id: "Devices", body: devicesWebix(model.m_devices, component) },
-        ]
-      )
-    }
-
-    // const leftMenuInfo = [
-    //   { header:"Graphic trends", body: ""},
-    //   { header:"PLC", body: "" },
-    //   { header:"Logs", body: ""},
-    //   { header:"Devices", id:"Devices", body: devicesWebix([1,2,3,4,5,6,7,8,9,10,112,114,116,118,145,1323])}];
-
 
     return (
       <div>
+        <Webix ui={{ "label": "demo", "view": "label","css":"deviceLabel", "id":"descriptionDevice"}} />
         <Webix ui={webixButton(150)} id="q1" data="Get Devices" click={() => {
-          // Info.actions.setDevicesName(leftMenuInfo())
           Info.actions.updateLeftMenu(model.m_devices);
+          let l = $$("descriptionDevice");
+          l.setValue("123");
+          
           // this.updateDevices(leftMenuInfo());
           console.log("webixButton click");
           // this.setState((state, props) => ({

@@ -7,22 +7,16 @@ import * as webix from 'webix/webix.js';
 // import { HashRouter as Router, Route, NavLink} from 'react-router-dom';
 import { Link, BrowserRouter as Router, Route } from 'react-router-dom';
 import {useHistory} from 'react-router'
-import Home from './Home';
-// import FilmsView from './FilmsView';
-// import Chart from './Chart';
-import MenuTop from './MenuTop';
+import DevicesView from './DevicesView';
 import MenuLeft from './MenuLeft';
-import DataView from './DataView';
 import { accordionInit } from './data/config.js';
 import {AddCounter,Info} from "./Context"
-// import Chart from './ChartInteract';
-// import Chart2 from './Chart2';
 
 const DevicesPage = () => {
     return (
         <div className="c2">
-        {/* <MenuTop updateDevices={Info.actions.setDevicesName}/> */}
-        <MenuTop/>
+        {/* <DevicesView updateDevices={Info.actions.setDevicesName}/> */}
+        <DevicesView/>
     </div>
     );
   }; 
@@ -44,48 +38,13 @@ const CPLotWebPage = () => {
   }; 
 
   const updateLeftMenu1= () => {
-    let grid = $$("parametersGrid");
-    let item = grid.getItem("m3");
-    item.value = "qwe";
-    // grid.refresh();
-    grid.updateItem("m3",item);
-
-
-    // v.attachEvent("onAfterExpand", function(id){
-    //     console.log("Expand for section "+id);
-    //   })
-    // v.expand();
-    // v.setValue("123");
-    // let d = [
-	// 	{ header:"Graphic trends 1", body: ""},
-    //     { header:"PLC ", body: "" },
-    //     { header:"CPLotWeb 1", body: ""},
-    //     { header:"Devices 1", id:"DeviceInit" ,body: "" }
-    // ];
-    // Info.actions.setDevicesName(d)
-    // console.log(v)
     let v= $$("DeviceInit");
     v.define("header","new header");
     // v.expand();
-
   }
 
   const updateLeftMenu = () => {
-    // let v= $$("DeviceInit");
-    // v.attachEvent("onAfterExpand", function(id){
-    //     console.log("Expand for section "+id);
-    //   })
-    // v.expand();
-    // v.setValue("123");
-    // let d = [
-	// 	{ header:"Graphic trends 1", body: ""},
-    //     { header:"PLC ", body: "" },
-    //     { header:"CPLotWeb 1", body: ""},
-    //     { header:"Devices 1", id:"DeviceInit" ,body: "" }
-    // ];
-    // Info.actions.setDevicesName(d)
-    // console.log(v)
-    let v= $$("DeviceInit");
+        let v= $$("DeviceInit");
     console.log(v)
     // v.define("header","new header");
     // v.body = "new header 1";
@@ -151,8 +110,7 @@ function App() {
       <Router>
       <div className="c1">
           <div><span class='webix_icon mdi mdi-file-video'></span>UNICON</div>
-        <Button/>
-        <Button1/>
+       
           <MenuLeft devtitle={devicesD}/>
       </div>
         <DevicesPage/>

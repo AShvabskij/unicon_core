@@ -86,3 +86,13 @@
 .webix_segment_0 {
     font-size: 5px !important;
 }
+
+.deviceLabel{
+    background-color: #1CA1C1  !important;
+    color: #FFFFFF !important;
+}
+
+.webix_el_box{
+    color: #FFFFFF !important;
+    padding: 3px 2px !important;
+}
