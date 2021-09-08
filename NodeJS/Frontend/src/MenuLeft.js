@@ -124,8 +124,7 @@ function devicesWebix(devicesArr) {
   return {
     view:"accordion",
     width: 0,
-    minHeight:400,
-    maxHeight:0,
+    id:"accmain",
     multi : false,
     collapsed:true,
     select:true,

@@ -96,3 +96,7 @@
     color: #FFFFFF !important;
     padding: 3px 2px !important;
 }
+
+.webix_view.webix_layout_accordion {
+    height: 100vh !important;
+}
