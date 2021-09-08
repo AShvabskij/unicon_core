@@ -1,3 +1,4 @@
+// import cbor from 'cbor' // from 'cbor-web'
 // import { createRequire } from "module";
 // const require = createRequire(import.meta.url);
 
@@ -18,7 +19,7 @@ const ERROR_RESPONSE = {
     msg: ""
 }
 
-const OSC_MAX_CHANNELS = 5;
+const OSC_MAX_CHANNELS = 8;
 
 export class SysInterfacesEnum {
     static Can = 1;
@@ -27,7 +28,7 @@ export class SysInterfacesEnum {
     static FO = 4;
 
     static toString(arg) {
-        switch (arg)  {
+        switch (arg) {
             case SysInterfacesEnum.Can: return 'Can';
             case SysInterfacesEnum.CanOpen: return 'CanOpen';
             case SysInterfacesEnum.ModBus: return 'ModBus';
@@ -110,8 +111,13 @@ export class Model extends Events {
                 console.warn("The model is not loaded!");
                 return;
             }
-
+/*
+            cbor.decodeFirst(message, {float: true, preferWeb: true}).then(o => {
+                console.log(JSON.stringify(o, null, 2))
+              });
+*/
             var messageData = JSON.parse(message.data);
+//          var messageData = CBOR.decode(message.data);
 
             let paramId = messageData.p_id;
             if (paramId != undefined) {
@@ -121,6 +127,13 @@ export class Model extends Events {
                 _messageDataLength = message.data.length;
 
                 this._streamParamValue(deviceId, paramId, valueData);
+                return;
+            }
+
+            // let oscId = messageData.o_id;
+            let deviceId = messageData.d_id;
+            if (deviceId != undefined) {
+                this._streamOscValue(deviceId, messageData);
                 return;
             }
         };
@@ -152,6 +165,25 @@ export class Model extends Events {
         }
 
         param.streamValue(valueData);
+    }
+
+    _streamOscValue(deviceId, valueData) {
+        let osc = this._capturedOscilloscope
+
+        if (osc === undefined || osc.deviceId !== deviceId) {
+            osc = this.device(deviceId).osc;
+            if (osc !== undefined) {
+                this._capturedOscilloscope = osc;
+            }
+        }
+
+        if (osc === undefined || valueData == undefined) {
+            console.log(RECEIVED_DATA_ERROR);
+            this.emit('error', RECEIVED_DATA_ERROR);
+            return;
+        }
+
+        osc.stream(valueData);
     }
 
     async load() {
@@ -344,6 +376,7 @@ export class Osciloscope {
         this.desc = ''
         this.resolution_ns = 0;
         this.lastError = 0;
+        this.channelStreams = []
 
         this.deviceProvider = new DeviceProvider();
 
@@ -354,6 +387,16 @@ export class Osciloscope {
     }
 
     async openDataStream() {
+
+        this.channelStreams = [];
+        for (var i = 0; i < 16; ++i) {
+            this.channelStreams.push(new Stream.Readable({
+                highWaterMark: 1, //STREAM_BUFFER_OBJECTS,
+                objectMode: true,
+                read() { }
+            }));
+        }
+
         this._byteCount = 0;
         this._msgCount = 0;
         this._timeLabel = new Date().getTime();
@@ -372,9 +415,25 @@ export class Osciloscope {
         try {
             let openStream = false;
             await this.deviceProvider.reqDataStream(this.deviceId, this.id, openStream);
+            for (var i = 0; i < 16; ++i) {
+                this.channelStreams[i].push(null);
+                this.channelStreams[i].destroy;
+            }
+            this.channelStreams = [];
         } catch (error) {
             this.lastError = error;
             console.error(error);
+            this.channelStreams = [];
+        }
+    }
+
+    stream(socketData) {
+        for (var i = 0; i <= OSC_MAX_CHANNELS; ++i) {
+            let data = this.parse(socketData, i);
+            if (data == -1) {
+                continue;
+            }
+            this.channelStreams[i].push(data);
         }
     }
 
@@ -383,9 +442,7 @@ export class Osciloscope {
             return -1;
         }
 
-        let chValues = socketData.values[ch];
-
-        if (socketData.error === 2 || chValues.length === 0) {
+        if (socketData.error === 2) {
             if (ch == OSC_MAX_CHANNELS) {
                 console.log(`The osc stream is finished, device id = ${this.deviceId}, received items = ${this._msgCount}, bytes = ${this._byteCount}`);
                 console.timeEnd(`The stream elapsed time(${this._timeLabel})`);
@@ -393,21 +450,37 @@ export class Osciloscope {
             return null;
         }
 
+        let chValues = socketData.values[ch];
+        if (chValues === undefined) {
+            return null;
+        }
+
         if (ch == OSC_MAX_CHANNELS) {
             let receivedBytes = JSON.stringify(chValues[0]).length * chValues.length * socketData.values.length;
             this._byteCount += receivedBytes;
-            console.log('Received bytes = ' + receivedBytes);
+            //          console.log('Received bytes = ' + receivedBytes);
         }
 
         this._msgCount += 1;
 
         let time_ns = socketData.time - chValues.length * this.resolution_ns;
-        return chValues.map(val => {
+        let values = chValues.map(val => {
             let time = time_ns * 0.001 - this._timeLabel;
             time_ns += this.resolution_ns;
 
             return { val, time };
         })
+/*
+        var result = [];
+        var i = 0;
+        values.reduce(function (prevRes, item) {
+            if (++i % 10 === 0) {
+                result.push(item);
+            }
+            return item;
+        });
+*/
+        return values;
     }
 }
 

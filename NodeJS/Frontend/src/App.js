@@ -15,8 +15,6 @@ import MenuLeft from './MenuLeft';
 import DataView from './DataView';
 import { accordionInit } from './data/config.js';
 import {AddCounter,Info} from "./Context"
-// import Chart from './ChartInteract';
-// import Chart2 from './Chart2';
 
 const DevicesPage = () => {
     return (

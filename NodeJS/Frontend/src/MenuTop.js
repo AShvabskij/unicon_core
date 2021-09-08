@@ -141,6 +141,7 @@ async function startOsc(deviceId, line) {
   streamSocket.onmessage = (message) => {
 
     var messageData = JSON.parse(message.data);
+
     let res = osc.parse(messageData, 0);
     if (res < 0) {
       return;
@@ -163,12 +164,10 @@ async function startOsc(deviceId, line) {
         if (i == 1) {
           // console.log("values() = " + JSON.stringify(values));
         }
-        drawValueRange(charts[chart], xValues, yValues, i);
+        if (chart == 'chart3') {
+          drawValueRange(charts[chart], xValues, yValues, i);
+        }
 
-      }
-
-      if (chart == 'chart3') {
-        break;
       }
 
     }
@@ -184,6 +183,63 @@ async function startOsc(deviceId, line) {
 
   //  console.log(output + "\n");
 };
+
+async function startOsc2(deviceId, line) {
+  console.log("try 2 to get osc streams...");
+
+  // let param = device.param(deviceId + 1);
+
+  let osc = model.device(deviceId).osc;
+  osc.openDataStream();
+
+  let charts = ChartControls();
+
+  let chNum = 0;
+  osc.channelStreams[chNum].on('data', values => {
+    let xValues = values.map(valObj => { return valObj.time });
+    let yValues = values.map(valObj => { return valObj.val });
+
+    drawValueRange(charts['chart3'], xValues, yValues, 1);
+  });
+
+  chNum = 1;
+  osc.channelStreams[chNum].on('data', values => {
+    let xValues = values.map(valObj => { return valObj.time });
+    let yValues = values.map(valObj => { return valObj.val });
+
+    drawValueRange(charts['chart3'], xValues, yValues, 2);
+  });
+
+  osc.channelStreams[2].on('data', values => {
+    let xValues = values.map(valObj => { return valObj.time });
+    let yValues = values.map(valObj => { return valObj.val });
+
+//    console.log (xValues[0] +','+ yValues[0]);
+
+  });
+
+  osc.channelStreams[3].on('data', values => {
+    let xValues = values.map(valObj => { return valObj.time });
+    let yValues = values.map(valObj => { return valObj.val });
+
+//    console.log (xValues[0] +','+ yValues[0]);
+  });
+
+  osc.channelStreams[4].on('data', values => {
+    let xValues = values.map(valObj => { return valObj.time });
+    let yValues = values.map(valObj => { return valObj.val });
+    
+//    console.log (xValues[0] +','+ yValues[0]);
+  });
+
+  osc.channelStreams[5].on('data', values => {
+    let xValues = values.map(valObj => { return valObj.time });
+    let yValues = values.map(valObj => { return valObj.val });
+    
+//    console.log (xValues[0] +','+ yValues[0]);
+  });
+
+}
 
 function devicesWebix(devicesArr, component) {
   console.log("devicesWebix");
@@ -446,7 +502,7 @@ const toolBar = () => {
           console.log("Start values");
           let deviceId = 1;
           let paramId = 65;
-          startOsc(deviceId, paramId);
+          startOsc2(deviceId, paramId);
         }
       },
 

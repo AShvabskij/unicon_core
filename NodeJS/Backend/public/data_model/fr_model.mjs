@@ -2,6 +2,7 @@
 // const require = createRequire(import.meta.url);
 
 const Events = require('events');
+var cbor = require('cbor');
 
 // import {ParamProvider} from "./services/paramprovider.mjs"
 // import {DeviceProvider} from "./services/deviceprovider.mjs"
@@ -97,9 +98,16 @@ class Model extends Events {
         };
 
         this.streamSocket.onmessage = (message) => {
+/*
+            new Response(message.data).arrayBuffer()
+                .then(function(data){
+                    console.log(cbor.decodeFirstSync(data));
+                });
+*/
+
             var messageData = JSON.parse(message.data);
             // console.log(message.data);
-    
+
             let valueData = messageData.value;
             let deviceId = messageData.d_id;
             let paramId = messageData.p_id;
@@ -109,11 +117,12 @@ class Model extends Events {
                 this.emit('error', RECEIVED_DATA_ERROR);
                 return;
             }
-    
+
             byteCount += message.data.length;
             msgCount++;
-    
+
             this.pushValue(deviceId, paramId, valueData);
+            
         };
 
         this.m_inited = true;
@@ -171,7 +180,7 @@ class Model extends Events {
         }
 
         //          console.log(`Received: ${JSON.stringify(pValue)}`);
-        this.m_capturedParam.stream.push(JSON.stringify(pValue));        
+        this.m_capturedParam.stream.push(JSON.stringify(pValue));
     }
 
     async load() {
@@ -182,7 +191,7 @@ class Model extends Events {
                     let err = "The data model is not inited yet. Will be inited now."
                     console.warn(err);
                     this.init();
-//                  reject({ status: 500, msg: err });
+                    //                  reject({ status: 500, msg: err });
                 }
 
                 let devices = await this.deviceProvider.reqDevices();

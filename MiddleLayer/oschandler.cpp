@@ -132,6 +132,7 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
     Q_ASSERT(m_oscRawDataBuff);
 
     out->oscId = osc.id;
+    out->deviceId = osc.deviceId;
 
     m_oscRawDataBuff->device_ID = osc.deviceId;
 
@@ -204,6 +205,7 @@ void OscHandler::stopStreamData(const OscHeader &osc)
 
     OscData val;
     val.oscId = osc.id;
+    val.deviceId = osc.deviceId;
 
     QJsonObject response = createStreamDataObj(val, STOP_STREAM_CODE);
     emit stream(response);
@@ -277,8 +279,10 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
         }
     }
 
+    res["d_id"] = data.deviceId;
     res["values"] = channelValues;
     res["time"] = data.timestamp;
+    res["error"] = 0;
 
     if (error != 0) {
         res["error"] = error;
