@@ -14,9 +14,11 @@ import { Model } from "./data_model/fr_model.mjs";
 import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 import { AddCounter, Info } from "./Context"
 
-let model = new Model('127.0.0.1');
+let model = new Model('192.168.7.113');
 Info.model = model;
 model.init();
+console.log("model.m_devices");
+console.log(model.m_devices);
 
 setTimeout(() => {
   model.load().then(result => {

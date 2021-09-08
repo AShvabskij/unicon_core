@@ -24,9 +24,10 @@
     "ws": "^7.5.3"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "dev": "react-scripts start",
-    "build": "react-scripts build",
+    "copyWasm": "copy-files-from-to --config copy-files-from-to.json",
+    "dev": "npm run copyWasm && react-scripts start",
+    "build": "npm run copyWasm && react-scripts build",
+    "start": "node src/server.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
