@@ -149,7 +149,7 @@ async function startOsc(deviceId, line) {
       streamSocket.close();
       let endDate = new Date();
 
-      var diff = (endDate.getTime() - startDate.getTime())
+      var diff = (endDate.getTime() - Info.startTime)
       console.log("The work time is = " + diff);
     }
   }

@@ -9,54 +9,61 @@ import {$$} from 'webix';
 import { Info } from './Context';
 
 
-async function getValue(param,rowId) {
-  console.log("try to get param value...");
+async function stopValues(param) {
   await param.closeValueStream();
+}
+
+async function getValue(param,rowId) {
+  console.log("try to get value streams...");
+  await param.closeValueStream();
+
   let resStream = await param.openValueStream();
-  resStream.on("data", chunk => {
-    let stringifiedRes = chunk.toString();
-    // console.log(`Received from stream: ${stringifiedRes}`);
-    let value = JSON.parse(stringifiedRes);
-    // let xValue = (value.valueTime & 0xFFFF) * 0.05;
-    let xValue = value.valueTime - Info.startTime;
-    let yValue = value.value;
-    // console.log (xValue +“,”+ yValue);
-    if (yValue != -1) {
+  if (resStream === undefined || resStream === null) {
+    console.error("Что-то пошло не так...");
+  }
+
+  resStream.on('data', chunk => {
+
+    let values = chunk;
+    let xValues = [];
+    let yValues = [];
+
+    for (var j = 0; j < values.length; j++) {
+      let value = values[j];
+
+      // let xValue = value.valueTime - startDate.getTime();
+      let xValue = value.valueTime - Info.startTime;
+      let yValue = value.value;
+
+      if (yValue == -1) {
+        break;
+      }
+
+      xValues.push(xValue);
+      yValues.push(yValue);
+
       let grid = $$("parametersGrid");
       let item = grid.getItem(rowId);
       item.value = yValue;
       item.time = xValue;
       // grid.refresh();
       grid.updateItem(rowId,item);
+
     }
+
+    if (xValues.length == 0 || yValues.length == 0) {
+      return;
+    }
+
+    // let grid = $$("parametersGrid");
+    //   let item = grid.getItem(rowId);
+    //   item.value = yValues.pop();
+    //   item.time = xValues.pop();
+    //   // grid.refresh();
+    //   grid.updateItem(rowId,item);
+    
   });
 }
-
-async function getValue1(deviceId = 1, paramId = 65) {
-  console.log("try to get value...");
-  let startDate = new Date();
-  Info.model.device(deviceId).param(paramId).lastValue().then(result => {
-    var paramValue = result;
-    var message = `param id = ${paramValue.paramId}, value = ${paramValue.value}, value format = ${paramValue.valueFormat}`;
-    console.log(message);
-  });
-  let param = Info.model.device(deviceId).param(paramId);
-  await param.closeValueStream();
-  let resStream = await param.openValueStream();
-  resStream.on("data", chunk => {
-    let stringifiedRes = chunk.toString();
-    // console.log(`Received from stream: ${stringifiedRes}`);
-    let value = JSON.parse(stringifiedRes);
-    // let xValue = (value.valueTime & 0xFFFF) * 0.05;
-    let xValue = value.valueTime - Info.startTime;
-    let yValue = value.value;
-    // console.log (xValue +“,”+ yValue);
-    if (yValue != -1) {
-      console.log(yValue);
-    }
-  });
-}
-
 
 function getItems(tree,rowId) {
   let row = tree.getFirstChildId(rowId);
@@ -107,7 +114,7 @@ function getUImainMenu(props) {
             tree.close(item);
           });
           rows.forEach(function(item, index, array) {
-            // getValue(item.row.param,item.id);
+            getValue(item.row.param,item.id);
           });
         } 
       }
