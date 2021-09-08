@@ -86,13 +86,14 @@ function getUImainMenu(props) {
       id: "parametersGrid",
 			height:353,
 			columns:[
-				{id:"modul", header:"Modul", width:"250",
-          template:"{common.treetable()} #modul#"},
-        {id:"name", header:"Name", fillspace:true}, //width:"250"
-				{id:"value", header:"Value", width:"90"},
+				{id:"name", header:"Name", fillspace:true,
+          template:"{common.treetable()} #name#"},
+        // {id:"name", header:"Name", fillspace:true}, //width:"250"
+				{id:"value", header:"Value", width:"220"},
 				{id:"dimension", header:"Dimension"},
 				{id:"time", header:"Time"},
-				{id:"chart", header:"Show on trend", width:"130"},
+				{id:"chart", header:"Show on trend", width:"130",
+          template:"{common.checkbox()}"},
 				{id:"numchart", header:"Number of trend", width:"130"}
 			],
       on : {
@@ -122,7 +123,7 @@ function getUImainMenu(props) {
 }
 
 
-function DataView(props) {
+function ParametersView(props) {
   // console.log("MenuLeft ");
   // console.log(props.devtitle);
 
@@ -133,4 +134,4 @@ function DataView(props) {
   );
 }
 
-export default DataView;
+export default ParametersView;

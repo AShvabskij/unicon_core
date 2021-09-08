@@ -8,7 +8,7 @@ import Chart from './ChartInteract';
 import Chart2 from './Chart2';
 import { ChartControls } from './Chart2';
 import ChartList from './ChartList';
-import DataView from './DataView';
+import ParametersView from './ParametersView';
 import Config from './.config.js';
 import { Model } from "./data_model/fr_model.mjs";
 import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
@@ -380,20 +380,14 @@ export default class DevicesView extends React.Component {
 
     return (
       <div>
-        <Webix ui={{ "label": "demo", "view": "label","css":"deviceLabel", "id":"descriptionDevice"}} />
-        <Webix ui={webixButton(150)} id="q1" data="Get Devices" click={() => {
-          Info.actions.updateLeftMenu(model.m_devices);
+        <Webix ui={{ "label": " ", "view": "label","css":"deviceLabel", "id":"descriptionDevice"}} />
+        {/* <Webix ui={webixButton(150)} id="q1" data="Get Devices" click={() => {
+          // Info.actions.updateLeftMenu(model.m_devices);
           let l = $$("descriptionDevice");
           l.setValue("123");
-          
-          // this.updateDevices(leftMenuInfo());
-          console.log("webixButton click");
-          // this.setState((state, props) => ({
-          //   dt: dt1
-          // }));
-
+          // console.log("webixButton click");
         }
-        } />
+        } /> */}
 
         <Webix ui={tabview1(this.props)} />
 
@@ -412,7 +406,7 @@ export default class DevicesView extends React.Component {
         <div id="memo2">Memo 2</div>
         <div id="memo3">Memo 3</div>
         <div id="memo4">Memo 4</div>
-        <DataView data={this.state.dt} />
+        <ParametersView data={this.state.dt} />
       </div>
     )
   }

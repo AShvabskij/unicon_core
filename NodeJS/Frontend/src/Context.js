@@ -10,27 +10,31 @@ const updateParameters = (indexDevice) => {
     // console.log("indexDevice="+indexDevice);
    
     let deviceItem = Info.model.m_devices[indexDevice];
-    // console.log(deviceItem);
-    // let s = $$(indexDevice);
+    
+    let checkbox = [{view:"checkbox", label:" ", value:1, uncheckValue:"off", checkValue:"on"}];
     let dt1 = [];
     let dtt = [];
     let i = 1;
     let j = 1;
-    let infoCurrentDivice = deviceItem.name;
+    let infoCurrentDivice = deviceItem.desc + ". Channel: " + deviceItem.interfaceName;
+    let desc = $$("descriptionDevice");
+    desc.setValue(infoCurrentDivice);
     deviceItem.modules.forEach(function(item, index, array) {
         // console.log(item.params);
         dtt = [];
         item.params.forEach(function(itemP, indexP, array) {
             infoCurrentDivice = infoCurrentDivice + " [" + itemP.deviceId + "]" + "</br>Chanal: " + item.interfaceName;
             // if(=="Can")
-            dtt.push({id: "m"+i, modul: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
-            name:itemP.name + " [" + itemP.id + "]", 
-            value:"1.008", dimension:"W", time:"11:56", chart:"+", numchart:1,
+            dtt.push({id: "m"+i, // name: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
+            name:itemP.name + " [" + itemP.deviceId + "." + itemP.moduleId + "." + itemP.id + "]", 
+            value:" ", dimension:itemP.unit, time:" ", 
+            chart:0, 
+            numchart:1,
             param:itemP
         })
             i++;
         });
-        dt1.push({"id":"modul"+j, "modul":"[" + item.deviceId + "] " + item.name + " [" + item.id + "]",
+        dt1.push({"id":"modul"+j, "name": item.name + " [" + item.deviceId + "." + item.id + "]",
         "open":false, "data":dtt 
         });
         j++;
