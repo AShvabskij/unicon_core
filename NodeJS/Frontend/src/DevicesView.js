@@ -187,6 +187,7 @@ function showChart(chartID, parentID) {
 function tabview1(props) {
   return {
     view: "tabview",
+    id:"tabview1",
     height: 800,
     pading: "0",
     cells: [
@@ -381,13 +382,24 @@ export default class DevicesView extends React.Component {
     return (
       <div>
         <Webix ui={{ "label": " ", "view": "label","css":"deviceLabel", "id":"descriptionDevice"}} />
-        {/* <Webix ui={webixButton(150)} id="q1" data="Get Devices" click={() => {
-          // Info.actions.updateLeftMenu(model.m_devices);
-          let l = $$("descriptionDevice");
-          l.setValue("123");
-          // console.log("webixButton click");
+        <Webix ui={webixButton(150)} id="q1" data="Get Devices" click={() => {
+          let acc = $$("accmain");
+          acc.adjust();
+          acc = $$("tabview1");
+          acc.adjust();
+          window.addEventListener('resize', function(event) {
+              // let l = $$("descriptionDevice");
+              // l.setValue("123");
+              let acc = $$("accmain");
+              acc.adjust();
+              acc = $$("tabview1");
+              acc.adjust();
+              acc = $$("parametersGrid");
+              acc.adjust();
+              
+          }, true);
         }
-        } /> */}
+        } />
 
         <Webix ui={tabview1(this.props)} />
 
