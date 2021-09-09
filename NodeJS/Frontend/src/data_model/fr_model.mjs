@@ -52,7 +52,7 @@ let _messageDataLength = 0
 
 const STREAM_SERVER_PORT = 1237;
 const RECEIVED_DATA_ERROR = "Received data error!";
-const STREAM_BUFFER_OBJECTS = 50;
+const STREAM_BUFFER_OBJECTS = 5;
 const CAPTURED_PARAMS_MAX = 12;
 
 export class Model extends Events {

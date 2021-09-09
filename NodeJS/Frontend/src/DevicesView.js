@@ -14,7 +14,7 @@ import { Model } from "./data_model/fr_model.mjs";
 import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 import { AddCounter, Info } from "./Context"
 
-let model = new Model(Config.ip);
+let model = new Model("127.0.0.1");
 Info.model = model;
 model.init();
 
@@ -97,7 +97,7 @@ async function startOsc(deviceId, line) {
   console.log("try to get osc streams...");
 
   // let param = device.param(deviceId + 1);
-  let streamSocketUrl = "ws://" + Config.ip + ":" + 1237;
+  let streamSocketUrl = "ws://" + '127.0.0.1' + ":" + 1237;
   let streamSocket = new WebSocket(streamSocketUrl);
 
   let startDate = new Date();
