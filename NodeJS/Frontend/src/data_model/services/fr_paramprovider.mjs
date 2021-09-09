@@ -37,7 +37,7 @@ export class ParamProvider {
         return this.request(reqCmd);
     };
 
-    async reqParamValue(deviceId, moduleId, paramId, stream) {
+    async reqParamValue(deviceId, moduleId, paramId, stream, args) {
         let cmd = REQ_GET_PARAMS_DATA
         let openStream = null;
         if (stream === "true" || stream === "on") {
@@ -48,7 +48,7 @@ export class ParamProvider {
             openStream = false;
         }
 
-        let reqCmd = this._createParamReqCmd(cmd, deviceId, moduleId, paramId);
+        let reqCmd = this._createParamReqCmd(cmd, deviceId, moduleId, paramId, args);
 
         if (openStream !== null) {
             if (openStream === true) {
@@ -66,11 +66,11 @@ export class ParamProvider {
         return this.request(reqCmd);
     };
 
-    _createParamReqCmd(reqName, deviceId, moduleId, paramId) {
+    _createParamReqCmd(reqName, deviceId, moduleId, paramId, args) {
         let req = {
             request_id: this._generateReqId(deviceId, paramId),
             cmd: this._paramCmd(reqName),
-            body: this._paramBody(deviceId, moduleId, paramId)
+            body: this._paramBody(deviceId, moduleId, paramId, args)
         };
 
         return req;
@@ -117,12 +117,14 @@ export class ParamProvider {
         return res;
     }
 
-    _paramBody(deviceId, moduleId, paramId) {
+    _paramBody(deviceId, moduleId, paramId, args) {
         let res = {
             device_id: deviceId,
             module_id: moduleId,
             param_id: paramId
         };
+
+        res = {...res, ...args}
 
         return res;
     }

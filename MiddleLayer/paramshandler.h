@@ -84,7 +84,7 @@ private:
     QJsonObject createValueObj(int requestId, const Param& param, const ParamValue& value);
     QJsonObject createStreamValueObj(const Param& param, const ParamValue& value, int error = 0);
 
-    void startPooling();
+    void startPooling(int intervalMsc);
     void stopPooling();
     long streamParamsValue();
     void stopStreamsParamValue();

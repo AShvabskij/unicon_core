@@ -133,7 +133,11 @@ int ParamsHandler::handleOpenStream(const QJsonObject& request)
     QJsonObject response = createValueObj(requestId, p, val);
     send(response);
 
-    startPooling();
+
+    int freq = cmdBody.value("frequency").toInt();
+    int interval = (freq == 0) ? DATA_YELD_INTERVAL_MSC : (1000 / freq);
+
+    startPooling(interval);
 
     return 0;
 }
@@ -190,12 +194,12 @@ ParamValue ParamsHandler::valueFrom(const GLIO_ELEMENT_VALUE& el)
     return res;
 }
 
-void ParamsHandler::startPooling()
+void ParamsHandler::startPooling(int intervalMsc)
 {
 
     m_streamValCount = 0;
 
-    m_streamTimer->setInterval(DATA_YELD_INTERVAL_MSC);
+    m_streamTimer->setInterval(intervalMsc);
     m_streamTimer->start();
 
     // connect(this, SIGNAL(requestStreamValue()), this, SLOT(slotTimerAlarm()), Qt::QueuedConnection);

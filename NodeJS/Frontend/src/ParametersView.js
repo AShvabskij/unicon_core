@@ -20,7 +20,8 @@ async function getValue(param, rowId) {
   let grid = $$("parametersGrid");
   let item = grid.getItem(rowId);
 
-  let resStream = await param.openValueStream();
+  let frequency = 5; // кол-во значений в секунду
+  let resStream = await param.openValueStream(frequency);
   if (resStream === undefined || resStream === null) {
     return;
   }
@@ -29,7 +30,7 @@ async function getValue(param, rowId) {
     let values = chunk;
     let value = values[values.length - 1];
 
-    item.value = value.value;
+    item.value = value.value.toFixed(4); 
     item.time = value.valueTime - Info.startTime;
     grid.updateItem(rowId, item);
   });
@@ -39,7 +40,7 @@ async function getValue2(param, rowId) {
 
   setInterval(async () => {
 
-    let value = await param.currentValue();
+    let value = await param.lastValue();
 
     let grid = $$("parametersGrid");
     let item = grid.getItem(rowId);

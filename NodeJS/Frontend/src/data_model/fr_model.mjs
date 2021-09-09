@@ -53,7 +53,7 @@ let _messageDataLength = 0
 
 const STREAM_SERVER_PORT = 1237;
 const RECEIVED_DATA_ERROR = "Received data error!";
-const STREAM_BUFFER_OBJECTS = 5;
+const STREAM_BUFFER_OBJECTS = 1;
 const CAPTURED_PARAMS_MAX = 12;
 
 export class Model extends Events {
@@ -111,13 +111,12 @@ export class Model extends Events {
                 console.warn("The model is not loaded!");
                 return;
             }
-/*
-            cbor.decodeFirst(message, {float: true, preferWeb: true}).then(o => {
-                console.log(JSON.stringify(o, null, 2))
-              });
-*/
+            /*
+                        cbor.decodeFirst(message, {float: true, preferWeb: true}).then(o => {
+                            console.log(JSON.stringify(o, null, 2))
+                          });
+            */
             var messageData = JSON.parse(message.data);
-//          var messageData = CBOR.decode(message.data);
 
             let paramId = messageData.p_id;
             if (paramId != undefined) {
@@ -470,16 +469,16 @@ export class Osciloscope {
 
             return { val, time };
         })
-/*
-        var result = [];
-        var i = 0;
-        values.reduce(function (prevRes, item) {
-            if (++i % 10 === 0) {
-                result.push(item);
-            }
-            return item;
-        });
-*/
+        /*
+                var result = [];
+                var i = 0;
+                values.reduce(function (prevRes, item) {
+                    if (++i % 10 === 0) {
+                        result.push(item);
+                    }
+                    return item;
+                });
+        */
         return values;
     }
 }
@@ -507,6 +506,7 @@ class Param {
         this.stream = null;
         this.buffer = [];
         this.buffIndex = 0;
+        this.buffObjectCount = STREAM_BUFFER_OBJECTS;
 
         this.lastError = 0;
 
@@ -542,7 +542,7 @@ class Param {
         return this.value;
     }
 
-    async openValueStream() {
+    async openValueStream(frequency, buffObjectCount) {
         try {
 
             this._timeLabel = new Date().getTime();
@@ -552,12 +552,17 @@ class Param {
 
             this.buffIndex = 0;
             this.buffer = [];
-            for (var i = 0; i < STREAM_BUFFER_OBJECTS; i++) {
+            this.buffObjectCount = (buffObjectCount !== undefined) ? buffObjectCount : this.buffObjectCount;
+            if (this.buffObjectCount === 0) {
+                this.buffObjectCount === 1
+            }  
+
+            for (var i = 0; i < this.buffObjectCount; i++) {
                 this.buffer[i] = new ParamValue();
             }
 
             this.stream = new Stream.Readable({
-                highWaterMark: STREAM_BUFFER_OBJECTS,
+                highWaterMark: this.buffObjectCount,
                 objectMode: true,
                 read() { }
             });
@@ -566,7 +571,7 @@ class Param {
             this.lastError = 0;
             this.value = new ParamValue()
 
-            await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream);
+            await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream, {frequency:frequency});
 
         } catch (error) {
             this.value = new ParamValue()
@@ -628,7 +633,9 @@ class Param {
             console.timeEnd(`The stream elapsed time(${this._timeLabel})`);
 
             this.buffer.splice(this.buffIndex)
-            this.stream.push(this.buffer);
+            if (this.buffer.length > 0) {
+                this.stream.push(this.buffer);
+            }
             this.stream.push(null);
             this.stream.destroy();
 
@@ -642,7 +649,7 @@ class Param {
         //      this.buffer[this.buffIndex] = pValue;
         this.buffIndex++;
 
-        if (this.buffIndex >= STREAM_BUFFER_OBJECTS) {
+        if (this.buffIndex >= this.buffObjectCount) {
             this.stream.push(this.buffer);
             this.buffIndex = 0;
         }
