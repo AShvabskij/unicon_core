@@ -16,6 +16,7 @@ struct OscChannelValues
 struct OscData
 {
     uint16_t oscId;
+    uint16_t deviceId;
     OscChannelValues chValues[32];
     qlonglong timestamp = 0;
 };
