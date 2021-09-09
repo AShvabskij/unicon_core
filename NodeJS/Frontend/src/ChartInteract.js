@@ -9,7 +9,7 @@ import {ZoomPanModifier} from "scichart/Charting/ChartModifiers/ZoomPanModifier"
 // import classes from "../../../../Examples/Examples.module.scss";
 // import image from "./javascript-line-chart.jpg";
 const divElementId = "scichart-root1";
-const LICENSE_KEY = "YN03HsWi1K/vGusha4Qb3/R1vUwOzCY9vtlNDHc7c49XD16rwywnrVa+JNN3vUauod95V2SBepdhEFARUXp694lo0ouxSm/ClGuTfkZQPChcx7JJFFAbDcPY6AvRx3OU+rM7lyR3VRhl6WyzIyydvFUHrxCTnM/UbvZalnexhnLH8bFnCL2vZZKxctgc715s7C4IYKF7naI+if1Xex45TJLBkyNaziXL9Y7MLvTujOSnrG6IJYFtapgYrL/TxMj0kRimE4rSRVjUZFZxhA461C8esWHp0GO2w/d+BQ5cnTdP2D0yB0nC9/NLu6ku+2uqluQvMujROmrylRwEAuX0UMkgEHcXgzEORYcW9nIJR6XF7Db1DQqmRQuYtn8648pg25tbDs9mJSagtV/+uCeOpLuiLhRD22u4AzZYB3YLPSek3eh5+tJu+zluuuJUgLGylw7OijFUX+X2WyD5WoWffIh2thlhx189EFv7NjOF09n/qFGiB5DvqLYJLT0i1BS5nH6Ng/cYczApW1TQthS+LN+L3VOIi9NO8L5HcIGqokHlzjnehdrzrKgAiQ==";
+const LICENSE_KEY = "Ms4s7kPNHtGh/C9XitPAzhFJxW+ZFPkuVWnfhrARTR8oaE/D/8/yqLbAgcp2sQdVuva50wv5PkKiiJ0Asd7iYW3xGE9OvtnG6TZwbI4PPVq773RfvLjesvEkaB0u56BbKnAfsg/pCgTGbfRUgDCNqxs5DWUwXGXJPf3WIeTGHAU58XU4o1p6yQ3gN8/3kjE5wYIRJmebm1+Z+NCq67sol9pNpoOUfx13Mo4kURoFw24t+lwtTOmvpbLadWLn1v/wR7QlMf0kf9IrgnW8D5aoytdjoZs+XXVzRBF7EmjT5if72KszBF8EkX4aFYaEbsuhNqcVN+ovRhrYLFy8KfcGuGTZsiI0cv51IAKvHOkrLFeokv64vlKEBehLLkiWfcKkAuMUMMBrdars6BDo2nCHltAh2E01GNGG4Ah8OmFlQ7+x1rtol4LmxsIfB5CAhXHSGkt75XAlfiYv827ljmvNBGRNXu/JOHwBqlLdIesFeQtWz8PBAwowPQ/5c+mA+6oXt/heSmxUg0IgK6YdOHsj/7/SbW+OGqYLjhEn90aDA1YhPPqPaSbE3qhD";
 
 async function initSciChart() {
     // Below find a trial / BETA key for SciChart.js.

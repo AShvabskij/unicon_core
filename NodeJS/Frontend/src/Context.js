@@ -25,7 +25,7 @@ const updateParameters = (indexDevice) => {
             infoCurrentDivice = infoCurrentDivice + " [" + itemP.deviceId + "]" + "</br>Chanal: " + item.interfaceName;
             // if(=="Can")
             dtt.push({id: "m"+i, // name: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
-            name:itemP.name + " [" + itemP.deviceId + "." + itemP.moduleId + "." + itemP.id + "]", 
+            name:itemP.name + " ["+ itemP.moduleId + "." + itemP.id + "]", 
             value:" ", dimension:itemP.unit, time:" ", 
             chart:0, 
             numchart:1,
@@ -33,7 +33,7 @@ const updateParameters = (indexDevice) => {
         })
             i++;
         });
-        dt1.push({"id":"modul"+j, "name": item.name + " [" + item.deviceId + "." + item.id + "]",
+        dt1.push({"id":"modul"+j, "name": item.name + " [" + item.id + "]",
         "open":false, "data":dtt 
         });
         j++;
