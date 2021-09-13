@@ -9,6 +9,7 @@
     "browserify": "^17.0.0",
     "cbor": "^8.0.0",
     "cbor-web": "^8.0.1",
+    "moment": "^2.29.1",
     "net": "^1.0.2",
     "node-fetch": "^2.6.1",
     "react": "^17.0.2",
@@ -24,9 +25,8 @@
     "ws": "^7.5.3"
   },
   "scripts": {
-    "copyWasm": "copy-files-from-to --config copy-files-from-to.json",
-    "dev": "npm run copyWasm && react-scripts start",
-    "build": "npm run copyWasm && react-scripts build",
+    "dev": "npm run && react-scripts start",
+    "build": "npm run && react-scripts build",
     "start": "node src/server.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
