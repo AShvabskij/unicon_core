@@ -22,10 +22,10 @@ const updateParameters = (indexDevice) => {
         // console.log(item.params);
         dtt = [];
         item.params.forEach(function(itemP, indexP, array) {
-            infoCurrentDivice = infoCurrentDivice + " [" + itemP.deviceId + "]" + "</br>Chanal: " + item.interfaceName;
+            infoCurrentDivice = infoCurrentDivice + " [" + Number(itemP.deviceId).toString(16) + "]" + "</br>Chanal: " + item.interfaceName;
             // if(=="Can")
             dtt.push({id: "m"+i, // name: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
-            name:itemP.name + " ["+ itemP.moduleId + "." + itemP.id + "]", 
+            name:itemP.name + " ["+ Number(itemP.moduleId).toString(16) + "." + Number(itemP.id).toString(16) + "]", 
             value:" ", dimension:itemP.unit, time:" ", 
             chart:0, 
             numchart:1,
@@ -33,7 +33,7 @@ const updateParameters = (indexDevice) => {
         })
             i++;
         });
-        dt1.push({"id":"modul"+j, "name": item.name + " [" + item.id + "]",
+        dt1.push({"id":"modul"+j, "name": item.name + " [" + Number(item.id).toString(16) + "]",
         "open":false, "data":dtt 
         });
         j++;
@@ -75,12 +75,10 @@ export const Info = {startTime:startDate.getTime(),model:{},
     elements:{},
     gridParameters:{},
     resize :function(event) {
-        let acc = $$("accmain");
-        acc.adjust();
-        acc = $$("tabview1");
-        acc.adjust();
-        acc = $$("parametersGrid");
-        acc.adjust();
+        let elements = ["accmain","tabview1","parametersGrid","descriptionDevice"]
+        elements.forEach(function(item, index, array) {
+            $$(item).adjust();
+        });
     }
 }
 
