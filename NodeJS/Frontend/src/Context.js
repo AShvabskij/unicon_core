@@ -73,7 +73,15 @@ const updateLeftMenu = () => {
 export const Info = {startTime:startDate.getTime(),model:{},
     actions:{updateLeftMenu:updateLeftMenu,updateParameters:updateParameters},
     elements:{},
-    gridParameters:{}
+    gridParameters:{},
+    resize :function(event) {
+        let acc = $$("accmain");
+        acc.adjust();
+        acc = $$("tabview1");
+        acc.adjust();
+        acc = $$("parametersGrid");
+        acc.adjust();
+    }
 }
 
 // export const AddCounter = () => {

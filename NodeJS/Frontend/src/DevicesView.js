@@ -300,7 +300,7 @@ function tabview1(props) {
           if (id == "controlContent") {
             showChart("chart1", "memo2")
           }
-
+          Info.resize(); 
         },
         onChange: function (newValue, oldValue, config) {
           // config is {yourProperty: "yourValue"}

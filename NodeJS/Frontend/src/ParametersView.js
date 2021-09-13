@@ -7,7 +7,7 @@ import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
 import { $$ } from 'webix';
 import { Info } from './Context';
-import moment from 'moment';
+// import moment from 'moment';
 
 
 async function stopValues(param) {
@@ -32,7 +32,8 @@ async function getValue(param, rowId) {
     let value = values[values.length - 1];
 
     item.value = value.value.toFixed(3); 
-    var dateStr = moment(value.valueTime).format('hh:mm:ss.SSS');
+    // var dateStr = moment(value.valueTime).format('hh:mm:ss.SSS');
+    var dateStr = value.valueTime;
     item.time = dateStr;
     grid.updateItem(rowId, item);
   });
