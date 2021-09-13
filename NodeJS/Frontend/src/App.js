@@ -92,6 +92,9 @@ const CPLotWebPage = () => {
     );
   }; 
 
+  window.addEventListener('resize', function(event) {
+    Info.resize();   
+  }, true);
 
 function App() {
   // React.useEffect(() => {
