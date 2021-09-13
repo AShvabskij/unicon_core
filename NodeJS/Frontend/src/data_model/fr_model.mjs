@@ -1,6 +1,8 @@
 // import cbor from 'cbor' // from 'cbor-web'
 // import { createRequire } from "module";
 // const require = createRequire(import.meta.url);
+import React,{ useEffect } from "react";
+import * as cbor from './../cbor.js';
 
 const Events = require('events');
 
@@ -20,6 +22,8 @@ const ERROR_RESPONSE = {
 }
 
 const OSC_MAX_CHANNELS = 8;
+
+
 
 export class SysInterfacesEnum {
     static Can = 1;
@@ -111,6 +115,10 @@ export class Model extends Events {
                 console.warn("The model is not loaded!");
                 return;
             }
+            cbor.decode([message],1,1);
+            // cbor.decodeFirst(message, {float: true, preferWeb: true}).then(o => {
+            //     console.log(JSON.stringify(o, null, 2))
+            //   });
             /*
                         cbor.decodeFirst(message, {float: true, preferWeb: true}).then(o => {
                             console.log(JSON.stringify(o, null, 2))
