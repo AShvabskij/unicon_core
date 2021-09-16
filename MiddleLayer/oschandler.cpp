@@ -249,7 +249,7 @@ long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
             break;
         }
         OscChannelDescr ch;
-        ch.channelNum = ++chNum;
+        ch.channelNum = chNum;
         ch.paramId = elem.param_ID;
         ch.scale = elem.scale;
 
