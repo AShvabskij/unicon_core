@@ -173,7 +173,7 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         }
     }
 
-    time_t trigTimeNs = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
+    qlonglong trigTimeNs = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
     out->timestamp = trigTimeNs  + ++m_dataCounter * m_oscRawDataBuff->data_length * osc.settings.timeResolutionNs;
 
     return 0;
