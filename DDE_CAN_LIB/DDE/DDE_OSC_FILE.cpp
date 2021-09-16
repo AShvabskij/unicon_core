@@ -19,7 +19,7 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
     }
 
 //  m_oscFile = new ifstream("C:\\Unicon\\DDE_CAN_LIB\\debug\\data\\D0007_04.10.2018_13.19.21_C1_WITH_IPLL.csv"); // открыли файл для чтения
-    m_oscFile = new ifstream(".\\data\\D0007_04.10.2018_13.19.21_C1_WITH_IPLL.csv"); // открыли файл для чтения
+    m_oscFile = new ifstream("D0007_04.10.2018_13.19.21_C1_WITH_IPLL.csv"); // открыли файл для чтения
     m_header = new OSC_FILE_HEADER();
 
     int res = m_oscFile->is_open() ? 0 : -1;

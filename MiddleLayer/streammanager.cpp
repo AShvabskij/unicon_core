@@ -2,6 +2,7 @@
 
 #include <QTextStream>
 #include <cstdio>
+// #include <QCborValue>
 
 StreamManager::StreamManager()
 {
@@ -13,15 +14,15 @@ int StreamManager::stream(QJsonObject value)
     QJsonDocument doc(value);
     QString strJson(doc.toJson(QJsonDocument::Compact));
 
-    QCborValue v = QCborValue::fromJsonValue(value);
-    QByteArray dataToSend = v.toCbor(QCborValue::UseFloat);
+//  QCborValue v = QCborValue::fromJsonValue(value);
+//  QByteArray dataToSend = v.toCbor(QCborValue::UseFloat);
 
     for (QWebSocket *client : m_clients) {
 
         client->sendTextMessage(strJson);
 //      client->sendBinaryMessage(dataToSend);
-        int bytes = client->bytesToWrite();
-        QTextStream(stdout) << " bytes to write = " << bytes << "\n" ;
+//      int bytes = client->bytesToWrite();
+//      QTextStream(stdout) << " bytes to write = " << bytes << "\n" ;
 
         client->flush();
     }
