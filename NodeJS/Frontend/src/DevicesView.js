@@ -85,6 +85,12 @@ async function startValues(deviceId, paramId, line) {
 
 let _interval = 5;
 function drawValueRange(chart, xValues, yValues, line) {
+  if (line == 1) {
+    chart.addVarPointRange(xValues, yValues)
+  } else {
+    chart.addVarPointRange2(xValues, yValues)
+  }
+/*
   _interval = _interval >= 15 ? 5 : _interval + 5;
   setTimeout(() => {
     if (line == 1) {
@@ -93,6 +99,7 @@ function drawValueRange(chart, xValues, yValues, line) {
       chart.addVarPointRange2(xValues, yValues)
     }
   }, _interval);
+*/  
 }
 
 async function startOsc(deviceId, line) {
@@ -175,7 +182,7 @@ async function startOsc2(deviceId, line) {
 
     drawValueRange(charts['chart3'], xValues, yValues, 1);
   });
-
+/*
   chNum = 1;
   osc.channelStreams[chNum].on('data', values => {
     let xValues = values.map(valObj => { return valObj.time });
@@ -183,7 +190,7 @@ async function startOsc2(deviceId, line) {
 
     drawValueRange(charts['chart3'], xValues, yValues, 2);
   });
-
+*/
   osc.channelStreams[2].on('data', values => {
     let xValues = values.map(valObj => { return valObj.time });
     let yValues = values.map(valObj => { return valObj.val });

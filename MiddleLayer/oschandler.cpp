@@ -57,7 +57,12 @@ void OscHandler::onStreamTimerAlarm()
         return;
     }
 
-    streamData();
+    int res = streamData();
+    if (res < 0) {
+        stopStreamData(m_capturedOsc);
+        stopPooling();
+        return;
+    }
 }
 
 int OscHandler::handleGetHeader(const QJsonObject &request)
@@ -146,7 +151,12 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
     for (const OSC_CH_DATA& chData : m_oscRawDataBuff->ch_data) {
 
         chNum++;
-        if (osc.channels.length() <= chNum || osc.channels[chNum].paramId == 0) {
+        if (chNum >= osc.channels.length()) {
+            break;
+        }
+
+        if (osc.channels[chNum].paramId == 0 && osc.channels[chNum].paramName.isEmpty()) {
+            QTextStream(stdout) << "Error: The channel is not assigned" ;
             continue;
         }
 
@@ -190,6 +200,9 @@ int OscHandler::streamData()
     }
 
     long res = getData(m_capturedOsc, m_oscDataBuff);
+    if (res < 0) {
+        return res;
+    }
     QJsonObject response = createStreamDataObj(*m_oscDataBuff);
 
     emit stream(response);
@@ -231,6 +244,10 @@ long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
 
     int chNum = -1;
     for (const OSC_CHANNEL_DESCR& elem : header.ch_descr) {
+        chNum++;
+        if (chNum >= OSC_CHANNELS_MAX) {
+            break;
+        }
         OscChannelDescr ch;
         ch.channelNum = ++chNum;
         ch.paramId = elem.param_ID;

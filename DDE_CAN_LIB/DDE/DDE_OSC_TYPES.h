@@ -3,6 +3,9 @@
 #include <cstdint>
 #include <time.h>
 
+#define DDE_PARAMS_NAME_LENGTH 64
+#define OSC_CHANNELS 48
+
 struct OSC_CHANNEL_DESCR
 {
     uint16_t param_ID;
@@ -10,7 +13,7 @@ struct OSC_CHANNEL_DESCR
     //uint8_t sub_index;
     //float min;
     //float max;
-//	char name[DDE_PARAMS_NAME_LENGTH]; - лишнее
+//	char name[DDE_PARAMS_NAME_LENGTH]; - пїЅпїЅпїЅпїЅпїЅпїЅ
 };
 struct OSC_CH_DATA
 {
@@ -19,7 +22,6 @@ struct OSC_CH_DATA
 
 struct OSC_SETTING
 {
-    //OSC_CHANNEL_DESCR ch[32];
     uint32_t time_resolution_ns; // 1000 = 1us
     uint32_t triger_mode; //single, continues, stream
     uint32_t reason;
@@ -33,7 +35,7 @@ struct DDE_GET_OSC_HEADER
 {
     uint16_t device_ID;
 
-    OSC_CHANNEL_DESCR ch_descr[32];
+    OSC_CHANNEL_DESCR ch_descr[OSC_CHANNELS];
     OSC_SETTING settings;
 
     uint16_t page_size;		//
@@ -49,7 +51,7 @@ struct DDE_GET_OSC_DATA
     uint16_t data_length;   // The length of a data in OSC_CH_DATA
     uint16_t overflow;  // flag if  buffer is overflowed (for debugging only)
     bool next_ready;    // flag if next data frame is ready
-    OSC_CH_DATA ch_data[32];
+    OSC_CH_DATA ch_data[OSC_CHANNELS];
 };
 
 struct DDE_SET_OSC_DATA

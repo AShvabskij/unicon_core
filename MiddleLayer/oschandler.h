@@ -4,6 +4,7 @@
 #include "basereqhandler.h"
 #include <QTimer>
 
+#define OSC_CHANNELS_MAX 16
 struct OscChannelValues
 {
     int channelNum = 0;
@@ -17,7 +18,7 @@ struct OscData
 {
     uint16_t oscId;
     uint16_t deviceId;
-    OscChannelValues chValues[32];
+    OscChannelValues chValues[OSC_CHANNELS_MAX];
     qlonglong timestamp = 0;
 };
 
@@ -25,6 +26,7 @@ struct OscChannelDescr
 {
     int channelNum = 0;
     uint16_t paramId = 0;
+    QString paramName = "";
     float scale;
 };
 
@@ -67,7 +69,9 @@ struct OscHeader
         res["id"] = id;
         res["desc"] = desc;
         res["name"] = name;
+        res["trig_time"] = settings.trigDTime.toMSecsSinceEpoch();
         res["resolution_ns"] = settings.timeResolutionNs;
+
 
         QJsonArray channelsObj;
         for (const OscChannelDescr& ch : channels) {

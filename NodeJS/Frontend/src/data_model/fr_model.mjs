@@ -376,6 +376,7 @@ export class Osciloscope {
         this.resolution_ns = 0;
         this.lastError = 0;
         this.channelStreams = []
+        this.trig_time = new Date().getTime();
 
         this.deviceProvider = new DeviceProvider();
 
@@ -403,6 +404,9 @@ export class Osciloscope {
 
         try {
             let openStream = true;
+            let oscHeader = await this.deviceProvider.reqOsc(this.id);
+            this.trig_time = oscHeader.trig_time
+
             await this.deviceProvider.reqDataStream(this.deviceId, this.id, openStream);
         } catch (error) {
             this.lastError = error;
@@ -464,7 +468,7 @@ export class Osciloscope {
 
         let time_ns = socketData.time - chValues.length * this.resolution_ns;
         let values = chValues.map(val => {
-            let time = time_ns * 0.001 - this._timeLabel;
+            let time = time_ns * 0.001 - this.trig_time;
             time_ns += this.resolution_ns;
 
             return { val, time };
