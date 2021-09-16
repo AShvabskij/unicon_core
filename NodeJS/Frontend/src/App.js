@@ -96,6 +96,8 @@ const CPLotWebPage = () => {
     Info.resize();   
   }, true);
 
+
+
 function App() {
   // React.useEffect(() => {
   //   console.log("on load");
