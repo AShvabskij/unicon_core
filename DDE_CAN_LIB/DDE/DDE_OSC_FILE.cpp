@@ -11,25 +11,59 @@
 using namespace std;
 
 const int DATA_YELD_INTERVAL_MSC = 50;
+const int DATA_YELD_ERROR = -1;
+const int DATA_YELD_FINISH = -2;
+const std::string OSC_FILE_ERROR = "Osc data file is not found!";
+
+DDE_OSC_FILE::DDE_OSC_FILE()
+{
+    m_oscFileStream = createFileStream(); // todo - долговременная операция, вынести из конструктора
+    m_header = new OSC_FILE_HEADER();
+    parseHeader(m_oscFileStream, *m_header);
+}
+
+std::ifstream DDE_OSC_FILE::openOscFile()
+{
+    std::ifstream oscFile(".\\data\\D0007_04.10.2018_13.19.21_C1_WITH_IPLL.csv"); // открыли файл для чтения
+    if (!oscFile.is_open()) {
+        oscFile.open("D0007_04.10.2018_13.19.21_C1_WITH_IPLL.csv");
+    }
+
+    int res = oscFile.is_open() ? 0 : -1;
+    if (res != 0) {
+        cout << OSC_FILE_ERROR;
+    }
+
+    return oscFile;
+}
+
+std::stringstream* DDE_OSC_FILE::createFileStream()
+{
+    std::ifstream file = openOscFile();
+
+    if (!file.is_open()) {
+        return nullptr;
+    }
+
+    std::string str;
+    file.seekg(0, std::ios::end);
+    str.reserve(file.tellg());
+    file.seekg(0, std::ios::beg);
+
+    str.assign((std::istreambuf_iterator<char>(file)),
+               std::istreambuf_iterator<char>());
+
+    std::stringstream* res = new std::stringstream(str);
+    str.clear();
+    file.close();
+    return  res;
+}
 
 int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
 {
-    if (m_oscFile != nullptr) {
-        m_oscFile->close();
-    }
-
-//  m_oscFile = new ifstream("C:\\Unicon\\DDE_CAN_LIB\\debug\\data\\D0007_04.10.2018_13.19.21_C1_WITH_IPLL.csv"); // открыли файл для чтения
-    m_oscFile = new ifstream("D0007_04.10.2018_13.19.21_C1_WITH_IPLL.csv"); // открыли файл для чтения
-    m_header = new OSC_FILE_HEADER();
-
-    int res = m_oscFile->is_open() ? 0 : -1;
-    if (res != 0) {
-        return res;
-    }
-
-    res = parseHeader(m_oscFile, *m_header);
-    if (res != 0) {
-        return res;
+    if (!m_oscFileStream) {
+        cout << OSC_FILE_ERROR;
+        return DATA_YELD_ERROR;
     }
 
     p.settings = m_header->settings;
@@ -39,11 +73,18 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
         p.ch_descr[i].scale = m_header->ch_descr[i].gain;
     }
 
-	return 0;
+    m_oscFileStream->seekg(0, std::ios::beg);
+
+    return 0;
 }
 
 int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
 {
+    if (!m_oscFileStream) {
+        cout << OSC_FILE_ERROR;
+        return DATA_YELD_ERROR;
+    }
+
     p.data_length = m_header->settings.time_resolution_ns != 0 ? (DATA_YELD_INTERVAL_MSC * 1000) / m_header->settings.time_resolution_ns : 0;
     p.overflow = 0;
     p.header_updated = 0;
@@ -53,14 +94,14 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
     for (int jj = 0; jj < p.data_length; ++jj) {
         std::string line("");
         while (line.empty() || !isdigit(line[0])) {
-            std::getline(*m_oscFile, line);
-            if (m_oscFile->eof()) {
-                return -2;
+            std::getline(*m_oscFileStream, line);
+            if (m_oscFileStream->eof()) {
+                return DATA_YELD_FINISH;
             }
         }
 
         for (int ii = 0; ii < OSC_CHANNELS; ii++) {
-            uint16_t rawValue = parseValueLine(ii, line);
+            uint16_t rawValue = parseValue(ii, line);
             uint16_t zeroLevel = 0x7FFF;
             float normValue = rawValue - zeroLevel;
             normValue =  normValue * m_header->ch_descr[ii].gain + m_header->ch_descr[ii].offset;
@@ -68,16 +109,23 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
         }
     }
 
-	return 0;
+    return 0;
 }
 
-int DDE_OSC_FILE::parseHeader(std::ifstream* oscFile, OSC_FILE_HEADER& header)
+int DDE_OSC_FILE::parseHeader(std::stringstream* fileStream, OSC_FILE_HEADER& header)
 {
     //  std::assert(oscFile);
+
+    if (!fileStream) {
+        return DATA_YELD_ERROR;
+    }
+
+    fileStream->seekg(0, std::ios::beg);
+
     int chIndex = -1;
     int res = -1;
 
-    for (std::string line; std::getline(*oscFile, line); ) {
+    for (std::string line; std::getline(*fileStream, line); ) {
         if (line.empty()) {
             continue;
         }
@@ -149,14 +197,13 @@ std::vector<std::string> DDE_OSC_FILE::split(string inputStr, char delim)
     return res;
 }
 
-uint16_t DDE_OSC_FILE::parseValueLine(uint8_t chNum, std::string line)
+uint16_t DDE_OSC_FILE::parseValue(uint8_t chNum, std::string line)
 {
     std::stringstream ss(line);
     std::string item;
-    int i = 0;
+    int i = -1;
     while(std::getline(ss, item, ',')) {
-        int colNum = i++;
-        if (colNum - 1 == chNum) {
+        if (i++ == chNum) {
             return std::atoi(item.c_str());
         }
     }

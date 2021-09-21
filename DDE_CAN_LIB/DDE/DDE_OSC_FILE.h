@@ -27,7 +27,7 @@ struct OSC_FILE_HEADER
 class DDE_OSC_FILE : public IDDE_OSC
 {
 public:
-    DDE_OSC_FILE() = default;
+    DDE_OSC_FILE();
     ~DDE_OSC_FILE() = default;
 
     virtual int get(DDE_GET_OSC_HEADER& p);
@@ -35,10 +35,13 @@ public:
     virtual int set(DDE_GET_OSC_HEADER& p){return 0;}
 
 private:
-    int parseHeader(std::ifstream *oscFile, OSC_FILE_HEADER &header);
-    uint16_t parseValueLine(uint8_t chNum, std::string line);
+    std::ifstream openOscFile();
+    std::stringstream* createFileStream();
+    int parseHeader(std::stringstream *fileStream, OSC_FILE_HEADER &header);
+    uint16_t parseValue(uint8_t chNum, std::string line);
     std::vector<std::string> split(std::string inputStr, char delim);
 
     OSC_FILE_HEADER* m_header = nullptr;
-    std::ifstream* m_oscFile = nullptr;
+    std::stringstream* m_oscFileStream = nullptr;
+
 };

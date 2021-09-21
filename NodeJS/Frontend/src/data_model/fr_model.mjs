@@ -21,7 +21,7 @@ const ERROR_RESPONSE = {
     msg: ""
 }
 
-const OSC_MAX_CHANNELS = 8;
+const OSC_MAX_CHANNELS = 16;
 
 
 
@@ -439,7 +439,7 @@ export class Osciloscope {
     }
 
     stream(socketData) {
-        for (var i = 0; i <= OSC_MAX_CHANNELS; ++i) {
+        for (var i = 0; i < OSC_MAX_CHANNELS; ++i) {
             let data = this.parse(socketData, i);
             if (data == -1) {
                 continue;
