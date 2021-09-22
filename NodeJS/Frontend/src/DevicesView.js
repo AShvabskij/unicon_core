@@ -33,6 +33,8 @@ setTimeout(() => {
   });
 }, 1000);
 
+const chartsArrVisible = [];
+const chartsArrHidden = ["chart3","chart4","chart5"];
 
 async function stopValues(deviceId, paramId) {
   let param = model.device(deviceId).param(paramId);
@@ -247,6 +249,7 @@ function tabview1(props) {
     view: "tabview",
     id:"tabview1",
     height: 800,
+    css:"tabParam",
     pading: "0",
     cells: [
       {
@@ -292,9 +295,9 @@ function tabview1(props) {
         onAfterTabClick: function (id, ev) {
           if (id == "oscilloscopeContent") {
             showChart("chart2", "memo1");
-            showElementChart("chart3");
-            showElementChart("chart4")
-            showElementChart("chart5")
+            // showElementChart("chart3");
+            // showElementChart("chart4")
+            // showElementChart("chart5")
           }
 
           if (id == "controlContent") {
@@ -401,14 +404,98 @@ const webixButton = (props = { width: "100" }) => {
   )
 }
 
+const showSelectChartWindow = () => {
+  let v = {
+    view:"window",
+    id:"showSelectChartWindow",
+    height:600,
+    width:1000,
+    left:50, top:50,
+    // css:"showSelectChartWindowData",
+    move:true,
+    modal:true,
+    head:"This window can be moved",
+    body:{
+      rows: [
+        {
+          id: "showSelectChartWindowData",   
+          view:"datatable",
+          height:100, 
+          columns:[
+            { id:"status", header:"Is Active", width:80, css:"center", 
+              template:"{common.checkbox()}"},
+            { id:"value", header:"Records", fillspace:1 },
+          ],
+          data: [
+            { id:1, status:0, value:"Record A"},
+            { id:2, status:1, value:"Record B"},
+            { id:3, status:0, value:"Record C"}
+          ]
+        },
+        {
+          height: 38,
+          cols: [
+            { "label": "Cancel", "view": "button", "height": 0, 
+                click: function (id, event) {
+                  // console.log("webixButton");
+                  $$("showSelectChartWindow").hide();
+                }
+            },
+            { "label": "Apply", "view": "button", "height": 0, 
+                click: function (id, event) {
+                  // then form process — add
+                  
+                  // if (chartsArrHidden.length > 0) {
+                    let chartToVisible = chartsArrHidden.shift();
+                    let paramArr = ["Param 1","Param 2","Param 3","Param 4"];
+                    Info.chartList[chartToVisible].setNamesArr(paramArr);
+                    // Info.chartList[chartToVisible].namesArr = ["Param 1","Param 2","Param 3","Param 4", "Param 5", "Param 6"];
+                    chartsArrVisible.push(chartToVisible);
+                    document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
+                    showElementChart(chartToVisible);
+                  // }
+                  $$("showSelectChartWindow").hide();
+                }
+            }
+          ]
+        }
+      ]
+    }
+  };
+  return v;
+}
+
 const addButtonClick = () => {
   // console.log("addButtonClick");
-  showElementChart("chart4");
+  
+  let comp = $$("showSelectChartWindowData");
+  console.log(comp);
+  let dataCollection = [
+    { id:1, status:0, value:"Record A1"},
+    { id:2, status:1, value:"Record B1"},
+    { id:3, status:0, value:"Record C1"}
+  ];
+  
+  if (chartsArrHidden.length > 0) {
+    $$("showSelectChartWindow").show();
+    comp.define({"data":dataCollection});
+    
+    // console.log("indexDev " + Info.states.indexDevice);
+
+    showSelectChartWindow();
+  }
 }
 
 const removeButtonClick = () => {
-  // console.log("addButtonClick");
-  showElementChart("chart4", "hidden");
+  // console.log("removeButtonClick");
+  if (chartsArrVisible.length > 0) {
+    let chartToHidden = chartsArrVisible.pop();
+    chartsArrHidden.unshift(chartToHidden);
+    
+    document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
+    showElementChart(chartToHidden, "hidden");
+  }
+  // then stop process — add
 }
 
 function addFunction(x) {
@@ -416,10 +503,10 @@ function addFunction(x) {
   return Math.sin(x * 0.01) * (1 + 0.5 * Math.random());
 }
 
-function addFunction1(x) {
-  // console.log("addFunction");
-  return Math.sin(x * 0.01) * Math.cos(x * 0.01) * (1 + 0.5 * Math.random());
-}
+// function addFunction1(x) {
+//   // console.log("addFunction");
+//   return Math.sin(x * 0.01) * Math.cos(x * 0.01) * (1 + 0.5 * Math.random());
+// }
 
 export default class DevicesView extends React.Component {
   constructor(props) {
@@ -439,8 +526,8 @@ export default class DevicesView extends React.Component {
 
     return (
       <div>
-        <Webix ui={{ "label": " ", "view": "label","css":"deviceLabel", "id":"descriptionDevice"}} />
-        <Webix ui={webixButton(150)} id="q1" data="Get Devices" click={() => {
+        <Webix ui={{ "label": " ", "view": "label", "css":"deviceLabel", "id":"descriptionDevice"}} />
+        {/* <Webix ui={webixButton(150)} id="q1" data="Get Devices" click={() => {
           let acc = $$("accmain");
           acc.adjust();
           acc = $$("tabview1");
@@ -457,21 +544,21 @@ export default class DevicesView extends React.Component {
               
           }, true);
         }
-        } />
+        } /> */}
 
         <Webix ui={tabview1(this.props)} />
-
+        <Webix ui={showSelectChartWindow()}  />
         <div id="chart2">
 
-          <Chart2 id="chart3" /* title="demo chart 3" */ addFunction={addFunction} />
-          <Chart2 id="chart4" title="&nbsp;" addFunction={addFunction1} />
-          <Chart2 id="chart5" title="&nbsp;" addFunction={addFunction1} />
+          <Chart2 id="chart3" /* title="demo chart 3" */  addFunction={addFunction} />
+          <Chart2 id="chart4" title="&nbsp;" addFunction={addFunction} />
+          <Chart2 id="chart5" title="&nbsp;" addFunction={addFunction} />
         </div>
 
         <Chart />
-        <ChartList />
+        {/* <ChartList /> */}
         <div id="memo1">{/* Memo 1 */}
-          <Webix ui={toolBar()} data="Add Chart" click={addButtonClick} />
+          <Webix ui={toolBar()} />
         </div>
         <div id="memo2">Memo 2</div>
         <div id="memo3">Memo 3</div>

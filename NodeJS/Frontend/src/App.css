@@ -90,6 +90,7 @@
 .deviceLabel{
     background-color: #1CA1C1  !important;
     color: #FFFFFF !important;
+    height: 38px;
 }
 
 .webix_el_box{
@@ -99,4 +100,40 @@
 
 .webix_view.webix_layout_accordion {
     height: 100vh !important;
+}
+/* .webix_view.webix_dtable {
+    height: calc( var(--height) - 95px) !important;
+} */
+
+:root{
+    --height: 100vh;
+    --h1: 10vh;
+    /* --chartheight:30vh; */
+    --chartcount : 1;
+    /* --chartheight : calc(calc( var(--height) / var(--chartcount)) - 140px); */
+    --chartheight : calc( calc( ( var(--height) - 140px )) / var(--chartcount));
+}
+.webix_view.webix_multiview {
+    height: 100vh !important;
+}
+/* #showSelectChartWindowData {
+    height: 200px !important;
+} */
+.showSelectChartWindowData {
+    height: calc( var(--height) - 95px) !important;
+}
+
+.logoUniCon {
+    background-image: url(./logo/uc2.jpg) !important;
+    height: 38px!important;
+    /* width: 10vh !important; */
+    width: 100% !important;
+}
+
+.tabParam .webix_view .webix_dtable {
+    height: calc( var(--height) - 95px ) !important;
+}
+
+.showSelectChartWindowData .webix_view .webix_dtable {
+    height: calc( var(--height) - 95px ) !important;
 }
