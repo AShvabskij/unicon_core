@@ -24,7 +24,7 @@ const DevicesPage = () => {
 const CPLotWebPage = () => {
     return (
         <div className="c2">
-            CPLotWebPage
+            cPlotWebPage
          </div>
     );
   }; 
@@ -33,7 +33,7 @@ const CPLotWebPage = () => {
   const Button = () => {
     const hist = useHistory();
     return (
-        <button onClick={() => updateLeftMenu1()}>Show CPLotWebPage</button>
+        <button onClick={() => updateLeftMenu1()}>Show cPlotWebPage</button>
     );
   }; 
 
@@ -114,8 +114,7 @@ function App() {
   <div className="App">
       <Router>
       <div className="c1">
-          <div><span class='webix_icon mdi mdi-file-video'></span>UNICON</div>
-       
+          <div><span class='webix_icon mdi mdi-file-video logoUniCon'></span></div>
           <MenuLeft devtitle={devicesD}/>
       </div>
         <DevicesPage/>

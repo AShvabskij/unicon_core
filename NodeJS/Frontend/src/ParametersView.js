@@ -72,7 +72,7 @@ function getUImainMenu(props) {
     // height:0,
     // id: "dataview",
     id: "parametersGrid",
-    height: 353,
+    height: 600,
     columns: [
       {
         id: "name", header: "Name", fillspace: true,

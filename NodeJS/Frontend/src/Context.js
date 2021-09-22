@@ -16,6 +16,7 @@ const updateParameters = (indexDevice) => {
     let i = 1;
     let j = 1;
     let infoCurrentDivice = deviceItem.desc + ". Channel: " + deviceItem.interfaceName;
+    Info.states.indexDevice = indexDevice;
     let desc = $$("descriptionDevice");
     desc.setValue(infoCurrentDivice);
     deviceItem.modules.forEach(function(item, index, array) {
@@ -73,7 +74,9 @@ const updateLeftMenu = () => {
 export const Info = {startTime:startDate.getTime(),model:{},
     actions:{updateLeftMenu:updateLeftMenu,updateParameters:updateParameters},
     elements:{},
+    states:{indexDevice:{}},
     gridParameters:{},
+    chartList:{"chart3":{setNamesArr: () => {}}, "chart4":{setNamesArr: () => {}}, "chart5":{setNamesArr: () => {}}},
     resize :function(event) {
         let elements = ["accmain","tabview1","parametersGrid","descriptionDevice"]
         elements.forEach(function(item, index, array) {

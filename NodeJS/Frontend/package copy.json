@@ -25,7 +25,8 @@
     "ws": "^7.5.3"
   },
   "scripts": {
-    "dev": "npm run && react-scripts start",
+    "copyWasm": "copy-files-from-to --config copy-files-from-to.json",
+    "dev": "npm run copyWasm && react-scripts start",
     "build": "npm run copyWasm && react-scripts build",
     "start": "node src/server.js",
     "test": "react-scripts test",
@@ -40,7 +41,7 @@
   "browserslist": {
     "production": [
       ">0.2%",
-      
+      "not dead",
       "not op_mini all"
     ],
     "development": [
