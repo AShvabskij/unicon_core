@@ -238,12 +238,7 @@ export class Model extends Events {
                     }
 
                     let oscHeader = await this.deviceProvider.reqOsc(device.id);
-
-                    device.osc.id = oscHeader.id;
-                    device.osc.deviceId = oscHeader.device_id;
-                    device.osc.name = oscHeader.name;
-                    device.osc.resolution_ns = oscHeader.resolution_ns;
-                    device.osc.desc = oscHeader.desc;
+                    device.osc = this.createOsc(oscHeader)
 
                     this.m_devices.push(device)
                 }
@@ -257,6 +252,18 @@ export class Model extends Events {
                 reject(err);
             }
         });
+    }
+
+    createOsc(oscHeader) {
+        let osc = new Osciloscope();
+        osc.id = oscHeader.id;
+        osc.deviceId = oscHeader.device_id;
+        osc.name = oscHeader.name;
+        osc.resolution_ns = oscHeader.resolution_ns;
+        osc.desc = oscHeader.desc;
+        osc.channels = oscHeader.channels;
+
+        return osc;
     }
 
     loaded() {
@@ -385,6 +392,7 @@ export class Osciloscope {
         this.lastError = 0;
         this.channelStreams = []
         this.trig_time = new Date().getTime();
+        this.channels = []
 
         this.deviceProvider = new DeviceProvider();
 
@@ -396,14 +404,12 @@ export class Osciloscope {
 
     async openDataStream() {
 
-        this.channelStreams = [];
-        for (var i = 0; i < 16; ++i) {
-            this.channelStreams.push(new Stream.Readable({
+        this.channels.forEach(channel => {
+            channel.stream = new Stream.Readable({
                 highWaterMark: 1, //STREAM_BUFFER_OBJECTS,
                 objectMode: true,
-                read() { }
-            }));
-        }
+                read() { } });
+        });
 
         this._byteCount = 0;
         this._msgCount = 0;
@@ -426,15 +432,14 @@ export class Osciloscope {
         try {
             let openStream = false;
             await this.deviceProvider.reqDataStream(this.deviceId, this.id, openStream);
-            for (var i = 0; i < 16; ++i) {
-                this.channelStreams[i].push(null);
-                this.channelStreams[i].destroy;
-            }
-            this.channelStreams = [];
         } catch (error) {
             this.lastError = error;
             console.error(error);
-            this.channelStreams = [];
+        }
+
+        for (var i = 0; i < OSC_MAX_CHANNELS; ++i) {
+            this.channel[i].stream.push(null);
+            this.channel[i].stream.destroy;
         }
     }
 
@@ -444,7 +449,7 @@ export class Osciloscope {
             if (data == -1) {
                 continue;
             }
-            this.channelStreams[i].push(data);
+            this.channels[i].stream.push(data);
         }
     }
 
@@ -481,16 +486,6 @@ export class Osciloscope {
 
             return { val, time };
         })
-        /*
-                var result = [];
-                var i = 0;
-                values.reduce(function (prevRes, item) {
-                    if (++i % 10 === 0) {
-                        result.push(item);
-                    }
-                    return item;
-                });
-        */
         return values;
     }
 }

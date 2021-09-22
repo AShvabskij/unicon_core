@@ -4,7 +4,7 @@
 #include "basereqhandler.h"
 #include <QTimer>
 
-#define OSC_CHANNELS_MAX 16
+#define OSC_CHANNELS_MAX 48
 struct OscChannelValues
 {
     int channelNum = 0;
@@ -78,6 +78,7 @@ struct OscHeader
             QJsonObject obj;
             obj["num"] = ch.channelNum;
             obj["param_id"] = ch.paramId;
+            obj["name"] = ch.paramName;
             obj["scale"] = ch.scale;
 
             channelsObj << obj;

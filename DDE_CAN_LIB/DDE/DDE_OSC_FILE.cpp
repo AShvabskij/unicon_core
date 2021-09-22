@@ -24,7 +24,7 @@ DDE_OSC_FILE::DDE_OSC_FILE()
 
 std::ifstream DDE_OSC_FILE::openOscFile()
 {
-    std::ifstream oscFile(".\\data\\D0007_04.10.2018_13.19.21_C1_WITH_IPLL.csv"); // открыли файл для чтения
+    std::ifstream oscFile(".\\data\\D0007_04.10.2018_13.19.21_C1_WITH_IPLL.csv");
     if (!oscFile.is_open()) {
         oscFile.open("D0007_04.10.2018_13.19.21_C1_WITH_IPLL.csv");
     }
@@ -69,7 +69,9 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
     p.settings = m_header->settings;
 
     for (int i = 0; i < OSC_CHANNELS; i++) {
-        p.ch_descr[i].param_ID = m_header->ch_descr[i].param_ID;
+        p.ch_descr[i].param.param_ID = m_header->ch_descr[i].param_ID;
+        p.ch_descr[i].chNum = m_header->ch_descr[i].chNum;
+        strcpy(p.ch_descr[i].param.name, m_header->ch_descr[i].name);
         p.ch_descr[i].scale = m_header->ch_descr[i].gain;
     }
 
@@ -133,11 +135,11 @@ int DDE_OSC_FILE::parseHeader(std::stringstream* fileStream, OSC_FILE_HEADER& he
         res = 0;
         std::string item;
         std::vector<std::string> elems = split(line, ',');
-        if (elems.size() < 2) {
-            return -1;
-        }
 
         if (line[0] == '.') {
+            if (elems.size() < 2) {
+                continue;
+            }
 
             if (elems[0] == ".Time") {
                 time_t now = std::time(0);   // get time now
@@ -164,10 +166,13 @@ int DDE_OSC_FILE::parseHeader(std::stringstream* fileStream, OSC_FILE_HEADER& he
                 continue;
             }
 
-            chDescr.param_ID = 1;
+            chDescr.param_ID = chIndex;
             strcpy(chDescr.name, elems[0].c_str());
             chDescr.group = elems[1];
-            chDescr.chNum = atoi(elems[2].c_str()) - 1; // исчисление от 0. Todo: Потом вернуть к 1
+            int grNum = atoi(elems[1].substr(1).c_str());
+            int localNum = atoi(elems[2].c_str());
+            int chNum = (grNum - 1) * 16 + (localNum - 1); // исчисление от 0. Todo: Позже следует сделать с 1
+            chDescr.chNum = chNum;
             chDescr.gain = stof(elems[5]);
             chDescr.offset = stof(elems[6]);
 

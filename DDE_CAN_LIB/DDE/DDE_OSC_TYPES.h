@@ -3,18 +3,33 @@
 #include <cstdint>
 #include <time.h>
 
-#define DDE_PARAMS_NAME_LENGTH 64
+#include "DDE_PARAMS_TYPES.h"
+
 #define OSC_CHANNELS 48
+
+struct OSC_PARAM
+{
+    uint16_t device_ID;
+    uint16_t module_ID;
+    uint16_t param_ID;
+    std::string group;
+
+    float min;
+    float max;
+
+    char name[DDE_PARAMS_NAME_LENGTH];
+    GLIO_ELEMENT_UNIT_ENUM value_unit;
+};
 
 struct OSC_CHANNEL_DESCR
 {
-    uint16_t param_ID;
+    uint16_t chNum;
+//  RGB color;
+    OSC_PARAM param;
+
     float scale;
-    //uint8_t sub_index;
-    //float min;
-    //float max;
-//	char name[DDE_PARAMS_NAME_LENGTH]; - ������
 };
+
 struct OSC_CH_DATA
 {
     float buff[0x10000];

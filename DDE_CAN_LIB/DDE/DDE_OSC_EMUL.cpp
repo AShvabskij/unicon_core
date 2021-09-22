@@ -22,7 +22,7 @@ int DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
 
     for (int ii =0; ii < CHANNELS_MAX; ii++)
     {
-        p.ch_descr[ii].param_ID = paramId++;
+        p.ch_descr[ii].param.param_ID = paramId++;
         p.ch_descr[ii].scale = 0.1;
     }
 
