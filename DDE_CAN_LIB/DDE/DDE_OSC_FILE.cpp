@@ -117,6 +117,7 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
 int DDE_OSC_FILE::parseHeader(std::stringstream* fileStream, OSC_FILE_HEADER& header)
 {
     //  std::assert(oscFile);
+    std::setlocale(LC_NUMERIC, "POSIX");
 
     if (!fileStream) {
         return DATA_YELD_ERROR;
