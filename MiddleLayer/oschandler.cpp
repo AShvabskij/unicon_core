@@ -7,7 +7,7 @@ const QString CMD_TYPE_CLOSE_STREAM = "close_stream";
 const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
 const int DATA_YELD_INTERVAL_MSC = 50;
-const int STREAM_OBJECT_LIMIT = 400;
+const int STREAM_OBJECT_LIMIT = 4000;
 
 const int STOP_STREAM_CODE = 2; //*100;
 
@@ -57,7 +57,12 @@ void OscHandler::onStreamTimerAlarm()
         return;
     }
 
-    streamData();
+    int res = streamData();
+    if (res < 0) {
+        stopStreamData(m_capturedOsc);
+        stopPooling();
+        return;
+    }
 }
 
 int OscHandler::handleGetHeader(const QJsonObject &request)
@@ -146,7 +151,12 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
     for (const OSC_CH_DATA& chData : m_oscRawDataBuff->ch_data) {
 
         chNum++;
-        if (osc.channels.length() <= chNum || osc.channels[chNum].paramId == 0) {
+        if (chNum >= osc.channels.length()) {
+            break;
+        }
+
+        if (osc.channels[chNum].paramId == 0 && osc.channels[chNum].paramName.isEmpty()) {
+            QTextStream(stdout) << "Error: The channel is not assigned" ;
             continue;
         }
 
@@ -163,7 +173,7 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         }
     }
 
-    time_t trigTimeNs = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
+    qlonglong trigTimeNs = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
     out->timestamp = trigTimeNs  + ++m_dataCounter * m_oscRawDataBuff->data_length * osc.settings.timeResolutionNs;
 
     return 0;
@@ -190,6 +200,9 @@ int OscHandler::streamData()
     }
 
     long res = getData(m_capturedOsc, m_oscDataBuff);
+    if (res < 0) {
+        return res;
+    }
     QJsonObject response = createStreamDataObj(*m_oscDataBuff);
 
     emit stream(response);
@@ -231,12 +244,17 @@ long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
 
     int chNum = -1;
     for (const OSC_CHANNEL_DESCR& elem : header.ch_descr) {
+        chNum++;
+        if (chNum >= OSC_CHANNELS_MAX) {
+            break;
+        }
         OscChannelDescr ch;
-        ch.channelNum = ++chNum;
-        ch.paramId = elem.param_ID;
+        ch.channelNum = elem.chNum; // chNum;
+        ch.paramId = elem.param.param_ID;
+        ch.paramName = elem.param.name;
         ch.scale = elem.scale;
 
-        if (elem.param_ID <= 0) {
+        if (elem.param.param_ID <= 0) {
             continue;
         }
 

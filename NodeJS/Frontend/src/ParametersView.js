@@ -7,7 +7,7 @@ import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
 import { $$ } from 'webix';
 import { Info } from './Context';
-// import moment from 'moment';
+import moment from 'moment';
 
 
 async function stopValues(param) {
@@ -21,7 +21,7 @@ async function getValue(param, rowId) {
   let grid = $$("parametersGrid");
   let item = grid.getItem(rowId);
 
-  let frequency = 5; // кол-во значений в секунду
+  let frequency = 2; // кол-во значений в секунду
   let resStream = await param.openValueStream(frequency);
   if (resStream === undefined || resStream === null) {
     return;
@@ -32,8 +32,7 @@ async function getValue(param, rowId) {
     let value = values[values.length - 1];
 
     item.value = value.value.toFixed(3); 
-    // var dateStr = moment(value.valueTime).format('hh:mm:ss.SSS');
-    var dateStr = value.valueTime;
+    var dateStr = moment(value.valueTime).format('hh:mm:ss.SSS');
     item.time = dateStr;
     grid.updateItem(rowId, item);
   });

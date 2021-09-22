@@ -87,14 +87,21 @@ async function startValues(deviceId, paramId, line) {
 
 let _interval = 5;
 function drawValueRange(chart, xValues, yValues, line) {
-  _interval = _interval >= 15 ? 5 : _interval + 5;
-  setTimeout(() => {
-    if (line == 1) {
-      chart.addVarPointRange(xValues, yValues)
-    } else {
-      chart.addVarPointRange2(xValues, yValues)
-    }
-  }, _interval);
+  if (line == 1) {
+    chart.addVarPointRange(xValues, yValues)
+  } else {
+    chart.addVarPointRange2(xValues, yValues)
+  }
+  /*
+    _interval = _interval >= 15 ? 5 : _interval + 5;
+    setTimeout(() => {
+      if (line == 1) {
+        chart.addVarPointRange(xValues, yValues)
+      } else {
+        chart.addVarPointRange2(xValues, yValues)
+      }
+    }, _interval);
+  */
 }
 
 async function startOsc(deviceId, line) {
@@ -143,9 +150,7 @@ async function startOsc(deviceId, line) {
         if (chart == 'chart3') {
           drawValueRange(charts[chart], xValues, yValues, i);
         }
-
       }
-
     }
 
     if (endOfData) {
@@ -166,55 +171,38 @@ async function startOsc2(deviceId, line) {
   // let param = device.param(deviceId + 1);
 
   let osc = model.device(deviceId).osc;
+  console.log('osc config: ');
+  osc.channels.forEach(channel => {
+    console.log(`channel = ${channel.num}, param id = ${channel.param_id}, name = ${channel.name}`);
+  });
+
   osc.openDataStream();
 
   let charts = ChartControls();
 
-  let chNum = 0;
-  osc.channelStreams[chNum].on('data', values => {
+  let chNum1 = 2;
+  console.log(`Drawing osc line 1 for the channel = ${osc.channels[chNum1].num}, 
+  param id = ${osc.channels[chNum1].param_id}, 
+  name = ${osc.channels[chNum1].name}`);
+
+  osc.channels[chNum1].stream.on('data', values => {
     let xValues = values.map(valObj => { return valObj.time });
     let yValues = values.map(valObj => { return valObj.val });
 
     drawValueRange(charts['chart3'], xValues, yValues, 1);
   });
 
-  chNum = 1;
-  osc.channelStreams[chNum].on('data', values => {
+  let chNum2 = 11;
+  console.log(`Drawing osc line 2 for the channel = ${osc.channels[chNum2].num}, 
+  param id = ${osc.channels[chNum2].param_id}, 
+  name = ${osc.channels[chNum2].name}`);
+
+  osc.channels[chNum2].stream.on('data', values => {
     let xValues = values.map(valObj => { return valObj.time });
     let yValues = values.map(valObj => { return valObj.val });
 
     drawValueRange(charts['chart3'], xValues, yValues, 2);
   });
-
-  osc.channelStreams[2].on('data', values => {
-    let xValues = values.map(valObj => { return valObj.time });
-    let yValues = values.map(valObj => { return valObj.val });
-
-//    console.log (xValues[0] +','+ yValues[0]);
-
-  });
-
-  osc.channelStreams[3].on('data', values => {
-    let xValues = values.map(valObj => { return valObj.time });
-    let yValues = values.map(valObj => { return valObj.val });
-
-//    console.log (xValues[0] +','+ yValues[0]);
-  });
-
-  osc.channelStreams[4].on('data', values => {
-    let xValues = values.map(valObj => { return valObj.time });
-    let yValues = values.map(valObj => { return valObj.val });
-    
-//    console.log (xValues[0] +','+ yValues[0]);
-  });
-
-  osc.channelStreams[5].on('data', values => {
-    let xValues = values.map(valObj => { return valObj.time });
-    let yValues = values.map(valObj => { return valObj.val });
-    
-//    console.log (xValues[0] +','+ yValues[0]);
-  });
-
 }
 
 function disableEnableElement(id, show) {
@@ -247,7 +235,7 @@ function showChart(chartID, parentID) {
 function tabview1(props) {
   return {
     view: "tabview",
-    id:"tabview1",
+    id: "tabview1",
     height: 800,
     css:"tabParam",
     pading: "0",
@@ -303,7 +291,7 @@ function tabview1(props) {
           if (id == "controlContent") {
             showChart("chart1", "memo2")
           }
-          Info.resize(); 
+          Info.resize();
         },
         onChange: function (newValue, oldValue, config) {
           // config is {yourProperty: "yourValue"}
@@ -317,7 +305,7 @@ function tabview1(props) {
     },
     on: {
       onChange: function (newValue, oldValue, config) {
-        
+
       }
     }
   }
@@ -532,16 +520,16 @@ export default class DevicesView extends React.Component {
           acc.adjust();
           acc = $$("tabview1");
           acc.adjust();
-          window.addEventListener('resize', function(event) {
-              // let l = $$("descriptionDevice");
-              // l.setValue("123");
-              let acc = $$("accmain");
-              acc.adjust();
-              acc = $$("tabview1");
-              acc.adjust();
-              acc = $$("parametersGrid");
-              acc.adjust();
-              
+          window.addEventListener('resize', function (event) {
+            // let l = $$("descriptionDevice");
+            // l.setValue("123");
+            let acc = $$("accmain");
+            acc.adjust();
+            acc = $$("tabview1");
+            acc.adjust();
+            acc = $$("parametersGrid");
+            acc.adjust();
+
           }, true);
         }
         } /> */}

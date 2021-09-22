@@ -10,10 +10,6 @@ const int RESOLUTION_NS = (DATA_YELD_INTERVAL_MSC * 1000) / BUFFER_MAX;
 
 int DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
 {
-    if (p.device_ID != 1) {
-        return -1;
-    }
-
     p.settings.reason = 0;
     p.settings.time_resolution_ns = RESOLUTION_NS;
 
@@ -26,7 +22,7 @@ int DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
 
     for (int ii =0; ii < CHANNELS_MAX; ii++)
     {
-        p.ch_descr[ii].param_ID = paramId++;
+        p.ch_descr[ii].param.param_ID = paramId++;
         p.ch_descr[ii].scale = 0.1;
     }
 
@@ -35,10 +31,6 @@ int DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
 
 int DDE_OSC_EMUL::get(DDE_GET_OSC_DATA& p)
 {
-    if (p.device_ID != 1) {
-        return -1;
-    }
-
     p.data_length = BUFFER_MAX;
     p.overflow = 0;
     p.header_updated = 0;
