@@ -4,6 +4,10 @@ const QString CMD_DEVICE_HEADER = "device_header";
 const QString CMD_SYSTEM_STATUS = "system_status";
 const QString CMD_TYPE = "get";
 
+DeviceHandler::DeviceHandler(IDDE *dde): BaseReqHandler(dde)
+{
+}
+
 int DeviceHandler::handle(const QJsonObject &request)
 {
     QJsonObject cmdObj = request.value("cmd").toObject();

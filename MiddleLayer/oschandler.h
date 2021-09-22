@@ -95,7 +95,7 @@ class OscHandler : public BaseReqHandler
 {
     Q_OBJECT
 public:
-    OscHandler();
+    OscHandler(IDDE* dde);
     virtual int handle(const QJsonObject& request);
 
 signals:
