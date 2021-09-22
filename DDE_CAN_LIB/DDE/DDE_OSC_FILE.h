@@ -35,6 +35,7 @@ public:
     virtual int set(DDE_GET_OSC_HEADER& p){return 0;}
 
 private:
+    std::string loadOscFile();
     std::ifstream openOscFile();
     std::stringstream* createFileStream();
     int parseHeader(std::stringstream *fileStream, OSC_FILE_HEADER &header);
@@ -43,5 +44,6 @@ private:
 
     OSC_FILE_HEADER* m_header = nullptr;
     std::stringstream* m_oscFileStream = nullptr;
+    std::string m_oscFileBuff = "";
 
 };
