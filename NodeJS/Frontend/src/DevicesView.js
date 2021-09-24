@@ -206,6 +206,12 @@ async function startOsc2(deviceId, line) {
   });
 }
 
+
+async function stopOsc(deviceId) {
+  let osc = model.device(deviceId).osc;
+  osc.closeDataStream();
+}
+
 function disableEnableElement(id, show) {
   const elem = document.getElementById(id);
   if (elem != null) {
@@ -367,10 +373,18 @@ const toolBar = () => {
       {
         view: "button", value: "Start osc", autowidth: true, align: "center",
         click: async function (id, event) {
-          console.log("Start values");
+          console.log("Start osc");
           let deviceId = 1;
           let paramId = 65;
           startOsc2(deviceId, paramId);
+        }
+      },
+      {
+        view: "button", value: "Stop osc", autowidth: true, align: "center",
+        click: async function (id, event) {
+          console.log("Stop osc");
+          let deviceId = Info.states.indexDevice;
+          stopOsc(deviceId);
         }
       },
     ]
