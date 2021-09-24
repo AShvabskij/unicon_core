@@ -7,7 +7,7 @@ const QString CMD_TYPE_CLOSE_STREAM = "close_stream";
 const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
 const int DATA_YELD_INTERVAL_MSC = 50;
-const int STREAM_OBJECT_LIMIT = 400;
+const int STREAM_OBJECT_LIMIT = 2000;
 
 const int STOP_STREAM_CODE = 2; //*100;
 
@@ -147,10 +147,9 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         return res;
     }
 
-    int chNum = 0;
-    for (const OSC_CH_DATA& chData : m_oscRawDataBuff->ch_data) {
+    for (int chNum = 1; chNum <= OSC_CHANNELS_MAX; ++chNum) {
+         const OSC_CH_DATA& chData = m_oscRawDataBuff->ch_data[chNum];
 
-        chNum++;
         if (!osc.channels.keys().contains(chNum)) {
             continue;
         }

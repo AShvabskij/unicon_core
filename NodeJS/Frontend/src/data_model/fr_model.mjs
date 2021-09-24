@@ -21,7 +21,7 @@ const ERROR_RESPONSE = {
     msg: ""
 }
 
-const OSC_MAX_CHANNELS = 48;
+const OSC_MAX_CHANNELS = 20;
 
 export class SysInterfacesEnum {
     static Can = 1;
@@ -437,8 +437,9 @@ export class Osciloscope {
         }
 
         for (var i = 1; i <= OSC_MAX_CHANNELS; ++i) {
-            this.channel[i].stream.push(null);
-            this.channel[i].stream.destroy;
+            this.channels[i].stream.push(null);
+            this.channels[i].stream.destroy;
+            this.channels[i].stream = null;
         }
     }
 
@@ -448,7 +449,9 @@ export class Osciloscope {
             if (data == -1) {
                 continue;
             }
-            this.channels[i].stream.push(data);
+            if (this.channels[i].stream !== null) {
+                this.channels[i].stream.push(data);
+            }
         }
     }
 
@@ -472,7 +475,7 @@ export class Osciloscope {
             return null;
         }
 
-        let receivedBytes = JSON.stringify(chValues[0]).length * chValues.length * socketData.values.length;
+        let receivedBytes = JSON.stringify(chValues[0]).length * chValues.length;
         this._byteCount += receivedBytes;
         // console.log('Received bytes = ' + receivedBytes);
 

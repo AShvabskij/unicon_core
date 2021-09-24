@@ -14,6 +14,7 @@ const int DATA_YELD_INTERVAL_MSC = 50;
 const int DATA_YELD_ERROR = -1;
 const int DATA_YELD_FINISH = -2;
 const std::string OSC_FILE_ERROR = "Osc data file is not found!";
+const int L_SIZE = 16;
 
 DDE_OSC_FILE::DDE_OSC_FILE()
 {
@@ -175,7 +176,7 @@ int DDE_OSC_FILE::parseHeader(std::stringstream* fileStream, OSC_FILE_HEADER& he
             chDescr.group = elems[1];
             int grNum = atoi(elems[1].substr(1).c_str());
             int localNum = atoi(elems[2].c_str());
-            int chNum = (grNum - 1) * 8 + localNum; // 1-based numeration
+            int chNum = (grNum - 1) * L_SIZE + localNum; // 1-based numeration
             chDescr.chNum = chNum;
             chDescr.gain = stof(elems[5]);
             chDescr.offset = stof(elems[6]);

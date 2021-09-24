@@ -4,7 +4,7 @@
 #include "basereqhandler.h"
 #include <QTimer>
 
-#define OSC_CHANNELS_MAX 48
+#define OSC_CHANNELS_MAX 20
 struct OscChannelValues
 {
     int channelNum = 0;

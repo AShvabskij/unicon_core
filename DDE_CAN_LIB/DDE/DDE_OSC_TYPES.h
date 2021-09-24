@@ -5,7 +5,7 @@
 
 #include "DDE_PARAMS_TYPES.h"
 
-#define OSC_CHANNELS 48
+#define OSC_CHANNELS 20
 
 struct OSC_PARAM
 {

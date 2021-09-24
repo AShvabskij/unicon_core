@@ -120,7 +120,7 @@ async function startOsc2(deviceId, line) {
 
   let charts = ChartControls();
 
-  let chNum1 = 2;
+  let chNum1 = 3;
   console.log(`Drawing osc line 1 for the channel = ${osc.channels[chNum1].num}, 
   param id = ${osc.channels[chNum1].param_id}, 
   name = ${osc.channels[chNum1].name}`);
@@ -131,10 +131,10 @@ async function startOsc2(deviceId, line) {
 
 //  console.log("val = " + yValues);
 
-//  drawValueRange(charts['chart3'], xValues, yValues, 1);
+    drawValueRange(charts['chart3'], xValues, yValues, 1);
   });
 
-  let chNum2 = 11;
+  let chNum2 = 19;
   console.log(`Drawing osc line 2 for the channel = ${osc.channels[chNum2].num}, 
   param id = ${osc.channels[chNum2].param_id}, 
   name = ${osc.channels[chNum2].name}`);
@@ -145,7 +145,7 @@ async function startOsc2(deviceId, line) {
 
 //  console.log("val = " + yValues[0] + "," + "time = " + xValues[0]);
 
-//  drawValueRange(charts['chart3'], xValues, yValues, 2);
+    drawValueRange(charts['chart3'], xValues, yValues, 2);
   });
 }
 
