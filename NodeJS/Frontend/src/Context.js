@@ -74,7 +74,7 @@ const updateLeftMenu = () => {
 export const Info = {startTime:startDate.getTime(),model:{},
     actions:{updateLeftMenu:updateLeftMenu,updateParameters:updateParameters},
     elements:{},
-    states:{indexDevice:{}},
+    states:{indexDevice:1},
     gridParameters:{},
     chartList:{"chart3":{setNamesArr: () => {}}, "chart4":{setNamesArr: () => {}}, "chart5":{setNamesArr: () => {}}},
     resize :function(event) {

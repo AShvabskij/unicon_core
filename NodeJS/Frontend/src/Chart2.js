@@ -161,23 +161,23 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
   }
 
   const addVarPoint = (x,y) => {
-      // xds.append(x, y);
+      arrayLines[0].dataSeries.append(x, y);
       xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
   }
 
   const addVarPointRange = (xValues = [], yValues = []) => {
-    // xds.appendRange(xValues, yValues);
+    arrayLines[0].dataSeries.appendRange(xValues, yValues);
     xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
   }
 
   const addVarPoint2 = (x,y) => {
-        // xds1.append(x, y);
-        // xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
+        arrayLines[1].dataSeries.append(x, y);
+        xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
   }
 
   const addVarPointRange2 = (xValues = [], yValues = []) => {
-    // xds1.appendRange(xValues, yValues);
-//  xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
+        arrayLines[1].dataSeries.appendRange(xValues, yValues);
+        xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
   }
 
   const startDemo = () => {
@@ -295,4 +295,5 @@ function ChartControls() {
   return chartControls;
 }
 
-export { ChartControls }
+export { ChartControls };
+export { colorsArr, colorsTitleArr };
