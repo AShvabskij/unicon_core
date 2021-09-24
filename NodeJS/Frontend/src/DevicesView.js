@@ -1,6 +1,6 @@
 import 'webix/webix.css';
 import Webix from './Webix';
-import { $$ } from 'webix';
+import { $$, template } from 'webix';
 import * as webix from 'webix/webix.js';
 // import Chart from "./Chart2";
 import React from "react";
@@ -13,6 +13,7 @@ import Config from './.config.js';
 import { Model } from "./data_model/fr_model.mjs";
 import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 import { AddCounter, Info } from "./Context"
+import { colorsArr, colorsTitleArr } from './Chart2';
 
 let model = new Model(Config.ip);
 Info.model = model;
@@ -392,6 +393,12 @@ const webixButton = (props = { width: "100" }) => {
   )
 }
 
+
+function mark_votes(value, config){
+  if (value > 0 )
+      return { "background":colorsArr[value-1], "color":colorsTitleArr[value-1] };
+};
+
 const showSelectChartWindow = () => {
   let v = {
     view:"window",
@@ -408,17 +415,39 @@ const showSelectChartWindow = () => {
         {
           id: "showSelectChartWindowData",   
           view:"datatable",
-          height:100, 
+          height:500, 
           columns:[
-            { id:"status", header:"Is Active", width:80, css:"center", 
+            { id:"channel", header:"Channel", width:120, css:"center"},
+            { id:"name", header:"Name", fillspace:1 },
+            { id:"status", header:"Show", width:80, css:"center", 
               template:"{common.checkbox()}"},
-            { id:"value", header:"Records", fillspace:1 },
+            { id:"line",	editor:"combo", 
+             cssFormat:mark_votes,
+              options:[
+                {id:"a", value: ""},
+                {id:1, value: "1"},
+                {id:2, value: "2"},
+                {id:3, value: "3"},
+                {id:4, value: "4"},
+                {id:5, value: "5"},
+                {id:6, value: "6"} // {id:2, $css: "colorChart1", value: "2"}
+              ], //collection:colorsArr,
+              // css: "colorChart1",
+              header:"Num Line", width:300},
           ],
-          data: [
-            { id:1, status:0, value:"Record A"},
-            { id:2, status:1, value:"Record B"},
-            { id:3, status:0, value:"Record C"}
-          ]
+          editable:true,
+          // autoheight:true,
+          data: [],
+          on: {
+            onAfterEditStop: function(state, editor, ignoreUpdate){
+               console.log(editor.row);
+               let table1 = this.getColumnConfig("line").collection;
+               if ((editor.value) && (editor.value != "a")) table1.config.data[editor.value].disabled = false;
+               if ((state.value) && (state.value != "a")) table1.config.data[state.value].disabled = true;
+               let item = this.getItem(editor.row);
+                console.log(item);
+            }
+          }
         },
         {
           height: 38,
@@ -449,7 +478,7 @@ const showSelectChartWindow = () => {
         }
       ]
     }
-  };
+  }
   return v;
 }
 
@@ -457,16 +486,24 @@ const addButtonClick = () => {
   // console.log("addButtonClick");
   
   let comp = $$("showSelectChartWindowData");
-  console.log(comp);
-  let dataCollection = [
-    { id:1, status:0, value:"Record A1"},
-    { id:2, status:1, value:"Record B1"},
-    { id:3, status:0, value:"Record C1"}
-  ];
+  // console.log(comp);
+
+  let osc = model.device(Info.states.indexDevice);
+  let dataForChoose = [];
+  if (osc != undefined) {
+    // console.log(osc.osc);
+    osc.osc.channels.forEach(function(item, index, array) {
+      dataForChoose.push({ id:index, channel:item.num, name:item.name + " [" + item.param_id + "]",  
+        status:0, idParam: item.param_id,
+      });
+      // console.log(dataForChoose);
+    })
+  }
+  console.log(dataForChoose);
   
   if (chartsArrHidden.length > 0) {
     $$("showSelectChartWindow").show();
-    comp.define({"data":dataCollection});
+    comp.define({"data":dataForChoose});
     
     // console.log("indexDev " + Info.states.indexDevice);
 
