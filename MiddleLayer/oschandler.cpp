@@ -11,7 +11,7 @@ const int STREAM_OBJECT_LIMIT = 4000;
 
 const int STOP_STREAM_CODE = 2; //*100;
 
-OscHandler::OscHandler()
+OscHandler::OscHandler(IDDE* dde): BaseReqHandler(dde)
 {
     m_oscRawDataBuff = new DDE_GET_OSC_DATA();
     m_oscDataBuff = new OscData();

@@ -7,7 +7,7 @@ const QString CMD_PARAMS_DATA = "param_data";
 const int DATA_YELD_INTERVAL_MSC = 100;
 const int STREAM_OBJECT_LIMIT = 6000;//*100;
 
-ParamsHandler::ParamsHandler()
+ParamsHandler::ParamsHandler(IDDE* dde): BaseReqHandler(dde)
 {
     m_streamTimer = new QTimer(this);
     m_streamTimer->setTimerType(Qt::PreciseTimer);

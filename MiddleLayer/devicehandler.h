@@ -39,7 +39,7 @@ struct SystemStatus
 class DeviceHandler : public BaseReqHandler
 {
 public:
-    DeviceHandler() = default;
+    DeviceHandler(IDDE* dde);
     virtual int handle(const QJsonObject &request);
 
 private:

@@ -59,7 +59,7 @@ class ParamsHandler : public BaseReqHandler
 {
     Q_OBJECT
 public:
-    ParamsHandler();
+    ParamsHandler(IDDE* dde);
     virtual int handle(const QJsonObject& request);
 
 signals:

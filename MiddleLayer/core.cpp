@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "../DDE_CAN_LIB/DDE_CAN.h"
+#include "../DDE_CAN_LIB/DDE_EMUL.h"
 
 #include "requestmanager.h"
 #include "responsemanager.h"
@@ -23,9 +24,13 @@ void Core::start()
 {
     test();
 
-    ParamsHandler* params = new ParamsHandler();
-    DeviceHandler* device = new DeviceHandler();
-    OscHandler* osc = new OscHandler();
+    IDDE* dde = new DDE_EMUL();
+    dde->init(0); //run thread
+
+    ParamsHandler* params = new ParamsHandler(dde);
+    DeviceHandler* device = new DeviceHandler(dde);
+    OscHandler* osc = new OscHandler(dde);
+
 
     RequestManager::instance()->registerHandler(device);
     RequestManager::instance()->registerHandler(params);
