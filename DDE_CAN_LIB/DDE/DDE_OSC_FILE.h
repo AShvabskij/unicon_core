@@ -20,7 +20,7 @@ struct OSC_FILE_CHANNEL_DESCR
 
 struct OSC_FILE_HEADER
 {
-    OSC_FILE_CHANNEL_DESCR ch_descr[OSC_CHANNELS];
+    OSC_FILE_CHANNEL_DESCR ch_descr[OSC_CHANNELS + 1];
     OSC_SETTING settings;
 };
 

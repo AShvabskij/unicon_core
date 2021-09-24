@@ -18,7 +18,7 @@ struct OscData
 {
     uint16_t oscId;
     uint16_t deviceId;
-    OscChannelValues chValues[OSC_CHANNELS_MAX];
+    OscChannelValues chValues[OSC_CHANNELS_MAX + 1];
     qlonglong timestamp = 0;
 };
 
@@ -27,7 +27,7 @@ struct OscChannelDescr
     int channelNum = 0;
     uint16_t paramId = 0;
     QString paramName = "";
-    float scale;
+    float scale = 0.0;
 };
 
 enum TriggerModeEnum {
@@ -55,7 +55,7 @@ struct OscHeader
     QString name = "";
     QString desc = "";
 
-    QVector<OscChannelDescr> channels;
+    QMap<quint8/*channel num*/, OscChannelDescr> channels;
     OscSettings settings;
 
     bool operator == (const OscHeader& o) const {
@@ -74,14 +74,17 @@ struct OscHeader
 
 
         QJsonArray channelsObj;
-        for (const OscChannelDescr& ch : channels) {
-            QJsonObject obj;
-            obj["num"] = ch.channelNum;
+        QJsonObject obj;
+
+        for (int chNum = 0; chNum <= OSC_CHANNELS_MAX; ++chNum) {
+            const OscChannelDescr& ch = channels.value(chNum);
+            obj["num"] = chNum;
             obj["param_id"] = ch.paramId;
             obj["name"] = ch.paramName;
             obj["scale"] = ch.scale;
 
             channelsObj << obj;
+
         }
 
         res["channels"] = channelsObj;

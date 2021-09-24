@@ -1,7 +1,7 @@
 // import cbor from 'cbor' // from 'cbor-web'
 // import { createRequire } from "module";
 // const require = createRequire(import.meta.url);
-import React,{ useEffect } from "react";
+import React, { useEffect } from "react";
 import * as cbor from './../cbor.js';
 
 const Events = require('events');
@@ -21,9 +21,7 @@ const ERROR_RESPONSE = {
     msg: ""
 }
 
-const OSC_MAX_CHANNELS = 16;
-
-
+const OSC_MAX_CHANNELS = 48;
 
 export class SysInterfacesEnum {
     static Can = 1;
@@ -408,7 +406,8 @@ export class Osciloscope {
             channel.stream = new Stream.Readable({
                 highWaterMark: 1, //STREAM_BUFFER_OBJECTS,
                 objectMode: true,
-                read() { } });
+                read() { }
+            });
         });
 
         this._byteCount = 0;
@@ -437,14 +436,14 @@ export class Osciloscope {
             console.error(error);
         }
 
-        for (var i = 0; i < OSC_MAX_CHANNELS; ++i) {
+        for (var i = 1; i <= OSC_MAX_CHANNELS; ++i) {
             this.channel[i].stream.push(null);
             this.channel[i].stream.destroy;
         }
     }
 
     stream(socketData) {
-        for (var i = 0; i < OSC_MAX_CHANNELS; ++i) {
+        for (var i = 1; i <= OSC_MAX_CHANNELS; ++i) {
             let data = this.parse(socketData, i);
             if (data == -1) {
                 continue;
@@ -454,11 +453,13 @@ export class Osciloscope {
     }
 
     parse(socketData, ch) {
+
         if (socketData.values == undefined) {
             return -1;
         }
 
-        if (socketData.error === 2) {
+        const isFinished = (socketData.error === 2);
+        if (isFinished) {
             if (ch == OSC_MAX_CHANNELS) {
                 console.log(`The osc stream is finished, device id = ${this.deviceId}, received items = ${this._msgCount}, bytes = ${this._byteCount}`);
                 console.timeEnd(`The stream elapsed time(${this._timeLabel})`);
@@ -467,21 +468,20 @@ export class Osciloscope {
         }
 
         let chValues = socketData.values[ch];
-        if (chValues === undefined) {
+        if (chValues === undefined || chValues.length == 0) {
             return null;
         }
 
-        if (ch == OSC_MAX_CHANNELS) {
-            let receivedBytes = JSON.stringify(chValues[0]).length * chValues.length * socketData.values.length;
-            this._byteCount += receivedBytes;
-            //          console.log('Received bytes = ' + receivedBytes);
-        }
+        let receivedBytes = JSON.stringify(chValues[0]).length * chValues.length * socketData.values.length;
+        this._byteCount += receivedBytes;
+        // console.log('Received bytes = ' + receivedBytes);
 
-        this._msgCount += 1;
+        this._msgCount++;
 
         let time_ns = socketData.time - chValues.length * this.resolution_ns;
+        let trig_time = this.trig_time;
         let values = chValues.map(val => {
-            let time = time_ns * 0.001 - this.trig_time;
+            let time = time_ns * 0.001 - trig_time;
             time_ns += this.resolution_ns;
 
             return { val, time };
@@ -562,7 +562,7 @@ class Param {
             this.buffObjectCount = (buffObjectCount !== undefined) ? buffObjectCount : this.buffObjectCount;
             if (this.buffObjectCount === 0) {
                 this.buffObjectCount === 1
-            }  
+            }
 
             for (var i = 0; i < this.buffObjectCount; i++) {
                 this.buffer[i] = new ParamValue();
@@ -578,7 +578,7 @@ class Param {
             this.lastError = 0;
             this.value = new ParamValue()
 
-            await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream, {frequency:frequency});
+            await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream, { frequency: frequency });
 
         } catch (error) {
             this.value = new ParamValue()

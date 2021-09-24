@@ -104,67 +104,6 @@ function drawValueRange(chart, xValues, yValues, line) {
   */
 }
 
-async function startOsc(deviceId, line) {
-  console.log("try to get osc streams...");
-
-  // let param = device.param(deviceId + 1);
-  let streamSocketUrl = "ws://" + Config.ip + ":" + 1237;
-  let streamSocket = new WebSocket(streamSocketUrl);
-
-  let startDate = new Date();
-
-  let osc = model.device(deviceId).osc;
-
-  streamSocket.onopen = async (event) => {
-    console.log(`Stream socket ${streamSocket.url} opened successfully.`);
-    osc.openDataStream();
-    startDate = new Date();
-  };
-
-  streamSocket.onmessage = (message) => {
-
-    var messageData = JSON.parse(message.data);
-
-    let res = osc.parse(messageData, 0);
-    if (res < 0) {
-      return;
-    }
-
-    let chNum = 0;
-    let charts = ChartControls();
-    let endOfData = false;
-    for (var chart in charts) {
-      for (var i = 1; i <= 2; ++i) {
-        let values = osc.parse(messageData, chNum++);
-        if (values == null) {
-          endOfData = true;
-          continue;
-        }
-
-        let xValues = values.map(valObj => { return valObj.time });
-        let yValues = values.map(valObj => { return valObj.val });
-
-        if (i == 1) {
-          // console.log("values() = " + JSON.stringify(values));
-        }
-        if (chart == 'chart3') {
-          drawValueRange(charts[chart], xValues, yValues, i);
-        }
-      }
-    }
-
-    if (endOfData) {
-      streamSocket.close();
-      let endDate = new Date();
-
-      var diff = (endDate.getTime() - Info.startTime)
-      console.log("The work time is = " + diff);
-    }
-  }
-
-  //  console.log(output + "\n");
-};
-
 async function startOsc2(deviceId, line) {
   console.log("try 2 to get osc streams...");
 
@@ -189,7 +128,9 @@ async function startOsc2(deviceId, line) {
     let xValues = values.map(valObj => { return valObj.time });
     let yValues = values.map(valObj => { return valObj.val });
 
-    drawValueRange(charts['chart3'], xValues, yValues, 1);
+//  console.log("val = " + yValues);
+
+//  drawValueRange(charts['chart3'], xValues, yValues, 1);
   });
 
   let chNum2 = 11;
@@ -201,7 +142,9 @@ async function startOsc2(deviceId, line) {
     let xValues = values.map(valObj => { return valObj.time });
     let yValues = values.map(valObj => { return valObj.val });
 
-    drawValueRange(charts['chart3'], xValues, yValues, 2);
+//  console.log("val = " + yValues[0] + "," + "time = " + xValues[0]);
+
+//  drawValueRange(charts['chart3'], xValues, yValues, 2);
   });
 }
 

@@ -272,7 +272,7 @@ QString MainWindowVM::oscDataObjToString(const QJsonObject &obj)
     QStringList dvalList;
     for (const QJsonValueRef& el : values) {
         QJsonArray valBuffer = el.toArray();
-        double dval = valBuffer[0].toDouble();
+        double dval = !valBuffer.isEmpty() ? valBuffer[0].toDouble() : -1;
         dvalList << QString("%1").arg(dval);
     }
 

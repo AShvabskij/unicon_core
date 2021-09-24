@@ -73,7 +73,7 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
 
     p.settings = m_header->settings;
 
-    for (int i = 0; i < OSC_CHANNELS; i++) {
+    for (int i = 0; i <= OSC_CHANNELS; i++) {
         p.ch_descr[i].param.param_ID = m_header->ch_descr[i].param_ID;
         p.ch_descr[i].chNum = m_header->ch_descr[i].chNum;
         strcpy(p.ch_descr[i].param.name, m_header->ch_descr[i].name);
@@ -96,7 +96,7 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
 
     p.next_ready = true;
 
-    for (int jj = 0; jj < p.data_length; ++jj) {
+    for (int ind = 0; ind < p.data_length; ++ind) {
         std::string line("");
         while (line.empty() || !isdigit(line[0])) {
             cout << line;
@@ -106,12 +106,12 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
             }
         }
 
-        for (int ii = 0; ii < OSC_CHANNELS; ii++) {
-            uint16_t rawValue = parseValue(ii, line);
+        for (int chNum = 1; chNum <= OSC_CHANNELS; chNum++) {
+            uint16_t rawValue = parseValue(chNum, line);
             uint16_t zeroLevel = 0x7FFF;
             float normValue = rawValue - zeroLevel;
-            normValue =  normValue * m_header->ch_descr[ii].gain + m_header->ch_descr[ii].offset;
-            p.ch_data[ii].buff[jj] = normValue;
+            normValue =  normValue * m_header->ch_descr[chNum].gain + m_header->ch_descr[chNum].offset;
+            p.ch_data[chNum].buff[ind] = normValue;
         }
     }
 
@@ -129,7 +129,7 @@ int DDE_OSC_FILE::parseHeader(std::stringstream* fileStream, OSC_FILE_HEADER& he
 
     fileStream->seekg(0, std::ios::beg);
 
-    int chIndex = -1;
+    int ind = 0;
     int res = -1;
 
     for (std::string line; std::getline(*fileStream, line); ) {
@@ -165,23 +165,24 @@ int DDE_OSC_FILE::parseHeader(std::stringstream* fileStream, OSC_FILE_HEADER& he
             OSC_FILE_CHANNEL_DESCR chDescr;
 
             std::vector<std::string> elems = split(line, ',');
-            chIndex++;
 
-            if (elems.empty() || chIndex >= OSC_CHANNELS) {
+            if (elems.empty()) {
                 continue;
             }
 
-            chDescr.param_ID = chIndex;
+            chDescr.param_ID = ++ind;
             strcpy(chDescr.name, elems[0].c_str());
             chDescr.group = elems[1];
             int grNum = atoi(elems[1].substr(1).c_str());
             int localNum = atoi(elems[2].c_str());
-            int chNum = (grNum - 1) * 16 + (localNum - 1); // исчисление от 0. Todo: Позже следует сделать с 1
+            int chNum = (grNum - 1) * 8 + localNum; // 1-based numeration
             chDescr.chNum = chNum;
             chDescr.gain = stof(elems[5]);
             chDescr.offset = stof(elems[6]);
 
-            header.ch_descr[chIndex] = chDescr;
+            if (chNum <= OSC_CHANNELS) {
+                header.ch_descr[chNum] = chDescr;
+            }
 
         } else if (line[0] == '&') {
         } else {
@@ -211,12 +212,10 @@ uint16_t DDE_OSC_FILE::parseValue(uint8_t chNum, std::string line)
 {
     std::stringstream ss(line);
     std::string item;
-    int i = -1;
-    while(std::getline(ss, item, ',')) {
-        if (i++ == chNum) {
-            return std::atoi(item.c_str());
-        }
+
+    for (int i = 0; i <= chNum; i++) {
+        std::getline(ss, item, ',');
     }
 
-    return 0;
+    return std::atoi(item.c_str());
 }

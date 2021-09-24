@@ -7,7 +7,7 @@ const QString CMD_TYPE_CLOSE_STREAM = "close_stream";
 const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
 const int DATA_YELD_INTERVAL_MSC = 50;
-const int STREAM_OBJECT_LIMIT = 4000;
+const int STREAM_OBJECT_LIMIT = 400;
 
 const int STOP_STREAM_CODE = 2; //*100;
 
@@ -147,15 +147,17 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         return res;
     }
 
-    int chNum = -1;
+    int chNum = 0;
     for (const OSC_CH_DATA& chData : m_oscRawDataBuff->ch_data) {
 
         chNum++;
-        if (chNum >= osc.channels.length()) {
-            break;
+        if (!osc.channels.keys().contains(chNum)) {
+            continue;
         }
 
-        if (osc.channels[chNum].paramId == 0 && osc.channels[chNum].paramName.isEmpty()) {
+        const OscChannelDescr& chDescr = osc.channels[chNum];
+
+        if (chDescr.paramId == 0 && chDescr.paramName.isEmpty()) {
             QTextStream(stdout) << "Error: The channel is not assigned" ;
             continue;
         }
@@ -164,8 +166,8 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
 
         chValues.channelNum = chNum;
         chValues.valuesize = m_oscRawDataBuff->data_length;
-        chValues.scale = osc.channels[chNum].scale;
-        chValues.paramId = osc.channels[chNum].paramId;
+        chValues.scale = chDescr.scale;
+        chValues.paramId = chDescr.paramId;
         chValues.values.clear();
 
         for (int i = 0; i < m_oscRawDataBuff->data_length; i++) {
@@ -242,14 +244,9 @@ long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
     out->desc = "osc desc";
     out->channels.clear();
 
-    int chNum = -1;
     for (const OSC_CHANNEL_DESCR& elem : header.ch_descr) {
-        chNum++;
-        if (chNum >= OSC_CHANNELS_MAX) {
-            break;
-        }
         OscChannelDescr ch;
-        ch.channelNum = elem.chNum; // chNum;
+        ch.channelNum = elem.chNum;
         ch.paramId = elem.param.param_ID;
         ch.paramName = elem.param.name;
         ch.scale = elem.scale;
@@ -258,7 +255,7 @@ long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
             continue;
         }
 
-        out->channels << ch;
+        out->channels[elem.chNum] = ch;
     }
 
     OscSettings settings;
@@ -292,9 +289,9 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
     QJsonArray channelValues;
 
     for (const OscChannelValues& chVal : data.chValues) {
-        if (chVal.paramId != 0) {
+//      if (chVal.paramId != 0) {
             channelValues << QJsonArray::fromVariantList(chVal.values);
-        }
+//      }
     }
 
     res["d_id"] = data.deviceId;
