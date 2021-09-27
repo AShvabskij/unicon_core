@@ -3,45 +3,21 @@
 // const require = createRequire(import.meta.url);
 import React, { useEffect } from "react";
 import * as cbor from './../cbor.js';
-
-const Events = require('events');
+import Oscilloscope from './oscilloscope.mjs'
+import {Param, SysModule, SysInterfacesEnum} from './device.mjs'
+import Device from './device.mjs'
 
 // import {ParamProvider} from "./services/paramprovider.mjs"
 // import {DeviceProvider} from "./services/deviceprovider.mjs"
-
 const { RequestHelper } = require("./services/fr_requesthelper.mjs");
 const { ParamProvider } = require("./services/fr_paramprovider.mjs");
 const { DeviceProvider } = require("./services/fr_deviceprovider.mjs");
-
-const Stream = require('stream-browserify');
+const Events = require('events');
 
 const STATUS_OK = 200;
 const ERROR_RESPONSE = {
     status: 500, // any server error
     msg: ""
-}
-
-const OSC_MAX_CHANNELS = 20;
-
-export class SysInterfacesEnum {
-    static Can = 1;
-    static CanOpen = 2;
-    static ModBus = 3;
-    static FO = 4;
-
-    static toString(arg) {
-        switch (arg) {
-            case SysInterfacesEnum.Can: return 'Can';
-            case SysInterfacesEnum.CanOpen: return 'CanOpen';
-            case SysInterfacesEnum.ModBus: return 'ModBus';
-            case SysInterfacesEnum.FO: return 'FO';
-        }
-    }
-}
-
-class ValueFormatEnum {
-    static Int = 1;
-    static Float = 2;
 }
 
 class StatusEnum {
@@ -55,7 +31,6 @@ let _messageDataLength = 0
 
 const STREAM_SERVER_PORT = 1237;
 const RECEIVED_DATA_ERROR = "Received data error!";
-const STREAM_BUFFER_OBJECTS = 1;
 const CAPTURED_PARAMS_MAX = 12;
 
 export class Model extends Events {
@@ -169,7 +144,7 @@ export class Model extends Events {
             return;
         }
 
-        param.streamValue(valueData);
+        param.streamValue(valueData, _messageDataLength);
     }
 
     _streamOscValue(deviceId, valueData) {
@@ -253,7 +228,7 @@ export class Model extends Events {
     }
 
     createOsc(oscHeader) {
-        let osc = new Osciloscope();
+        let osc = new Oscilloscope();
         osc.id = oscHeader.id;
         osc.deviceId = oscHeader.device_id;
         osc.name = oscHeader.name;
@@ -353,344 +328,6 @@ export class Model extends Events {
         res.unit = paramInfo.value_unit;
 
         return res;
-    }
-}
-
-export class Device {
-    constructor() {
-        this.id = ''
-        this.name = ''
-        this.desc = ''
-        this.image = 0
-        this.osc = new Osciloscope()
-        this.interface = SysInterfacesEnum.Can
-        this.interfaceName = 'Can';
-        this.modules = []
-        this.params = []
-    }
-
-    module(moduleId) {
-        let res = this.modules.find(item => item.id == moduleId);
-        return res;
-    }
-
-    param(paramId) {
-        let res = this.params.find(item => item.id == paramId);
-        return res;
-    }
-}
-
-export class Osciloscope {
-    constructor() {
-        this.id = 0
-        this.deviceId = 0
-        this.name = ''
-        this.desc = ''
-        this.resolution_ns = 0;
-        this.lastError = 0;
-        this.channelStreams = []
-        this.trig_time = new Date().getTime();
-        this.channels = []
-
-        this.deviceProvider = new DeviceProvider();
-
-        // Переменные для измерения производительности
-        this._byteCount = 0;
-        this._msgCount = 0;
-        this._timeLabel = new Date().getTime();
-    }
-
-    async openDataStream() {
-
-        this.channels.forEach(channel => {
-            channel.stream = new Stream.Readable({
-                highWaterMark: 1, //STREAM_BUFFER_OBJECTS,
-                objectMode: true,
-                read() { }
-            });
-        });
-
-        this._byteCount = 0;
-        this._msgCount = 0;
-        this._timeLabel = new Date().getTime();
-        console.time(`The stream elapsed time(${this._timeLabel})`);
-
-        try {
-            let openStream = true;
-            let oscHeader = await this.deviceProvider.reqOsc(this.id);
-            this.trig_time = oscHeader.trig_time
-
-            await this.deviceProvider.reqDataStream(this.deviceId, this.id, openStream);
-        } catch (error) {
-            this.lastError = error;
-            console.error(error);
-        }
-    }
-
-    async closeDataStream() {
-        try {
-            let openStream = false;
-            await this.deviceProvider.reqDataStream(this.deviceId, this.id, openStream);
-        } catch (error) {
-            this.lastError = error;
-            console.error(error);
-        }
-
-        for (var i = 1; i <= OSC_MAX_CHANNELS; ++i) {
-            this.channels[i].stream.push(null);
-            this.channels[i].stream.destroy;
-            this.channels[i].stream = null;
-        }
-    }
-
-    stream(socketData) {
-        for (var i = 1; i <= OSC_MAX_CHANNELS; ++i) {
-            let data = this.parse(socketData, i);
-            if (data == -1) {
-                continue;
-            }
-            if (this.channels[i].stream !== null) {
-                this.channels[i].stream.push(data);
-            }
-        }
-    }
-
-    parse(socketData, ch) {
-
-        if (socketData.values == undefined) {
-            return -1;
-        }
-
-        const isFinished = (socketData.error === 2);
-        if (isFinished) {
-            if (ch == OSC_MAX_CHANNELS) {
-                console.log(`The osc stream is finished, device id = ${this.deviceId}, received items = ${this._msgCount}, bytes = ${this._byteCount}`);
-                console.timeEnd(`The stream elapsed time(${this._timeLabel})`);
-            }
-            return null;
-        }
-
-        let chValues = socketData.values[ch];
-        if (chValues === undefined || chValues.length == 0) {
-            return null;
-        }
-
-        let receivedBytes = JSON.stringify(chValues[0]).length * chValues.length;
-        this._byteCount += receivedBytes;
-        // console.log('Received bytes = ' + receivedBytes);
-
-        this._msgCount++;
-
-        let time_ns = socketData.time - chValues.length * this.resolution_ns;
-        let trig_time = this.trig_time;
-        let values = chValues.map(val => {
-            let time = time_ns * 0.001 - trig_time;
-            time_ns += this.resolution_ns;
-
-            return { val, time };
-        })
-        return values;
-    }
-}
-
-class SysModule {
-    constructor() {
-        this.id = 0;
-        this.deviceId = 0;
-        this.name = '';
-        this.desc = '';
-        this.params = [];
-    }
-}
-
-class Param {
-    constructor() {
-        this.id = 0;
-        this.deviceId = 0;
-        this.moduleId = 0;
-        this.name = '';
-        this.desc = '';
-        this.unit = '';
-        this.value = new ParamValue();
-
-        this.stream = null;
-        this.buffer = [];
-        this.buffIndex = 0;
-        this.buffObjectCount = STREAM_BUFFER_OBJECTS;
-
-        this.lastError = 0;
-
-        this.paramProvider = new ParamProvider();
-
-        // Переменные для измерения производительности
-        this._byteCount = 0;
-        this._msgCount = 0;
-
-        this._timeLabel = new Date().getTime();
-    }
-
-    async lastValue() {
-
-        setTimeout(() => {
-            this.currentValue();
-        }, 0)
-
-        return this.value;
-    }
-
-    async currentValue() {
-
-        try {
-            let valueData = await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id);
-            this.value = Param.paramValueFromJson(valueData)
-            this.lastError = 0;
-        } catch (err) {
-            this.value = new ParamValue()
-            this.lastError = err;
-        }
-
-        return this.value;
-    }
-
-    async openValueStream(frequency, buffObjectCount) {
-        try {
-
-            this._timeLabel = new Date().getTime();
-            console.time(`The stream elapsed time(${this._timeLabel})`);
-            this._byteCount = 0;
-            this._msgCount = 0;
-
-            this.buffIndex = 0;
-            this.buffer = [];
-            this.buffObjectCount = (buffObjectCount !== undefined) ? buffObjectCount : this.buffObjectCount;
-            if (this.buffObjectCount === 0) {
-                this.buffObjectCount === 1
-            }
-
-            for (var i = 0; i < this.buffObjectCount; i++) {
-                this.buffer[i] = new ParamValue();
-            }
-
-            this.stream = new Stream.Readable({
-                highWaterMark: this.buffObjectCount,
-                objectMode: true,
-                read() { }
-            });
-
-            let stream = "on";
-            this.lastError = 0;
-            this.value = new ParamValue()
-
-            await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream, { frequency: frequency });
-
-        } catch (error) {
-            this.value = new ParamValue()
-            this.lastError = error;
-            console.error(error);
-        }
-
-        return this.stream;
-    }
-
-    async closeValueStream() {
-        try {
-
-            let stream = "off";
-
-            await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream)
-
-            if (this.stream === null) {
-                return;
-            }
-
-            if (!this.stream.destroyed) {
-                this.stream.push(null);
-                this.stream.destroy();
-            }
-            this.lastError = 0;
-
-        } catch (error) {
-            this.lastError = error;
-        }
-    }
-
-    streamValue(valueData) {
-
-        if (this.stream === null || this.stream.destroyed) {
-            console.warn(`Receiving value error. The param stream is deactivated now. Device id = ${this.deviceId}, param id = ${this.id}, value = ${JSON.stringify(valueData)}`);
-            return;
-        }
-
-        let pValue = this.buffer[this.buffIndex];//new ParamValue();
-        pValue.paramId = this.id;
-        pValue.deviceId = this.deviceId;
-        pValue.value = valueData.value;
-        pValue.valueFormat = valueData.format;
-        pValue.valueTime = valueData.time;
-        pValue.scale = valueData.scale;
-
-        let currTime = new Date().getTime();
-        let pValueDeltaTime = pValue.valueTime > 0 ? currTime - pValue.valueTime : 0
-
-        if (pValueDeltaTime > 50) {
-            console.warn(`Param value actuality = ${pValueDeltaTime}`)
-        }
-
-        const isFinished = (pValue.value == -1);
-
-        if (isFinished === true) {
-            console.log(`The param stream is finished, device id = ${this.deviceId}, param id = ${this.id}, received items = ${this._msgCount}, bytes = ${this._byteCount}`);
-            console.timeEnd(`The stream elapsed time(${this._timeLabel})`);
-
-            this.buffer.splice(this.buffIndex)
-            if (this.buffer.length > 0) {
-                this.stream.push(this.buffer);
-            }
-            this.stream.push(null);
-            this.stream.destroy();
-
-            return;
-        }
-
-        // console.log(`Received: ${JSON.stringify(pValue)}`);
-        this._byteCount += _messageDataLength;
-        this._msgCount++;
-
-        //      this.buffer[this.buffIndex] = pValue;
-        this.buffIndex++;
-
-        if (this.buffIndex >= this.buffObjectCount) {
-            this.stream.push(this.buffer);
-            this.buffIndex = 0;
-        }
-    }
-
-    lastError() {
-        return this.lastError;
-    }
-
-    static paramValueFromJson(data) {
-        // формат ожидаемых данных: {param_id: , device_id:, value:{value, format, time, scale}}
-        let res = new ParamValue();
-        res.paramId = data.param_id;
-        res.deviceId = data.device_id;
-        res.value = data.value.value;
-        res.valueFormat = data.value.format;
-        res.valueTime = data.value.time;
-        res.scale = data.value.scale;
-
-        return res;
-    }
-}
-
-class ParamValue {
-    constructor() {
-        this.paramId = 0;
-        this.deviceId = 0;
-        this.valueFormat = ValueFormatEnum.Int
-        this.valueTime = 0;
-        this.scale = 0.0;
-        this.value = -1.0;
     }
 }
 

@@ -11,7 +11,6 @@ import ChartList from './ChartList';
 import ParametersView from './ParametersView';
 import Config from './.config.js';
 import { Model } from "./data_model/fr_model.mjs";
-import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 import { AddCounter, Info } from "./Context"
 import { colorsArr, colorsTitleArr } from './Chart2';
 
@@ -94,7 +93,7 @@ function drawValueRange(chart, xValues, yValues, line) {
     chart.addVarPointRange2(xValues, yValues)
   }
   /*
-    _interval = _interval >= 15 ? 5 : _interval + 5;
+      _interval = _interval >= 15 ? 5 : _interval + 5;
     setTimeout(() => {
       if (line == 1) {
         chart.addVarPointRange(xValues, yValues)
@@ -105,7 +104,7 @@ function drawValueRange(chart, xValues, yValues, line) {
   */
 }
 
-async function startOsc2(deviceId, line) {
+async function startOsc(deviceId) {
   console.log("try 2 to get osc streams...");
 
   // let param = device.param(deviceId + 1);
@@ -318,8 +317,7 @@ const toolBar = () => {
         click: async function (id, event) {
           console.log("Start osc");
           let deviceId = 1;
-          let paramId = 65;
-          startOsc2(deviceId, paramId);
+          startOsc(deviceId);
         }
       },
       {
