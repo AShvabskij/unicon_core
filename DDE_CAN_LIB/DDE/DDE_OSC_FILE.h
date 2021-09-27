@@ -8,11 +8,14 @@
 
 struct OSC_FILE_CHANNEL_DESCR
 {
+    uint16_t colIndex = 0;
+
     uint16_t param_ID = 0;
     char name[DDE_PARAMS_NAME_LENGTH];
     float gain = 0;
     float offset = 0;
-    std::string group;
+    uint8_t setNum;
+    uint8_t setChNum = 0;
     uint8_t chNum = 0;
     float min = 0;
     float max = 0;
@@ -20,7 +23,7 @@ struct OSC_FILE_CHANNEL_DESCR
 
 struct OSC_FILE_HEADER
 {
-    OSC_FILE_CHANNEL_DESCR ch_descr[OSC_CHANNELS];
+    OSC_FILE_CHANNEL_DESCR ch_descr[OSC_CHANNELS + 1];
     OSC_SETTING settings;
 };
 
@@ -39,7 +42,8 @@ private:
     std::ifstream openOscFile();
     std::stringstream* createFileStream();
     int parseHeader(std::stringstream *fileStream, OSC_FILE_HEADER &header);
-    uint16_t parseValue(uint8_t chNum, std::string line);
+    std::vector<std::uint16_t> parseLine(std::string line);
+    float normalizeValue(uint16_t rawValue, float gain, float offset);
     std::vector<std::string> split(std::string inputStr, char delim);
 
     OSC_FILE_HEADER* m_header = nullptr;

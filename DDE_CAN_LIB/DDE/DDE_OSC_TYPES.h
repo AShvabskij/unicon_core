@@ -5,7 +5,7 @@
 
 #include "DDE_PARAMS_TYPES.h"
 
-#define OSC_CHANNELS 48
+#define OSC_CHANNELS 20
 
 struct OSC_PARAM
 {
@@ -50,7 +50,7 @@ struct DDE_GET_OSC_HEADER
 {
     uint16_t device_ID;
 
-    OSC_CHANNEL_DESCR ch_descr[OSC_CHANNELS];
+    OSC_CHANNEL_DESCR ch_descr[OSC_CHANNELS + 1];
     OSC_SETTING settings;
 
     uint16_t page_size;		//
@@ -66,7 +66,7 @@ struct DDE_GET_OSC_DATA
     uint16_t data_length;   // The length of a data in OSC_CH_DATA
     uint16_t overflow;  // flag if  buffer is overflowed (for debugging only)
     bool next_ready;    // flag if next data frame is ready
-    OSC_CH_DATA ch_data[OSC_CHANNELS];
+    OSC_CH_DATA ch_data[OSC_CHANNELS + 1];
 };
 
 struct DDE_SET_OSC_DATA

@@ -14,6 +14,8 @@ const int DATA_YELD_INTERVAL_MSC = 50;
 const int DATA_YELD_ERROR = -1;
 const int DATA_YELD_FINISH = -2;
 const std::string OSC_FILE_ERROR = "Osc data file is not found!";
+const std::string OSC_FILE_PARSE_ERROR = "Error while parsing th osc file!";
+const int SET_SIZE = 16;
 
 DDE_OSC_FILE::DDE_OSC_FILE()
 {
@@ -73,7 +75,7 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
 
     p.settings = m_header->settings;
 
-    for (int i = 0; i < OSC_CHANNELS; i++) {
+    for (int i = 0; i <= OSC_CHANNELS; i++) {
         p.ch_descr[i].param.param_ID = m_header->ch_descr[i].param_ID;
         p.ch_descr[i].chNum = m_header->ch_descr[i].chNum;
         strcpy(p.ch_descr[i].param.name, m_header->ch_descr[i].name);
@@ -93,29 +95,58 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
     p.data_length = m_header->settings.time_resolution_ns != 0 ? (DATA_YELD_INTERVAL_MSC * 1000) / m_header->settings.time_resolution_ns : 0;
     p.overflow = 0;
     p.header_updated = 0;
-
     p.next_ready = true;
 
-    for (int jj = 0; jj < p.data_length; ++jj) {
-        std::string line("");
+    for (int ind = 0; ind < p.data_length; ++ind) {
+        string line("");
         while (line.empty() || !isdigit(line[0])) {
-            cout << line;
             std::getline(*m_oscFileStream, line);
             if (m_oscFileStream->eof()) {
                 return DATA_YELD_FINISH;
             }
         }
 
-        for (int ii = 0; ii < OSC_CHANNELS; ii++) {
-            uint16_t rawValue = parseValue(ii, line);
-            uint16_t zeroLevel = 0x7FFF;
-            float normValue = rawValue - zeroLevel;
-            normValue =  normValue * m_header->ch_descr[ii].gain + m_header->ch_descr[ii].offset;
-            p.ch_data[ii].buff[jj] = normValue;
+        auto values = parseLine(line);
+        for (int chNum = 1; chNum <= OSC_CHANNELS; chNum++) {
+            uint16_t rawValue = values[chNum];
+            p.ch_data[chNum].buff[ind] = normalizeValue(rawValue, m_header->ch_descr[chNum].gain, m_header->ch_descr[chNum].offset);
         }
     }
 
     return 0;
+}
+
+float DDE_OSC_FILE::normalizeValue(uint16_t rawValue, float gain, float offset)
+{
+    uint16_t zeroLevel = 0x7FFF;
+    float normValue = rawValue - zeroLevel;
+    normValue =  normValue * gain + offset;
+    return normValue;
+}
+
+std::vector<std::uint16_t> DDE_OSC_FILE::parseLine(std::string line)
+{
+    std::vector<std::uint16_t> res;
+    res.reserve(OSC_CHANNELS + 1);
+
+    auto elems = split(line, ',');
+    if (elems.empty()) {
+        cout << OSC_FILE_PARSE_ERROR;
+        return res;
+    }
+
+    for (int chNum = 0; chNum <= OSC_CHANNELS; chNum++) {
+        uint16_t elemInd = m_header->ch_descr[chNum].colIndex;
+        if (elemInd >= elems.size() ) {
+            cout << OSC_FILE_PARSE_ERROR;
+            continue;
+        }
+        string item = elems[elemInd];
+        uint16_t rawValue = std::atoi(item.c_str());
+        res.push_back(rawValue);
+    }
+
+    return res;
 }
 
 int DDE_OSC_FILE::parseHeader(std::stringstream* fileStream, OSC_FILE_HEADER& header)
@@ -129,7 +160,7 @@ int DDE_OSC_FILE::parseHeader(std::stringstream* fileStream, OSC_FILE_HEADER& he
 
     fileStream->seekg(0, std::ios::beg);
 
-    int chIndex = -1;
+    int ind = 0;
     int res = -1;
 
     for (std::string line; std::getline(*fileStream, line); ) {
@@ -165,23 +196,28 @@ int DDE_OSC_FILE::parseHeader(std::stringstream* fileStream, OSC_FILE_HEADER& he
             OSC_FILE_CHANNEL_DESCR chDescr;
 
             std::vector<std::string> elems = split(line, ',');
-            chIndex++;
 
-            if (elems.empty() || chIndex >= OSC_CHANNELS) {
+            if (elems.empty()) {
                 continue;
             }
 
-            chDescr.param_ID = chIndex;
+            int setNum = atoi(elems[1].substr(1).c_str());
+            int setChNum = atoi(elems[2].c_str());
+            int chNum = (setNum - 1) * SET_SIZE + setChNum; // 1-based numeration
+
+            chDescr.param_ID = ++ind;
             strcpy(chDescr.name, elems[0].c_str());
-            chDescr.group = elems[1];
-            int grNum = atoi(elems[1].substr(1).c_str());
-            int localNum = atoi(elems[2].c_str());
-            int chNum = (grNum - 1) * 16 + (localNum - 1); // исчисление от 0. Todo: Позже следует сделать с 1
+            int k = (setChNum <= 8) ? 2 : 1;
+            chDescr.colIndex = (setNum - 1) * (SET_SIZE/k) + setChNum;
+            chDescr.setNum = setNum;
+            chDescr.setChNum = setChNum;
             chDescr.chNum = chNum;
             chDescr.gain = stof(elems[5]);
             chDescr.offset = stof(elems[6]);
 
-            header.ch_descr[chIndex] = chDescr;
+            if (chNum <= OSC_CHANNELS) {
+                header.ch_descr[chNum] = chDescr;
+            }
 
         } else if (line[0] == '&') {
         } else {
@@ -205,18 +241,4 @@ std::vector<std::string> DDE_OSC_FILE::split(string inputStr, char delim)
     }
 
     return res;
-}
-
-uint16_t DDE_OSC_FILE::parseValue(uint8_t chNum, std::string line)
-{
-    std::stringstream ss(line);
-    std::string item;
-    int i = -1;
-    while(std::getline(ss, item, ',')) {
-        if (i++ == chNum) {
-            return std::atoi(item.c_str());
-        }
-    }
-
-    return 0;
 }

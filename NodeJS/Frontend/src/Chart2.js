@@ -35,7 +35,7 @@ import { AddCounter, Info } from "./Context"
 const LICENSE_KEY = "Ms4s7kPNHtGh/C9XitPAzhFJxW+ZFPkuVWnfhrARTR8oaE/D/8/yqLbAgcp2sQdVuva50wv5PkKiiJ0Asd7iYW3xGE9OvtnG6TZwbI4PPVq773RfvLjesvEkaB0u56BbKnAfsg/pCgTGbfRUgDCNqxs5DWUwXGXJPf3WIeTGHAU58XU4o1p6yQ3gN8/3kjE5wYIRJmebm1+Z+NCq67sol9pNpoOUfx13Mo4kURoFw24t+lwtTOmvpbLadWLn1v/wR7QlMf0kf9IrgnW8D5aoytdjoZs+XXVzRBF7EmjT5if72KszBF8EkX4aFYaEbsuhNqcVN+ovRhrYLFy8KfcGuGTZsiI0cv51IAKvHOkrLFeokv64vlKEBehLLkiWfcKkAuMUMMBrdars6BDo2nCHltAh2E01GNGG4Ah8OmFlQ7+x1rtol4LmxsIfB5CAhXHSGkt75XAlfiYv827ljmvNBGRNXu/JOHwBqlLdIesFeQtWz8PBAwowPQ/5c+mA+6oXt/heSmxUg0IgK6YdOHsj/7/SbW+OGqYLjhEn90aDA1YhPPqPaSbE3qhD";
 // let scs: SciChartSurface;
 // let timerId: NodeJS.Timeout;
-const visiblePoints = 1000;
+const visiblePoints = 2000;
 const intervalAddPoint = 40;
 const suffixChartID = "scichart-root2";
 let chartControls = [];

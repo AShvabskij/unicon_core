@@ -11,7 +11,6 @@ import ChartList from './ChartList';
 import ParametersView from './ParametersView';
 import Config from './.config.js';
 import { Model } from "./data_model/fr_model.mjs";
-import { SysInterfacesEnum } from "./data_model/fr_model.mjs";
 import { AddCounter, Info } from "./Context"
 import { colorsArr, colorsTitleArr } from './Chart2';
 
@@ -94,7 +93,7 @@ function drawValueRange(chart, xValues, yValues, line) {
     chart.addVarPointRange2(xValues, yValues)
   }
   /*
-    _interval = _interval >= 15 ? 5 : _interval + 5;
+      _interval = _interval >= 15 ? 5 : _interval + 5;
     setTimeout(() => {
       if (line == 1) {
         chart.addVarPointRange(xValues, yValues)
@@ -105,68 +104,7 @@ function drawValueRange(chart, xValues, yValues, line) {
   */
 }
 
-async function startOsc(deviceId, line) {
-  console.log("try to get osc streams...");
-
-  // let param = device.param(deviceId + 1);
-  let streamSocketUrl = "ws://" + Config.ip + ":" + 1237;
-  let streamSocket = new WebSocket(streamSocketUrl);
-
-  let startDate = new Date();
-
-  let osc = model.device(deviceId).osc;
-
-  streamSocket.onopen = async (event) => {
-    console.log(`Stream socket ${streamSocket.url} opened successfully.`);
-    osc.openDataStream();
-    startDate = new Date();
-  };
-
-  streamSocket.onmessage = (message) => {
-
-    var messageData = JSON.parse(message.data);
-
-    let res = osc.parse(messageData, 0);
-    if (res < 0) {
-      return;
-    }
-
-    let chNum = 0;
-    let charts = ChartControls();
-    let endOfData = false;
-    for (var chart in charts) {
-      for (var i = 1; i <= 2; ++i) {
-        let values = osc.parse(messageData, chNum++);
-        if (values == null) {
-          endOfData = true;
-          continue;
-        }
-
-        let xValues = values.map(valObj => { return valObj.time });
-        let yValues = values.map(valObj => { return valObj.val });
-
-        if (i == 1) {
-          // console.log("values() = " + JSON.stringify(values));
-        }
-        if (chart == 'chart3') {
-          drawValueRange(charts[chart], xValues, yValues, i);
-        }
-      }
-    }
-
-    if (endOfData) {
-      streamSocket.close();
-      let endDate = new Date();
-
-      var diff = (endDate.getTime() - Info.startTime)
-      console.log("The work time is = " + diff);
-    }
-  }
-
-  //  console.log(output + "\n");
-};
-
-async function startOsc2(deviceId, line) {
+async function startOsc(deviceId) {
   console.log("try 2 to get osc streams...");
 
   // let param = device.param(deviceId + 1);
@@ -181,7 +119,7 @@ async function startOsc2(deviceId, line) {
 
   let charts = ChartControls();
 
-  let chNum1 = 2;
+  let chNum1 = 3;
   console.log(`Drawing osc line 1 for the channel = ${osc.channels[chNum1].num}, 
   param id = ${osc.channels[chNum1].param_id}, 
   name = ${osc.channels[chNum1].name}`);
@@ -190,10 +128,12 @@ async function startOsc2(deviceId, line) {
     let xValues = values.map(valObj => { return valObj.time });
     let yValues = values.map(valObj => { return valObj.val });
 
+//  console.log("val = " + yValues);
+
     drawValueRange(charts['chart3'], xValues, yValues, 1);
   });
 
-  let chNum2 = 11;
+  let chNum2 = 19;
   console.log(`Drawing osc line 2 for the channel = ${osc.channels[chNum2].num}, 
   param id = ${osc.channels[chNum2].param_id}, 
   name = ${osc.channels[chNum2].name}`);
@@ -201,6 +141,8 @@ async function startOsc2(deviceId, line) {
   osc.channels[chNum2].stream.on('data', values => {
     let xValues = values.map(valObj => { return valObj.time });
     let yValues = values.map(valObj => { return valObj.val });
+
+//  console.log("val = " + yValues[0] + "," + "time = " + xValues[0]);
 
     drawValueRange(charts['chart3'], xValues, yValues, 2);
   });
@@ -375,8 +317,7 @@ const toolBar = () => {
         click: async function (id, event) {
           console.log("Start osc");
           let deviceId = 1;
-          let paramId = 65;
-          startOsc2(deviceId, paramId);
+          startOsc(deviceId);
         }
       },
       {
