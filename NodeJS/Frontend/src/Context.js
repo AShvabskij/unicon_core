@@ -76,6 +76,7 @@ export const Info = {startTime:startDate.getTime(),model:{},
     elements:{},
     states:{indexDevice:1},
     gridParameters:{},
+    paramToCharts:{"chart3":{}, "chart4":{}, "chart5":{}},
     chartList:{"chart3":{setNamesArr: () => {}}, "chart4":{setNamesArr: () => {}}, "chart5":{setNamesArr: () => {}}},
     resize :function(event) {
         let elements = ["accmain","tabview1","parametersGrid","descriptionDevice"]

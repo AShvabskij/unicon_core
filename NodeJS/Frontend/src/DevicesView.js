@@ -413,6 +413,8 @@ function mark_votes(value, config){
       return { "background":colorsArr[value-1], "color":colorsTitleArr[value-1] };
 };
 
+// const paramToCharts = [];
+
 const showSelectChartWindow = () => {
   let v = {
     view:"window",
@@ -460,6 +462,7 @@ const showSelectChartWindow = () => {
                if ((state.value) && (state.value != "a")) table1.config.data[state.value].disabled = true;
                let item = this.getItem(editor.row);
                 console.log(item);
+                // paramToCharts.push();
             }
           }
         },
@@ -475,7 +478,7 @@ const showSelectChartWindow = () => {
             { "label": "Apply", "view": "button", "height": 0, 
                 click: function (id, event) {
                   // then form process — add
-                  
+                  // Info.paramToCharts
                   // if (chartsArrHidden.length > 0) {
                     let chartToVisible = chartsArrHidden.shift();
                     let paramArr = ["Param 1","Param 2","Param 3","Param 4"];
@@ -498,30 +501,31 @@ const showSelectChartWindow = () => {
 
 const addButtonClick = () => {
   // console.log("addButtonClick");
-  
-  let comp = $$("showSelectChartWindowData");
-  // console.log(comp);
+  if (chartsArrVisible.length < 3) {
+      let comp = $$("showSelectChartWindowData");
+      // console.log(comp);
 
-  let osc = model.device(Info.states.indexDevice);
-  let dataForChoose = [];
-  if (osc != undefined) {
-    // console.log(osc.osc);
-    osc.osc.channels.forEach(function(item, index, array) {
-      dataForChoose.push({ id:index, channel:item.num, name:item.name + " [" + item.param_id + "]",  
-        status:0, idParam: item.param_id,
-      });
+      let osc = model.device(Info.states.indexDevice);
+      let dataForChoose = [];
+      if (osc != undefined) {
+        // console.log(osc.osc);
+        osc.osc.channels.forEach(function(item, index, array) {
+          dataForChoose.push({ id:index, channel:item.num, name:item.name + " [" + item.param_id + "]",  
+            status:0, idParam: item.param_id,
+          });
+          // console.log(dataForChoose);
+        })
+      }
       // console.log(dataForChoose);
-    })
-  }
-  console.log(dataForChoose);
-  
-  if (chartsArrHidden.length > 0) {
-    $$("showSelectChartWindow").show();
-    comp.define({"data":dataForChoose});
-    
-    // console.log("indexDev " + Info.states.indexDevice);
+      
+      // if (chartsArrHidden.length > 0) {
+        $$("showSelectChartWindow").show();
+        comp.define({"data":dataForChoose});
+        
+        // console.log("indexDev " + Info.states.indexDevice);
 
-    showSelectChartWindow();
+        showSelectChartWindow();
+      // }
   }
 }
 
