@@ -126,6 +126,7 @@ private:
     void stopStreamData(const OscHeader& osc);
 
     OscHeader m_capturedOsc;
+    QVector<int> m_capturedChannels;
     int m_streamValCount = 0;
     QTimer* m_streamTimer;
     DDE_GET_OSC_DATA* m_oscRawDataBuff; // buffer to receive data from osc

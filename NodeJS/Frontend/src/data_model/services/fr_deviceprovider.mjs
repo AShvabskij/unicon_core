@@ -21,7 +21,7 @@ export class DeviceProvider {
     setRequestHelper(reqHelper = RequestHelper) {
         this.m_reqHelper = reqHelper;
     }
-
+    
     request(cmd) {
         return this.requestHelper().request(cmd);
     }
@@ -49,9 +49,9 @@ export class DeviceProvider {
         return this.request(reqCmd);
     }
 
-    async reqOpenOscStream(deviceId, oscId) {
+    async reqOpenOscStream(deviceId, oscId, channels) {
         let cmd = REQ_GET_OSC_STREAM_OPEN;
-        let reqCmd = this._createDeviceReqCmd(cmd, deviceId, oscId);
+        let reqCmd = this._createDeviceReqCmd(cmd, deviceId, oscId, channels);
 
         return this.request(reqCmd);
     }
@@ -70,11 +70,11 @@ export class DeviceProvider {
         return this.request(reqCmd);
     };
 
-    _createDeviceReqCmd(reqName, deviceId, moduleId) {
+    _createDeviceReqCmd(reqName, deviceId, moduleId, channels) {
         let req = {
             request_id: this._genReqId(deviceId, moduleId),
             cmd: this._deviceCmd(reqName),
-            body: this._deviceBody(deviceId, moduleId)
+            body: this._deviceBody(deviceId, moduleId, channels)
         };
 
         return req;
@@ -136,10 +136,11 @@ export class DeviceProvider {
         return res;
     }
 
-    _deviceBody(deviceId, moduleId) {
+    _deviceBody(deviceId, moduleId, channels) {
         let res = {
             device_id: deviceId,
-            module_id: moduleId
+            module_id: moduleId,
+            channels: channels
         };
 
         return res;

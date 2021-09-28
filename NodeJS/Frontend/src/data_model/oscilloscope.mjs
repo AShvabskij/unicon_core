@@ -26,6 +26,14 @@ export default class Oscilloscope {
 
     async openDataStream(channels) {
 
+        if (!Array.isArray(channels) || channels.length === 0) {
+            channels = []
+            this.channels.forEach(channel => {
+                if (channel.name !== '' || channel.param_id !== 0)
+                channels.push(channel.num)
+            });
+        }
+
         channels.forEach(channel => {
             this.channels[channel].stream = new Stream.Readable({
                 highWaterMark: 1, //STREAM_BUFFER_OBJECTS,
@@ -44,7 +52,7 @@ export default class Oscilloscope {
             this.trig_time = oscHeader.trig_time;
             this._capturedChannels = channels;
 
-            await this.deviceProvider.reqOpenOscStream(this.deviceId, this.id);
+            await this.deviceProvider.reqOpenOscStream(this.deviceId, this.id, channels);
         } catch (error) {
             this.lastError = error;
             console.error(error);
