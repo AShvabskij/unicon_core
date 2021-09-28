@@ -286,15 +286,18 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
 {
     QJsonObject res;
     QJsonArray channelValues;
+    QJsonArray channels;
 
     for (const OscChannelValues& chVal : data.chValues) {
-//      if (chVal.paramId != 0) {
+        if (chVal.channelNum != 0) {
+            channels << chVal.channelNum;
             channelValues << QJsonArray::fromVariantList(chVal.values);
-//      }
+        }
     }
 
     res["d_id"] = data.deviceId;
     res["values"] = channelValues;
+    res["channels"] = channels;
     res["time"] = data.timestamp;
     res["error"] = 0;
 

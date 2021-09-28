@@ -115,39 +115,28 @@ async function startOsc(deviceId) {
     console.log(`channel = ${channel.num}, param id = ${channel.param_id}, name = ${channel.name}`);
   });
 
-  osc.openDataStream();
+  let channels = [3, 19]
+  osc.openDataStream(channels);
+  console.log("Start osc for channels: " + channels);
 
   let charts = ChartControls();
-
-  let chNum1 = 3;
-  console.log(`Drawing osc line 1 for the channel = ${osc.channels[chNum1].num}, 
-  param id = ${osc.channels[chNum1].param_id}, 
-  name = ${osc.channels[chNum1].name}`);
-
-  osc.channels[chNum1].stream.on('data', values => {
+  
+  osc.channels[channels[0]].stream.on('data', values => {
     let xValues = values.map(valObj => { return valObj.time });
     let yValues = values.map(valObj => { return valObj.val });
-
-//  console.log("val = " + yValues);
-
+  //  console.log("val = " + yValues);
+  
     drawValueRange(charts['chart3'], xValues, yValues, 1);
   });
 
-  let chNum2 = 19;
-  console.log(`Drawing osc line 2 for the channel = ${osc.channels[chNum2].num}, 
-  param id = ${osc.channels[chNum2].param_id}, 
-  name = ${osc.channels[chNum2].name}`);
-
-  osc.channels[chNum2].stream.on('data', values => {
+  osc.channels[channels[1]].stream.on('data', values => {
     let xValues = values.map(valObj => { return valObj.time });
     let yValues = values.map(valObj => { return valObj.val });
-
-//  console.log("val = " + yValues[0] + "," + "time = " + xValues[0]);
-
+  //  console.log("val = " + yValues);
+  
     drawValueRange(charts['chart3'], xValues, yValues, 2);
   });
 }
-
 
 async function stopOsc(deviceId) {
   let osc = model.device(deviceId).osc;
@@ -315,7 +304,6 @@ const toolBar = () => {
       {
         view: "button", value: "Start osc", autowidth: true, align: "center",
         click: async function (id, event) {
-          console.log("Start osc");
           let deviceId = 1;
           startOsc(deviceId);
         }

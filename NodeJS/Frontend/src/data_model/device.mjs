@@ -1,6 +1,7 @@
 import Oscilloscope from './oscilloscope.mjs'
 
 const Stream = require('stream-browserify');
+const { RequestHelper } = require("./services/fr_requesthelper.mjs");
 const { ParamProvider } = require("./services/fr_paramprovider.mjs");
 
 const STREAM_BUFFER_OBJECTS = 1;
@@ -72,7 +73,7 @@ export class Param {
 
         this.lastError = 0;
 
-        this.paramProvider = new ParamProvider();
+        this.paramProvider = new ParamProvider(RequestHelper);
 
         // Переменные для измерения производительности
         this._byteCount = 0;

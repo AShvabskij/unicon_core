@@ -49,8 +49,15 @@ export class DeviceProvider {
         return this.request(reqCmd);
     }
 
-    async reqDataStream(deviceId, oscId, openStream) {
-        let cmd = openStream ? REQ_GET_OSC_STREAM_OPEN : REQ_GET_OSC_STREAM_CLOSE;
+    async reqOpenOscStream(deviceId, oscId) {
+        let cmd = REQ_GET_OSC_STREAM_OPEN;
+        let reqCmd = this._createDeviceReqCmd(cmd, deviceId, oscId);
+
+        return this.request(reqCmd);
+    }
+
+    async reqCloseOscStream(deviceId, oscId) {
+        let cmd = REQ_GET_OSC_STREAM_CLOSE;
         let reqCmd = this._createDeviceReqCmd(cmd, deviceId, oscId);
 
         return this.request(reqCmd);

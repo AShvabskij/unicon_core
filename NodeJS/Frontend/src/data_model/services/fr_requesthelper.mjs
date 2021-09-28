@@ -38,7 +38,7 @@ export class _RequestHelper {
             this.m_connected = false;
             this.m_socket = null;
 
-            setTimeout(async () => {
+            setTimeout(() => {
                 this.initConnection();
             }, 5000);
         };
