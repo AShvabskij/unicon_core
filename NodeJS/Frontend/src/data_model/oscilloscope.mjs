@@ -1,5 +1,6 @@
 const { DeviceProvider } = require("./services/fr_deviceprovider.mjs");
 const Stream = require('stream-browserify');
+const { RequestHelper } = require("./services/fr_requesthelper.mjs");
 
 const OSC_MAX_CHANNELS = 20;
 
@@ -15,7 +16,7 @@ export default class Oscilloscope {
         this.trig_time = new Date().getTime();
         this.channels = []
 
-        this.deviceProvider = new DeviceProvider();
+        this.deviceProvider = new DeviceProvider(RequestHelper);
 
         // Переменные для измерения производительности
         this._byteCount = 0;
@@ -23,13 +24,21 @@ export default class Oscilloscope {
         this._timeLabel = new Date().getTime();
     }
 
-    async openDataStream() {
+    async openDataStream(channels) {
 
-        this.channels.forEach(channel => {
-            channel.stream = new Stream.Readable({
+        if (!Array.isArray(channels) || channels.length === 0) {
+            channels = []
+            this.channels.forEach(channel => {
+                if (channel.name !== '' || channel.param_id !== 0)
+                channels.push(channel.num)
+            });
+        }
+
+        channels.forEach(channel => {
+            this.channels[channel].stream = new Stream.Readable({
                 highWaterMark: 1, //STREAM_BUFFER_OBJECTS,
                 objectMode: true,
-                read() { }
+                read() { } 
             });
         });
 
@@ -39,11 +48,11 @@ export default class Oscilloscope {
         console.time(`The stream elapsed time(${this._timeLabel})`);
 
         try {
-            let openStream = true;
             let oscHeader = await this.deviceProvider.reqOsc(this.id);
-            this.trig_time = oscHeader.trig_time
+            this.trig_time = oscHeader.trig_time;
+            this._capturedChannels = channels;
 
-            await this.deviceProvider.reqDataStream(this.deviceId, this.id, openStream);
+            await this.deviceProvider.reqOpenOscStream(this.deviceId, this.id, channels);
         } catch (error) {
             this.lastError = error;
             console.error(error);
@@ -52,28 +61,33 @@ export default class Oscilloscope {
 
     async closeDataStream() {
         try {
-            let openStream = false;
-            await this.deviceProvider.reqDataStream(this.deviceId, this.id, openStream);
+            await this.deviceProvider.reqCloseOscStream(this.deviceId, this.id);
         } catch (error) {
             this.lastError = error;
             console.error(error);
         }
 
         for (var i = 1; i <= OSC_MAX_CHANNELS; ++i) {
-            this.channels[i].stream.push(null);
-            this.channels[i].stream.destroy;
-            this.channels[i].stream = null;
+            if (this.channels[i].stream != undefined && this.channels[i].stream != null) {
+                this.channels[i].stream.push(null);
+                this.channels[i].stream.destroy;
+                this.channels[i].stream = null;
+            }
         }
     }
 
     stream(socketData) {
-        for (var i = 1; i <= OSC_MAX_CHANNELS; ++i) {
-            let data = this.parse(socketData, i);
+        for (var i = 0; i < socketData.channels.length; ++i) {
+            let chNum = socketData.channels[i];
+            if (this._capturedChannels.indexOf(chNum) == -1) {
+                continue;
+            }
+            let data = this.parse(socketData, chNum);
             if (data == -1) {
                 continue;
             }
-            if (this.channels[i].stream !== null) {
-                this.channels[i].stream.push(data);
+            if (this.channels[chNum].stream !== undefined && this.channels[chNum].stream !== null) {
+                this.channels[chNum].stream.push(data);
             }
         }
     }
@@ -93,9 +107,10 @@ export default class Oscilloscope {
             return null;
         }
 
-        let chValues = socketData.values[ch];
+        let ind = socketData.channels.indexOf(ch)
+        let chValues = socketData.values[ind];
         if (chValues === undefined || chValues.length == 0) {
-            return null;
+            return -1;
         }
 
         let receivedBytes = JSON.stringify(chValues[0]).length * chValues.length;

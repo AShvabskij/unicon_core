@@ -52,7 +52,7 @@ int StreamManager::registerHandler(IReqHandler *handler)
 {
     QMetaObject::Connection con = connect(handler, &IReqHandler::stream, this, &StreamManager::stream, Qt::QueuedConnection);
     if (!con) {
-        QTextStream(stdout) << "connected! " << '\n';
+        QTextStream(stdout) << "The stream connection is failed! " << '\n';
         return -1;
     }
 

@@ -96,7 +96,8 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
     }
 
     int deviceId = cmdBody.value("device_id").toInt();
-    int oscId  = cmdBody.value("osc_id").toInt();
+    int oscId = cmdBody.value("osc_id").toInt();
+    QJsonArray channels = cmdBody.value("channels").toArray();
 
     OscHeader header;
     long ret = getHeader(deviceId, oscId, &header);
@@ -106,6 +107,12 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
 
     m_capturedOsc = header;
     m_dataCounter = 0;
+
+    m_capturedChannels.clear();
+    for (const QJsonValue& val : channels) {
+        m_capturedChannels << val.toInt();
+    }
+    m_capturedChannels.removeAll(0);
 
     startPooling();
 
@@ -191,6 +198,7 @@ void OscHandler::startPooling()
 void OscHandler::stopPooling()
 {
     m_capturedOsc = OscHeader();
+    m_capturedChannels.clear();
     m_streamTimer->stop();
 }
 
@@ -286,15 +294,19 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
 {
     QJsonObject res;
     QJsonArray channelValues;
+    QJsonArray channels;
 
     for (const OscChannelValues& chVal : data.chValues) {
-//      if (chVal.paramId != 0) {
-            channelValues << QJsonArray::fromVariantList(chVal.values);
-//      }
+        if (chVal.channelNum == 0) continue;
+        if (!m_capturedChannels.empty() && !m_capturedChannels.contains(chVal.channelNum)) continue;
+
+        channels << chVal.channelNum;
+        channelValues << QJsonArray::fromVariantList(chVal.values);
     }
 
     res["d_id"] = data.deviceId;
     res["values"] = channelValues;
+    res["channels"] = channels;
     res["time"] = data.timestamp;
     res["error"] = 0;
 
