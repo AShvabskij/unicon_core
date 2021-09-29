@@ -115,9 +115,8 @@ export default class Oscilloscope {
 
         let receivedBytes = JSON.stringify(chValues[0]).length * chValues.length;
         this._byteCount += receivedBytes;
-        // console.log('Received bytes = ' + receivedBytes);
-
         this._msgCount++;
+        // console.log('Received bytes = ' + receivedBytes);
 
         let time_ns = socketData.time - chValues.length * this.resolution_ns;
         let trig_time = this.trig_time;

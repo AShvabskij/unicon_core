@@ -19,7 +19,6 @@ const int SET_SIZE = 16;
 
 DDE_OSC_FILE::DDE_OSC_FILE()
 {
-    m_oscFileBuff = loadOscFile();
     m_header = new OSC_FILE_HEADER();
 }
 
@@ -62,6 +61,8 @@ std::string DDE_OSC_FILE::loadOscFile()
 int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
 {
     if (m_oscFileBuff.empty()) {
+        m_oscFileBuff = loadOscFile(); // place here temporaly
+
         cout << OSC_FILE_ERROR;
         return DATA_YELD_ERROR;
     }
@@ -80,6 +81,9 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
         p.ch_descr[i].chNum = m_header->ch_descr[i].chNum;
         strcpy(p.ch_descr[i].param.name, m_header->ch_descr[i].name);
         p.ch_descr[i].scale = m_header->ch_descr[i].gain;
+        p.ch_descr[i].param.min = m_header->ch_descr[i].min;
+        p.ch_descr[i].param.max = m_header->ch_descr[i].max;
+
     }
 
     return 0;

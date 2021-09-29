@@ -172,6 +172,7 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
 
         chValues.channelNum = chNum;
         chValues.valuesize = m_oscRawDataBuff->data_length;
+        chValues.valueDensity = chValues.valuesize / DATA_YELD_INTERVAL_MSC;
         chValues.scale = chDescr.scale;
         chValues.paramId = chDescr.paramId;
         chValues.values.clear();
@@ -257,6 +258,8 @@ long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
         ch.paramId = elem.param.param_ID;
         ch.paramName = elem.param.name;
         ch.scale = elem.scale;
+        ch.min = elem.param.min;
+        ch.max = elem.param.max;
 
         if (elem.param.param_ID <= 0) {
             continue;
