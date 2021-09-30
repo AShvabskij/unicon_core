@@ -87,11 +87,7 @@ async function startValues(deviceId, paramId, line) {
 
 let _interval = 5;
 function drawValueRange(chart, xValues, yValues, line) {
-  if (line == 1) {
-    chart.addVarPointRange(xValues, yValues)
-  } else {
-    chart.addVarPointRange2(xValues, yValues)
-  }
+  chart.addVarPointRange(xValues, yValues, line)
   /*
       _interval = _interval >= 15 ? 5 : _interval + 5;
     setTimeout(() => {
@@ -107,32 +103,21 @@ function drawValueRange(chart, xValues, yValues, line) {
 async function startOsc(indexDevice) {
   let device = Info.model.m_devices[indexDevice];
   let osc = await device.getOsc();
-  console.log('osc config: ');
-  osc.channels.forEach(channel => {
-    console.log(`channel = ${channel.num}, param id = ${channel.param_id}, name = ${channel.name}`);
-  });
-
-  let channels = [3, 19]
+  
+  let channels = [];
+  Info.paramToCharts['chart3'].forEach(function(item, index, array) {
+    channels.push(item.channel);
+  })
   osc.openDataStream(channels);
-  console.log("Start osc for channels: " + channels);
-
   let charts = ChartControls();
   
-  osc.channels[channels[0]].stream.on('data', values => {
-    let xValues = values.map(valObj => { return valObj.time });
-    let yValues = values.map(valObj => { return valObj.val });
-  //  console.log("val = " + yValues);
-  
-    drawValueRange(charts['chart3'], xValues, yValues, 1);
-  });
-
-  osc.channels[channels[1]].stream.on('data', values => {
-    let xValues = values.map(valObj => { return valObj.time });
-    let yValues = values.map(valObj => { return valObj.val });
-  //  console.log("val = " + yValues);
-  
-    drawValueRange(charts['chart3'], xValues, yValues, 2);
-  });
+  Info.paramToCharts['chart3'].forEach(function(item, index, array) {
+      osc.channels[item.channel].stream.on('data', values => {
+          let xValues = values.map(valObj => { return valObj.time });
+          let yValues = values.map(valObj => { return valObj.val });
+          drawValueRange(charts['chart3'], xValues, yValues, index + 1);
+      })
+  })
 }
 
 async function stopOsc(indexDevice) {
@@ -305,6 +290,7 @@ const toolBar = () => {
       {
         view: "button", value: "Start osc", autowidth: true, align: "center",
         click: async function (id, event) {
+          console.log("Start osc");
           startOsc(Info.states.indexDevice);
         }
       },
@@ -341,7 +327,10 @@ function mark_votes(value, config){
       return { "background":colorsArr[value-1], "color":colorsTitleArr[value-1] };
 };
 
-// const paramToCharts = [];
+const paramToCharts = [];
+// const paramToCharts = (paramArr) => {
+//   return paramArr;
+// }; 
 
 const showSelectChartWindow = () => {
   let v = {
@@ -390,7 +379,8 @@ const showSelectChartWindow = () => {
                if ((state.value) && (state.value != "a")) table1.config.data[state.value].disabled = true;
                let item = this.getItem(editor.row);
                 console.log(item);
-                // paramToCharts.push();
+                let showParam = {name: item.name, channel: item.channel, idParam: item.idParam};
+                paramToCharts.push(showParam);
             }
           }
         },
@@ -405,17 +395,17 @@ const showSelectChartWindow = () => {
             },
             { "label": "Apply", "view": "button", "height": 0, 
                 click: function (id, event) {
-                  // then form process — add
-                  // Info.paramToCharts
-                  // if (chartsArrHidden.length > 0) {
                     let chartToVisible = chartsArrHidden.shift();
-                    let paramArr = ["Param 1","Param 2","Param 3","Param 4"];
+                    // let paramArr = ["Param 1","Param 2","Param 3","Param 4"];
+                    let paramArr = [];
+                    paramToCharts.forEach(function(item, index, array) {
+                        paramArr.push(item.name);
+                      })
+                    Info.paramToCharts[chartToVisible] = paramToCharts;
                     Info.chartList[chartToVisible].setNamesArr(paramArr);
-                    // Info.chartList[chartToVisible].namesArr = ["Param 1","Param 2","Param 3","Param 4", "Param 5", "Param 6"];
                     chartsArrVisible.push(chartToVisible);
                     document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
                     showElementChart(chartToVisible);
-                  // }
                   $$("showSelectChartWindow").hide();
                 }
             }

@@ -171,13 +171,13 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
     counter = counter +step;
   }
 
-  const addVarPoint = (x,y) => {
-    arrayLines[0].dataSeries.append(x, y);
+  const addVarPoint = (x,y,line) => {
+      arrayLines[line-1].dataSeries.append(x, y);
       xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
   }
 
-  const addVarPointRange = (xValues = [], yValues = []) => {
-    arrayLines[0].dataSeries.appendRange(xValues, yValues);
+  const addVarPointRange = (xValues = [], yValues = [], line) => {
+    arrayLines[line-1].dataSeries.appendRange(xValues, yValues);
     xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
 
     var curMin = Math.min.apply(null, yValues),
