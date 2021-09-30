@@ -59,7 +59,7 @@ export class _RequestHelper {
                 this.m_socket.send(cmdStr);
                 console.log('sended cmd = ' + cmdStr);
            
-                setTimeout(() => reject({ status: 500, msg: `Request time out for cmd = ${cmdStr}` }), 1000)
+                setTimeout(() => reject({ status: 500, msg: `Request time out for cmd = ${cmdStr}` }), 10000)
             }
             this.m_socket.onmessage = (message) => {
                 var messageData = JSON.parse(message.data);

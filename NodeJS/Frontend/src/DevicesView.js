@@ -104,12 +104,9 @@ function drawValueRange(chart, xValues, yValues, line) {
   */
 }
 
-async function startOsc(deviceId) {
-  console.log("try 2 to get osc streams...");
-
-  // let param = device.param(deviceId + 1);
-
-  let osc = model.device(deviceId).osc;
+async function startOsc(indexDevice) {
+  let device = Info.model.m_devices[indexDevice];
+  let osc = await device.getOsc();
   console.log('osc config: ');
   osc.channels.forEach(channel => {
     console.log(`channel = ${channel.num}, param id = ${channel.param_id}, name = ${channel.name}`);
@@ -138,9 +135,13 @@ async function startOsc(deviceId) {
   });
 }
 
-async function stopOsc(deviceId) {
-  let osc = model.device(deviceId).osc;
-  osc.closeDataStream();
+async function stopOsc(indexDevice) {
+  let device = Info.model.m_devices[indexDevice];
+  let osc = device.osc;
+
+  if (osc != null) {
+    osc.closeDataStream();
+  }
 }
 
 function disableEnableElement(id, show) {
@@ -304,16 +305,14 @@ const toolBar = () => {
       {
         view: "button", value: "Start osc", autowidth: true, align: "center",
         click: async function (id, event) {
-          let deviceId = 1;
-          startOsc(deviceId);
+          startOsc(Info.states.indexDevice);
         }
       },
       {
         view: "button", value: "Stop osc", autowidth: true, align: "center",
         click: async function (id, event) {
           console.log("Stop osc");
-          let deviceId = Info.states.indexDevice;
-          stopOsc(deviceId);
+          stopOsc(Info.states.indexDevice);
         }
       },
     ]
@@ -428,17 +427,18 @@ const showSelectChartWindow = () => {
   return v;
 }
 
-const addButtonClick = () => {
+const addButtonClick = async () => {
   // console.log("addButtonClick");
   if (chartsArrVisible.length < 3) {
       let comp = $$("showSelectChartWindowData");
       // console.log(comp);
 
-      let osc = model.device(Info.states.indexDevice);
+      let indexDevice = Info.states.indexDevice;
+      let device = Info.model.m_devices[indexDevice];
       let dataForChoose = [];
-      if (osc != undefined) {
-        // console.log(osc.osc);
-        osc.osc.channels.forEach(function(item, index, array) {
+      if (device != undefined) {
+        let osc = await device.getOsc();
+        osc.channels.forEach(function(item, index, array) {
           dataForChoose.push({ id:index, channel:item.num, name:item.name + " [" + item.param_id + "]",  
             status:0, idParam: item.param_id,
           });

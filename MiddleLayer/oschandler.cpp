@@ -131,7 +131,7 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
     int deviceId = cmdBody.value("device_id").toInt();
     int oscId  = cmdBody.value("osc_id").toInt();
 
-    if (m_capturedOsc.deviceId == deviceId && m_capturedOsc.id == oscId) {
+    if (m_capturedOsc.deviceId == deviceId /*&& m_capturedOsc.id == oscId*/) {
         stopPooling();
     }
 
