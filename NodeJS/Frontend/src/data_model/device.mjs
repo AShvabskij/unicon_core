@@ -49,11 +49,12 @@ export default class Device {
     }
 
     async getOsc() {
-/*        
+        
         if (this.osc != null) {
+            this.deviceProvider.reqOsc(this.id); // for demo purpose only (need to reload osc data file)
             return this.osc;
         }
-*/        
+        
         let oscHeader = await this.deviceProvider.reqOsc(this.id);
         this.osc = this.createOsc(oscHeader)
         return this.osc;

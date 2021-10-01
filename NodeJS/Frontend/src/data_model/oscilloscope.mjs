@@ -27,19 +27,21 @@ export default class Oscilloscope {
 
         if (!Array.isArray(channels) || channels.length === 0) {
             channels = []
-            this.channels.forEach(channel => {
+            for (var i = 0; i < this.channels.length; ++i) {
+                let channel =  this.channels[i];
                 if (channel.name !== '' || channel.param_id !== 0)
                 channels.push(channel.num)
-            });
+            }
         }
 
-        channels.forEach(channel => {
+        for (var i = 0; i < channels.length; ++i) {
+            let channel = channels[i];
             this.channels[channel].stream = new Stream.Readable({
                 highWaterMark: 1, //STREAM_BUFFER_OBJECTS,
                 objectMode: true,
                 read() { } 
-            });
-        });
+            });            
+        }
 
         this._byteCount = 0;
         this._msgCount = 0;
@@ -61,7 +63,7 @@ export default class Oscilloscope {
     async closeDataStream() {
         if (this._capturedChannels == undefined) return;
 
-        for (var i = 1; i < this._capturedChannels.length; ++i) {
+        for (var i = 0; i < this._capturedChannels.length; ++i) {
             let chNum = this._capturedChannels[i];
             this._finishChannel(chNum);
         }
@@ -104,9 +106,9 @@ export default class Oscilloscope {
 
         let stream = this.channels[chNum].stream;
         if (stream) {
-            stream.push(null);
-            stream.destroy;
-            this.channels[chNum] = null;
+            this.channels[chNum].stream.push(null);
+            this.channels[chNum].stream.destroy;
+            this.channels[chNum].stream = null;
         }
     }
 
