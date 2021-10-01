@@ -359,7 +359,7 @@ function mark_votes(value, config){
       return { "background":colorsArr[value-1], "color":colorsTitleArr[value-1] };
 };
 
-const paramToCharts = [];
+var paramToCharts = [];
 // const paramToCharts = (paramArr) => {
 //   return paramArr;
 // }; 
@@ -439,6 +439,7 @@ const showSelectChartWindow = () => {
                     document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
                     showElementChart(chartToVisible);
                   $$("showSelectChartWindow").hide();
+                  paramToCharts = [];
                 }
             }
           ]
