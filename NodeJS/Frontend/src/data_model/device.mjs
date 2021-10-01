@@ -3,6 +3,7 @@ import Oscilloscope from './oscilloscope.mjs'
 const Stream = require('stream-browserify');
 const { RequestHelper } = require("./services/fr_requesthelper.mjs");
 const { ParamProvider } = require("./services/fr_paramprovider.mjs");
+const { DeviceProvider } = require("./services/fr_deviceprovider.mjs");
 
 const STREAM_BUFFER_OBJECTS = 1;
 
@@ -28,11 +29,13 @@ export default class Device {
         this.name = ''
         this.desc = ''
         this.image = 0
-        this.osc = new Oscilloscope()
+        this.osc = null
         this.interface = SysInterfacesEnum.Can
         this.interfaceName = 'Can';
         this.modules = []
         this.params = []
+
+        this.deviceProvider = new DeviceProvider(RequestHelper);
     }
 
     module(moduleId) {
@@ -43,6 +46,30 @@ export default class Device {
     param(paramId) {
         let res = this.params.find(item => item.id == paramId);
         return res;
+    }
+
+    async getOsc() {
+        
+        if (this.osc != null) {
+            this.deviceProvider.reqOsc(this.id); // for demo purpose only (need to reload osc data file)
+            return this.osc;
+        }
+        
+        let oscHeader = await this.deviceProvider.reqOsc(this.id);
+        this.osc = this.createOsc(oscHeader)
+        return this.osc;
+    }
+
+    createOsc(oscHeader) {
+        let osc = new Oscilloscope();
+        osc.id = oscHeader.id;
+        osc.deviceId = oscHeader.device_id;
+        osc.name = oscHeader.name;
+        osc.resolution_ns = oscHeader.resolution_ns;
+        osc.desc = oscHeader.desc;
+        osc.channels = oscHeader.channels;
+
+        return osc;
     }
 }
 

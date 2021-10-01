@@ -23,6 +23,7 @@ struct OSC_FILE_CHANNEL_DESCR
 
 struct OSC_FILE_HEADER
 {
+    uint16_t device_id;
     OSC_FILE_CHANNEL_DESCR ch_descr[OSC_CHANNELS + 1];
     OSC_SETTING settings;
 };
@@ -38,8 +39,8 @@ public:
     virtual int set(DDE_GET_OSC_HEADER& p){return 0;}
 
 private:
-    std::string loadOscFile();
-    std::ifstream openOscFile();
+    std::string loadOscFile(uint16_t deviceId = 1);
+    std::ifstream openOscFile(int fileNumber);
     std::stringstream* createFileStream();
     int parseHeader(std::stringstream *fileStream, OSC_FILE_HEADER &header);
     std::vector<std::uint16_t> parseLine(std::string line);

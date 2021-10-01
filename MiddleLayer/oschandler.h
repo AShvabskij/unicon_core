@@ -10,7 +10,8 @@ struct OscChannelValues
     int channelNum = 0;
     uint16_t paramId = 0;
     float scale;
-    int valuesize;
+    int valuesize = 0; // // number of points in values buffer
+    int valueDensity = 0; // number of points per millisec
     QVariantList values;
 };
 
@@ -28,6 +29,8 @@ struct OscChannelDescr
     uint16_t paramId = 0;
     QString paramName = "";
     float scale = 0.0;
+    float min;
+    float max;
 };
 
 enum TriggerModeEnum {

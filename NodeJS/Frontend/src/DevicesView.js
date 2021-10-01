@@ -17,15 +17,11 @@ import { colorsArr, colorsTitleArr } from './Chart2';
 let model = new Model(Config.ip);
 Info.model = model;
 model.init();
-console.log("model.m_devices");
-console.log(model.m_devices);
 
 setTimeout(() => {
-  // console.log("setTimeout result");
-  // console.log(model.load);
   model.load().then(result => {
-    console.log("loadDataModel result");
-    // console.log(model.m_devices);
+    console.log("loadDataModel result:");
+    console.log(model.devices());
     Info.actions.updateLeftMenu();
   }, error => {
     console.log("loadDataModel error");
@@ -100,62 +96,44 @@ function drawValueRange(chart, xValues, yValues, line) {
   */
 }
 
-async function startOsc(deviceId) {
-  console.log("try 2 to get osc streams...");
+async function startOsc(indexDevice) {
+  let device = Info.model.devices()[indexDevice];
+  let osc = await device.getOsc();
 
-  // let param = device.param(deviceId + 1);
+  let chart = chartsArrVisible.slice(-1);
+  if (chart == undefined || Info.paramToCharts[chart] == undefined) {
+    return;
+  }
 
-  let osc = model.device(deviceId).osc;
-  console.log('osc config: ');
-  osc.channels.forEach(channel => {
-    console.log(`channel = ${channel.num}, param id = ${channel.param_id}, name = ${channel.name}`);
-  });
-
-  let channels = [3, 19]
-  osc.openDataStream(channels);
-  console.log("Start osc for channels: " + channels);
-
-  let charts = ChartControls();
-  
-  osc.channels[channels[0]].stream.on('data', values => {
-    let xValues = values.map(valObj => { return valObj.time });
-    let yValues = values.map(valObj => { return valObj.val });
-  //  console.log("val = " + yValues);
-  
-    drawValueRange(charts['chart3'], xValues, yValues, 1);
-  });
-
-  osc.channels[channels[1]].stream.on('data', values => {
-    let xValues = values.map(valObj => { return valObj.time });
-    let yValues = values.map(valObj => { return valObj.val });
-  //  console.log("val = " + yValues);
-  
-    drawValueRange(charts['chart3'], xValues, yValues, 2);
-  });
-}
-
-
-async function startOsc2(deviceId) {
-  let osc = model.device(deviceId).osc;
   let channels = [];
-  Info.paramToCharts['chart3'].forEach(function(item, index, array) {
+  Info.paramToCharts[chart].forEach(function(item, index, array) {
     channels.push(item.channel);
   })
+  
+  if (channels.length == 0) {
+    console.log("There is no any selected channel!")
+    return;
+  }
+
   osc.openDataStream(channels);
   let charts = ChartControls();
   
-  Info.paramToCharts['chart3'].forEach(function(item, index, array) {
+  Info.paramToCharts[chart].forEach(function(item, index, array) {
       osc.channels[item.channel].stream.on('data', values => {
           let xValues = values.map(valObj => { return valObj.time });
           let yValues = values.map(valObj => { return valObj.val });
-          drawValueRange(charts['chart3'], xValues, yValues, index + 1);
+          drawValueRange(charts[chart], xValues, yValues, index + 1);
       })
   })
 }
 
 async function stopOsc(deviceId) {
-  let osc = model.device(deviceId).osc;
-  osc.closeDataStream();
+  let device = Info.model.devices()[deviceId];
+  let osc = device.osc;
+
+  if (osc != null) {
+    osc.closeDataStream();
+  }
 }
 
 function disableEnableElement(id, show) {
@@ -320,17 +298,14 @@ const toolBar = () => {
         view: "button", value: "Start osc", autowidth: true, align: "center",
         click: async function (id, event) {
           console.log("Start osc");
-          // let deviceId = 1;
-          // startOsc(deviceId);
-          startOsc2(Info.states.indexDevice);
+          startOsc(Info.states.indexDevice);
         }
       },
       {
         view: "button", value: "Stop osc", autowidth: true, align: "center",
         click: async function (id, event) {
           console.log("Stop osc");
-          let deviceId = Info.states.indexDevice;
-          stopOsc(deviceId);
+          stopOsc(Info.states.indexDevice);
         }
       },
     ]
@@ -450,17 +425,18 @@ const showSelectChartWindow = () => {
   return v;
 }
 
-const addButtonClick = () => {
+const addButtonClick = async () => {
   // console.log("addButtonClick");
   if (chartsArrVisible.length < 3) {
       let comp = $$("showSelectChartWindowData");
       // console.log(comp);
 
-      let osc = model.device(Info.states.indexDevice);
+      let indexDevice = Info.states.indexDevice;
+      let device = Info.model.devices()[indexDevice];
       let dataForChoose = [];
-      if (osc != undefined) {
-        // console.log(osc.osc);
-        osc.osc.channels.forEach(function(item, index, array) {
+      if (device != undefined) {
+        let osc = await device.getOsc();
+        osc.channels.forEach(function(item, index, array) {
           dataForChoose.push({ id:index, channel:item.num, name:item.name + " [" + item.param_id + "]",  
             status:0, idParam: item.param_id,
           });

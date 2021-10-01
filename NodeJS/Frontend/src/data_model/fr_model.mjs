@@ -152,12 +152,10 @@ export class Model extends Events {
 
         if (osc === undefined || osc.deviceId !== deviceId) {
             osc = this.device(deviceId).osc;
-            if (osc !== undefined) {
-                this._capturedOscilloscope = osc;
-            }
+            this._capturedOscilloscope = osc;
         }
 
-        if (osc === undefined || valueData == undefined) {
+        if (osc === undefined || osc === null || valueData == undefined) {
             console.log(RECEIVED_DATA_ERROR);
             this.emit('error', RECEIVED_DATA_ERROR);
             return;
@@ -209,34 +207,17 @@ export class Model extends Events {
 
                         device.modules.push(module);
                     }
-
-                    let oscHeader = await this.deviceProvider.reqOsc(device.id);
-                    device.osc = this.createOsc(oscHeader)
-
                     this.m_devices.push(device)
                 }
 
                 console.log("loaded devices  = " + this.m_devices.length);
-
                 resolve({ result: 'true', status: 200 });
-
+                
             } catch (err) {
                 console.log(err);
                 reject(err);
             }
         });
-    }
-
-    createOsc(oscHeader) {
-        let osc = new Oscilloscope();
-        osc.id = oscHeader.id;
-        osc.deviceId = oscHeader.device_id;
-        osc.name = oscHeader.name;
-        osc.resolution_ns = oscHeader.resolution_ns;
-        osc.desc = oscHeader.desc;
-        osc.channels = oscHeader.channels;
-
-        return osc;
     }
 
     loaded() {

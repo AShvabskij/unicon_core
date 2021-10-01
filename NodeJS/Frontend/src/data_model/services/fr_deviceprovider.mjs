@@ -22,8 +22,8 @@ export class DeviceProvider {
         this.m_reqHelper = reqHelper;
     }
     
-    request(cmd) {
-        return this.requestHelper().request(cmd);
+    request(cmd, timeout) {
+        return this.requestHelper().request(cmd, timeout);
     }
 
     async requestDevice(deviceId, moduleId) {
@@ -46,7 +46,7 @@ export class DeviceProvider {
 
     async reqOsc(deviceId) {
         let reqCmd = this._createOscReqCmd(REQ_GET_OSC, deviceId);
-        return this.request(reqCmd);
+        return this.request(reqCmd, 10000); // 10000 for demo purpose only
     }
 
     async reqOpenOscStream(deviceId, oscId, channels) {

@@ -9,7 +9,7 @@ const updateParameters = (indexDevice) => {
     // console.log(Info);
     // console.log("indexDevice="+indexDevice);
    
-    let deviceItem = Info.model.m_devices[indexDevice];
+    let deviceItem = Info.model.devices()[indexDevice];
     
     let dt1 = [];
     let dtt = [];
@@ -68,7 +68,7 @@ const updateLeftMenuBase = (devicesArr) => {
 } 
 
 const updateLeftMenu = () => {
-    updateLeftMenuBase(Info.model.m_devices)
+    updateLeftMenuBase(Info.model.devices())
 }
 
 export const Info = {startTime:startDate.getTime(),model:{},
