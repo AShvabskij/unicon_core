@@ -17,15 +17,11 @@ import { colorsArr, colorsTitleArr } from './Chart2';
 let model = new Model(Config.ip);
 Info.model = model;
 model.init();
-console.log("model.m_devices");
-console.log(model.m_devices);
 
 setTimeout(() => {
-  // console.log("setTimeout result");
-  // console.log(model.load);
   model.load().then(result => {
-    console.log("loadDataModel result");
-    // console.log(model.m_devices);
+    console.log("loadDataModel result:");
+    console.log(model.devices());
     Info.actions.updateLeftMenu();
   }, error => {
     console.log("loadDataModel error");
@@ -101,7 +97,7 @@ function drawValueRange(chart, xValues, yValues, line) {
 }
 
 async function startOsc(indexDevice) {
-  let device = Info.model.m_devices[indexDevice];
+  let device = Info.model.devices()[indexDevice];
   let osc = await device.getOsc();
 
   let chart = chartsArrVisible.slice(-1);
@@ -131,8 +127,8 @@ async function startOsc(indexDevice) {
   })
 }
 
-async function stopOsc(indexDevice) {
-  let device = Info.model.m_devices[indexDevice];
+async function stopOsc(deviceId) {
+  let device = Info.model.devices()[deviceId];
   let osc = device.osc;
 
   if (osc != null) {
@@ -435,7 +431,7 @@ const addButtonClick = async () => {
       // console.log(comp);
 
       let indexDevice = Info.states.indexDevice;
-      let device = Info.model.m_devices[indexDevice];
+      let device = Info.model.devices()[indexDevice];
       let dataForChoose = [];
       if (device != undefined) {
         let osc = await device.getOsc();
