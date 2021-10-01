@@ -103,19 +103,30 @@ function drawValueRange(chart, xValues, yValues, line) {
 async function startOsc(indexDevice) {
   let device = Info.model.m_devices[indexDevice];
   let osc = await device.getOsc();
-  
+
+  let chart = chartsArrVisible.slice(-1);
+  if (chart == undefined || Info.paramToCharts[chart] == undefined) {
+    return;
+  }
+
   let channels = [];
-  Info.paramToCharts['chart3'].forEach(function(item, index, array) {
+  Info.paramToCharts[chart].forEach(function(item, index, array) {
     channels.push(item.channel);
   })
+  
+  if (channels.length == 0) {
+    console.log("There is no any selected channel!")
+    return;
+  }
+
   osc.openDataStream(channels);
   let charts = ChartControls();
   
-  Info.paramToCharts['chart3'].forEach(function(item, index, array) {
+  Info.paramToCharts[chart].forEach(function(item, index, array) {
       osc.channels[item.channel].stream.on('data', values => {
           let xValues = values.map(valObj => { return valObj.time });
           let yValues = values.map(valObj => { return valObj.val });
-          drawValueRange(charts['chart3'], xValues, yValues, index + 1);
+          drawValueRange(charts[chart], xValues, yValues, index + 1);
       })
   })
 }

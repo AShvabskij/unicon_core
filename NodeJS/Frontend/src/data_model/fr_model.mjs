@@ -211,9 +211,8 @@ export class Model extends Events {
                 }
 
                 console.log("loaded devices  = " + this.m_devices.length);
-
                 resolve({ result: 'true', status: 200 });
-
+                
             } catch (err) {
                 console.log(err);
                 reject(err);

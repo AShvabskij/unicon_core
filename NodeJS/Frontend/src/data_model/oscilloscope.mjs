@@ -12,7 +12,6 @@ export default class Oscilloscope {
         this.desc = ''
         this.resolution_ns = 0;
         this.lastError = 0;
-        this.channelStreams = []
         this.trig_time = new Date().getTime();
         this.channels = []
 
@@ -60,6 +59,13 @@ export default class Oscilloscope {
     }
 
     async closeDataStream() {
+        if (this._capturedChannels == undefined) return;
+
+        for (var i = 1; i < this._capturedChannels.length; ++i) {
+            let chNum = this._capturedChannels[i];
+            this._finishChannel(chNum);
+        }
+
         try {
             await this.deviceProvider.reqCloseOscStream(this.deviceId, this.id);
         } catch (error) {
@@ -67,16 +73,11 @@ export default class Oscilloscope {
             console.error(error);
         }
 
-        for (var i = 1; i <= OSC_MAX_CHANNELS; ++i) {
-            if (this.channels[i].stream != undefined && this.channels[i].stream != null) {
-                this.channels[i].stream.push(null);
-                this.channels[i].stream.destroy;
-                this.channels[i].stream = null;
-            }
-        }
     }
 
     stream(socketData) {
+        if (this._capturedChannels == undefined || this._capturedChannels.length == 0) return;
+
         for (var i = 0; i < socketData.channels.length; ++i) {
             let chNum = socketData.channels[i];
             if (this._capturedChannels.indexOf(chNum) == -1) {
@@ -86,10 +87,35 @@ export default class Oscilloscope {
             if (data == -1) {
                 continue;
             }
-            if (this.channels[chNum].stream !== undefined && this.channels[chNum].stream !== null) {
-                this.channels[chNum].stream.push(data);
+
+            if (data) {
+                this._pushChannelData(chNum, data);
+            } else {
+                this._finishChannel(chNum)
             }
         }
+    }
+
+    _finishChannel(chNum) {
+        const index = this._capturedChannels.indexOf(chNum);
+        if (index > -1) {
+            this._capturedChannels.splice(index, 1)
+        }
+
+        let stream = this.channels[chNum].stream;
+        if (stream) {
+            stream.push(null);
+            stream.destroy;
+            this.channels[chNum] = null;
+        }
+    }
+
+    _pushChannelData(chNum, data) {
+        let stream = this.channels[chNum].stream;
+        if (stream) {
+            this.channels[chNum].stream.push(data);
+        }
+        return;
     }
 
     parse(socketData, ch) {
@@ -109,7 +135,7 @@ export default class Oscilloscope {
 
         let ind = socketData.channels.indexOf(ch)
         let chValues = socketData.values[ind];
-        if (chValues === undefined || chValues.length == 0) {
+        if (!chValues) {
             return -1;
         }
 

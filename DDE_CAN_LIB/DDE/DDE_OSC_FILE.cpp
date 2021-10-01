@@ -38,9 +38,9 @@ std::ifstream DDE_OSC_FILE::openOscFile(int fileNumber)
     return file;
 }
 
-std::string DDE_OSC_FILE::loadOscFile(int fileNumber)
+std::string DDE_OSC_FILE::loadOscFile(uint16_t deviceId)
 {
-    ifstream file = openOscFile(fileNumber);
+    ifstream file = openOscFile(deviceId);
 
     if (!file.is_open()) {
         return "";
