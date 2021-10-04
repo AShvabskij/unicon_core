@@ -84,6 +84,7 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
     if (res < 0) {
         return res;
     }
+    fileStream.close();
 
 
     p.settings = m_header->settings;
