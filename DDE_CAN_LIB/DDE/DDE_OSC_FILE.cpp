@@ -12,7 +12,7 @@ using namespace std;
 
 const int DATA_YELD_INTERVAL_MSC = 50;
 const int DATA_YELD_ERROR = -1;
-const int DATA_YELD_FINISH = -2;
+const int DATA_YELD_FINISH = 2;
 const std::string OSC_FILE_ERROR = "Osc data file is not found!\n";
 const std::string OSC_FILE_PARSE_ERROR = "Error while parsing th osc file!\n";
 const int SET_SIZE = 16;
