@@ -39,7 +39,7 @@ public:
     virtual int set(DDE_GET_OSC_HEADER& p){return 0;}
 
 private:
-    int loadOscFile(uint16_t deviceId = 1);
+    int loadOscFile(uint16_t deviceId, std::string* outBuff);
     std::ifstream openOscFile(int fileNumber);
     std::stringstream* createFileStream();
     int parseHeader(const std::ifstream& fileStream, OSC_FILE_HEADER &header);

@@ -38,25 +38,26 @@ std::ifstream DDE_OSC_FILE::openOscFile(int fileNumber)
     return file;
 }
 
-int DDE_OSC_FILE::loadOscFile(uint16_t deviceId)
+int DDE_OSC_FILE::loadOscFile(uint16_t deviceId, string *outBuff)
 {
-    ifstream file = openOscFile(deviceId);
+    assert(outBuff);
 
+    ifstream file = openOscFile(deviceId);
     if (!file.is_open()) {
         return DATA_YELD_ERROR;
     }
 
-    m_oscFileBuff.clear();
+    outBuff->clear();
     file.seekg(0, std::ios::end);
-    m_oscFileBuff.reserve(file.tellg());
+    outBuff->reserve(file.tellg());
     file.seekg(0, std::ios::beg);
 
-    m_oscFileBuff.assign((std::istreambuf_iterator<char>(file)),
+    outBuff->assign((std::istreambuf_iterator<char>(file)),
                std::istreambuf_iterator<char>());
 
     file.close();
 
-    if (m_oscFileBuff.empty()) {
+    if (outBuff->empty()) {
         cout << OSC_FILE_ERROR;
         return DATA_YELD_ERROR;
     }
@@ -84,7 +85,6 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
     if (res < 0) {
         return res;
     }
-    fileStream.close();
 
 
     p.settings = m_header->settings;
@@ -108,7 +108,7 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
 
     if (!m_oscFileStream) {
         if(m_oscFileBuff.empty()) {
-            res = loadOscFile(p.device_ID);
+            res = loadOscFile(p.device_ID, &m_oscFileBuff);
         }
 
         m_oscFileStream = new std::stringstream(m_oscFileBuff);
