@@ -38,45 +38,53 @@ std::ifstream DDE_OSC_FILE::openOscFile(int fileNumber)
     return file;
 }
 
-std::string DDE_OSC_FILE::loadOscFile(uint16_t deviceId)
+int DDE_OSC_FILE::loadOscFile(uint16_t deviceId)
 {
     ifstream file = openOscFile(deviceId);
 
     if (!file.is_open()) {
-        return "";
+        return DATA_YELD_ERROR;
     }
 
-    string buff;
+    m_oscFileBuff.clear();
     file.seekg(0, std::ios::end);
-    buff.reserve(file.tellg());
+    m_oscFileBuff.reserve(file.tellg());
     file.seekg(0, std::ios::beg);
 
-    buff.assign((std::istreambuf_iterator<char>(file)),
+    m_oscFileBuff.assign((std::istreambuf_iterator<char>(file)),
                std::istreambuf_iterator<char>());
 
     file.close();
 
-    return buff;
+    if (m_oscFileBuff.empty()) {
+        cout << OSC_FILE_ERROR;
+        return DATA_YELD_ERROR;
+    }
+
+    return 0;
 }
 
 int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
 {
+    int res = 0;
     if (!m_header || m_header->device_id != p.device_ID) {
         delete m_header;
         m_header = new OSC_FILE_HEADER();
         m_header->device_id = p.device_ID;
 
+        ifstream fileStream = openOscFile(m_header->device_id);
+        res = parseHeader(fileStream, *m_header);
+        fileStream.close();
+
+        delete m_oscFileStream;
+        m_oscFileStream = nullptr;
         m_oscFileBuff.clear();
-        m_oscFileBuff = loadOscFile(p.device_ID);
     }
 
-    delete m_oscFileStream;
-    m_oscFileStream = new std::stringstream(m_oscFileBuff);
-
-    int res = parseHeader(m_oscFileStream, *m_header);
     if (res < 0) {
         return res;
     }
+
 
     p.settings = m_header->settings;
 
@@ -95,9 +103,18 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
 
 int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
 {
+    int res = 0;
+
     if (!m_oscFileStream) {
-        cout << OSC_FILE_ERROR;
-        return DATA_YELD_ERROR;
+        if(m_oscFileBuff.empty()) {
+            res = loadOscFile(p.device_ID);
+        }
+
+        m_oscFileStream = new std::stringstream(m_oscFileBuff);
+    }
+
+    if (res < 0) {
+        return res;
     }
 
     p.data_length = m_header->settings.time_resolution_ns != 0 ? (DATA_YELD_INTERVAL_MSC * 1000) / m_header->settings.time_resolution_ns : 0;
@@ -110,6 +127,8 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
         while (line.empty() || !isdigit(line[0])) {
             std::getline(*m_oscFileStream, line);
             if (m_oscFileStream->eof()) {
+                delete m_oscFileStream;
+                m_oscFileStream = nullptr;
                 return DATA_YELD_FINISH;
             }
         }
@@ -121,7 +140,7 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
         }
     }
 
-    return 0;
+    return res;
 }
 
 float DDE_OSC_FILE::normalizeValue(uint16_t rawValue, float gain, float offset)
@@ -157,16 +176,16 @@ std::vector<std::uint16_t> DDE_OSC_FILE::parseLine(std::string line)
     return res;
 }
 
-int DDE_OSC_FILE::parseHeader(std::stringstream* fileStream, OSC_FILE_HEADER& header)
+int DDE_OSC_FILE::parseHeader(const std::ifstream& fileStream, OSC_FILE_HEADER& header)
 {
-    //  std::assert(oscFile);
+    stringstream stream;
+    stream << fileStream.rdbuf();
+
     std::setlocale(LC_NUMERIC, "POSIX");
 
-    if (fileStream) {
-        fileStream->seekg(0, std::ios::beg);
-    }
+    stream.seekg(0, std::ios::beg);
 
-    if (!fileStream || fileStream->rdbuf()->in_avail() == 0) {
+    if (stream.rdbuf()->in_avail() == 0) {
         cout << OSC_FILE_ERROR;
         return DATA_YELD_ERROR;
     }
@@ -174,7 +193,7 @@ int DDE_OSC_FILE::parseHeader(std::stringstream* fileStream, OSC_FILE_HEADER& he
     int ind = 0;
     int res = -1;
 
-    for (std::string line; std::getline(*fileStream, line); ) {
+    for (std::string line; std::getline(stream, line); ) {
         if (line.empty()) {
             continue;
         }
