@@ -43,11 +43,15 @@ private:
     std::ifstream openOscFile(int fileNumber);
     std::stringstream* createFileStream();
     int parseHeader(const std::ifstream& fileStream, OSC_FILE_HEADER &header);
-    std::vector<std::uint16_t> parseLine(std::string line);
+    std::string readLine(std::istream &stream);
+    std::vector<std::uint16_t> parseValues(std::string line);
     float normalizeValue(uint16_t rawValue, float gain, float offset);
     std::vector<std::string> split(std::string inputStr, char delim);
+
+    int thread_load();
 
     OSC_FILE_HEADER* m_header = nullptr;
     std::stringstream* m_oscFileStream = nullptr;
     std::string m_oscFileBuff = "";
+    std::thread* m_loadThread;
 };

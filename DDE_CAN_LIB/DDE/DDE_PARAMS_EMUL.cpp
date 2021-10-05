@@ -35,7 +35,6 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 
 		//fill device with random params
         for (int jj = 0; jj <= module_count; jj++) {
-            s = "module " + to_string(jj);
 			for (int subix = 0; subix < 4; subix++) {
 				int param_ID = (jj << 6) + subix;
 				device[ii].el_descr[param_ID].id = param_ID; // (jj << 6) + subix;
@@ -45,7 +44,8 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 				device[ii].el[param_ID].ivalue = -1;
 				device[ii].el[param_ID].fvalue = -1;
 
-				string s1;
+                s = "module " + to_string(jj);
+                string s1;
                 s1 = (subix != 0) ? "param_"+ to_string(subix) : s;
 				strcpy(device[ii].el_descr[param_ID].name, s1.c_str());
                 s1 = s + " param "+ to_string(subix);

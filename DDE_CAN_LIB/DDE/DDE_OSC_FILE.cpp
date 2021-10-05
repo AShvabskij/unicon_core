@@ -99,24 +99,38 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
 
     }
 
+    m_loadThread = new std::thread(&DDE_OSC_FILE::thread_load, this);
+
     return res;
 }
 
-int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
+int DDE_OSC_FILE::thread_load()
 {
     int res = 0;
-
     if (!m_oscFileStream) {
         if(m_oscFileBuff.empty()) {
-            res = loadOscFile(p.device_ID, &m_oscFileBuff);
+            res = loadOscFile(m_header->device_id, &m_oscFileBuff);
         }
 
         m_oscFileStream = new std::stringstream(m_oscFileBuff);
     }
 
-    if (res < 0) {
-        return res;
+    return res;
+}
+
+int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
+{
+    if (m_loadThread) {
+        m_loadThread->join();
+        delete m_loadThread;
+        m_loadThread = nullptr;
     }
+
+    if (!m_oscFileStream) {
+        return DATA_YELD_ERROR;
+    }
+
+    int res = 0;
 
     p.data_length = m_header->settings.time_resolution_ns != 0 ? (DATA_YELD_INTERVAL_MSC * 1000) / m_header->settings.time_resolution_ns : 0;
     p.overflow = 0;
@@ -124,24 +138,41 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
     p.next_ready = true;
 
     for (int ind = 0; ind < p.data_length; ++ind) {
-        string line("");
-        while (line.empty() || !isdigit(line[0])) {
-            std::getline(*m_oscFileStream, line);
-            if (m_oscFileStream->eof()) {
-                delete m_oscFileStream;
-                m_oscFileStream = nullptr;
-                return DATA_YELD_FINISH;
-            }
-        }
+        string line = readLine(*m_oscFileStream);
+        auto values = parseValues(line);
 
-        auto values = parseLine(line);
+        if (values.size() < OSC_CHANNELS) continue;
+
         for (int chNum = 1; chNum <= OSC_CHANNELS; chNum++) {
             uint16_t rawValue = values[chNum];
             p.ch_data[chNum].buff[ind] = normalizeValue(rawValue, m_header->ch_descr[chNum].gain, m_header->ch_descr[chNum].offset);
         }
     }
 
+    if (m_oscFileStream->eof()) {
+        delete m_oscFileStream;
+        m_oscFileStream = nullptr;
+        return DATA_YELD_FINISH;
+    }
+
     return res;
+}
+
+std::string DDE_OSC_FILE::readLine(std::istream &stream)
+{
+    if (stream.eof()) {
+        return "";
+    }
+
+    std::string line;
+    while (line.empty() || !isdigit(line[0])) {
+        std::getline(stream, line);
+        if (stream.eof()) {
+            return "";
+        }
+    }
+
+    return line;
 }
 
 float DDE_OSC_FILE::normalizeValue(uint16_t rawValue, float gain, float offset)
@@ -152,7 +183,7 @@ float DDE_OSC_FILE::normalizeValue(uint16_t rawValue, float gain, float offset)
     return normValue;
 }
 
-std::vector<std::uint16_t> DDE_OSC_FILE::parseLine(std::string line)
+std::vector<std::uint16_t> DDE_OSC_FILE::parseValues(std::string line)
 {
     std::vector<std::uint16_t> res;
     res.reserve(OSC_CHANNELS + 1);
@@ -225,8 +256,6 @@ int DDE_OSC_FILE::parseHeader(const std::ifstream& fileStream, OSC_FILE_HEADER& 
 
         } else if (line[0] == '@') {
             OSC_FILE_CHANNEL_DESCR chDescr;
-
-            std::vector<std::string> elems = split(line, ',');
 
             if (elems.empty()) {
                 continue;
