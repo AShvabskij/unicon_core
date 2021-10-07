@@ -201,6 +201,7 @@ export class Param {
             return;
         }
 
+
         let pValue = this.buffer[this.buffIndex];//new ParamValue();
         pValue.paramId = this.id;
         pValue.deviceId = this.deviceId;
@@ -208,6 +209,11 @@ export class Param {
         pValue.valueFormat = valueData.format;
         pValue.valueTime = valueData.time;
         pValue.scale = valueData.scale;
+
+        if (this.value.value == valueData.value) {
+            return;
+        }
+        this.value = pValue;
 
         let currTime = new Date().getTime();
         let pValueDeltaTime = pValue.valueTime > 0 ? currTime - pValue.valueTime : 0

@@ -86,7 +86,6 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
         return res;
     }
 
-
     p.settings = m_header->settings;
 
     for (int i = 0; i <= OSC_CHANNELS; i++) {
