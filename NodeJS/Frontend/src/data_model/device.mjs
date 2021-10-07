@@ -202,6 +202,10 @@ export class Param {
             return;
         }
 
+        if (this.value.value == valueData.value) {
+            return;
+        }
+
         let pValue = this.buffer[this.buffIndex];//new ParamValue();
         pValue.paramId = this.id;
         pValue.deviceId = this.deviceId;
@@ -210,10 +214,7 @@ export class Param {
         pValue.valueTime = valueData.time;
         pValue.scale = valueData.scale;
 
-        if (this.value.value == valueData.value) {
-            return;
-        }
-        this.value = pValue;
+        this.value = this._paramValueFromStreamData(valueData);
 
         let currTime = new Date().getTime();
         let pValueDeltaTime = pValue.valueTime > 0 ? currTime - pValue.valueTime : 0
@@ -253,6 +254,17 @@ export class Param {
 
     lastError() {
         return this.lastError;
+    }
+
+    _paramValueFromStreamData(data) {
+        this.value.paramId = this.id;
+        this.value.deviceId = this.deviceId;
+        this.value.value = data.value;
+        this.value.valueFormat = data.format;
+        this.value.valueTime = data.time;
+        this.value.scale = data.scale;
+
+        return this.value;
     }
 
     static paramValueFromJson(data) {

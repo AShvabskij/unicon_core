@@ -95,7 +95,7 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
         p.ch_descr[i].scale = m_header->ch_descr[i].gain;
         p.ch_descr[i].param.min = m_header->ch_descr[i].min;
         p.ch_descr[i].param.max = m_header->ch_descr[i].max;
-
+        p.ch_descr[i].color = m_header->ch_descr[i].color;
     }
 
     m_loadThread = new std::thread(&DDE_OSC_FILE::thread_load, this);
@@ -273,6 +273,12 @@ int DDE_OSC_FILE::parseHeader(const std::ifstream& fileStream, OSC_FILE_HEADER& 
             chDescr.chNum = chNum;
             chDescr.gain = stof(elems[5]);
             chDescr.offset = stof(elems[6]);
+
+            string color = elems[7];
+            vector<string> colors = split(color, ' ');
+            chDescr.color.Red = stoi(colors[0]);
+            chDescr.color.Green = stoi(colors[1]);
+            chDescr.color.Blue = stoi(colors[2]);
 
             if (chNum <= OSC_CHANNELS) {
                 header.ch_descr[chNum] = chDescr;

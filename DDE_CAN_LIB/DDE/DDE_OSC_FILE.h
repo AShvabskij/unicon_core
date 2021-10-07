@@ -19,6 +19,7 @@ struct OSC_FILE_CHANNEL_DESCR
     uint8_t chNum = 0;
     float min = 0;
     float max = 0;
+    RGB color;
 };
 
 struct OSC_FILE_HEADER

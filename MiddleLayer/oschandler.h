@@ -3,6 +3,7 @@
 
 #include "basereqhandler.h"
 #include <QTimer>
+#include <QColor>
 
 #define OSC_CHANNELS_MAX 20
 struct OscChannelValues
@@ -31,6 +32,8 @@ struct OscChannelDescr
     float scale = 0.0;
     float min;
     float max;
+
+    QColor color;
 };
 
 enum TriggerModeEnum {
@@ -85,6 +88,10 @@ struct OscHeader
             obj["param_id"] = ch.paramId;
             obj["name"] = ch.paramName;
             obj["scale"] = ch.scale;
+            obj["color"] = ch.color.name(QColor::NameFormat::HexRgb);
+            obj["R"] = (int)ch.color.red();
+            obj["G"] = (int)ch.color.green();
+            obj["B"] = (int)ch.color.blue();
 
             channelsObj << obj;
 

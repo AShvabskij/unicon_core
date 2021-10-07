@@ -21,10 +21,16 @@ struct OSC_PARAM
     char value_unit[6];
 };
 
+struct RGB {
+    uint8_t Red;
+    uint8_t Green;
+    uint8_t Blue;
+};
+
 struct OSC_CHANNEL_DESCR
 {
     uint16_t chNum;
-//  RGB color;
+    RGB color;
     OSC_PARAM param;
 
     float scale;

@@ -256,6 +256,7 @@ long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
         ch.scale = elem.scale;
         ch.min = elem.param.min;
         ch.max = elem.param.max;
+        ch.color = QColor(elem.color.Red, elem.color.Green, elem.color.Blue);
 
         if (elem.param.param_ID <= 0) {
             continue;
