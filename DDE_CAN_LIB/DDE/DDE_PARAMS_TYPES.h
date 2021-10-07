@@ -51,7 +51,7 @@ struct GLIO_ELEMENT_DESCR
 	//uint8_t params_count;
 	char name[DDE_PARAMS_NAME_LENGTH];
     char descr[DDE_PARAMS_DESCR_LENGTH];
-    GLIO_ELEMENT_UNIT_ENUM value_unit;
+    char value_unit[6];
 
 	//GLIO_ELEMENT el;
 

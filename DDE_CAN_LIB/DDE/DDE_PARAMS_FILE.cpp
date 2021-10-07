@@ -29,7 +29,7 @@ int DDE_PARAMS_FILE::init()
 {
     std::setlocale(LC_NUMERIC, "POSIX");
 
-    int res = m_file->open("test.csv");
+    int res = m_file->open("parameters.csv");
     if (res != 0) {
         return res;
     }
@@ -66,7 +66,7 @@ int DDE_PARAMS_FILE::init()
 
             strcpy(device[ii].el_descr[paramId].name, cells[1].c_str());
             strcpy(device[ii].el_descr[paramId].descr, cells[2].c_str());
-            device[ii].el_descr[paramId].value_unit = GLIO_ELEMENT_UNIT_ENUM::UNIT_AMPERE;
+            strcpy(device[ii].el_descr[paramId].value_unit, cells[7].c_str());
             device[ii].el_descr[paramId].id = paramId;
 
             device[ii].el[paramId].id = paramId;

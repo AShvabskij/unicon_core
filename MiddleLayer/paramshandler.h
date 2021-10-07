@@ -34,23 +34,10 @@ struct Param
     int moduleId = 0;
     QString name = "";
     QString desc = "";
-    qint8 valueUnit = 0;
+    QString valueUnit = 0;
 
     bool operator == (const Param& p) const {
         return this->id == p.id && this->deviceId == p.deviceId && this->moduleId == p.moduleId;
-    }
-
-    static QString valueUnitToString(qint8 unit)
-    {
-        switch (unit) {
-        case 1: return "A";
-        case 2: return "V";
-        case 3: return "W";
-        case 4: return "С";
-        case 5: return "S";
-        };
-
-        return "";
     }
 };
 typedef QVector<Param> ParamList;

@@ -359,7 +359,7 @@ QJsonObject ParamsHandler::createHeaderObj(int requestId, const ParamList& param
         obj["param_id"] = param.id;
         obj["name"] = param.name;
         obj["desc"] = param.desc;
-        obj["value_unit"] = Param::valueUnitToString(param.valueUnit);
+        obj["value_unit"] = param.valueUnit;
 
         body << obj;
 

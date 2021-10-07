@@ -18,7 +18,7 @@ struct OSC_PARAM
     float max;
 
     char name[DDE_PARAMS_NAME_LENGTH];
-    GLIO_ELEMENT_UNIT_ENUM value_unit;
+    char value_unit[6];
 };
 
 struct OSC_CHANNEL_DESCR

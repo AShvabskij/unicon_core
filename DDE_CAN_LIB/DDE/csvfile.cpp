@@ -27,6 +27,7 @@ int CsvFile::open(const string &fileName)
     if (m_fileName != fileName || m_buff.empty()) {
         ifstream file = openFile(fileName);
         if (!file.is_open()) {
+            cout << FILE_ERROR;
             return OPEN_FILE_ERROR;
         }
 

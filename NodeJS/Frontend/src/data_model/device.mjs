@@ -29,6 +29,7 @@ export default class Device {
         this.name = ''
         this.desc = ''
         this.image = 0
+        this.info = ''
         this.osc = null
         this.interface = SysInterfacesEnum.Can
         this.interfaceName = 'Can';
@@ -200,7 +201,6 @@ export class Param {
             console.warn(`Receiving value error. The param stream is deactivated now. Device id = ${this.deviceId}, param id = ${this.id}, value = ${JSON.stringify(valueData)}`);
             return;
         }
-
 
         let pValue = this.buffer[this.buffIndex];//new ParamValue();
         pValue.paramId = this.id;

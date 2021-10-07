@@ -22,8 +22,6 @@ Core::~Core()
 
 void Core::start()
 {
-    test();
-
     IDDE* dde = new DDE_EMUL();
     dde->init(0); //run thread
 
