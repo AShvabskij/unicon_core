@@ -31,7 +31,12 @@ async function getValue(param, rowId) {
     let values = chunk;
     let value = values[values.length - 1];
 
-    item.value = value.value.toFixed(3); 
+    if (value.valueFormat == 3) {
+      item.value = value.value.toFixed(3); 
+    } else { 
+      item.value = value.value;
+    }; 
+
     var dateStr = moment(value.valueTime).format('hh:mm:ss.SSS');
     item.time = dateStr;
     grid.updateItem(rowId, item);
@@ -74,19 +79,20 @@ function getUImainMenu(props) {
     id: "parametersGrid",
     height: 600,
     columns: [
-      {
-        id: "name", header: "Name", fillspace: true,
-        template: "{common.treetable()} #name#"
+      { id: "name", header: "Name", width: "250",
+      template: "{common.treetable()} #name#"
       },
-      // {id:"name", header:"Name", fillspace:true}, //width:"250"
-      { id: "value", header: "Value", width: "220" },
+      { 
+        id: "desc", header: "Description", fillspace: true
+      },
+      { id: "value", header: "Value", width: "80" },
       { id: "dimension", header: "Dimension" },
       { id: "time", header: "Time" },
       {
-        id: "chart", header: "Show on trend", width: "130",
+        id: "chart", header: "Show", width: "80",
         template: "{common.checkbox()}"
       },
-      { id: "numchart", header: "Number of trend", width: "130" },
+      { id: "numchart", header: "Trend", width: "80" },
       // { id:"votes", header:"Votes", template:function(obj){
       //   if (obj.votes > 350000)
       //     return "<span style='color:green;'>"+obj.votes+"</span>";
