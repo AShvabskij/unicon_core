@@ -86,7 +86,14 @@ function getUImainMenu(props) {
         id: "chart", header: "Show on trend", width: "130",
         template: "{common.checkbox()}"
       },
-      { id: "numchart", header: "Number of trend", width: "130" }
+      { id: "numchart", header: "Number of trend", width: "130" },
+      // { id:"votes", header:"Votes", template:function(obj){
+      //   if (obj.votes > 350000)
+      //     return "<span style='color:green;'>"+obj.votes+"</span>";
+      //   else
+      //     return "<span style='color:red;'>"+obj.votes+"</span>";
+      // },
+      //  width:100}
     ],
     on: {
       onAfterClose: function (id) {

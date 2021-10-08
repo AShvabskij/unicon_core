@@ -124,7 +124,7 @@
 }
 
 .logoUniCon {
-    background-image: url(./logo/uc2.jpg) !important;
+    background-image: url(./logo/uc_3.jpg) !important;
     height: 38px!important;
     /* width: 10vh !important; */
     width: 100% !important;
@@ -136,4 +136,11 @@
 
 .showSelectChartWindowData .webix_view .webix_dtable {
     height: calc( var(--height) - 95px ) !important;
+}
+
+.infoPics {
+    background-image: url(./pictures/HRVS_DN_PowerStart.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    width: 300px !important;
 }

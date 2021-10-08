@@ -9,6 +9,8 @@ import Chart2 from './Chart2';
 import { ChartControls } from './Chart2';
 import ChartList from './ChartList';
 import ParametersView from './ParametersView';
+import ControlView from './ControlView';
+import InfoView from './InfoView';
 import Config from './.config.js';
 import { Model } from "./data_model/fr_model.mjs";
 import { AddCounter, Info } from "./Context"
@@ -195,7 +197,7 @@ function tabview1(props) {
         body: {
           id: "controlContent",
           view: "htmlform",
-          content: "memo2"
+          content: "controlview"
         }
       },
       {
@@ -204,7 +206,7 @@ function tabview1(props) {
         body: {
           id: "infoContent",
           view: "htmlform",
-          content: "memo3"
+          content: "infoview"
         }
       }
     ],
@@ -219,9 +221,9 @@ function tabview1(props) {
             // showElementChart("chart5")
           }
 
-          if (id == "controlContent") {
-            showChart("chart1", "memo2")
-          }
+          // if (id == "controlContent") {
+          //   showChart("chart1", "memo2")
+          // }
           Info.resize();
         },
         onChange: function (newValue, oldValue, config) {
@@ -260,7 +262,7 @@ const toolBar = () => {
           removeButtonClick();
         }
       },
-      {
+      /* {
         view: "button", value: "Start", autowidth: true, align: "center",
         click: function (id, event) {
           let charts = ChartControls();
@@ -282,9 +284,9 @@ const toolBar = () => {
             await stopValues(deviceId, paramId);
           }
         }
-      },
+      }, */
 
-      {
+      /* {
         view: "button", value: "Start values", autowidth: true, align: "center",
         click: async function (id, event) {
           console.log("Start values");
@@ -293,7 +295,7 @@ const toolBar = () => {
           startValues(deviceId, paramId, 1);
           startValues(23, paramId + 1, 2);
         }
-      },
+      }, */
       {
         view: "button", value: "Start osc", autowidth: true, align: "center",
         click: async function (id, event) {
@@ -329,12 +331,19 @@ const webixButton = (props = { width: "100" }) => {
 }
 
 
+// function mark_votes(value, config){
+//   if (value > 0 )
+//       return { "background":colorsArr[value-1], "color":colorsTitleArr[value-1] };
+// };
+
 function mark_votes(value, config){
-  if (value > 0 )
+  if (value > 0)
       return { "background":colorsArr[value-1], "color":colorsTitleArr[value-1] };
+  else 
+      return { "background":colorsArr[12], "color":colorsTitleArr[0] };
 };
 
-var paramToCharts = [];
+let paramToCharts = [];
 // const paramToCharts = (paramArr) => {
 //   return paramArr;
 // }; 
@@ -356,39 +365,133 @@ const showSelectChartWindow = () => {
           id: "showSelectChartWindowData",   
           view:"datatable",
           height:500, 
+          // scheme:{
+          //   $change:function(item){
+          //     if (item.status.state == 1)
+          //       item.$cellCss = {line:"green"};
+          //   }
+          // },
           columns:[
             { id:"channel", header:"Channel", width:120, css:"center"},
             { id:"name", header:"Name", fillspace:1 },
             { id:"status", header:"Show", width:80, css:"center", 
-              template:"{common.checkbox()}"},
-            { id:"line",	editor:"combo", 
+                  template:"{common.checkbox()}"},
+            { id:"line",	//editor:"combo", 
              cssFormat:mark_votes,
-              options:[
-                {id:"a", value: ""},
-                {id:1, value: "1"},
-                {id:2, value: "2"},
-                {id:3, value: "3"},
-                {id:4, value: "4"},
-                {id:5, value: "5"},
-                {id:6, value: "6"} // {id:2, $css: "colorChart1", value: "2"}
-              ], //collection:colorsArr,
+              // options:[
+              //   {id:"a", value: ""},
+              //   {id:1, value: "1"},
+              //   {id:2, value: "2"},
+              //   {id:3, value: "3"},
+              //   {id:4, value: "4"},
+              //   {id:5, value: "5"},
+              //   {id:6, value: "6"} // {id:2, $css: "colorChart1", value: "2"}
+              // ], //collection:colorsArr,
               // css: "colorChart1",
               header:"Num Line", width:300},
           ],
-          editable:true,
+          //editable:true,
           // autoheight:true,
           data: [],
           on: {
-            onAfterEditStop: function(state, editor, ignoreUpdate){
-               console.log(editor.row);
+            onCheck: function(row, column, state){
+              console.log("onCheck");
+              // console.log("paramToCharts init");
+              // console.log(paramToCharts);
+              // console.log(row);
+              // console.log(column);
+              // console.log(state);
+              let item = this.getItem(row);
+              if (item.name[2] != "0") {
+                  let showParam = {name: item.name, channel: item.channel, idParam: item.idParam, row: row};
+                  let table1 = $$("showSelectChartWindowData");
+                  let item1 = table1.getItem(row);
+                  if (state == 1) {
+                      paramToCharts.push(showParam);
+                      item1.line = paramToCharts.length;
+                      table1.updateItem(row, item1);
+                  }
+                  if (state == 0) {
+                    let posId = paramToCharts.indexOf(showParam);
+                    console.log("posId = " + posId);
+                    paramToCharts.splice(posId, 1);
+                    console.log(paramToCharts.length);
+                    
+                    item1.line = "";
+                      table1.updateItem(row, item1);
+                      console.log(showParam);
+                      paramToCharts.forEach(function(item2, index, array) {
+                        // console.log(item2.row);
+                        let item4 = table1.getItem(item2.row);
+                        // console.log(item4);
+                        item4.line = index + 1;
+                        table1.updateItem(item2.row, item4);
+                      })
+                    }
+                  }
+                  else {
+                    let table1 = $$("showSelectChartWindowData");
+                    let item1 = table1.getItem(row);
+                    item1.status = 0;
+                        table1.updateItem(row, item1);
+                  }
+              // console.log("item1.line="+item1.line);
+              // table1.updateItem(row, item1);
+           },
+            /* onAfterEditStop: function(state, editor, ignoreUpdate){
+              //  console.log(editor.row);
+              //  console.log("paramToCharts = " + paramToCharts);
                let table1 = this.getColumnConfig("line").collection;
                if ((editor.value) && (editor.value != "a")) table1.config.data[editor.value].disabled = false;
                if ((state.value) && (state.value != "a")) table1.config.data[state.value].disabled = true;
                let item = this.getItem(editor.row);
-                console.log(item);
+                // console.log(item);
                 let showParam = {name: item.name, channel: item.channel, idParam: item.idParam};
                 paramToCharts.push(showParam);
-            }
+            }, */
+            /* onCheck: function(row, column, state){
+              console.log("onCheck");
+              console.log("paramToCharts init");
+              console.log(paramToCharts);
+              console.log(row);
+              console.log(column);
+              console.log(state);
+              let item = this.getItem(row);
+              // console.log(item);
+              let showParam = {name: item.name, channel: item.channel, idParam: item.idParam, row: row};
+              let table1 = $$("showSelectChartWindowData");
+              let item1 = table1.getItem(row);
+              if (state == 1) {
+                  paramToCharts.push(showParam);
+                  console.log("paramToCharts Add");
+                  console.log(paramToCharts);
+                  item1.line = paramToCharts.length;
+                  table1.updateItem(row, item1);
+                  console.log("paramToCharts end add");
+                  console.log(paramToCharts);
+                  
+              }
+              if (state == 0) {
+                  console.log("paramToCharts init remove");
+                  console.log(paramToCharts);
+                  item1.line = "a";
+                  table1.updateItem(row, item1);
+                  console.log(showParam);
+                  let posId = paramToCharts.indexOf(showParam);
+                  console.log("posId = " + posId);
+                  paramToCharts.splice(posId, 1);
+                  console.log(paramToCharts.length);
+                  paramToCharts.forEach(function(item2, index, array) {
+                    // console.log(item2.row);
+                    let item4 = table1.getItem(item2.row);
+                    // console.log(item4);
+                    item4.line = index + 1;
+                    table1.updateItem(item2.row, item4);
+                  })
+              }
+              console.log("item1.line="+item1.line);
+              // table1.updateItem(row, item1);
+           }, */
           }
         },
         {
@@ -525,15 +628,18 @@ export default class DevicesView extends React.Component {
           <Chart2 id="chart5" title="&nbsp;" addFunction={addFunction} />
         </div>
 
-        <Chart />
+        {/* <Chart /> */}
         {/* <ChartList /> */}
         <div id="memo1">{/* Memo 1 */}
           <Webix ui={toolBar()} />
         </div>
-        <div id="memo2">Memo 2</div>
+        {/* <div id="memo2">Memo 2</div>
         <div id="memo3">Memo 3</div>
         <div id="memo4">Memo 4</div>
-        <ParametersView data={this.state.dt} />
+         */}
+         <ParametersView data={this.state.dt} />
+         <ControlView data={this} />
+         <InfoView data={this} />
       </div>
     )
   }

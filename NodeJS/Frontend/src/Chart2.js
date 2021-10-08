@@ -40,7 +40,8 @@ const intervalAddPoint = 40;
 const suffixChartID = "scichart-root2";
 let chartControls = [];
 
-const colorsArr = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000"];
+const colorsArr = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000", "white"];
+// const colorsArr = ["rgb(222,223,224)","rgb(255 255 128)","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000"];
 
 const colorsTitleArr = ["black","white","white", "white", "white", "black", "white", "white", "white", "white","white","white"];
 
@@ -304,16 +305,16 @@ export default function Chart(props) {
     let currentChartID = props.id+"_"+suffixChartID;
   return (
         <Row id={props.id}  style={{ visibility:"hidden" }} >
-              <Col className = "chart1" xs={10}  > 
+              <Col className = "chart1" xs={12}  > 
         {props.title}
               <div id={currentChartID} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
         {/* <div id={currentChartID} style={{ width:"auto"}} ></div>  */}
       </Col>
-              <Col className = "chart2" xs={2}   > 
+             {/*  <Col className = "chart2" xs={2}   > 
         <div>&nbsp;</div>
         <Webix ui={webixButton()} data="Start" click={controls.startDemo} />
         <Webix ui={webixButton()} data="Stop" click={controls.stopDemo} />
-      </Col>
+      </Col> */}
 
     </Row>
   );
