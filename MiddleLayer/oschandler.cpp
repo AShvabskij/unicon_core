@@ -58,7 +58,7 @@ void OscHandler::onStreamTimerAlarm()
     }
 
     int res = streamData();
-    if (res < 0) {
+    if (res < 0 || res == STOP_STREAM_CODE) {
         stopStreamData(m_capturedOsc);
         stopPooling();
         return;
@@ -185,7 +185,7 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
     qlonglong trigTimeNs = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
     out->timestamp = trigTimeNs  + ++m_dataCounter * m_oscRawDataBuff->data_length * osc.settings.timeResolutionNs;
 
-    return 0;
+    return res;
 }
 
 void OscHandler::startPooling()
@@ -210,11 +210,7 @@ int OscHandler::streamData()
     }
 
     long res = getData(m_capturedOsc, m_oscDataBuff);
-    if (res < 0) {
-        return res;
-    }
-    QJsonObject response = createStreamDataObj(*m_oscDataBuff);
-
+    QJsonObject response = createStreamDataObj(*m_oscDataBuff, res);
     emit stream(response);
 
     return res;
@@ -260,6 +256,7 @@ long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
         ch.scale = elem.scale;
         ch.min = elem.param.min;
         ch.max = elem.param.max;
+        ch.color = QColor(elem.color.Red, elem.color.Green, elem.color.Blue);
 
         if (elem.param.param_ID <= 0) {
             continue;

@@ -541,7 +541,7 @@ const addButtonClick = async () => {
         let osc = await device.getOsc();
         osc.channels.forEach(function(item, index, array) {
           dataForChoose.push({ id:index, channel:item.num, name:item.name + " [" + item.param_id + "]",  
-            status:0, idParam: item.param_id,
+            color:item.color, status:0, idParam: item.param_id,
           });
           // console.log(dataForChoose);
         })

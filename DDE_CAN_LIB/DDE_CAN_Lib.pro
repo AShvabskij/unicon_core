@@ -17,7 +17,9 @@ SOURCES += \
     DDE/DDE_OSC_FILE.cpp \
     DDE/DDE_PARAMS.cpp \
     DDE/DDE_PARAMS_EMUL.cpp \
+    DDE/DDE_PARAMS_FILE.cpp \
     DDE_EMUL.cpp \
+    DDE/csvfile.cpp \
     dde_lib.cpp \
     DDE_CAN.cpp
 
@@ -31,10 +33,12 @@ HEADERS += \
     DDE/DDE_OSC_TYPES.h \
     DDE/DDE_PARAMS.h \
     DDE/DDE_PARAMS_EMUL.h \
+    DDE/DDE_PARAMS_FILE.h \
     DDE/DDE_PARAMS_TYPES.h \
     DDE/DDE_TYPES.h \
     DDE/my_func.h \
     DDE_EMUL.h \
+    DDE/csvfile.h \
     dde_lib.h \
     DDE_CAN.h
 

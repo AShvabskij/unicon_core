@@ -28,9 +28,9 @@ export default class Oscilloscope {
         if (!Array.isArray(channels) || channels.length === 0) {
             channels = []
             for (var i = 0; i < this.channels.length; ++i) {
-                let channel =  this.channels[i];
+                let channel = this.channels[i];
                 if (channel.name !== '' || channel.param_id !== 0)
-                channels.push(channel.num)
+                    channels.push(channel.num)
             }
         }
 
@@ -39,8 +39,8 @@ export default class Oscilloscope {
             this.channels[channel].stream = new Stream.Readable({
                 highWaterMark: 1, //STREAM_BUFFER_OBJECTS,
                 objectMode: true,
-                read() { } 
-            });            
+                read() { }
+            });
         }
 
         this._byteCount = 0;
@@ -80,6 +80,7 @@ export default class Oscilloscope {
     stream(socketData) {
         if (this._capturedChannels == undefined || this._capturedChannels.length == 0) return;
 
+        let isFinished = false;
         for (var i = 0; i < socketData.channels.length; ++i) {
             let chNum = socketData.channels[i];
             if (this._capturedChannels.indexOf(chNum) == -1) {
@@ -94,7 +95,13 @@ export default class Oscilloscope {
                 this._pushChannelData(chNum, data);
             } else {
                 this._finishChannel(chNum)
+                isFinished = true;
             }
+        }
+
+        if (isFinished) {
+            console.log(`The osc stream is finished, device id = ${this.deviceId}, received items = ${this._msgCount}, bytes = ${this._byteCount}`);
+            console.timeEnd(`The stream elapsed time(${this._timeLabel})`);
         }
     }
 
@@ -128,10 +135,6 @@ export default class Oscilloscope {
 
         const isFinished = (socketData.error === 2);
         if (isFinished) {
-            if (ch == OSC_MAX_CHANNELS) {
-                console.log(`The osc stream is finished, device id = ${this.deviceId}, received items = ${this._msgCount}, bytes = ${this._byteCount}`);
-                console.timeEnd(`The stream elapsed time(${this._timeLabel})`);
-            }
             return null;
         }
 

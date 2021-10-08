@@ -3,6 +3,7 @@
 #include "DDE/DDE_PARAMS_EMUL.h"
 #include "DDE/DDE_OSC_EMUL.h"
 #include "DDE/DDE_OSC_FILE.h"
+#include "DDE/DDE_PARAMS_FILE.h"
 
 DDE_EMUL::DDE_EMUL()
 {
@@ -16,7 +17,9 @@ DDE_EMUL::~DDE_EMUL()
 _dde_func_return_t DDE_EMUL::init(int /*mode*/)
 {
     m_params = new DDE_PARAMS_EMUL();
-    m_osc = new DDE_OSC_FILE();//new DDE_OSC_EMUL();
+    m_osc = new DDE_OSC_FILE();
+
+    m_params->init();
 
 	return 0;
 }

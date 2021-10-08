@@ -18,13 +18,19 @@ struct OSC_PARAM
     float max;
 
     char name[DDE_PARAMS_NAME_LENGTH];
-    GLIO_ELEMENT_UNIT_ENUM value_unit;
+    char value_unit[6];
+};
+
+struct RGB {
+    uint8_t Red;
+    uint8_t Green;
+    uint8_t Blue;
 };
 
 struct OSC_CHANNEL_DESCR
 {
     uint16_t chNum;
-//  RGB color;
+    RGB color;
     OSC_PARAM param;
 
     float scale;

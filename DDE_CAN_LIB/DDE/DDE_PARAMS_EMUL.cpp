@@ -35,7 +35,6 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 
 		//fill device with random params
         for (int jj = 0; jj <= module_count; jj++) {
-            s = "module " + to_string(jj);
 			for (int subix = 0; subix < 4; subix++) {
 				int param_ID = (jj << 6) + subix;
 				device[ii].el_descr[param_ID].id = param_ID; // (jj << 6) + subix;
@@ -45,12 +44,14 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 				device[ii].el[param_ID].ivalue = -1;
 				device[ii].el[param_ID].fvalue = -1;
 
-				string s1;
+                s = "module " + to_string(jj);
+                string s1;
                 s1 = (subix != 0) ? "param_"+ to_string(subix) : s;
 				strcpy(device[ii].el_descr[param_ID].name, s1.c_str());
                 s1 = s + " param "+ to_string(subix);
                 strcpy(device[ii].el_descr[param_ID].descr, s1.c_str());
-                device[ii].el_descr[param_ID].value_unit = (subix != 0) ? GLIO_ELEMENT_UNIT_ENUM::UNIT_AMPERE : GLIO_ELEMENT_UNIT_ENUM::UNIT_UNDEFINED;
+                strcpy(device[ii].el_descr[param_ID].value_unit, (subix != 0) ? valueUnitToString(GLIO_ELEMENT_UNIT_ENUM::UNIT_AMPERE).c_str()
+                                                                              : valueUnitToString(GLIO_ELEMENT_UNIT_ENUM::UNIT_UNDEFINED).c_str());
                 device[ii].el[param_ID].scale = 0;
 				device[ii].el[param_ID].timestamp = 0;
 
@@ -245,7 +246,21 @@ void DDE_PARAMS_EMUL::read_params(DDE_GET_PARAMS_DATA& get_params)
         get_params.el[0].deprecated = false;
     }
 
-	//if (get_params.callback_func != NULL) get_params.callback_func();
+    //if (get_params.callback_func != NULL) get_params.callback_func();
+}
+
+string DDE_PARAMS_EMUL::valueUnitToString(GLIO_ELEMENT_UNIT_ENUM unit)
+{
+    switch (unit) {
+    case UNIT_AMPERE: return "A";
+    case INT_VOLTS: return "V";
+    case UNIT_WATT: return "W";
+    case UNIT_CELSIUS: return "С";
+    case UNIT_SEC: return "S";
+    case UNIT_UNDEFINED: return "";
+    };
+
+    return "";
 }
 
 inline time_t DDE_PARAMS_EMUL::systemTime()
