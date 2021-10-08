@@ -177,6 +177,7 @@ ParamValue ParamsHandler::valueFrom(const GLIO_ELEMENT_VALUE& el)
     ParamValue res;
     res.scale = el.scale;
     res.timestamp = el.timestamp; //QDateTime::currentMSecsSinceEpoch();
+    res.valueFormat = el.format;
 
     switch (el.format) {
     case FORMAT_INT:

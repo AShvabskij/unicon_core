@@ -17,34 +17,40 @@ const int CSV_NUMBER_OF_CELLS = 10;
 
 DDE_PARAMS_FILE::DDE_PARAMS_FILE()
 {
-    m_file = new CsvFile();
 }
 
 DDE_PARAMS_FILE::~DDE_PARAMS_FILE()
 {
-    delete m_file;
 }
 
 int DDE_PARAMS_FILE::init()
 {
     std::setlocale(LC_NUMERIC, "POSIX");
 
-    int res = m_file->open("parameters.csv");
-    if (res != 0) {
-        return res;
-    }
-
-    int devices_count = 1;
+    int res = 0;
+    int devices_count = 4;
     int devices_step = 11;
 
+    CsvFile* file = new CsvFile();
     for (int ii = 1; ii < devices_count * devices_step; ii = ii + devices_step)	{
+        string fileName = "parameters_"+to_string(ii) + ".csv";
+        res = file->open(fileName);
+        if (res != 0) {
+            return res;
+        }
+
         device[ii].device_ID = ii;
-        sprintf(device[ii].name, "Device PUT %d", ii);
-        sprintf(device[ii].descr, "Device Power Unit Type %d", ii);
+        if (ii == 1) {
+            strcpy(device[ii].name, "HRVS-DN-PowerStart");
+            strcpy(device[ii].descr, "Medium Voltage Digital Soft Starter 60-1,200A, 2,300-15,000V");
+        } else {
+            sprintf(device[ii].name, "Device PUT %d", ii);
+            sprintf(device[ii].descr, "Device Power Unit Type %d", ii);
+        }
 
         StringList rowCells;
-        while (!m_file->eof()) {
-            StringList cells = m_file->readNextRow([](StringList rowCells) {
+        while (!file->eof()) {
+            StringList cells = file->readNextRow([](StringList rowCells) {
                     bool isValidRow = !rowCells.empty();
                     isValidRow = isValidRow && rowCells.size() >= CSV_NUMBER_OF_CELLS;
                     isValidRow = isValidRow && isdigit(*rowCells[3].c_str());
@@ -78,6 +84,8 @@ int DDE_PARAMS_FILE::init()
             device[ii].el[paramId].timestamp = 0;
         }
     }
+
+    delete file;
 
     return res;
 }

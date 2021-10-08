@@ -28,6 +28,4 @@ private:
 
     DEVICE_PARAMS device[64]; //not more than 64 devices
     uint32_t devices_count;
-
-    CsvFile* m_file;
 };
