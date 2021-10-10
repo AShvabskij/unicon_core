@@ -24,6 +24,6 @@ private:
 
     std::stringstream* m_fileStream = nullptr;
     std::string m_buff = "";
-    std::thread* m_loadThread;
+    std::thread* m_loadThread = nullptr;
     std::string m_fileName = "";
 };
