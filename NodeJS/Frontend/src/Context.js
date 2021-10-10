@@ -66,6 +66,7 @@ const updateLeftMenuBase = (devicesArr) => {
   });
    
     webix.ui(devices,$$("DeviceInit"), 0);
+    $$("descriptionDevice").$view.children[0].style.color = "white";
 } 
 
 const updateLeftMenu = () => {
@@ -84,6 +85,7 @@ export const Info = {startTime:startDate.getTime(),model:{},
             "chart5":{setNamesArr: () => {}, setColorsArr: () => {}}
         },
     resize :function(event) {
+        
         let elements = ["accmain","tabview1","parametersGrid","descriptionDevice"]
         elements.forEach(function(item, index, array) {
             //if(item == "controlview") $$(item).resize();
