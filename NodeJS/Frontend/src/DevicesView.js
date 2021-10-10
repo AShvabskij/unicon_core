@@ -14,7 +14,10 @@ import InfoView from './InfoView';
 import Config from './.config.js';
 import { Model } from "./data_model/fr_model.mjs";
 import { AddCounter, Info } from "./Context"
-import { colorsArr, colorsTitleArr } from './Chart2';
+import { colorsArrDefaults, colorsTitleArr } from './Chart2';
+
+let colorsArrTab = [];
+colorsArrTab = colorsArrDefaults;
 
 let model = new Model(Config.ip);
 Info.model = model;
@@ -107,9 +110,12 @@ async function startOsc(indexDevice) {
     return;
   }
 
+  let charts = ChartControls();
+
   let channels = [];
   Info.paramToCharts[chart].forEach(function(item, index, array) {
     channels.push(item.channel);
+    charts[chart].clearChart(index + 1);
   })
   
   if (channels.length == 0) {
@@ -118,7 +124,6 @@ async function startOsc(indexDevice) {
   }
 
   osc.openDataStream(channels);
-  let charts = ChartControls();
   
   Info.paramToCharts[chart].forEach(function(item, index, array) {
       osc.channels[item.channel].stream.on('data', values => {
@@ -219,6 +224,10 @@ function tabview1(props) {
             // showElementChart("chart3");
             // showElementChart("chart4")
             // showElementChart("chart5")
+          }
+          if (id == "controlContent") {
+            let cv = document.getElementById("controlview");
+            cv.style.visibility = "visible";
           }
 
           // if (id == "controlContent") {
@@ -338,12 +347,13 @@ const webixButton = (props = { width: "100" }) => {
 
 function mark_votes(value, config){
   if (value > 0)
-      return { "background":colorsArr[value-1], "color":colorsTitleArr[value-1] };
+      // return { "background":colorsArrTab[value-1], "color":colorsTitleArr[value-1] };
+      return { "background":colorsArrTab[value-1], "color":colorsArrTab[value-1] };
   else 
-      return { "background":colorsArr[12], "color":colorsTitleArr[0] };
+      return { "background":colorsArrTab[12], "color":colorsArrTab[12] };
 };
 
-let paramToCharts = [];
+let paramToChart = [];
 // const paramToCharts = (paramArr) => {
 //   return paramArr;
 // }; 
@@ -391,52 +401,47 @@ const showSelectChartWindow = () => {
               header:"Num Line", width:300},
           ],
           //editable:true,
+          // checkboxRefresh:true,
           // autoheight:true,
           data: [],
           on: {
             onCheck: function(row, column, state){
               console.log("onCheck");
-              // console.log("paramToCharts init");
-              // console.log(paramToCharts);
-              // console.log(row);
-              // console.log(column);
-              // console.log(state);
-              let item = this.getItem(row);
-              if (item.name[2] != "0") {
+              let table1 = $$("showSelectChartWindowData");
+              let item = table1.getItem(row);
+                  
+              if (item.name != "—") {
                   let showParam = {name: item.name, channel: item.channel, idParam: item.idParam, row: row};
-                  let table1 = $$("showSelectChartWindowData");
-                  let item1 = table1.getItem(row);
+                  
                   if (state == 1) {
-                      paramToCharts.push(showParam);
-                      item1.line = paramToCharts.length;
-                      table1.updateItem(row, item1);
+                      Info.paramToChart.push(showParam);
+                      //console.log(colorsArrTab);
+                      // colorsArrTab.push(item.color);
+                      item.line = Info.paramToChart.length;
                   }
                   if (state == 0) {
-                    let posId = paramToCharts.indexOf(showParam);
-                    console.log("posId = " + posId);
-                    paramToCharts.splice(posId, 1);
-                    console.log(paramToCharts.length);
-                    
-                    item1.line = "";
-                      table1.updateItem(row, item1);
-                      console.log(showParam);
-                      paramToCharts.forEach(function(item2, index, array) {
-                        // console.log(item2.row);
+                      let newParamArr = [];
+                      Info.paramToChart.forEach(function(item3, index, array) {
+                          console.log(item3);  
+                          if(item3.channel == item.channel) {
+                            console.log("continue");
+                          }
+                          else newParamArr.push(item3);
+                      });
+                      Info.paramToChart = newParamArr;
+                      
+                      item.line = 0;
+                      Info.paramToChart.forEach(function(item2, index, array) {
                         let item4 = table1.getItem(item2.row);
-                        // console.log(item4);
                         item4.line = index + 1;
                         table1.updateItem(item2.row, item4);
                       })
                     }
                   }
-                  else {
-                    let table1 = $$("showSelectChartWindowData");
-                    let item1 = table1.getItem(row);
-                    item1.status = 0;
-                        table1.updateItem(row, item1);
+              else {
+                      item.status = 0;
                   }
-              // console.log("item1.line="+item1.line);
-              // table1.updateItem(row, item1);
+              table1.updateItem(row, item);
            },
             /* onAfterEditStop: function(state, editor, ignoreUpdate){
               //  console.log(editor.row);
@@ -506,18 +511,24 @@ const showSelectChartWindow = () => {
             { "label": "Apply", "view": "button", "height": 0, 
                 click: function (id, event) {
                     let chartToVisible = chartsArrHidden.shift();
-                    // let paramArr = ["Param 1","Param 2","Param 3","Param 4"];
                     let paramArr = [];
-                    paramToCharts.forEach(function(item, index, array) {
+                    Info.paramToChart.forEach(function(item, index, array) {
                         paramArr.push(item.name);
-                      })
-                    Info.paramToCharts[chartToVisible] = paramToCharts;
+                      });
+                    Info.paramToCharts[chartToVisible] = Info.paramToChart;
                     Info.chartList[chartToVisible].setNamesArr(paramArr);
+                    Info.chartList[chartToVisible].setColorsArr(colorsArrTab);
                     chartsArrVisible.push(chartToVisible);
                     document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
                     showElementChart(chartToVisible);
                   $$("showSelectChartWindow").hide();
-                  paramToCharts = [];
+                  let table1 = $$("showSelectChartWindowData");
+                  Info.paramToChart.forEach(function(item, index, array) {
+                      let item2 = table1.getItem(item.row);
+                      item2.line = 0;
+                  });
+                  table1.refresh;
+                  Info.paramToChart = [];
                 }
             }
           ]
@@ -540,7 +551,9 @@ const addButtonClick = async () => {
       if (device != undefined) {
         let osc = await device.getOsc();
         osc.channels.forEach(function(item, index, array) {
-          dataForChoose.push({ id:index, channel:item.num, name:item.name + " [" + item.param_id + "]",  
+          let name1 = item.name + " [" + item.param_id + "]";
+          if (item.name == "") name1 = "—";
+          dataForChoose.push({ id:index, channel:item.num, name:name1,  
             color:item.color, status:0, idParam: item.param_id,
           });
           // console.log(dataForChoose);
@@ -637,8 +650,13 @@ export default class DevicesView extends React.Component {
         <div id="memo3">Memo 3</div>
         <div id="memo4">Memo 4</div>
          */}
+         <div id="controlview" className="w100proc" style={{ visibility:"hidden" }} >
+            <ControlView />
+         {/* <Webix id="resize1" ui={webixButton()} /> */}
+        </div>
+        
          <ParametersView data={this.state.dt} />
-         <ControlView data={this} />
+        
          <InfoView data={this} />
       </div>
     )

@@ -94,7 +94,7 @@
 }
 
 .webix_el_box{
-    color: #FFFFFF !important;
+    /* color: #FFFFFF !important; */
     padding: 3px 2px !important;
 }
 
@@ -143,4 +143,5 @@
     height: 547px !important;
     /* width: 10vh !important; */
     width: 300px !important;
+    background-repeat: no-repeat;
 }

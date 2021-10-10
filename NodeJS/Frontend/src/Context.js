@@ -76,12 +76,17 @@ export const Info = {startTime:startDate.getTime(),model:{},
     elements:{},
     states:{indexDevice:1},
     gridParameters:{},
+    paramToChart:[],
     paramToCharts:{"chart3":{}, "chart4":{}, "chart5":{}},
-    chartList:{"chart3":{setNamesArr: () => {}}, "chart4":{setNamesArr: () => {}}, "chart5":{setNamesArr: () => {}}},
+    chartList:{"chart3":{setNamesArr: () => {}, setColorsArr: () => {}}, 
+            "chart4":{setNamesArr: () => {}, setColorsArr: () => {}}, 
+            "chart5":{setNamesArr: () => {}, setColorsArr: () => {}}
+        },
     resize :function(event) {
         let elements = ["accmain","tabview1","parametersGrid","descriptionDevice"]
         elements.forEach(function(item, index, array) {
-            $$(item).adjust();
+            //if(item == "controlview") $$(item).resize();
+           $$(item).adjust();
         });
     }
 }

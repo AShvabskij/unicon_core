@@ -32,7 +32,7 @@ import { AddCounter, Info } from "./Context"
 // import classes from "../../../../Examples/Examples.module.scss";
 // import image from "./javascript-line-chart.jpg";
 
-const LICENSE_KEY = "Ms4s7kPNHtGh/C9XitPAzhFJxW+ZFPkuVWnfhrARTR8oaE/D/8/yqLbAgcp2sQdVuva50wv5PkKiiJ0Asd7iYW3xGE9OvtnG6TZwbI4PPVq773RfvLjesvEkaB0u56BbKnAfsg/pCgTGbfRUgDCNqxs5DWUwXGXJPf3WIeTGHAU58XU4o1p6yQ3gN8/3kjE5wYIRJmebm1+Z+NCq67sol9pNpoOUfx13Mo4kURoFw24t+lwtTOmvpbLadWLn1v/wR7QlMf0kf9IrgnW8D5aoytdjoZs+XXVzRBF7EmjT5if72KszBF8EkX4aFYaEbsuhNqcVN+ovRhrYLFy8KfcGuGTZsiI0cv51IAKvHOkrLFeokv64vlKEBehLLkiWfcKkAuMUMMBrdars6BDo2nCHltAh2E01GNGG4Ah8OmFlQ7+x1rtol4LmxsIfB5CAhXHSGkt75XAlfiYv827ljmvNBGRNXu/JOHwBqlLdIesFeQtWz8PBAwowPQ/5c+mA+6oXt/heSmxUg0IgK6YdOHsj/7/SbW+OGqYLjhEn90aDA1YhPPqPaSbE3qhD";
+const LICENSE_KEY = "5obTEufopzpmZoVnuxGH/pLJzUjiLmHopfyX3DyUklHey7Y5M0glbfHMtl45fsdkg9/j35pS2jwXCF1Uuq/kx/xCNz7ykB/9/0eEpQxWt03XI0oPFHplh9sYLfpEfJUqnTjPUFlki4aKYBDe/sj3HDxIl4kmHx/P2jsp02CkImftfuleC3bzDL4joIKl4IOKsTpgi8DL/TDC21w/z0jG5GuT4x6Ts9wB2sBH8J+a07r31wXwDGucUqAtAMJvYcYCLdvKn9qiWgp4fQ9Wqh9KUhK6h83AkQ+5g/gjwxmem5VD7hSgHnloqDTqmeirQnf9UFwmYRyKmDSLifPA1J7ZFwTeNGa3cB7aFg/qlPNIJISmyRt9PBIRkCyeyCjhJhPKx7T1U/G0vUDSASQRzI3TgX+Mwor3DN12cXasdxHIkqaYMfT2QcbpoTY3L3tFAHkWEWKDpo/aYyfgWz80LLBGxfIKy+f8GHfx4gOGZ/hM7EFkjFY3AzgrY8HFepNUw1JdnUXPkEGtY31dq5jwJlWFxv6HG05dTUH1Kpixulp1O/UvZm2mTLvJ7EGdaA==";
 // let scs: SciChartSurface;
 // let timerId: NodeJS.Timeout;
 const visiblePoints = 10000;
@@ -40,8 +40,8 @@ const intervalAddPoint = 40;
 const suffixChartID = "scichart-root2";
 let chartControls = [];
 
-const colorsArr = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000", "white"];
-// const colorsArr = ["rgb(222,223,224)","rgb(255 255 128)","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000"];
+const colorsArrDefaults = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000", "white"];
+// let colorsArr = colorsArrDefaults;
 
 const colorsTitleArr = ["black","white","white", "white", "white", "black", "white", "white", "white", "white","white","white"];
 
@@ -49,7 +49,7 @@ const colorsTitleArr = ["black","white","white", "white", "white", "black", "whi
 // const namesArr = ["Param 1","Param 2","Param 3","Param 4"];
 
 
-async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesArr = []) {
+async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesArr = [], colorsArr = []) {
   const seriesArr = [];
   for (let k = 0; k < namesArr.length; k++) {
       seriesArr.push({color:colorsArr[k],name:namesArr[k],colorText:colorsTitleArr[k]});
@@ -172,6 +172,10 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
     counter = counter +step;
   }
 
+  const clearChart = (line) => {
+    arrayLines[line-1].dataSeries.clear();
+  }
+
   const addVarPoint = (x,y,line) => {
       arrayLines[line-1].dataSeries.append(x, y);
       xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
@@ -235,7 +239,7 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
   };
 
 
-  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPoint2, addVarPointRange, addVarPointRange2 } };
+  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPoint2, addVarPointRange, addVarPointRange2, clearChart } };
 }
 
 
@@ -269,11 +273,12 @@ const WebixButton12 = () => {
 
 export default function Chart(props) {
   const [namesArr, setNamesArr] = React.useState([]);
-  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addVarPoint: () =>{}, addVarPoint2: () =>{}, addVarPointRange: () =>{}, addVarPointRange2: () =>{} });
+  const [colorsArr, setColorsArr] = React.useState(colorsArrDefaults);
+  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addVarPoint: () =>{}, addVarPoint2: () =>{}, addVarPointRange: () =>{}, addVarPointRange2: () =>{}, clearChart: () =>{}, });
 
   React.useEffect(() => {
     (async () => {
-        const res = await initSciChart(props.id,props.addFunction,namesArr);
+        const res = await initSciChart(props.id,props.addFunction,namesArr,colorsArr);
       // scs = res.sciChartSurface;
       setControls(res.controls);
       chartControls[props.id] = res.controls;
@@ -300,8 +305,9 @@ export default function Chart(props) {
       // clearTimeout(autoStartTimerId);
       //scs?.delete();
     };
-  }, [namesArr]);
+  }, [namesArr], [colorsArr]);
   Info.chartList[props.id].setNamesArr = setNamesArr;
+  Info.chartList[props.id].setColorsArr = setColorsArr;
     let currentChartID = props.id+"_"+suffixChartID;
   return (
         <Row id={props.id}  style={{ visibility:"hidden" }} >
@@ -325,4 +331,4 @@ function ChartControls() {
 }
 
 export { ChartControls };
-export { colorsArr, colorsTitleArr };
+export { colorsArrDefaults, colorsTitleArr };
