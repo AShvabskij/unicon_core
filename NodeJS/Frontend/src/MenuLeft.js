@@ -4,6 +4,17 @@ import React from "react";
 import {$$} from 'webix';
 
 
+function showPage(pageID, parentID = "") {
+  var sc = document.getElementById(pageID);
+  sc.style.setProperty("visibility", "visible");
+  // const m = document.getElementById(parentID);
+  // if (sc.parentElement.id != parentID) {
+  //   m.appendChild(sc)
+  // }
+  // console.log(sc.parentElement);
+
+}
+
  function accordion() {
   return {
     view:"accordion",
@@ -18,10 +29,28 @@ import {$$} from 'webix';
           console.log(newValue)
       },
       onAfterExpand:function(id){
-          console.log("onAfterExpand")
+          // console.log("onAfterExpand")
           console.log(id)
-          console.log($$(id))
-          
+          // console.log($$(id)) 
+          let changeId = $$(id);
+          let newHeight = 42;
+          switch(id)  {
+            case "DeviceInit":
+              newHeight = 220;
+
+              break;
+
+            case "cPlotWeb":
+              break;
+
+            case "PLC":
+              break;
+
+            case "GraphicTrends":
+              break;
+          }
+          changeId.config.height = newHeight;
+          changeId.resize();
       }
     }
   }

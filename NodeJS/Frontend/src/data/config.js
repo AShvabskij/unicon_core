@@ -1,8 +1,8 @@
 export const accordionInit = [
-		{ header:"Graphic trends", body: ""},
-        { header:"PLC", body: "" },
-        { header:"cPlotWeb", body: ""},
-        { header:"Devices", id:"DeviceInit" ,body: "" }
+	{ header:"Graphic trends", id:"GraphicTrends", body: ""},
+	{ header:"PLC", id:"PLC", body: "" },
+	{ header:"cPlotWeb", id:"cPlotWeb", body: ""},
+	{ header:"Devices", id:"DeviceInit" ,body: "" }
 ];
 
 
