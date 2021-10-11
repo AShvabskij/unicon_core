@@ -54,5 +54,5 @@ private:
     OSC_FILE_HEADER* m_header = nullptr;
     std::stringstream* m_oscFileStream = nullptr;
     std::string m_oscFileBuff = "";
-    std::thread* m_loadThread;
+    std::thread* m_loadThread = nullptr;
 };
