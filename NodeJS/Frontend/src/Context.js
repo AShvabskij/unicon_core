@@ -30,12 +30,13 @@ const updateParameters = (indexDevice) => {
             value:" ", dimension:itemP.unit, time:" ", 
             desc:itemP.desc,
             chart:0, 
-            numchart:1,
-            param:itemP
+            numchart:"",
+            param:itemP,
+            // rw: itemP.RW,
         })
             i++;
         });
-        dt1.push({"id":"modul"+j, "name": item.name + " [" + Number(item.id).toString(16) + "]",
+        dt1.push({"id":"modul"+j, "value":"", "name": item.name + " [" + Number(item.id).toString(16) + "]",
         "open":false, "data":dtt 
         });
         j++;

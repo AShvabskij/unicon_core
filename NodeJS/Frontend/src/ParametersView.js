@@ -69,6 +69,14 @@ function getItems(tree, rowId) {
   return rowsList;
 }
 
+function mark_items(value, rw = "W", config){
+  if ((rw == "W") && (value != ""))
+      // return { "background":colorsArrTab[value-1], "color":colorsTitleArr[value-1] };
+      return { "border": "2px solid #454e50"};
+  else 
+      return { "border": "0px" };
+};
+
 function getUImainMenu(props) {
 
   return {
@@ -85,7 +93,10 @@ function getUImainMenu(props) {
       { 
         id: "desc", header: "Description", fillspace: true
       },
-      { id: "value", header: "Value", width: "80" },
+      { id: "value", header: "Value", width: "180", cssFormat:mark_items, 
+          editor:"inline-text", 
+          template:"<input type='text' value='#value#' style='width:155px;'>"
+        },
       { id: "dimension", header: "Dimension" },
       { id: "time", header: "Time" },
       {
@@ -101,6 +112,12 @@ function getUImainMenu(props) {
       // },
       //  width:100}
     ],
+    autoheight:true,
+    scrollX:false,
+    select:"cell",
+    navigation:true,
+    editable:true,
+    // checkboxRefresh:true,
     on: {
       onAfterClose: function (id) {
         let tree = $$("parametersGrid");
