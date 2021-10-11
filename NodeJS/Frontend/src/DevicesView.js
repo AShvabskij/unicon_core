@@ -368,7 +368,7 @@ const showSelectChartWindow = () => {
     // css:"showSelectChartWindowData",
     move:true,
     modal:true,
-    head:"This window can be moved",
+    head:"Select oscilloscope channels",
     body:{
       rows: [
         {

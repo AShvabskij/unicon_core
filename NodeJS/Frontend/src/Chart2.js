@@ -102,7 +102,7 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
   for (let m = 0; m < seriesArr.length; m++) {
     arrayLines.push(new FastLineRenderableSeries(wasmContext, {
       stroke: seriesArr[m].color,
-      strokeThickness: 4,
+      strokeThickness: 2,
       dataSeries: new XyDataSeries(wasmContext, { dataSeriesName: seriesArr[m].name }),
       animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
     }))

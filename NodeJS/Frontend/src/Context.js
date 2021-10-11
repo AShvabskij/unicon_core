@@ -54,7 +54,7 @@ const updateLeftMenuBase = (devicesArr) => {
     view:"flexlayout",cols:[]};
     devicesArr.forEach(function(item, index, array) {
         // console.log(item, index);
-        devices.cols.push( { view:"toggle", label:item.name + "</br>Channel: " + item.interfaceName, minWidth: 120, height: 60, css: "webix_primary", modules: item.modules,
+        devices.cols.push( { view:"toggle", label:item.name + "</br>Channel: " + item.interfaceName, minWidth: 120, height: 80, css: "webix_primary", modules: item.modules,
         click:function(id,event){
             updateParameters(index);
             
