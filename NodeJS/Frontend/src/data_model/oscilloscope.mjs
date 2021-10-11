@@ -140,7 +140,7 @@ export default class Oscilloscope {
 
         let ind = socketData.channels.indexOf(ch)
         let chValues = socketData.values[ind];
-        if (!chValues) {
+        if (!chValues || chValues.length == 0) {
             return -1;
         }
 

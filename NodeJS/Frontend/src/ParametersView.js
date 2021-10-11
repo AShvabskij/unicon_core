@@ -21,7 +21,7 @@ async function getValue(param, rowId) {
   let grid = $$("parametersGrid");
   let item = grid.getItem(rowId);
 
-  let frequency = 4; // кол-во значений в секунду
+  let frequency = 3; // кол-во значений в секунду
   let resStream = await param.openValueStream(frequency);
   if (resStream === undefined || resStream === null) {
     return;
@@ -87,7 +87,7 @@ function getUImainMenu(props) {
     id: "parametersGrid",
     height: 600,
     columns: [
-      { id: "name", header: "Name", width: "250",
+      { id: "name", header: "Name", width: "300",
       template: "{common.treetable()} #name#"
       },
       { 
