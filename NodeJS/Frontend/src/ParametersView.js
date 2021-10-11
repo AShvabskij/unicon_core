@@ -21,7 +21,7 @@ async function getValue(param, rowId) {
   let grid = $$("parametersGrid");
   let item = grid.getItem(rowId);
 
-  let frequency = 2; // кол-во значений в секунду
+  let frequency = 4; // кол-во значений в секунду
   let resStream = await param.openValueStream(frequency);
   if (resStream === undefined || resStream === null) {
     return;
@@ -70,9 +70,9 @@ function getItems(tree, rowId) {
 }
 
 function mark_items(value, rw = "W", config){
-  if ((rw == "W") && (value != ""))
+  if ((rw.rw == "W") && (value != ""))
       // return { "background":colorsArrTab[value-1], "color":colorsTitleArr[value-1] };
-      return { "border": "2px solid #454e50"};
+      return { "border": "0px solid #454e50"};
   else 
       return { "border": "0px" };
 };

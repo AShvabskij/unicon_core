@@ -91,6 +91,7 @@ export class Param {
         this.moduleId = 0;
         this.name = '';
         this.desc = '';
+        this.rw = 'R';
         this.unit = '';
         this.value = new ParamValue();
 

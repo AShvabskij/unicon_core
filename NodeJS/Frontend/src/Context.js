@@ -32,7 +32,7 @@ const updateParameters = (indexDevice) => {
             chart:0, 
             numchart:"",
             param:itemP,
-            // rw: itemP.RW,
+            rw: itemP.rw,
         })
             i++;
         });

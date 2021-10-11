@@ -307,6 +307,7 @@ export class Model extends Events {
         res.name = paramInfo.name;
         res.desc = paramInfo.desc;
         res.unit = paramInfo.value_unit;
+        res.rw = paramInfo.rw;
 
         return res;
     }

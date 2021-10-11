@@ -72,14 +72,15 @@ int DDE_PARAMS_FILE::init()
 
             strcpy(device[ii].el_descr[paramId].name, cells[1].c_str());
             strcpy(device[ii].el_descr[paramId].descr, cells[2].c_str());
-            strcpy(device[ii].el_descr[paramId].value_unit, cells[7].c_str());
+            strcpy(device[ii].el_descr[paramId].value_unit, cells[8].c_str());
             device[ii].el_descr[paramId].id = paramId;
+            device[ii].el_descr[paramId].readable = (cells[4] == "R") ? true : false;
 
             device[ii].el[paramId].id = paramId;
             device[ii].el[paramId].scale = 0;
             device[ii].el[paramId].format = static_cast<GLIO_ELEMENT_FORMAT_ENUM>(atoi(cells[4].c_str()));
-            device[ii].el[paramId].fvalue = atof(cells[9].c_str());
-            device[ii].el[paramId].ivalue = atoi(cells[9].c_str());
+            device[ii].el[paramId].fvalue = atof(cells[10].c_str());
+            device[ii].el[paramId].ivalue = atoi(cells[10].c_str());
 
             device[ii].el[paramId].timestamp = 0;
         }
@@ -186,6 +187,18 @@ int DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
         p.el[0].timestamp = systemTime();
         p.el[0].format = device[p.device_ID].el[paramId].format;
         p.el[0].deprecated = false;
+
+        int valFormat = device[p.device_ID].el[paramId].format;
+        string unit = device[p.device_ID].el_descr[paramId].value_unit;
+        if (valFormat == 3) {
+            if (unit == "A") {
+                p.el[0].fvalue = generateValue(0.1, 10, 0, systemTime());
+            } else {
+                p.el[0].fvalue = generateValue(device[p.device_ID].el[paramId].fvalue, 0.01);
+                device[p.device_ID].el[paramId].fvalue = p.el[0].fvalue;
+            }
+        }
+
     }
 
     return 0;
@@ -203,4 +216,40 @@ inline time_t DDE_PARAMS_FILE::systemTime()
 int DDE_PARAMS_FILE::set(DDE_SET_PARAMS_DATA& p)
 {
 	return 0;
+}
+
+float DDE_PARAMS_FILE::generateValue(float frequency_hertz, int amplitude, float noise, time_t timeMsc)
+{
+    const float f = frequency_hertz; // set freq heer (Гц)
+    const float a = amplitude; // set amplitude heer
+
+    const float pi = 3.14159274;
+    float w = (2 * pi * f);
+
+    float t = (timeMsc & 0xFFFF) * 0.001;
+    float rnd = 1 + noise*((rand()%100)/(100*1.0));
+    float res = a * sin((w * t * rnd));
+
+    return res;
+}
+
+float DDE_PARAMS_FILE::generateValue(float value , float noise)
+{
+    static int tick = 0;
+    static int tick2 = 0;
+    tick++;
+    if (tick > 32000) tick = 0;
+
+    float rnd = 1;
+
+    if (tick % 6 == 0) {
+        tick2++;
+        if (tick2 % 2 == 0) {
+            rnd = 1 + noise*((rand()%100)/(100*1.0));
+        } else {
+            rnd = 1 - noise*((rand()%100)/(100*1.0));
+        }
+    }
+
+    return value * rnd;
 }
