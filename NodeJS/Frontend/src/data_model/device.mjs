@@ -136,11 +136,11 @@ export class Param {
 
     async openValueStream(frequency, buffObjectCount) {
         try {
-/*
+
             if (this.stream !== null) {
                 this.closeValueStream();
             }
-*/    
+    
             this._timeLabel = new Date().getTime();
             console.time(`The stream elapsed time(${this._timeLabel})`);
             this._byteCount = 0;
@@ -209,7 +209,7 @@ export class Param {
 
         if (this.stream === null || this.stream.destroyed) {
             console.warn(`Receiving value error. The param stream is deactivated now. Device id = ${this.deviceId}, param id = ${this.id}, value = ${JSON.stringify(valueData)}`);
-//          this.closeValueStream();
+            this.closeValueStream();
             return;
         }
 
