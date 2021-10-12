@@ -85,7 +85,7 @@ export class Model extends Events {
 
         this.streamSocket.onmessage = (message) => {
             if (!this.loaded()) {
-                console.warn("The model is not loaded!");
+                console.warn("The model is not loaded on receive message!");
                 return;
             }
             // cbor.decode([message],1,1);
@@ -101,11 +101,10 @@ export class Model extends Events {
 
             let paramId = messageData.p_id;
             if (paramId != undefined) {
-                let valueData = messageData.value;
-                let deviceId = messageData.d_id;
-
                 _messageDataLength = message.data.length;
 
+                let valueData = messageData.value;
+                let deviceId = messageData.d_id;
                 this._streamParamValue(deviceId, paramId, valueData);
                 return;
             }
@@ -139,8 +138,7 @@ export class Model extends Events {
         }
 
         if (param === undefined || valueData == undefined) {
-            console.log(RECEIVED_DATA_ERROR);
-            this.emit('error', RECEIVED_DATA_ERROR);
+            console.warn(RECEIVED_DATA_ERROR);
             return;
         }
 
@@ -148,16 +146,16 @@ export class Model extends Events {
     }
 
     _streamOscValue(deviceId, valueData) {
-        let osc = this._capturedOscilloscope
-
-        if (osc === undefined || osc.deviceId !== deviceId) {
-            osc = this.device(deviceId).osc;
-            this._capturedOscilloscope = osc;
+        if (!this._capturedOscilloscope || this._capturedOscilloscope.deviceId !== deviceId) {
+            let device = this.device(deviceId);
+            if (device) {
+                this._capturedOscilloscope = device.osc;
+            }
         }
 
+        let osc = this._capturedOscilloscope
         if (osc === undefined || osc === null || valueData == undefined) {
-            console.log(RECEIVED_DATA_ERROR);
-            this.emit('error', RECEIVED_DATA_ERROR);
+            console.warn("Unable to receive osc stream data");
             return;
         }
 
