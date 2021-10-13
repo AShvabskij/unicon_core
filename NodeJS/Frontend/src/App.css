@@ -53,6 +53,7 @@
     /* background-color: red; */
     width: 23%;
     float: left;
+    font-size: 10px;
 }
 
 .c2 {
@@ -76,4 +77,71 @@
     /* background-color: saddlebrown; */
     /* width: 77%;
     float: right; */
+}
+
+.devices {
+    font-size: 5px;
+}
+
+.webix_segment_0 {
+    font-size: 5px !important;
+}
+
+.deviceLabel{
+    background-color: #1CA1C1  !important;
+    color: #FFFFFF !important;
+    height: 38px;
+}
+
+.webix_el_box{
+    /* color: #FFFFFF !important; */
+    padding: 3px 2px !important;
+}
+
+.webix_view.webix_layout_accordion {
+    height: 100vh !important;
+}
+/* .webix_view.webix_dtable {
+    height: calc( var(--height) - 95px) !important;
+} */
+
+:root{
+    --height: 100vh;
+    --h1: 10vh;
+    /* --chartheight:30vh; */
+    --chartcount : 1;
+    /* --chartheight : calc(calc( var(--height) / var(--chartcount)) - 140px); */
+    --chartheight : calc( calc( ( var(--height) - 140px )) / var(--chartcount));
+}
+.webix_view.webix_multiview {
+    height: 100vh !important;
+}
+/* #showSelectChartWindowData {
+    height: 200px !important;
+} */
+.showSelectChartWindowData {
+    height: calc( var(--height) - 95px) !important;
+}
+
+.logoUniCon {
+    background-image: url(./logo/uc_3.jpg) !important;
+    height: 38px!important;
+    /* width: 10vh !important; */
+    width: 100% !important;
+}
+
+.tabParam .webix_view .webix_dtable {
+    height: calc( var(--height) - 95px ) !important;
+}
+
+.showSelectChartWindowData .webix_view .webix_dtable {
+    height: calc( var(--height) - 95px ) !important;
+}
+
+.infoPics {
+    background-image: url(./pictures/HRVS_DN_PowerStart.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    width: 300px !important;
+    background-repeat: no-repeat;
 }

@@ -265,6 +265,15 @@ Window {
                 }
             }
 
+            Button {
+                id: btnParamOsc
+                width: 120
+                text: "Oscilloscope"
+                onClicked: {
+                    model.oscParamValues()
+                }
+            }
+
         }
 
         Divider {

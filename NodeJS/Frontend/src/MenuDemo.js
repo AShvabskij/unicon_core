@@ -1,6 +1,5 @@
 import 'webix/webix.css';
 import Webix from './Webix';
-import FilmsView from "./FilmsView1";
 import Chart from "./Chart";
 import React,{ useState,useReducer } from "react";
 import * as webix from 'webix/webix.js';

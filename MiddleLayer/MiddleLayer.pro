@@ -14,6 +14,7 @@ SOURCES += \
         basereqhandler.cpp \
         devicehandler.cpp \
         mainwindowvm.cpp \
+        oschandler.cpp \
         paramshandler.cpp \
         requestmanager.cpp \
         responsemanager.cpp \
@@ -40,6 +41,7 @@ HEADERS += \
     devicehandler.h \
     ireqhandler.h \
     mainwindowvm.h \
+    oschandler.h \
     paramshandler.h \
     requestmanager.h \
     responsemanager.h \

@@ -57,6 +57,8 @@ protected:
     uint32_t overflow = 0;
 
 private:
+    std::string valueUnitToString(GLIO_ELEMENT_UNIT_ENUM unit);
+
     DEVICE_PARAMS_EMUL device[64]; //not more than 64 devices
     uint32_t devices_count;
 

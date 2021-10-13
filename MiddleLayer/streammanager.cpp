@@ -2,6 +2,7 @@
 
 #include <QTextStream>
 #include <cstdio>
+// #include <QCborValue>
 
 StreamManager::StreamManager()
 {
@@ -13,11 +14,15 @@ int StreamManager::stream(QJsonObject value)
     QJsonDocument doc(value);
     QString strJson(doc.toJson(QJsonDocument::Compact));
 
+//  QCborValue v = QCborValue::fromJsonValue(value);
+//  QByteArray dataToSend = v.toCbor(QCborValue::UseFloat);
+
     for (QWebSocket *client : m_clients) {
 
         client->sendTextMessage(strJson);
-//      int bytes = client->bytesToWrite();
-//      QTextStream(stdout) << " bytes to write = " << bytes << "\n" ;
+//      client->sendBinaryMessage(dataToSend);
+        int bytes = client->bytesToWrite();
+        QTextStream(stdout) << " bytes to write = " << bytes << "\n" ;
 
         client->flush();
     }
@@ -47,7 +52,7 @@ int StreamManager::registerHandler(IReqHandler *handler)
 {
     QMetaObject::Connection con = connect(handler, &IReqHandler::stream, this, &StreamManager::stream, Qt::QueuedConnection);
     if (!con) {
-        QTextStream(stdout) << "connected! " << '\n';
+        QTextStream(stdout) << "The stream connection is failed! " << '\n';
         return -1;
     }
 

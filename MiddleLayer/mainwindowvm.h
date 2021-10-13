@@ -22,6 +22,7 @@ public:
     Q_INVOKABLE void receiveDeviceInfo();
     Q_INVOKABLE void receiveParamValues();
     Q_INVOKABLE void streamParamValues();
+    Q_INVOKABLE void oscParamValues();
 
     QString deviceId() const;
     void setDeviceId(QString deviceId);
@@ -36,6 +37,7 @@ public slots:
     QString deviceObjToString(const QJsonObject &obj);
     QString paramValueObjToString(const QJsonObject &obj);
     QString streamParamValueObjToString(const QJsonObject &obj);
+    QString oscDataObjToString(const QJsonObject &obj);
 
 signals:
     void paramIndexChanged(QString paramIndex);

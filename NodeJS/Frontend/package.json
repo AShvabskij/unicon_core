@@ -7,6 +7,9 @@
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
     "browserify": "^17.0.0",
+    "cbor": "^8.0.0",
+    "cbor-web": "^8.0.1",
+    "moment": "^2.29.1",
     "copy-files-from-to": "^3.2.0",
     "net": "^1.0.2",
     "node-fetch": "^2.6.1",
@@ -39,7 +42,7 @@
   "browserslist": {
     "production": [
       ">0.2%",
-      "not dead",
+      
       "not op_mini all"
     ],
     "development": [
