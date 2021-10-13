@@ -74,7 +74,7 @@ int DDE_PARAMS_FILE::init()
             strcpy(device[ii].el_descr[paramId].descr, cells[2].c_str());
             strcpy(device[ii].el_descr[paramId].value_unit, cells[8].c_str());
             device[ii].el_descr[paramId].id = paramId;
-            device[ii].el_descr[paramId].readable = (cells[4] == "R") ? true : false;
+            device[ii].el_descr[paramId].writable = (cells[4] == "W") ? true : false;
 
             device[ii].el[paramId].id = paramId;
             device[ii].el[paramId].scale = 0;

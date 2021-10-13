@@ -52,7 +52,7 @@ struct GLIO_ELEMENT_DESCR
 	char name[DDE_PARAMS_NAME_LENGTH];
     char descr[DDE_PARAMS_DESCR_LENGTH];
     char value_unit[6];
-    bool readable = false;
+    bool writable = false;
 
 	//GLIO_ELEMENT el;
 

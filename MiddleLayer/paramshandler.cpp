@@ -308,7 +308,7 @@ long ParamsHandler::getParamHeader(int deviceId, int paramId, Param *out)
         if (elem.id == paramId) {
             out->name = elem.name;
             out->valueUnit = elem.value_unit;
-            out->readable = elem.readable;
+            out->writable = elem.writable;
             return 0;
         }
     }
@@ -343,7 +343,7 @@ long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)
         p.name = elem.name;
         p.desc = elem.descr;
         p.valueUnit = elem.value_unit;
-        p.readable = elem.readable;
+        p.writable = elem.writable;
 
         *out << p;
     }
@@ -363,7 +363,7 @@ QJsonObject ParamsHandler::createHeaderObj(int requestId, const ParamList& param
         obj["name"] = param.name;
         obj["desc"] = param.desc;
         obj["value_unit"] = param.valueUnit;
-        obj["rw"] = param.readable ? "R" : "W";
+        obj["rw"] = param.writable ? "W" : "R";
 
         body << obj;
 

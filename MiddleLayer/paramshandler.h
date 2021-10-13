@@ -35,7 +35,7 @@ struct Param
     QString name = "";
     QString desc = "";
     QString valueUnit = 0;
-    bool readable = false;
+    bool writable = false;
 
     bool operator == (const Param& p) const {
         return this->id == p.id && this->deviceId == p.deviceId && this->moduleId == p.moduleId;
