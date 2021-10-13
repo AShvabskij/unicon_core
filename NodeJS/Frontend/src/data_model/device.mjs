@@ -205,11 +205,11 @@ export class Param {
         this.stream = null;
     }
 
-    streamValue(valueData, messageDataLength) {
+    async streamValue(valueData, messageDataLength) {
 
         if (this.stream === null || this.stream.destroyed) {
             console.warn(`Receiving value error. The param stream is deactivated now. Device id = ${this.deviceId}, param id = ${this.id}, value = ${JSON.stringify(valueData)}`);
-            this.closeValueStream();
+            await this.closeValueStream();
             return;
         }
 

@@ -83,7 +83,7 @@ export class Model extends Events {
             return;
         };
 
-        this.streamSocket.onmessage = (message) => {
+        this.streamSocket.onmessage = async (message) => {
             if (!this.loaded()) {
                 console.warn("The model is not loaded on receive message!");
                 return;
@@ -105,14 +105,14 @@ export class Model extends Events {
 
                 let valueData = messageData.value;
                 let deviceId = messageData.d_id;
-                this._streamParamValue(deviceId, paramId, valueData);
+                await this._streamParamValue(deviceId, paramId, valueData);
                 return;
             }
 
             // let oscId = messageData.o_id;
             let deviceId = messageData.d_id;
             if (deviceId != undefined) {
-                this._streamOscValue(deviceId, messageData);
+                await this._streamOscValue(deviceId, messageData);
                 return;
             }
         };
@@ -120,7 +120,7 @@ export class Model extends Events {
         this.m_inited = true;
     }
 
-    _streamParamValue(deviceId, paramId, valueData) {
+    async _streamParamValue(deviceId, paramId, valueData) {
         let param = this._capturedParams.find((item) => {
             return item.id === paramId && item.deviceId === deviceId
         });
@@ -142,10 +142,10 @@ export class Model extends Events {
             return;
         }
 
-        param.streamValue(valueData, _messageDataLength);
+        await param.streamValue(valueData, _messageDataLength);
     }
 
-    _streamOscValue(deviceId, valueData) {
+    async _streamOscValue(deviceId, valueData) {
         if (!this._capturedOscilloscope || this._capturedOscilloscope.deviceId !== deviceId) {
             let device = this.device(deviceId);
             if (device) {
@@ -155,11 +155,12 @@ export class Model extends Events {
 
         let osc = this._capturedOscilloscope
         if (osc === undefined || osc === null || valueData == undefined) {
-            console.warn("Unable to receive osc stream data");
+            console.warn("Unable to receive osc stream data. The osc is deactivated now");
+            await this.deviceProvider.reqCloseOscStream(deviceId);
             return;
         }
 
-        osc.stream(valueData);
+        await osc.stream(valueData);
     }
 
     async load() {
