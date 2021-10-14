@@ -205,19 +205,25 @@ export class Param {
             return;
         }
 
+        if (valueData == undefined || valueData.value === undefined) {
+            console.warn(`Receiving value error. The value is not defined. Device id = ${this.deviceId}, param id = ${this.id}, value = ${JSON.stringify(valueData)}`);
+            return;
+        }
+
         if (this.value.value == valueData.value) {
             return;
         }
 
-        let value = this._deserializeValueFromStreamData(valueData);
-
         let pValue = this.buffer[this.buffIndex];
         pValue.paramId = this.id;
         pValue.deviceId = this.deviceId;
-        pValue.value = value.value;
-        pValue.valueTime = value.valueTime;
-        pValue.format = value.format;
-        pValue.scale = value.scale;
+        pValue.value = valueData.value;
+        pValue.valueTime = valueData.valueTime;
+        pValue.format = this.valueFormat;
+        pValue.scale = this.valueScale;
+
+        this.buffer[this.buffIndex] = pValue;
+        this.value = pValue;
 
         let currTime = new Date().getTime();
         let pValueDeltaTime = pValue.valueTime > 0 ? currTime - pValue.valueTime : 0
@@ -269,17 +275,6 @@ export class Param {
         this.valueScale = data.value_scale;
         this.rw = data.rw;
 
-    }
-    
-    _deserializeValueFromStreamData(data) {
-        this.value.paramId = this.id;
-        this.value.deviceId = this.deviceId;
-        this.value.value = data.value;
-        this.value.valueTime = data.time;
-        this.value.format = this.valueFormat;
-        this.value.scale = this.valueScale;
-
-        return this.value;
     }
 }
 

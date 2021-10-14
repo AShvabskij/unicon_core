@@ -163,11 +163,12 @@ int DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
 
 int DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
 {
+
     if (p.module_ID == 0 && p.device_ID == 0) {
         return -1;
     }
 
-    if (p.module_ID > PARAMS_ID_MAX) {
+    if (p.module_ID > PARAMS_ID_MAX || p.param_ID > PARAMS_ID_MAX) {
         return -1;
     }
 

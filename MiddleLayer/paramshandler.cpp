@@ -279,6 +279,7 @@ long ParamsHandler::getParamValue(const Param& p, ParamValue* out)
     DDE_GET_PARAMS_DATA data;
 
     data.device_ID = p.deviceId;
+    data.module_ID = p.moduleId;
     data.param_ID = p.id;
 
     _dde_func_return_t res = m_dde->get_params_data(data);
@@ -303,6 +304,7 @@ long ParamsHandler::getParamHeader(int deviceId, int paramId, Param *out)
     }
 
     out->deviceId = deviceId;
+    out->moduleId = 0;
     out->id = paramId;
 
     for (const GLIO_ELEMENT_DESCR& elem : header.el_descr) {
