@@ -57,20 +57,10 @@ export default class Device {
         }
         
         let oscHeader = await this.deviceProvider.reqOsc(this.id);
-        this.osc = this.createOsc(oscHeader)
+        this.osc = new Oscilloscope();
+        this.osc.deserialize(oscHeader);
+
         return this.osc;
-    }
-
-    createOsc(oscHeader) {
-        let osc = new Oscilloscope();
-        osc.id = oscHeader.id;
-        osc.deviceId = oscHeader.device_id;
-        osc.name = oscHeader.name;
-        osc.resolution_ns = oscHeader.resolution_ns;
-        osc.desc = oscHeader.desc;
-        osc.channels = oscHeader.channels;
-
-        return osc;
     }
 }
 
@@ -92,7 +82,9 @@ export class Param {
         this.name = '';
         this.desc = '';
         this.rw = 'R';
-        this.unit = '';
+        this.valueUnit = '';
+        this.valueFormat = 0;
+        this.valueScale = 0.0;
         this.value = new ParamValue();
 
         this.stream = null;
@@ -124,7 +116,7 @@ export class Param {
 
         try {
             let valueData = await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id);
-            this.value = Param.paramValueFromJson(valueData)
+            this.value.deserialize(valueData);
             this.lastError = 0;
         } catch (err) {
             this.value = new ParamValue()
@@ -217,15 +209,15 @@ export class Param {
             return;
         }
 
-        let pValue = this.buffer[this.buffIndex];//new ParamValue();
+        let value = this._deserializeValueFromStreamData(valueData);
+
+        let pValue = this.buffer[this.buffIndex];
         pValue.paramId = this.id;
         pValue.deviceId = this.deviceId;
-        pValue.value = valueData.value;
-        pValue.valueFormat = valueData.format;
-        pValue.valueTime = valueData.time;
-        pValue.scale = valueData.scale;
-
-        this.value = this._paramValueFromStreamData(valueData);
+        pValue.value = value.value;
+        pValue.valueTime = value.valueTime;
+        pValue.format = value.format;
+        pValue.scale = value.scale;
 
         let currTime = new Date().getTime();
         let pValueDeltaTime = pValue.valueTime > 0 ? currTime - pValue.valueTime : 0
@@ -266,28 +258,28 @@ export class Param {
         return this.lastError;
     }
 
-    _paramValueFromStreamData(data) {
+    deserialize(data) {
+        this.deviceId = data.device_id;
+        this.moduleId = data.module_id;
+        this.id = data.param_id;
+        this.name = data.name;
+        this.desc = data.desc;
+        this.valueUnit = data.value_unit;
+        this.valueFormat = data.value_format;
+        this.valueScale = data.value_scale;
+        this.rw = data.rw;
+
+    }
+    
+    _deserializeValueFromStreamData(data) {
         this.value.paramId = this.id;
         this.value.deviceId = this.deviceId;
         this.value.value = data.value;
-        this.value.valueFormat = data.format;
         this.value.valueTime = data.time;
-        this.value.scale = data.scale;
+        this.value.format = this.valueFormat;
+        this.value.scale = this.valueScale;
 
         return this.value;
-    }
-
-    static paramValueFromJson(data) {
-        // формат ожидаемых данных: {param_id: , device_id:, value:{value, format, time, scale}}
-        let res = new ParamValue();
-        res.paramId = data.param_id;
-        res.deviceId = data.device_id;
-        res.value = data.value.value;
-        res.valueFormat = data.value.format;
-        res.valueTime = data.value.time;
-        res.scale = data.value.scale;
-
-        return res;
     }
 }
 
@@ -295,14 +287,29 @@ class ParamValue {
     constructor() {
         this.paramId = 0;
         this.deviceId = 0;
-        this.valueFormat = ValueFormatEnum.Int
+        this.format = ValueFormatEnum.Undefined;
         this.valueTime = 0;
         this.scale = 0.0;
         this.value = -1.0;
     }
+
+    deserialize(data) {
+        // формат ожидаемых данных: {param_id: , device_id:, value:{value, format, time, scale}}
+        this.paramId = data.param_id;
+        this.deviceId = data.device_id;
+        this.value = data.value.value;
+        this.valueTime = data.value.time;
+        this.format = data.format;
+        this.scale = data.scale;
+    }
+
 }
 
 class ValueFormatEnum {
-    static Int = 1;
-    static Float = 2;
+    static Undefined = 0;
+    static Bin = 1;
+    static Int = 2;
+    static Float = 3;
+    static Hex = 4;
+    static Text = 5;
 }

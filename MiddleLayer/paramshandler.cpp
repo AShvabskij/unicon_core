@@ -92,7 +92,7 @@ int ParamsHandler::handleGetValue(const QJsonObject &request)
     }
 
     ParamValue val;
-    getParamValue(deviceId, paramId, &val);
+    getParamValue(p, &val);
 
     QJsonObject response = createValueObj(requestId, p, val);
     send(response);
@@ -128,7 +128,7 @@ int ParamsHandler::handleOpenStream(const QJsonObject& request)
     m_capturedParams << p;
 
     ParamValue val;
-    getParamValue(deviceId, paramId, &val);
+    getParamValue(p, &val);
 
     QJsonObject response = createValueObj(requestId, p, val);
     send(response);
@@ -168,24 +168,25 @@ int ParamsHandler::handleCloseStream(const QJsonObject &request)
     return 0;
 }
 
-ParamValue ParamsHandler::valueFrom(const GLIO_ELEMENT_VALUE& el)
+ParamValue ParamsHandler::valueFrom(const GLIO_ELEMENT_VALUE& el, const GLIO_ELEMENT_FORMAT_ENUM& format)
 {
     if (el.deprecated) {
         return ParamValue();
     }
 
     ParamValue res;
-    res.scale = el.scale;
     res.timestamp = el.timestamp; //QDateTime::currentMSecsSinceEpoch();
-    res.valueFormat = el.format;
 
-    switch (el.format) {
+    switch (format) {
     case FORMAT_INT:
     {
         res.value = el.ivalue;
     }; break;
     case FORMAT_FLOAT: {
         res.value = el.fvalue;
+    }; break;
+    case FORMAT_TEXT: {
+        res.value = el.ivalue;
     }; break;
     default: {
         res.value = el.fvalue;
@@ -220,7 +221,7 @@ long ParamsHandler::streamParamsValue()
 
     for (const Param &p : m_capturedParams) {
         ParamValue val;
-        long res = getParamValue(p.deviceId, p.id, &val);
+        long res = getParamValue(p, &val);
         QJsonObject response = createStreamValueObj(p, val, res);
 
         emit stream(response);
@@ -271,21 +272,21 @@ void ParamsHandler::onStreamTimerAlarm()
     streamParamsValue();
 }
 
-long ParamsHandler::getParamValue(int deviceId, int paramId, ParamValue* out)
+long ParamsHandler::getParamValue(const Param& p, ParamValue* out)
 {
     Q_ASSERT(out);
 
     DDE_GET_PARAMS_DATA data;
 
-    data.device_ID = deviceId;
-    data.param_ID = paramId;
+    data.device_ID = p.deviceId;
+    data.param_ID = p.id;
 
     _dde_func_return_t res = m_dde->get_params_data(data);
     if (res < 0) {
         return res;
     }
 
-    *out = valueFrom(data.el[0]);
+    *out = valueFrom(data.el[0], (GLIO_ELEMENT_FORMAT_ENUM)p.valueFormat);
 
     return 0;
 }
@@ -307,8 +308,11 @@ long ParamsHandler::getParamHeader(int deviceId, int paramId, Param *out)
     for (const GLIO_ELEMENT_DESCR& elem : header.el_descr) {
         if (elem.id == paramId) {
             out->name = elem.name;
-            out->valueUnit = elem.value_unit;
+            out->valueUnit = elem.unit;
             out->writable = elem.writable;
+            out->valueFormat = elem.format;
+            out->valueScale = elem.scale;
+
             return 0;
         }
     }
@@ -342,8 +346,10 @@ long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)
         p.id = elem.id;
         p.name = elem.name;
         p.desc = elem.descr;
-        p.valueUnit = elem.value_unit;
+        p.valueUnit = elem.unit;
         p.writable = elem.writable;
+        p.valueFormat = elem.format;
+        p.valueScale = elem.scale;
 
         *out << p;
     }
@@ -363,6 +369,8 @@ QJsonObject ParamsHandler::createHeaderObj(int requestId, const ParamList& param
         obj["name"] = param.name;
         obj["desc"] = param.desc;
         obj["value_unit"] = param.valueUnit;
+        obj["value_format"] = param.valueFormat;
+        obj["value_scale"] = param.valueScale;
         obj["rw"] = param.writable ? "W" : "R";
 
         body << obj;
@@ -380,9 +388,10 @@ QJsonObject ParamsHandler::createValueObj(int requestId, const Param& param, con
 {
     QJsonObject body;
     body["device_id"] = param.deviceId;
-    body["module_id"] = param.moduleId;
     body["param_id"] = param.id;
     body["value"] = value.toJson();
+    body["format"] = param.valueFormat;
+    body["scale"] = param.valueScale;
 
     QJsonObject res;
     res["request_id"] = requestId;

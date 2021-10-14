@@ -72,13 +72,13 @@ int DDE_PARAMS_FILE::init()
 
             strcpy(device[ii].el_descr[paramId].name, cells[1].c_str());
             strcpy(device[ii].el_descr[paramId].descr, cells[2].c_str());
-            strcpy(device[ii].el_descr[paramId].value_unit, cells[8].c_str());
+            strcpy(device[ii].el_descr[paramId].unit, cells[8].c_str());
             device[ii].el_descr[paramId].id = paramId;
             device[ii].el_descr[paramId].writable = (cells[4] == "W") ? true : false;
+            device[ii].el_descr[paramId].format = static_cast<GLIO_ELEMENT_FORMAT_ENUM>(atoi(cells[4].c_str()));
+            device[ii].el_descr[paramId].scale = 0;
 
             device[ii].el[paramId].id = paramId;
-            device[ii].el[paramId].scale = 0;
-            device[ii].el[paramId].format = static_cast<GLIO_ELEMENT_FORMAT_ENUM>(atoi(cells[4].c_str()));
             device[ii].el[paramId].fvalue = atof(cells[10].c_str());
             device[ii].el[paramId].ivalue = atoi(cells[10].c_str());
 
@@ -174,33 +174,32 @@ int DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
     if (p.param_ID == 0) {
         for (int ii = 0; ii < 16; ii++) {
             int paramId = p.module_ID + ii;
-            p.el[ii].ivalue = device[p.device_ID].el[paramId].ivalue;
-            p.el[ii].fvalue = device[p.device_ID].el[paramId].fvalue;
+            auto el = device[p.device_ID].el[paramId];
+            p.el[ii].id = paramId;
+            p.el[ii].ivalue = el.ivalue;
+            p.el[ii].fvalue = el.fvalue;
             p.el[ii].timestamp = systemTime();
-            p.el[ii].format = device[p.device_ID].el[paramId].format;
-            p.el[ii].deprecated = false;
         }
     } else {
         int paramId = p.param_ID;
-        p.el[0].ivalue = device[p.device_ID].el[paramId].ivalue;
-        p.el[0].fvalue = device[p.device_ID].el[paramId].fvalue;
+        auto el = device[p.device_ID].el[paramId];
+        p.el[0].id = paramId;
+        p.el[0].ivalue = el.ivalue;
+        p.el[0].fvalue = el.fvalue;
         p.el[0].timestamp = systemTime();
-        p.el[0].format = device[p.device_ID].el[paramId].format;
-        p.el[0].deprecated = false;
 
-        int valFormat = device[p.device_ID].el[paramId].format;
-        string unit = device[p.device_ID].el_descr[paramId].value_unit;
-        if (valFormat == 3) {
+        uint8_t format = device[p.device_ID].el_descr[paramId].format;
+        string unit = device[p.device_ID].el_descr[paramId].unit;
+        if (format == 3) {
             if (unit == "A") {
                 p.el[0].fvalue = generateValue(0.1, 10, 0, systemTime());
             } else if (unit == "V") {
                 p.el[0].fvalue = generateValue(0.1, 4000, 0, systemTime());
-            } else if (unit == ""){
+            } else if (unit == "") {
                 p.el[0].fvalue = generateValue(device[p.device_ID].el[paramId].fvalue, 0.01);
                 device[p.device_ID].el[paramId].fvalue = p.el[0].fvalue;
             }
         }
-
     }
 
     return 0;

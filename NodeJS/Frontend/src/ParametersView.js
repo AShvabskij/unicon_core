@@ -31,7 +31,7 @@ async function getValue(param, rowId) {
     let values = chunk;
     let value = values[values.length - 1];
 
-    if (value.valueFormat == 3) {
+    if (value.format == 3) {
       item.value = value.value.toFixed(3); 
     } else { 
       item.value = value.value;
