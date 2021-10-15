@@ -4,8 +4,8 @@
 import React, { useEffect } from "react";
 import * as cbor from './../cbor.js';
 import Oscilloscope from './oscilloscope.mjs'
-import {Param, SysModule, SysInterfacesEnum} from './device.mjs'
-import Device from './device.mjs'
+import { Device, SysModule, SysInterfacesEnum } from './device.mjs'
+import { Param } from './param.mjs'
 
 // import {ParamProvider} from "./services/paramprovider.mjs"
 // import {DeviceProvider} from "./services/deviceprovider.mjs"
@@ -109,7 +109,6 @@ export class Model extends Events {
                 return;
             }
 
-            // let oscId = messageData.o_id;
             let deviceId = messageData.d_id;
             if (deviceId != undefined) {
                 await this._streamOscValue(deviceId, messageData);
@@ -121,6 +120,11 @@ export class Model extends Events {
     }
 
     async _streamParamValue(deviceId, paramId, valueData) {
+        if (valueData == undefined) {
+            console.warn(RECEIVED_DATA_ERROR);
+            return;
+        }
+
         let param = this._capturedParams.find((item) => {
             return item.id === paramId && item.deviceId === deviceId
         });
@@ -137,12 +141,21 @@ export class Model extends Events {
             }
         }
 
-        if (param === undefined || valueData == undefined) {
+        if (param === undefined) {
+            await this.forceCloseStream(deviceId, paramId);
             console.warn(RECEIVED_DATA_ERROR);
             return;
         }
 
         await param.streamValue(valueData, _messageDataLength);
+    }
+
+    async forceCloseStream(deviceId, paramId) {
+        try {
+            await this.paramProvider.reqParamValue(deviceId, null, paramId, "off")
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     async _streamOscValue(deviceId, valueData) {
@@ -211,7 +224,7 @@ export class Model extends Events {
 
                 console.log("loaded devices  = " + this.m_devices.length);
                 resolve({ result: 'true', status: 200 });
-                
+
             } catch (err) {
                 console.log(err);
                 reject(err);
