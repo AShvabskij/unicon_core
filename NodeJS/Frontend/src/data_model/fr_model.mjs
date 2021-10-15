@@ -4,8 +4,8 @@
 import React, { useEffect } from "react";
 import * as cbor from './../cbor.js';
 import Oscilloscope from './oscilloscope.mjs'
-import { Device, SysModule, SysInterfacesEnum } from './device.mjs'
-import { Param } from './param.mjs'
+import {Device, SysModule, SysInterfacesEnum} from './device.mjs'
+import {Param} from './param.mjs'
 
 // import {ParamProvider} from "./services/paramprovider.mjs"
 // import {DeviceProvider} from "./services/deviceprovider.mjs"
