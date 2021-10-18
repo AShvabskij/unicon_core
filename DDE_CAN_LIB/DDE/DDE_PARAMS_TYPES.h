@@ -12,6 +12,8 @@
 
 #define DDE_PARAMS_NAME_LENGTH 64
 #define DDE_PARAMS_DESCR_LENGTH 256
+#define DDE_PARAMS_TXTVALUE_LENGTH 32
+#define DDE_PARAMS_TXTVALUES_MAX_COUNT 32
 
 enum GLIO_ELEMENT_FORMAT_ENUM
 {
@@ -53,7 +55,9 @@ struct GLIO_ELEMENT_DESCR
     GLIO_ELEMENT_FORMAT_ENUM format;  // 0 - not defined 1-int 2-float 3-bit, 4-hex, 5-text
     float scale = 1;
     char unit[6]; // unit of measurement
-    std::map<int, char[32]> texts; // list of predefined text values
+    char* txtValues[DDE_PARAMS_TXTVALUES_MAX_COUNT]; // list of predefined text values
+    int txtIndexes[DDE_PARAMS_TXTVALUES_MAX_COUNT];
+//  std::map<int, char*> txtValues; // std::map does work unstable
     bool writable = false; // writable|readable
 };
 

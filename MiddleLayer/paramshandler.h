@@ -26,6 +26,7 @@ struct Param
     QString name = "";
     QString desc = "";
     QString valueUnit = 0;
+    QMap<int, QString> valueTexts;
     qint8 valueFormat = 0;
     float valueScale = 0.0;
     bool writable = false;
@@ -41,6 +42,8 @@ class ParamsHandler : public BaseReqHandler
     Q_OBJECT
 public:
     ParamsHandler(IDDE* dde);
+    ~ParamsHandler();
+
     virtual int handle(const QJsonObject& request);
 
 signals:
@@ -75,6 +78,9 @@ private:
 
     int m_streamValCount = 0;
     QTimer* m_streamTimer;
+    mutable DDE_GET_PARAMS_HEADER* m_header = nullptr;
+    mutable DDE_GET_PARAMS_DATA *m_data = nullptr;
+
 };
 
 #endif // PARAMSHANDLER_H

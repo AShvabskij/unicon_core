@@ -1,30 +1,30 @@
-Group;Element;Description;GLIO Adres;Value type (1-BIT,2-INT,3-FLOAT);R/W;min;max;Value unity;iq coef (by default 1.0.15) ;Value
-;;;;;;;;;;
-MOTOR DATA;I(A);The current of the motor in each of the three phases;65;3;R;;;A;1;2,2
-MOTOR DATA;I(%);Operating current in each of the three phases as a percentage of motor FLA;66;2;R;;;%;;70
-MOTOR DATA;VOLT;The voltage in each of the three phases;67;3;R;;;V;;1500
-MOTOR DATA;FREQ;The line frequency;68;2;R;;;Hz;;50
-MOTOR DATA;COSP;The motor power factor;69;3;R;;;;;1
-MOTOR DATA;Deg;Displays the angle (in degrees) between the voltage and the current;70;2;R;;;deg.;;0
-MOTOR DATA;PW;Displays motor power;71;3;R;;;KW;;0
-MOTOR DATA;Q;Displays motor reactive power;72;3;R;;;KVAR;;0
-MAIN&PROTECT;RATED LINE VOLTAGE;HRVS-DN-PowerStart's rate voltage;129;2;W;2300;15000;V;;3300
-MAIN&PROTECT;STARTER FLC;HRVS-DN-PowerStart's FLC (Full Load Current);130;2;W;20;1800;A;;150
-MAIN&PROTECT;MOTOR FLA;Sets motor's FLA(Full load Ampere);131;2;W;0;1800;A;;150
-MAIN&PROTECT;RATED MOTOR POWER;Sets motor rated power as indicated on its name plate ;132;2;W;50;40000;KW;;1000
-MAIN&PROTECT;SERVICE FACTOR ;Sets motor rated service factor;133;2;W;100;130;%;;100
-MAIN&PROTECT;UNDERCURRENT TRIP ;Sets UNDER CURRENT TRIP protection. ;134;2;W;20;90;%;;0
-MAIN&PROTECT;UNDERCURRENT DELAY ;Sets the time delay for UNDER CURRENT TRIP protection. ;135;2;W;0,2;40;sec.;;1
-MAIN&PROTECT;O/C – SHEAR PIN ;Sets OVER CURRENT SHEAR PIN protection;136;3;W;0;5;sec.;;0,1
-MAIN&PROTECT;O/C – DELAY;Sets O/C – SHEAR PIN DELAY time.;137;3;W;0;5;sec.;;0,1
-MAIN&PROTECT;OVERLOAD CLASS;Sets OVERLOAD CLASS characteristics;138;5;W;;;;;IEC CLASS 10
-MAIN&PROTECT;UNBALANCE TRIP;Sets UNBALANCE TRIP level ;139;2;W;10;100;%;;20
-MAIN&PROTECT;UNBALANCE DELAY ;Sets UNBALANCE TRIP DELAY ;140;2;W;200;60000;msec.;;1000
-MAIN&PROTECT;GND FAULT TRIP;Sets GND FAULT TRIP level. ;141;2;W;10;100;%;;20
-MAIN&PROTECT;GND FAULT DELAY ;Sets GND FAULT TRIP DELAY;142;2;W;200;60000;msec.;;5000
-MAIN&PROTECT;UNDERVOLTAGE TRIP;Sets UNDER VOLTAGE TRIP level;143;2;W;50;90;%;;70
-MAIN&PROTECT;UNDERVOLTAGE DELAY ;Sets UNDERVOLT TRIP DELAY. ;144;2;W;200;10000;msec.;;5000
-MAIN&PROTECT;FREQUENCY TRIP ENABLE ;Sets the FREQUENCY TRIP. ;145;1;W;;;;;1
+Group;Element;Description;GLIO Adres;Value type (1-BIT,2-INT,3-FLOAT);R/W;min;max;Value unity;iq coef (by default 1.0.15) ;Value;ValueList
+;;;;;;;;;;;
+MOTOR DATA;I(A);The current of the motor in each of the three phases;65;3;R;;;A;1;2,2;
+MOTOR DATA;I(%);Operating current in each of the three phases as a percentage of motor FLA;66;2;R;;;%;;70;
+MOTOR DATA;VOLT;The voltage in each of the three phases;67;3;R;;;V;;1500;
+MOTOR DATA;FREQ;The line frequency;68;2;R;;;Hz;;50;
+MOTOR DATA;COSP;The motor power factor;69;3;R;;;;;1;
+MOTOR DATA;Deg;Displays the angle (in degrees) between the voltage and the current;70;2;R;;;deg.;;0;
+MOTOR DATA;PW;Displays motor power;71;3;R;;;KW;;0;
+MOTOR DATA;Q;Displays motor reactive power;72;3;R;;;KVAR;;0;
+MAIN&PROTECT;RATED LINE VOLTAGE;HRVS-DN-PowerStart's rate voltage;129;2;W;2300;15000;V;;3300;
+MAIN&PROTECT;STARTER FLC;HRVS-DN-PowerStart's FLC (Full Load Current);130;2;W;20;1800;A;;150;
+MAIN&PROTECT;MOTOR FLA;Sets motor's FLA(Full load Ampere);131;2;W;0;1800;A;;150;
+MAIN&PROTECT;RATED MOTOR POWER;Sets motor rated power as indicated on its name plate ;132;2;W;50;40000;KW;;1000;
+MAIN&PROTECT;SERVICE FACTOR ;Sets motor rated service factor;133;2;W;100;130;%;;100;
+MAIN&PROTECT;UNDERCURRENT TRIP ;Sets UNDER CURRENT TRIP protection. ;134;2;W;20;90;%;;0;
+MAIN&PROTECT;UNDERCURRENT DELAY ;Sets the time delay for UNDER CURRENT TRIP protection. ;135;2;W;0,2;40;sec.;;1;
+MAIN&PROTECT;O/C – SHEAR PIN ;Sets OVER CURRENT SHEAR PIN protection;136;3;W;0;5;sec.;;0,1;
+MAIN&PROTECT;O/C – DELAY;Sets O/C – SHEAR PIN DELAY time.;137;3;W;0;5;sec.;;0,1;
+MAIN&PROTECT;OVERLOAD CLASS;Sets OVERLOAD CLASS characteristics;138;5;W;;;;;2;IEC CLASS 5,IEC CLASS 10,IEC CLASS 15,IEC CLASS 20,IEC CLASS 25,IEC CLASS 30,NEMA CLASS 5,NEMA CLASS 10,NEMA CLASS 15,NEMA CLASS 20,NEMA CLASS 25,NEMA CLASS 30
+MAIN&PROTECT;UNBALANCE TRIP;Sets UNBALANCE TRIP level ;139;2;W;10;100;%;;20;
+MAIN&PROTECT;UNBALANCE DELAY ;Sets UNBALANCE TRIP DELAY ;140;2;W;200;60000;msec.;;1000;
+MAIN&PROTECT;GND FAULT TRIP;Sets GND FAULT TRIP level. ;141;2;W;10;100;%;;20;
+MAIN&PROTECT;GND FAULT DELAY ;Sets GND FAULT TRIP DELAY;142;2;W;200;60000;msec.;;5000;
+MAIN&PROTECT;UNDERVOLTAGE TRIP;Sets UNDER VOLTAGE TRIP level;143;2;W;50;90;%;;70;
+MAIN&PROTECT;UNDERVOLTAGE DELAY ;Sets UNDERVOLT TRIP DELAY. ;144;2;W;200;10000;msec.;;5000;
+MAIN&PROTECT;FREQUENCY TRIP ENABLE ;Sets the FREQUENCY TRIP. ;145;1;W;;;;;1;
 MAIN&PROTECT;"PHASE LOSS TRIP
 ENABLE
-";Sets the PHASE LOSS TRIP;146;1;W;;;;;0
+";Sets the PHASE LOSS TRIP;146;1;W;;;;;0;

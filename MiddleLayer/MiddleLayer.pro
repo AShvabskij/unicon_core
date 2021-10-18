@@ -1,6 +1,6 @@
 QT += core network websockets qml quick
 
-CONFIG += c++11 qml_debug qmltypes
+CONFIG += c++11 c++1z qml_debug qmltypes
 
 QML_IMPORT_NAME = solcon.qmlmodels
 QML_IMPORT_MAJOR_VERSION = 1

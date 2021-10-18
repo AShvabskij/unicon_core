@@ -15,6 +15,8 @@ export class Param {
         this.valueUnit = '';
         this.valueFormat = 0;
         this.valueScale = 0.0;
+        this.valueTexts;
+        
         this.value = new ParamValue();
 
         this.stream = null;
@@ -54,6 +56,14 @@ export class Param {
         }
 
         return this.value;
+    }
+
+    displayValue(value) {
+        switch (this.valueFormat) {
+            case 3: return value.toFixed(3)
+            case 5: return this.valueTexts[value]
+            default: return value
+        }
     }
 
     async openValueStream(frequency, buffObjectCount) {
@@ -203,8 +213,9 @@ export class Param {
         this.valueUnit = data.value_unit;
         this.valueFormat = data.value_format;
         this.valueScale = data.value_scale;
-        this.rw = data.rw;
+        this.valueTexts = data.value_texts;
 
+        this.rw = data.rw;
     }
 }
 

@@ -12,6 +12,15 @@ ParamsHandler::ParamsHandler(IDDE* dde): BaseReqHandler(dde)
     m_streamTimer = new QTimer(this);
     m_streamTimer->setTimerType(Qt::PreciseTimer);
     connect(m_streamTimer, &QTimer::timeout, this, &ParamsHandler::onStreamTimerAlarm);
+
+    m_header = new DDE_GET_PARAMS_HEADER();
+    m_data = new DDE_GET_PARAMS_DATA();
+}
+
+ParamsHandler::~ParamsHandler()
+{
+    delete m_header;
+    delete m_data;
 }
 
 int ParamsHandler::handle(const QJsonObject &request)
@@ -276,29 +285,28 @@ long ParamsHandler::getParamValue(const Param& p, ParamValue* out)
 {
     Q_ASSERT(out);
 
-    DDE_GET_PARAMS_DATA data;
+    m_data->device_ID = p.deviceId;
+    m_data->module_ID = p.moduleId;
+    m_data->param_ID = p.id;
 
-    data.device_ID = p.deviceId;
-    data.module_ID = p.moduleId;
-    data.param_ID = p.id;
-
-    _dde_func_return_t res = m_dde->get_params_data(data);
+    _dde_func_return_t res = m_dde->get_params_data(*m_data);
     if (res < 0) {
         return res;
     }
 
-    *out = valueFrom(data.el[0], (GLIO_ELEMENT_FORMAT_ENUM)p.valueFormat);
+    *out = valueFrom(m_data->el[0], (GLIO_ELEMENT_FORMAT_ENUM)p.valueFormat);
 
     return 0;
 }
 
+#include <iostream>
+
 long ParamsHandler::getParamHeader(int deviceId, int paramId, Param *out)
 {
-    DDE_GET_PARAMS_HEADER header;
-    header.device_ID = deviceId;
-    header.elem_ID = paramId;
+    m_header->device_ID = deviceId;
+    m_header->elem_ID = paramId;
 
-    _dde_func_return_t res = m_dde->get_params_header(header);
+    _dde_func_return_t res = m_dde->get_params_header(*m_header);
     if (res < 0) {
         return res;
     }
@@ -307,13 +315,19 @@ long ParamsHandler::getParamHeader(int deviceId, int paramId, Param *out)
     out->moduleId = 0;
     out->id = paramId;
 
-    for (const GLIO_ELEMENT_DESCR& elem : header.el_descr) {
-        if (elem.id == paramId) {
+    for (const GLIO_ELEMENT_DESCR& elem : m_header->el_descr) {
+        if (elem.id == paramId)     {
             out->name = elem.name;
             out->valueUnit = elem.unit;
             out->writable = elem.writable;
             out->valueFormat = elem.format;
             out->valueScale = elem.scale;
+
+            for (int ind = 0; ind < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++ind) {
+                if (elem.txtValues[ind] != nullptr) {
+                    out->txtValues[elem.txtIndexes[ind]] = elem.txtValues[ind];
+                }
+            }
 
             return 0;
         }
@@ -326,18 +340,17 @@ long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)
 {
     Q_ASSERT(out);
 
-    DDE_GET_PARAMS_HEADER header;
-    header.device_ID = deviceId;
-    header.elem_ID = moduleId;
+    m_header->device_ID = deviceId;
+    m_header->elem_ID = moduleId;
 
-    _dde_func_return_t res = m_dde->get_params_header(header);
+    _dde_func_return_t res = m_dde->get_params_header(*m_header);
     if (res < 0) {
         return res;
     }
 
-    for (int i = 1; i < header.el_count; ++i) {
+    for (int i = 1; i < m_header->el_count; ++i) {
 
-        GLIO_ELEMENT_DESCR& elem = header.el_descr[i];
+        GLIO_ELEMENT_DESCR& elem = m_header->el_descr[i];
         if (elem.id == 0) {
             continue;
         }
@@ -352,6 +365,12 @@ long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)
         p.writable = elem.writable;
         p.valueFormat = elem.format;
         p.valueScale = elem.scale;
+
+        for (int ind = 0; ind < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++ind) {
+            if (elem.txtValues[ind] != nullptr) {
+                p.txtValues[elem.txtIndexes[ind]] = elem.txtValues[ind];
+            }
+        }
 
         *out << p;
     }
@@ -374,6 +393,15 @@ QJsonObject ParamsHandler::createHeaderObj(int requestId, const ParamList& param
         obj["value_format"] = param.valueFormat;
         obj["value_scale"] = param.valueScale;
         obj["rw"] = param.writable ? "W" : "R";
+        obj["value_texts"] = [](const QMap<int, QString>& txtValues ) {
+            QJsonObject json;
+            QMapIterator<int, QString> i(txtValues);
+            while (i.hasNext()) {
+                i.next();
+                json.insert(QString::number(i.key()), i.value());
+            }
+            return json;
+        }(param.txtValues);
 
         body << obj;
 

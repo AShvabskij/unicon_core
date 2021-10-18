@@ -31,11 +31,7 @@ async function getValue(param, rowId) {
     let values = chunk;
     let value = values[values.length - 1];
 
-    if (value.format == 3) {
-      item.value = value.value.toFixed(3); 
-    } else { 
-      item.value = value.value;
-    }; 
+    item.value = param.displayValue(value.value);
 
     var dateStr = moment(value.valueTime).format('hh:mm:ss.SSS');
     item.time = dateStr;
