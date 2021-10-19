@@ -193,7 +193,9 @@ int DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
         if (valFormat == 3) {
             if (unit == "A") {
                 p.el[0].fvalue = generateValue(0.1, 10, 0, systemTime());
-            } else {
+            } else if (unit == "V") {
+                p.el[0].fvalue = generateValue(0.1, 4000, 0, systemTime());
+            } else if (unit == ""){
                 p.el[0].fvalue = generateValue(device[p.device_ID].el[paramId].fvalue, 0.01);
                 device[p.device_ID].el[paramId].fvalue = p.el[0].fvalue;
             }

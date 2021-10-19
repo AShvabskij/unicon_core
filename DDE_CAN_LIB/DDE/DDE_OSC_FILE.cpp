@@ -98,6 +98,11 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
         p.ch_descr[i].color = m_header->ch_descr[i].color;
     }
 
+    if (m_loadThread && m_loadThread->joinable()) {
+        m_loadThread->join();
+        delete m_loadThread;
+    }
+
     m_loadThread = new std::thread(&DDE_OSC_FILE::thread_load, this);
 
     return res;
@@ -119,12 +124,6 @@ int DDE_OSC_FILE::thread_load()
 
 int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
 {
-    if (m_loadThread) {
-        m_loadThread->join();
-        delete m_loadThread;
-        m_loadThread = nullptr;
-    }
-
     if (!m_oscFileStream) {
         return DATA_YELD_ERROR;
     }

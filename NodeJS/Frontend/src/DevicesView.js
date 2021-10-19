@@ -34,6 +34,8 @@ setTimeout(() => {
   });
 }, 1000);
 
+model.on('error', (text) => { console.log(text);})
+
 const chartsArrVisible = [];
 const chartsArrHidden = ["chart3","chart4","chart5"];
 
@@ -47,9 +49,7 @@ async function startValues(deviceId, paramId, line) {
   let startDate = new Date();
 
   let param = model.device(deviceId).param(paramId);
-  await param.closeValueStream();
-
-  let resStream = await param.openValueStream();
+    let resStream = await param.openValueStream();
   if (resStream === undefined || resStream === null) {
     console.error("Что-то пошло не так...");
   }

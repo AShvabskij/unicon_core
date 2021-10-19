@@ -27,9 +27,8 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 
     for (int ii = 1; ii < devices_count * devices_step; ii = ii + devices_step)	{
 		device[ii].device_ID = ii;
-        sprintf(device[ii].name, "Device PUT %d", ii);
         sprintf(device[ii].descr, "Device Power Unit Type %d", ii);
-
+		
 		string s;
         int module_count = 2;// (rand() / RAND_MAX) * 60 + 3;
 

@@ -74,11 +74,13 @@ export default class Oscilloscope {
             this.lastError = error;
             console.error(error);
         }
-
     }
 
-    stream(socketData) {
-        if (this._capturedChannels == undefined || this._capturedChannels.length == 0) return;
+    async stream(socketData) {
+        if (this._capturedChannels == undefined || this._capturedChannels.length == 0) {
+            await this.closeDataStream();
+            return;
+        }
 
         let isFinished = false;
         for (var i = 0; i < socketData.channels.length; ++i) {
@@ -140,7 +142,7 @@ export default class Oscilloscope {
 
         let ind = socketData.channels.indexOf(ch)
         let chValues = socketData.values[ind];
-        if (!chValues) {
+        if (!chValues || chValues.length == 0) {
             return -1;
         }
 

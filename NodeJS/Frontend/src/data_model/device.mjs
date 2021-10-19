@@ -137,6 +137,10 @@ export class Param {
     async openValueStream(frequency, buffObjectCount) {
         try {
 
+            if (this.stream !== null) {
+                this.closeValueStream();
+            }
+    
             this._timeLabel = new Date().getTime();
             console.time(`The stream elapsed time(${this._timeLabel})`);
             this._byteCount = 0;
@@ -178,17 +182,9 @@ export class Param {
         try {
 
             let stream = "off";
-
             await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream)
 
-            if (this.stream === null) {
-                return;
-            }
-
-            if (!this.stream.destroyed) {
-                this.stream.push(null);
-                this.stream.destroy();
-            }
+            this.destroyStream();
             this.lastError = 0;
 
         } catch (error) {
@@ -196,10 +192,24 @@ export class Param {
         }
     }
 
-    streamValue(valueData, messageDataLength) {
+    destroyStream() {
+        if (this.stream === null) {
+            return;
+        }
+
+        if (!this.stream.destroyed) {
+            this.stream.push(null);
+            this.stream.destroy();
+        }
+
+        this.stream = null;
+    }
+
+    async streamValue(valueData, messageDataLength) {
 
         if (this.stream === null || this.stream.destroyed) {
             console.warn(`Receiving value error. The param stream is deactivated now. Device id = ${this.deviceId}, param id = ${this.id}, value = ${JSON.stringify(valueData)}`);
+            await this.closeValueStream();
             return;
         }
 
@@ -234,9 +244,8 @@ export class Param {
             if (this.buffer.length > 0) {
                 this.stream.push(this.buffer);
             }
-            this.stream.push(null);
-            this.stream.destroy();
 
+            this.destroyStream();
             return;
         }
 
