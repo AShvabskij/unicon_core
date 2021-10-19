@@ -6,7 +6,7 @@ import * as webix from 'webix/webix.js';
 let startDate = new Date();
 
 const updateParameters = (indexDevice) => {
-    // console.log(Info);
+    console.log("indexDevice = " + indexDevice);
     // console.log("indexDevice="+indexDevice);
    
     let deviceItem = Info.model.devices()[indexDevice];
@@ -71,6 +71,7 @@ const updateLeftMenuBase = (devicesArr) => {
 } 
 
 const updateLeftMenu = () => {
+    //document["model"] = Info.model;
     updateLeftMenuBase(Info.model.devices())
 }
 
