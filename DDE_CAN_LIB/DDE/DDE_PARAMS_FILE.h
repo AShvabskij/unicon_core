@@ -8,9 +8,6 @@
 
 #include "DDE/csvfile.h"
 
-#define PARAMS_ID_MAX		0xfff
-#define DDE_PARAMS_NAME_LENGTH 64
-
 class DDE_PARAMS_FILE : public IDDE_PARAMS
 {
 public:

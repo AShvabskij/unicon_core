@@ -62,10 +62,11 @@ private:
     long getParamValue(const Param &p, ParamValue* out);
     long getParamHeader(int deviceId, int paramId, Param *out);
     long getParamHeaders(int deviceId, int moduleId, ParamList *out);
+    long setParamValue(const Param& param, const ParamValue &value);
 
     ParamValue valueFrom(const GLIO_ELEMENT_VALUE &el, const GLIO_ELEMENT_FORMAT_ENUM& format);
     QJsonObject createHeaderObj(int requestId, const ParamList &params);
-    QJsonObject createValueObj(int requestId, const Param& param, const ParamValue& value);
+    QJsonObject createValueObj(int requestId, const Param& param, const ParamValue& value, int error = 0);
     QJsonObject createStreamValueObj(const Param& param, const ParamValue& value, int error = 0);
 
     void startPooling(int intervalMsc);

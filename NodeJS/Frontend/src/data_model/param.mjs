@@ -58,6 +58,18 @@ export class Param {
         return this.value;
     }
 
+    async setValue(value) {
+
+        try {
+            let valueData = await this.paramProvider.setParamValue(this.deviceId, this.id, value);
+            this.value.deserialize(valueData);
+            this.lastError = 0;
+        } catch (err) {
+            this.value = new ParamValue()
+            this.lastError = err;
+        }
+    }
+
     displayValue(value) {
         switch (this.valueFormat) {
             case 3: return value.toFixed(3)
@@ -205,6 +217,9 @@ export class Param {
     }
 
     deserialize(data) {
+        if (data.param_id == 129) {
+            console.log("here it is");
+        }
         this.deviceId = data.device_id;
         this.moduleId = data.module_id;
         this.id = data.param_id;

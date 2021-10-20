@@ -10,6 +10,9 @@
 
 #define PARAMS_REQUEST_TIMOUT_MS	1000
 
+#define PARAMS_ID_MAX		0xfff
+#define DEVICE_ID_MAX		127
+
 #define DDE_PARAMS_NAME_LENGTH 64
 #define DDE_PARAMS_DESCR_LENGTH 256
 #define DDE_PARAMS_TXTVALUE_LENGTH 32
@@ -102,8 +105,8 @@ struct DDE_GET_PARAMS_DATA
 
 struct DDE_SET_PARAMS_DATA
 {
-	uint16_t index;
-	//uint sub_index;
+    uint16_t device_ID;
+    uint16_t param_ID;
 
     GLIO_ELEMENT_VALUE el; //just one
 	//void (*callback_func)();

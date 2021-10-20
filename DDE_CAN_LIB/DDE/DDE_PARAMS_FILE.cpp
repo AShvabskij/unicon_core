@@ -78,7 +78,7 @@ int DDE_PARAMS_FILE::init()
         strcpy(el_descr.descr, cells[2].c_str());
         strcpy(el_descr.unit, cells[8].c_str());
         el_descr.id = paramId;
-        el_descr.writable = (cells[4] == "W") ? true : false;
+        el_descr.writable = (cells[5] == "W") ? true : false;
         el_descr.format = static_cast<GLIO_ELEMENT_FORMAT_ENUM>(atoi(cells[4].c_str()));
         el_descr.scale = 0;
 
@@ -114,7 +114,7 @@ int DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
 
 
     //check valid input
-    if (p.device_ID > 127 || p.elem_ID > PARAMS_ID_MAX ) {
+    if (p.device_ID > DEVICE_ID_MAX || p.elem_ID > PARAMS_ID_MAX ) {
         memset(&p, 0, sizeof(DDE_GET_PARAMS_HEADER));
         return -1;
     }
@@ -234,7 +234,18 @@ inline time_t DDE_PARAMS_FILE::systemTime()
 
 int DDE_PARAMS_FILE::set(DDE_SET_PARAMS_DATA& p)
 {
-	return 0;
+    //check valid input
+    if (p.device_ID <= 0 || p.param_ID <= 0) {
+        return -1;
+    }
+
+    if (p.device_ID > DEVICE_ID_MAX || p.param_ID > PARAMS_ID_MAX ) {
+        return -1;
+    }
+
+    m_device[p.device_ID].el[p.param_ID] = p.el;
+
+    return 0;
 }
 
 float DDE_PARAMS_FILE::generateValue(float frequency_hertz, int amplitude, float noise, time_t timeMsc)
