@@ -37,8 +37,8 @@ export class Param {
 
     async lastValue() {
 
-        setTimeout(() => {
-            this.currentValue();
+        setTimeout(async () => {
+            await this.currentValue();
         }, 0)
 
         return this.value;
@@ -53,6 +53,7 @@ export class Param {
         } catch (err) {
             this.value = new ParamValue()
             this.lastError = err;
+            console.error(err);
         }
 
         return this.value;

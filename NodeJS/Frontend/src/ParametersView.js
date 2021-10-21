@@ -40,7 +40,6 @@ async function getValue(param, rowId) {
 }
 
 async function getValue2(param, rowId) {
-
   setInterval(async () => {
 
     let value = await param.lastValue();
