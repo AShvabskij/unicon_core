@@ -17,7 +17,7 @@ import { AddCounter, Info } from "./Context"
 import { colorsArrDefaults, colorsTitleArr } from './Chart2';
 
 let colorsArrTab = [];
-colorsArrTab = colorsArrDefaults;
+// colorsArrTab = colorsArrDefaults;
 
 let model = new Model(Config.ip);
 Info.model = model;
@@ -418,7 +418,7 @@ const showSelectChartWindow = () => {
                   if (state == 1) {
                       Info.paramToChart.push(showParam);
                       //console.log(colorsArrTab);
-                      // colorsArrTab.push(item.color);
+                      colorsArrTab.push(item.color);
                       item.line = Info.paramToChart.length;
                   }
                   if (state == 0) {
