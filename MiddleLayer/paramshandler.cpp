@@ -15,6 +15,8 @@ ParamsHandler::ParamsHandler(IDDE* dde): BaseReqHandler(dde)
 
     m_header = new DDE_GET_PARAMS_HEADER();
     m_data = new DDE_GET_PARAMS_DATA();
+
+    qRegisterMetaType<Param>("Param");
 }
 
 ParamsHandler::~ParamsHandler()
@@ -189,14 +191,9 @@ int ParamsHandler::handleOpenStream(const QJsonObject& request)
         return ret;
     }
 
+    sendEmptyResponse(p, requestId);
+
     m_capturedParams << p;
-
-    ParamValue val;
-    getParamValue(p, &val);
-
-    QJsonObject response = createValueObj(requestId, p, val);
-    send(response);
-
 
     int freq = cmdBody.value("frequency").toInt();
     int interval = (freq == 0) ? DATA_YELD_INTERVAL_MSC : (1000 / freq);
@@ -221,6 +218,12 @@ int ParamsHandler::handleCloseStream(const QJsonObject &request)
     for (const Param &p: m_capturedParams) {
         if (p.id == paramId && p.deviceId == deviceId) {
             m_capturedParams.removeAll(p);
+
+            QMetaObject::invokeMethod(this, "sendEmptyResponse", Qt::QueuedConnection,
+                                      Q_ARG(const Param&, p),
+                                      Q_ARG(int, requestId),
+                                      Q_ARG(int, 0));
+
             break;
         }
     }
@@ -230,6 +233,14 @@ int ParamsHandler::handleCloseStream(const QJsonObject &request)
     }
 
     return 0;
+}
+
+void ParamsHandler::sendEmptyResponse(const Param &param, int requestId, int error)
+{
+    ParamValue val;
+
+    QJsonObject response = createValueObj(requestId, param, val, error);
+    send(response);
 }
 
 ParamValue ParamsHandler::valueFrom(const GLIO_ELEMENT_VALUE& el, const GLIO_ELEMENT_FORMAT_ENUM& format)

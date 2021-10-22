@@ -159,7 +159,6 @@ int DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
                 for (int ii = p.elem_ID; ii < p.elem_ID + 64; ii++) {
                     if (m_device[p.device_ID].el_descr[ii].name[0] != 0)
                     {
-                        cout << "sizeof(GLIO_ELEMENT_DESCR) = " << sizeof(GLIO_ELEMENT_DESCR) << "\n";
                         memcpy(&p.el_descr[p.el_count], &m_device[p.device_ID].el_descr[ii], sizeof(GLIO_ELEMENT_DESCR));
                         p.el_descr[p.el_count].id = ii;
                         p.el_count++;
@@ -169,7 +168,6 @@ int DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
             else //level 4 (request for individual param name - not used
             {
                 p.el_count = 1;
-                cout << "sizeof(GLIO_ELEMENT_DESCR) = " << sizeof(GLIO_ELEMENT_DESCR) << "\n";
                 memcpy(&p.el_descr[0], &m_device[p.device_ID].el_descr[p.elem_ID], sizeof(GLIO_ELEMENT_DESCR));
             }
         }

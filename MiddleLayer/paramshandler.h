@@ -74,6 +74,7 @@ private:
     long streamParamsValue();
     void stopStreamsParamValue();
     void stopStreamParamValue(const Param &param);
+    Q_SLOT void sendEmptyResponse (const Param &param, int requestId, int error = 0);
 
     ParamList m_capturedParams;
 
