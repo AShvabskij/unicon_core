@@ -23,6 +23,15 @@ export default class Oscilloscope {
         this._timeLabel = new Date().getTime();
     }
 
+    deserialize(oscHeader) {
+        this.id = oscHeader.id;
+        this.deviceId = oscHeader.device_id;
+        this.name = oscHeader.name;
+        this.desc = oscHeader.desc;
+        this.resolution_ns = oscHeader.resolution_ns;        
+        this.channels = oscHeader.channels;
+    }
+
     async openDataStream(channels) {
 
         if (!Array.isArray(channels) || channels.length === 0) {

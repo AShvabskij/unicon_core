@@ -33,7 +33,7 @@ const updateParameters = (indexDevice) => {
             // if(=="Can")
             dtt.push({id: "m"+i, // name: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
             name:itemP.name + " ["+ Number(itemP.moduleId).toString(16) + "." + Number(itemP.id).toString(16) + "]", 
-            value:" ", dimension:itemP.unit, time:" ", 
+            value:" ", dimension:itemP.valueUnit, time:" ", 
             desc:itemP.desc,
             chart:0, 
             numchart:"",

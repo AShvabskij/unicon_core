@@ -123,13 +123,11 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
     QJsonObject cmdBody = request.value("body").toObject();
+    int deviceId = cmdBody.value("device_id").toInt();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
         return -1;
     }
-
-    int deviceId = cmdBody.value("device_id").toInt();
-    int oscId  = cmdBody.value("osc_id").toInt();
 
     if (m_capturedOsc.deviceId == deviceId /*&& m_capturedOsc.id == oscId*/) {
         stopPooling();

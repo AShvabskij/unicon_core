@@ -31,11 +31,7 @@ async function getValue(param, rowId) {
     let values = chunk;
     let value = values[values.length - 1];
 
-    if (value.valueFormat == 3) {
-      item.value = value.value.toFixed(3); 
-    } else { 
-      item.value = value.value;
-    }; 
+    item.value = param.displayValue(value.value);
 
     var dateStr = moment(value.valueTime).format('hh:mm:ss.SSS');
     item.time = dateStr;
@@ -44,7 +40,6 @@ async function getValue(param, rowId) {
 }
 
 async function getValue2(param, rowId) {
-
   setInterval(async () => {
 
     let value = await param.lastValue();
@@ -167,6 +162,10 @@ function getUImainMenu(props) {
         let rows = getItems(tree, id);
         rows.forEach(function (item, index, array) {
           item.row.param.closeValueStream();
+          if (item.row.rw == "W") {
+            let value = item.row.param.value.value + 1
+            item.row.param.setValue(value)
+          }
         });
       },
       onAfterOpen: function (id) {
@@ -211,6 +210,8 @@ function getUImainMenu(props) {
 function ParametersView(props) {
   // console.log("MenuLeft ");
   // console.log(props.devtitle);
+  console.log("!!!!!");
+  console.log(props);
 
   return (
     <div id="dataview">

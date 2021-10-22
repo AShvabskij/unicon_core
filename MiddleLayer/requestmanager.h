@@ -30,7 +30,6 @@ private:
     QThread workerThread;
     QQueue<QJsonObject> m_requests;
     QList<IReqHandler *> m_handlerList;
-
 };
 
 #endif // REQUESTMANAGER_H
