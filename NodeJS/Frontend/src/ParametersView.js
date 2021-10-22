@@ -21,7 +21,7 @@ async function getValue(param, rowId) {
   let grid = $$("parametersGrid");
 //let item = grid.getItem(rowId);
 
-  let frequency = 4; // кол-во значений в секунду
+  let frequency = 2; // кол-во значений в секунду
   let resStream = await param.openValueStream(frequency);
   if (resStream === undefined || resStream === null) {
     return;
