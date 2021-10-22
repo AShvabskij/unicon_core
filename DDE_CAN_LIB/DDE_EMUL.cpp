@@ -34,9 +34,9 @@ _dde_func_return_t DDE_EMUL::get_params_data(DDE_GET_PARAMS_DATA& p)
     return m_params->get(p);
 }
 
-_dde_func_return_t DDE_EMUL::set_params_data(DDE_SET_PARAMS_DATA&)
+_dde_func_return_t DDE_EMUL::set_params_data(DDE_SET_PARAMS_DATA& p)
 {
-	return 0;
+    return m_params->set(p);
 }
 
 _dde_func_return_t DDE_EMUL::get_osc_header(DDE_GET_OSC_HEADER& p)

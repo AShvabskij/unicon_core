@@ -89,9 +89,6 @@ struct OscHeader
             obj["name"] = ch.paramName;
             obj["scale"] = ch.scale;
             obj["color"] = ch.color.name(QColor::NameFormat::HexRgb);
-            obj["R"] = (int)ch.color.red();
-            obj["G"] = (int)ch.color.green();
-            obj["B"] = (int)ch.color.blue();
 
             channelsObj << obj;
 
