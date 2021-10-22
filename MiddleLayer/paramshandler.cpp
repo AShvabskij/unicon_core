@@ -219,7 +219,7 @@ int ParamsHandler::handleCloseStream(const QJsonObject &request)
         if (p.id == paramId && p.deviceId == deviceId) {
             m_capturedParams.removeAll(p);
 
-            QMetaObject::invokeMethod(this, "sendEmptyResponse", Qt::QueuedConnection,
+            QMetaObject::invokeMethod(this, "sendEmptyResponse", Qt::AutoConnection,
                                       Q_ARG(const Param&, p),
                                       Q_ARG(int, requestId),
                                       Q_ARG(int, 0));
