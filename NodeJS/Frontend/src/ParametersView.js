@@ -19,9 +19,9 @@ async function getValue(param, rowId) {
 // await param.closeValueStream();
 // let value = await param.currentValue();
   let grid = $$("parametersGrid");
-  let item = grid.getItem(rowId);
+//let item = grid.getItem(rowId);
 
-  let frequency = 3; // кол-во значений в секунду
+  let frequency = 4; // кол-во значений в секунду
   let resStream = await param.openValueStream(frequency);
   if (resStream === undefined || resStream === null) {
     return;
@@ -31,25 +31,36 @@ async function getValue(param, rowId) {
     let values = chunk;
     let value = values[values.length - 1];
 
-    item.value = param.displayValue(value.value);
-
     var dateStr = moment(value.valueTime).format('hh:mm:ss.SSS');
-    item.time = dateStr;
-    grid.updateItem(rowId, item);
-  });
+//  item.value = param.displayValue(value.value);
+//  item.time = dateStr;
+    
+    grid.updateItem(rowId, {"value": param.displayValue(value.value), "time": dateStr});
+});
 }
 
+let isInterval = false;
 async function getValue2(param, rowId) {
-  setInterval(async () => {
+  let value = await param.lastValue();
+  let grid = $$("parametersGrid");
+  let item = grid.getItem(rowId);
 
-    let value = await param.lastValue();
+  item.value = value.value;
+  item.time = value.valueTime - Info.startTime;
 
-    let grid = $$("parametersGrid");
-    let item = grid.getItem(rowId);
-    item.value = value.value;
-    item.time = value.valueTime - Info.startTime;
-    grid.updateItem(rowId, item);
-  }, 500)
+  grid.updateItem(rowId, item);
+
+  if (param.id == 65 || param.id == 66 || param.id == 67 && !isInterval) {
+    setInterval(() => {
+
+      isInterval = true;
+      item.value = item.value + 1;
+      item.time = value.valueTime - Info.startTime;
+//    grid.render(rowId, item)
+      grid.updateItem(rowId, {"value": item.value});
+    }, 300)
+  }
+  
 }
 
 function getItems(tree, rowId) {
