@@ -1,6 +1,7 @@
 import React, {useState,useEffect} from "react";
 import {$$} from 'webix';
 import * as webix from 'webix/webix.js';
+import {removeButtonClick} from './DevicesView';
 
 // export const Context = React.createContext();
 let startDate = new Date();
@@ -8,9 +9,11 @@ let startDate = new Date();
 const updateParameters = (indexDevice) => {
     console.log("indexDevice = " + indexDevice);
     // console.log("indexDevice="+indexDevice);
-   
-    let deviceItem = Info.model.devices()[indexDevice];
     
+    let deviceItem = Info.model.devices()[indexDevice];
+    for (let i = 0; i < 3; i++) {
+        removeButtonClick();
+    }
     let dt1 = [];
     let dtt = [];
     let i = 1;
@@ -23,6 +26,9 @@ const updateParameters = (indexDevice) => {
         // console.log(item.params);
         dtt = [];
         item.params.forEach(function(itemP, indexP, array) {
+            // console.log("itemP.rw");
+            // console.log(itemP.rw);
+            // console.log(item);
             infoCurrentDivice = infoCurrentDivice + " [" + Number(itemP.deviceId).toString(16) + "]" + "</br>Chanal: " + item.interfaceName;
             // if(=="Can")
             dtt.push({id: "m"+i, // name: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
@@ -33,11 +39,12 @@ const updateParameters = (indexDevice) => {
             numchart:"",
             param:itemP,
             rw: itemP.rw,
+            // rw: "R",
         })
             i++;
         });
         dt1.push({"id":"modul"+j, "value":"", "name": item.name + " [" + Number(item.id).toString(16) + "]",
-        "open":false, "data":dtt 
+        "open":false, "rw": "R", "data":dtt 
         });
         j++;
     });
@@ -54,7 +61,7 @@ const updateLeftMenuBase = (devicesArr) => {
     view:"flexlayout",cols:[]};
     devicesArr.forEach(function(item, index, array) {
         // console.log(item, index);
-        devices.cols.push( { view:"toggle", label:item.name + "</br>Channel: " + item.interfaceName, minWidth: 120, height: 80, css: "webix_primary", modules: item.modules,
+        devices.cols.push( { view:"toggle", icon:"mdi mdi-cogs", label:item.name + "</br>Channel: " + item.interfaceName, minWidth: 120, height: 80, css: "webix_primary", modules: item.modules,
         click:function(id,event){
             updateParameters(index);
             

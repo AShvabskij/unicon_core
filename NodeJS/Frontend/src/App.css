@@ -138,8 +138,67 @@
     height: calc( var(--height) - 95px ) !important;
 }
 
+.no_editable {
+    border: 0px solid white !important;
+    /* background: white !important; */
+}
+
+.editable {
+    border: 1px solid #b6e2ec !important;
+    /* border: 1px solid #454e50 !important;
+    background: #d3eaf0 !important; */
+}
+
 .infoPics {
     background-image: url(./pictures/HRVS_DN_PowerStart.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    width: 300px !important;
+    background-repeat: no-repeat;
+}
+
+.infoPic2 {
+    background-image: url(./pictures/pic2.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    width: 300px !important;
+    background-repeat: no-repeat;
+}
+
+.infoPic3 {
+    background-image: url(./pictures/pic3.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    width: 300px !important;
+    background-repeat: no-repeat;
+}
+
+.infoPic4 {
+    background-image: url(./pictures/pic4.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    width: 300px !important;
+    background-repeat: no-repeat;
+}
+
+.infoPic5 {
+    background-image: url(./pictures/pic5.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    width: 300px !important;
+    background-repeat: no-repeat;
+}
+
+.infoPic6 {
+    background-image: url(./pictures/pic6.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    width: 300px !important;
+    background-repeat: no-repeat;
+}
+
+.infoPic7 {
+    background-image: url(./pictures/pic7.jpg) !important;
     height: 547px !important;
     /* width: 10vh !important; */
     width: 300px !important;

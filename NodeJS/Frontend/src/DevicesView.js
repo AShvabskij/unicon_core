@@ -22,6 +22,8 @@ colorsArrTab = colorsArrDefaults;
 let model = new Model(Config.ip);
 Info.model = model;
 model.init();
+console.log("model");
+console.log(model.devices());
 
 setTimeout(() => {
   model.load().then(result => {
@@ -665,3 +667,4 @@ export default class DevicesView extends React.Component {
 
 
 // export default MenuCenter;
+export { removeButtonClick };
