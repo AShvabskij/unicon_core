@@ -20,6 +20,7 @@ let colorsArrTab = [];
 // colorsArrTab = colorsArrDefaults;
 
 let model = new Model(Config.ip);
+// document["model"] = model;
 Info.model = model;
 model.init();
 console.log("model");
@@ -423,14 +424,19 @@ const showSelectChartWindow = () => {
                   }
                   if (state == 0) {
                       let newParamArr = [];
+                      let newColorsArrTab = [];
                       Info.paramToChart.forEach(function(item3, index, array) {
                           console.log(item3);  
                           if(item3.channel == item.channel) {
                             console.log("continue");
                           }
-                          else newParamArr.push(item3);
+                          else {
+                            newParamArr.push(item3);
+                            newColorsArrTab.push(colorsArrTab[index]);
+                          }
                       });
                       Info.paramToChart = newParamArr;
+                      colorsArrTab = newColorsArrTab;
                       
                       item.line = 0;
                       Info.paramToChart.forEach(function(item2, index, array) {
@@ -518,8 +524,8 @@ const showSelectChartWindow = () => {
                         paramArr.push(item.name);
                       });
                     Info.paramToCharts[chartToVisible] = Info.paramToChart;
-                    Info.chartList[chartToVisible].setNamesArr(paramArr);
                     Info.chartList[chartToVisible].setColorsArr(colorsArrTab);
+                    Info.chartList[chartToVisible].setNamesArr(paramArr);
                     chartsArrVisible.push(chartToVisible);
                     document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
                     showElementChart(chartToVisible);
@@ -613,7 +619,7 @@ export default class DevicesView extends React.Component {
     Info.elements = { ...Info.elements, menuTop: this };
 
     return (
-      <div>
+      <div id="deviceView">
         <Webix ui={{ "label": " ", "view": "label", "css":"deviceLabel", "id":"descriptionDevice"}} />
         {/* <Webix ui={webixButton(150)} id="q1" data="Get Devices" click={() => {
           let acc = $$("accmain");
@@ -659,7 +665,7 @@ export default class DevicesView extends React.Component {
         
          <ParametersView data={this.state.dt} />
         
-         <InfoView data={this} />
+         <InfoView data={Info.states.indexDevice} />
       </div>
     )
   }

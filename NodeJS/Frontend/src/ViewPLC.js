@@ -8,7 +8,7 @@ import WebixComponent from './WebixComponent';
 import { $$ } from 'webix';
 import { Info } from './Context';
 import moment from 'moment';
-
+import ControlView from "./ControlView"
 
 function getInfo(props) {
   return {
@@ -46,30 +46,15 @@ function getInfo(props) {
 }
 
 
-function InfoView(props) {
+function ViewPLC(props) {
   // console.log("MenuLeft ");
-  console.log("InfoView");
-  console.log(props.data);
-  let className= "infoPic"+props.data;
-  let textArr = [];
-  textArr.push("Text 1");
-  textArr.push("Text 2");
-  textArr.push("Text 3");
-  textArr.push("Text 4");
-  let text= textArr[props.data];
+  // console.log(props.devtitle);
+
   return (
-    
-    <div id="infoview">
-      <table>  
-        <tr>
-          <td><div class={className}> </div></td>
-          <td>{text}</td>
-        </tr>
-      </table>
-      
-      {/* <Webix ui={{ "label": "Label123456", "view": "label" }} /> */}
+    <div id="ViewPLC">
+      <ControlView/>
     </div>
   );
 }
 
-export default InfoView;
+export default ViewPLC;

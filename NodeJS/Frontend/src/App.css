@@ -124,7 +124,7 @@
 }
 
 .logoUniCon {
-    background-image: url(./logo/uc_3.jpg) !important;
+    background-image: url(./logo/uc_5.jpg) !important;
     height: 38px!important;
     /* width: 10vh !important; */
     width: 100% !important;
@@ -139,17 +139,17 @@
 }
 
 .no_editable {
-    border: 0px solid white !important;
+    /* border: 0px solid white !important; */
     /* background: white !important; */
 }
 
 .editable {
-    border: 1px solid #b6e2ec !important;
+    border: 2px solid #b6e2ec !important;
     /* border: 1px solid #454e50 !important;
     background: #d3eaf0 !important; */
 }
 
-.infoPics {
+.infoPic0 {
     background-image: url(./pictures/HRVS_DN_PowerStart.jpg) !important;
     height: 547px !important;
     /* width: 10vh !important; */
@@ -157,7 +157,7 @@
     background-repeat: no-repeat;
 }
 
-.infoPic2 {
+.infoPic1 {
     background-image: url(./pictures/pic2.jpg) !important;
     height: 547px !important;
     /* width: 10vh !important; */
@@ -165,7 +165,7 @@
     background-repeat: no-repeat;
 }
 
-.infoPic3 {
+.infoPic2 {
     background-image: url(./pictures/pic3.jpg) !important;
     height: 547px !important;
     /* width: 10vh !important; */
@@ -173,7 +173,7 @@
     background-repeat: no-repeat;
 }
 
-.infoPic4 {
+.infoPic3 {
     background-image: url(./pictures/pic4.jpg) !important;
     height: 547px !important;
     /* width: 10vh !important; */
@@ -181,7 +181,7 @@
     background-repeat: no-repeat;
 }
 
-.infoPic5 {
+.infoPic4 {
     background-image: url(./pictures/pic5.jpg) !important;
     height: 547px !important;
     /* width: 10vh !important; */
@@ -189,7 +189,7 @@
     background-repeat: no-repeat;
 }
 
-.infoPic6 {
+.infoPic5 {
     background-image: url(./pictures/pic6.jpg) !important;
     height: 547px !important;
     /* width: 10vh !important; */
@@ -197,7 +197,7 @@
     background-repeat: no-repeat;
 }
 
-.infoPic7 {
+.infoPic6 {
     background-image: url(./pictures/pic7.jpg) !important;
     height: 547px !important;
     /* width: 10vh !important; */

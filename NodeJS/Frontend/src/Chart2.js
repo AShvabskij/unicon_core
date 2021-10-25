@@ -113,6 +113,8 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
     arrayLines[m].rolloverModifierProps.tooltipColor = seriesArr[m].color;
     arrayLines[m].rolloverModifierProps.tooltipTextColor = seriesArr[m].colorText;
     sciChartSurface.renderableSeries.add(arrayLines[m]);
+    console.log("m="+m);
+    console.log(seriesArr[m]);
   }
 
   let counter = 0;
@@ -273,9 +275,10 @@ const WebixButton12 = () => {
 
 export default function Chart(props) {
   const [namesArr, setNamesArr] = React.useState([]);
-  const [colorsArr, setColorsArr] = React.useState(colorsArrDefaults);
+  // const [colorsArr, setColorsArr] = React.useState(colorsArrDefaults);
+  const [colorsArr, setColorsArr] = React.useState([]);
   const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addVarPoint: () =>{}, addVarPoint2: () =>{}, addVarPointRange: () =>{}, addVarPointRange2: () =>{}, clearChart: () =>{}, });
-
+  console.log(colorsArr);
   React.useEffect(() => {
     (async () => {
         const res = await initSciChart(props.id,props.addFunction,namesArr,colorsArr);
@@ -330,5 +333,4 @@ function ChartControls() {
   return chartControls;
 }
 
-export { ChartControls };
-export { colorsArrDefaults, colorsTitleArr };
+export { ChartControls, colorsArrDefaults, colorsTitleArr };

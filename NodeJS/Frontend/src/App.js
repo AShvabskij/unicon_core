@@ -8,7 +8,10 @@ import * as webix from 'webix/webix.js';
 import { Link, BrowserRouter as Router, Route } from 'react-router-dom';
 import {useHistory} from 'react-router'
 import DevicesView from './DevicesView';
+import ViewGraphicTrends from './ViewGraphicTrends';
 import MenuLeft from './MenuLeft';
+import ViewCPlotWeb from './ViewCPlotWeb';
+import ViewPLC from './ViewPLC';
 import { accordionInit } from './data/config.js';
 import {AddCounter,Info} from "./Context"
 
@@ -17,18 +20,12 @@ const DevicesPage = () => {
         <div className="c2">
         {/* <DevicesView updateDevices={Info.actions.setDevicesName}/> */}
         <DevicesView/>
+        <ViewCPlotWeb/>
+        <ViewPLC/>
+        <ViewGraphicTrends/>
     </div>
     );
   }; 
-
-const CPLotWebPage = () => {
-    return (
-        <div className="c2">
-            cPlotWebPage
-         </div>
-    );
-  }; 
-
 
   const Button = () => {
     const hist = useHistory();
@@ -52,8 +49,8 @@ const CPLotWebPage = () => {
     // v.define({body:{view: "button", value: "Add Chart 2",  align: "left"}});
     // v.refresh();
     webix.ui({
-        view: "button", value: "Add Chart 2",  align: "left"}
-      , $$("DeviceInit"), 0);
+        view: "button", value: "Add Chart 2",  align: "left"}, 
+        $$("DeviceInit"), 0);
     let comp = {view:"segmented", height:100, multiview:true, value:1, options:[
         { id:"1", value:"Section A <br>sdf sdff 12 " }, // the initially selected segment
         { id:"2", value:"Section B <br>fsdf f sdf f s" }, 
@@ -117,6 +114,12 @@ function App() {
           <div><span class='webix_icon mdi mdi-file-video logoUniCon'></span></div>
           <MenuLeft devtitle={devicesD}/>
       </div>
+      {/* <div className="c2">
+        <ViewGraphicTrends/>
+        {/* <ViewPLC/>
+        <ViewcPlotWeb/> */}
+        {/* <DevicesView/> */}
+        {/*</div> */}
         <DevicesPage/>
         {/* <Route exact path="/" component={DevicesPage} />   
         <Route exact path="/CPLotWebPage" component={CPLotWebPage} />  */}

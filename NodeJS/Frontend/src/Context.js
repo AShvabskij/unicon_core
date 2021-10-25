@@ -5,15 +5,16 @@ import {removeButtonClick} from './DevicesView';
 
 // export const Context = React.createContext();
 let startDate = new Date();
+let deviceIcons = ["developer_board", "dns", "broken_image", "corporate_fare", "dvr", "receipt"]
 
 const updateParameters = (indexDevice) => {
     console.log("indexDevice = " + indexDevice);
     // console.log("indexDevice="+indexDevice);
     
     let deviceItem = Info.model.devices()[indexDevice];
-    for (let i = 0; i < 3; i++) {
-        removeButtonClick();
-    }
+    // for (let i = 0; i < 3; i++) {
+    //     removeButtonClick();
+    // }
     let dt1 = [];
     let dtt = [];
     let i = 1;
@@ -57,12 +58,16 @@ const updateParameters = (indexDevice) => {
 
 const updateLeftMenuBase = (devicesArr) => {
     let options = [];
-    let  devices = { margin:10, padding:0, type:"wide",
+    let minWidthBut = 170;
+    if ((devicesArr.length % 3) == 0) minWidthBut = 95;
+    let devices = { margin:10, padding:0, type:"wide",
     view:"flexlayout",cols:[]};
     devicesArr.forEach(function(item, index, array) {
         // console.log(item, index);
-        devices.cols.push( { view:"toggle", icon:"mdi mdi-cogs", label:item.name + "</br>Channel: " + item.interfaceName, minWidth: 120, height: 80, css: "webix_primary", modules: item.modules,
+        devices.cols.push( { view:"toggle", label:'<span class="material-icons">' + deviceIcons[index] + '</span> ' + item.name + "</br>Channel: " + item.interfaceName, minWidth: minWidthBut, height: 80, css: "webix_primary", modules: item.modules,
         click:function(id,event){
+            let tree = $$("parametersGrid");
+            tree.clearAll();
             updateParameters(index);
             
             let s1 = $$(id).getParentView();
@@ -91,7 +96,9 @@ export const Info = {startTime:startDate.getTime(),model:{},
     paramToCharts:{"chart3":{}, "chart4":{}, "chart5":{}},
     chartList:{"chart3":{setNamesArr: () => {}, setColorsArr: () => {}}, 
             "chart4":{setNamesArr: () => {}, setColorsArr: () => {}}, 
-            "chart5":{setNamesArr: () => {}, setColorsArr: () => {}}
+            "chart5":{setNamesArr: () => {}, setColorsArr: () => {}},
+            "chartTrends":{setNamesArr: () => {}, setColorsArr: () => {}},
+            "chartCPlotWeb":{setNamesArr: () => {}, setColorsArr: () => {}},
         },
     resize :function(event) {
         

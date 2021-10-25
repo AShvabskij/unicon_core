@@ -103,7 +103,7 @@ function getUImainMenu(props) {
       { 
         id: "desc", header: "Description", fillspace: true
       },
-      { id: "value", header: "Value", width: "70", cssFormat:mark_items_edit, 
+      { id: "value", header: "Value", width: "170", cssFormat:mark_items_edit, 
           editor:"",
           // template:"<input type='text' value='#value#' style='width:155px;'>"
         },
@@ -123,7 +123,9 @@ function getUImainMenu(props) {
       //  width:100}
     ],
     autoheight:true,
-    scrollX:false,
+    // scrollX:false,
+    // scrollY:true,
+    scroll:true,
     select:"cell",
     navigation:true,
     editable:true,
@@ -132,10 +134,11 @@ function getUImainMenu(props) {
     on: {
       onItemClick:function(id){
 				console.log("onItemClick");
-				console.log(id);
+				// console.log(id);
         console.log(Info.model.devices()[Info.states.indexDevice].params);
-        let paramCell = Info.model.devices()[Info.states.indexDevice].params[id.row.substr(1,1)-1];
-        // console.log(paramCell.rw);
+        let paramCell = Info.model.devices()[Info.states.indexDevice].params[id.row.substr(1)-1];
+        console.log(paramCell.rw);
+        console.log(id);
 				if (paramCell.rw == "W") {
 			  		this.editRow(id);
 				}
@@ -143,30 +146,25 @@ function getUImainMenu(props) {
 			onBeforeEditStart:function(id){
 				console.log("onBeforeEditStart");
         // console.log(id);
-        let paramCell = Info.model.devices()[Info.states.indexDevice].params[id.row.substr(1,1)-1];
-        // console.log(paramCell.rw);
+        let paramCell = Info.model.devices()[Info.states.indexDevice].params[id.row.substr(1)-1];
+        
+        console.log(paramCell.rw);
 				
-        if((id.column === "value") && (id.row != "m3")){
-				  var currentEd = this.getColumnConfig(id.column).editor;
-				  if (paramCell.rw == "W") {
-			  		this.getColumnConfig(id.column).editor = "text"; // "inline-text";
+        if((id.column === "value") && (paramCell.rw == "W")){
+				  // let currentEd = this.getColumnConfig(id.column).editor;
+          console.log(paramCell.valueFormat);
+				  if (paramCell.valueFormat == "5") {
+			  		let column = this.getColumnConfig(id.column);
+              column.collection = [];
+              let val;
+              for(let key in paramCell.valueTexts) {
+                val = paramCell.valueTexts[key];
+                column.collection.push({id:val, value: val});
+              }
+            column.editor = "richselect";
 			  	}
-          
-          // if (id.row === 3) {
-				  // 	this.getColumnConfig(id.column).editor = "text";	
-				  // } else {
-					// this.getColumnConfig(id.column).editor = "popup"
-				  // }
+          else this.getColumnConfig(id.column).editor = "text"; // "inline-text";
 			  }
-        if ((id.column === "value") && (id.row == "m3")) {
-          let column = this.getColumnConfig(id.column);
-          column.collection = [
-            {id:"a", value: "a"},
-            {id:"b", value: "b"},
-            {id:"c", value: "c"}
-          ];
-          column.editor = "richselect";
-        }
 			},
       onAfterClose: function (id) {
         let tree = $$("parametersGrid");

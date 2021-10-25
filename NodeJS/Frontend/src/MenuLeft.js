@@ -15,6 +15,16 @@ function showPage(pageID, parentID = "") {
 
 }
 
+function hidePages(arrPages,visibeElements) {
+  arrPages.forEach(element => {
+    document.getElementById(element).style.display = "none";
+  });
+  visibeElements.forEach(element => {
+    document.getElementById(element).style.display = "";
+    document.getElementById(element).style.visibility = "visible";
+  });
+}
+
  function accordion() {
   return {
     view:"accordion",
@@ -30,6 +40,7 @@ function showPage(pageID, parentID = "") {
       },
       onAfterExpand:function(id){
           // console.log("onAfterExpand")
+          let pages = ["deviceView","ViewCPlotWeb","ViewPLC","ViewGraphicTrends"]
           console.log(id)
           // console.log($$(id)) 
           let changeId = $$(id);
@@ -37,16 +48,19 @@ function showPage(pageID, parentID = "") {
           switch(id)  {
             case "DeviceInit":
               newHeight = 220;
-
+              hidePages(pages,["deviceView"]);
               break;
 
             case "cPlotWeb":
+              hidePages(pages,["ViewCPlotWeb","chartCPlotWeb"]);
               break;
 
             case "PLC":
+              hidePages(pages,["ViewPLC"]);
               break;
 
             case "GraphicTrends":
+              hidePages(pages,["ViewGraphicTrends","chartTrends"]);
               break;
           }
           changeId.config.height = newHeight;
