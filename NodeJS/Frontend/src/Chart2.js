@@ -43,7 +43,7 @@ let chartControls = [];
 const colorsArrDefaults = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000", "white"];
 // let colorsArr = colorsArrDefaults;
 
-const colorsTitleArr = ["black","white","white", "white", "white", "black", "white", "white", "white", "white","white","white"];
+const colorsTitleArr = ["black","black","black", "black", "black", "black", "white", "white", "white", "white","white","white"];
 
 // const namesArr = ["Param 1","Param 2","Param 3","Param 4", "Param 5", "Param 6"];
 // const namesArr = ["Param 1","Param 2","Param 3","Param 4"];
