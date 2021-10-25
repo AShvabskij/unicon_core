@@ -160,6 +160,7 @@
 .infoPic1 {
     background-image: url(./pictures/pic2.jpg) !important;
     height: 547px !important;
+    /* background-cover:  */
     /* width: 10vh !important; */
     width: 300px !important;
     background-repeat: no-repeat;

@@ -52,10 +52,12 @@ function InfoView(props) {
   console.log(props.data);
   let className= "infoPic"+props.data;
   let textArr = [];
-  textArr.push("Text 1");
-  textArr.push("Text 2");
-  textArr.push("Text 3");
+  textArr.push("By using thyristors (SCRs) in a phase angle control mode, reduced voltage control can be achieved. Phase control makes it possible to gradually increase the motor terminal voltage from an initial set point up to the system supply voltage level. The related starting current and the starting torque can be optimally adjusted to the motor/load conditions.");
+  textArr.push("Control Module- MVCP is the “brain” of the soft starter. It consists of the mBoard that includes: • Main CPU PCB. • HMI board: can be either placed in the Control Module box or at the cabinet door. </br> Fireboard PCB. </br> Powersupply. </br> Input/outputinterfaceterminals. </br> Optional PCBs (when ordered). </br>The Control Module for HRVS-DN-PowerStart is identical for all ratings and suitable for mounting in the L.V. compartment of the cabinet which should be fully segregated from the M.V. compartment. </br>Interposing relays should be connected to all HRVS-DN-PowerStart auxiliary contacts, three relays must be incorporated: Immediate, End of Acceleration and Fault.");
+  textArr.push("Motor will start only if SOFT STOP (terminal 21) and STOP (terminal 22) terminals are connected to Control Input voltage.");
   textArr.push("Text 4");
+  textArr.push("Text 5");
+  textArr.push("Text 6");
   let text= textArr[props.data];
   return (
     
