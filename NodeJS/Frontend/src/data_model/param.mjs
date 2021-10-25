@@ -73,8 +73,8 @@ export class Param {
 
     displayValue(value) {
         switch (this.valueFormat) {
-            case 3: return value.toFixed(3)
-            case 5: return this.valueTexts[value]
+            case ValueFormatEnum.Float: return value.toFixed(3)
+            case ValueFormatEnum.Text: return this.valueTexts[value]
             default: return value
         }
     }
