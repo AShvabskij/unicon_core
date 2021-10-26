@@ -353,7 +353,7 @@ function mark_votes(value, config){
       // return { "background":colorsArrTab[value-1], "color":colorsTitleArr[value-1] };
       return { "background":colorsArrTab[value-1], "color":colorsArrTab[value-1] };
   else 
-      return { "background":colorsArrTab[12], "color":colorsArrTab[12] };
+      return { "background":colorsArrTab[12], "color":"white" };
 };
 
 let paramToChart = [];

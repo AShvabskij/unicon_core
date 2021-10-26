@@ -122,10 +122,9 @@ function getUImainMenu(props) {
       // },
       //  width:100}
     ],
-    autoheight:true,
+    // autoheight:true,
     // scrollX:false,
-    // scrollY:true,
-    scroll:true,
+    // scroll:"auto",
     select:"cell",
     navigation:true,
     editable:true,
@@ -137,11 +136,13 @@ function getUImainMenu(props) {
 				// console.log(id);
         console.log(Info.model.devices()[Info.states.indexDevice].params);
         let paramCell = Info.model.devices()[Info.states.indexDevice].params[id.row.substr(1)-1];
-        console.log(paramCell.rw);
-        console.log(id);
-				if (paramCell.rw == "W") {
-			  		this.editRow(id);
-				}
+        console.log(paramCell);
+        // console.log(id);
+        if (paramCell != undefined) {
+            if (paramCell["rw"] == "W") {
+                this.editRow(id);
+            }
+        }
 			},
 			onBeforeEditStart:function(id){
 				console.log("onBeforeEditStart");
@@ -166,6 +167,16 @@ function getUImainMenu(props) {
           else this.getColumnConfig(id.column).editor = "text"; // "inline-text";
 			  }
 			},
+      onAfterEditStop: function (state, editor, ignoreUpdate) {
+        console.log("onAfterEditStop");
+        console.log(state); 
+        // console.log(editor);
+        // console.log(ignoreUpdate);
+
+        // if(state.value != state.old){
+        //   webix.message("Cell value was changed")
+        // }
+      },
       onAfterClose: function (id) {
         let tree = $$("parametersGrid");
         let rows = getItems(tree, id);
