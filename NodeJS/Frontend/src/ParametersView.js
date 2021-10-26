@@ -9,18 +9,11 @@ import { $$ } from 'webix';
 import { Info } from './Context';
 import moment from 'moment';
 
-
-async function stopValues(param) {
-  await param.closeValueStream();
-}
-
 async function getValue(param, rowId) {
-  console.log("try to get value streams...");
-// await param.closeValueStream();
-// let value = await param.currentValue();
-  let grid = $$("parametersGrid");
-//let item = grid.getItem(rowId);
+  let value = await param.currentValue();
+  updateRowValue(value, param, rowId);
 
+  console.log("try to get value streams...");
   let frequency = 2; // кол-во значений в секунду
   let resStream = await param.openValueStream(frequency);
   if (resStream === undefined || resStream === null) {
@@ -30,37 +23,39 @@ async function getValue(param, rowId) {
   resStream.on('data', chunk => {
     let values = chunk;
     let value = values[values.length - 1];
-
-    var dateStr = moment(value.valueTime).format('hh:mm:ss.SSS');
-//  item.value = param.displayValue(value.value);
-//  item.time = dateStr;
-    
-    grid.updateItem(rowId, {"value": param.displayValue(value.value), "time": dateStr});
+    updateRowValue(value, param, rowId);
 });
 }
 
 let isInterval = false;
 async function getValue2(param, rowId) {
   let value = await param.lastValue();
-  let grid = $$("parametersGrid");
-  let item = grid.getItem(rowId);
-
-  item.value = value.value;
-  item.time = value.valueTime - Info.startTime;
-
-  grid.updateItem(rowId, item);
+  updateRowValue(value, param, rowId);
 
   if (param.id == 65 || param.id == 66 || param.id == 67 && !isInterval) {
     setInterval(() => {
 
       isInterval = true;
-      item.value = item.value + 1;
-      item.time = value.valueTime - Info.startTime;
-//    grid.render(rowId, item)
-      grid.updateItem(rowId, {"value": item.value});
+      value.value += 1;
+      updateRowValue(value, param, rowId);
     }, 300)
   }
+}
+
+function updateRowValue(value, param, rowId) {
+  var dateStr = moment(value.valueTime).format('hh:mm:ss.SSS');
+  let grid = $$("parametersGrid");
+
+//setTimeout(() => {
+//  grid.updateItem(rowId, {"value": param.displayValue(value.value), "time": dateStr});
+//}, 1000);
   
+  grid.updateItem(rowId, {"value": param.displayValue(value.value), "time": dateStr});
+
+//  let item = grid.getItem(rowId);
+//  item.value = item.value + 1;
+//  item.time = value.valueTime - Info.startTime;
+
 }
 
 function getItems(tree, rowId) {
@@ -98,10 +93,11 @@ function getUImainMenu(props) {
    }, */
     columns: [
       { id: "name", header: "Name", width: "280",
-      template: "{common.treetable()} #name#"
-      },
-      { 
-        id: "desc", header: "Description", fillspace: true
+      template: "{common.treetable()} #name#",
+      header:[
+        "Name",
+        { content:"textFilter" }
+      ]      
       },
       { id: "value", header: "Value", width: "170", cssFormat:mark_items_edit, 
           editor:"",
@@ -114,6 +110,10 @@ function getUImainMenu(props) {
         template: "{common.checkbox()}"
       },
       { id: "numchart", header: "Trend", width: "60" },
+      { 
+        id: "desc", header: "Description", fillspace: true
+      },
+
       // { id:"votes", header:"Votes", template:function(obj){
       //   if (obj.votes > 350000)
       //     return "<span style='color:green;'>"+obj.votes+"</span>";
@@ -171,13 +171,8 @@ function getUImainMenu(props) {
         let rows = getItems(tree, id);
         rows.forEach(function (item, index, array) {
           item.row.param.closeValueStream();
-          if (item.row.rw == "W") {
-            let value = item.row.param.value.value + 1
-            item.row.param.setValue(value)
-          }
         });
-      },
-      onAfterOpen: function (id) {
+      }, onAfterOpen: function (id) {
         let tree = $$("parametersGrid");
         let rows = getItems(tree, id);
         console.log("onAfterOpen=" + id);
