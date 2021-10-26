@@ -74,7 +74,7 @@ export class Model extends Events {
             console.log('Stream closed.');
 
             this.m_inited = false;
-            this.m_socket = null;
+            this.streamSocket = null;
 
             setTimeout(async () => {
                 this.init();
