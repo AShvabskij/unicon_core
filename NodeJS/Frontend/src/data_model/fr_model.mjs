@@ -55,15 +55,13 @@ export class Model extends Events {
             return;
         }
 
-        RequestHelper.initConnection(this.m_host);
-
         let streamSocketUrl = "ws://" + this.m_host + ":" + STREAM_SERVER_PORT;
-
         this.streamSocket = new WebSocket(streamSocketUrl);
 
         this.streamSocket.onopen = (event) => {
             console.log(`Stream socket ${this.streamSocket.url} opened successfully.`);
             this.m_inited = true;
+            RequestHelper.initConnection(this.m_host);
         };
 
         this.streamSocket.onerror = (error) => {

@@ -6,9 +6,7 @@ let DATA_SERVER_PORT = 1235;
 export class _RequestHelper {
 
     m_connected = false;
-    // m_socketUrl = "ws://" + "127.0.0.1" + ":" + DATA_SERVER_PORT;
     m_socketUrl = "ws://" + Config.ip + ":" + DATA_SERVER_PORT;
-    m_socket = new WebSocket(this.m_socketUrl);
     m_events = new Events();
 
     constructor() {
@@ -40,9 +38,9 @@ export class _RequestHelper {
             this.m_connected = false;
             this.m_socket = null;
 
-            setTimeout(() => {
+            setTimeout(async () => {
                 this.initConnection();
-            }, 5000);
+            }, 7000);
         };
 
         this.m_socket.onmessage = (message) => {
