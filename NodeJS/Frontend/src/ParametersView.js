@@ -172,7 +172,8 @@ function getUImainMenu(props) {
         rows.forEach(function (item, index, array) {
           item.row.param.closeValueStream();
         });
-      }, onAfterOpen: function (id) {
+      }, 
+      onAfterOpen: function (id) {
         let tree = $$("parametersGrid");
         let rows = getItems(tree, id);
         console.log("onAfterOpen=" + id);
