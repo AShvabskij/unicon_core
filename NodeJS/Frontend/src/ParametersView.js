@@ -92,7 +92,7 @@ function getUImainMenu(props) {
       }
    }, */
     columns: [
-      { id: "name", header: "Name", width: "280",
+      { id: "name", header: "Name", width: "300",
       template: "{common.treetable()} #name#",
       header:[
         "Name",
@@ -103,13 +103,13 @@ function getUImainMenu(props) {
           editor:"",
           // template:"<input type='text' value='#value#' style='width:155px;'>"
         },
-      { id: "dimension", header: "Dimension", width: "90" },
+      { id: "dimension", header: "Dimension", width: "80" },
       { id: "time", header: "Time" },
       {
         id: "chart", header: "Show", width: "60",
         template: "{common.checkbox()}"
       },
-      { id: "numchart", header: "Trend", width: "60" },
+//    { id: "numchart", header: "Trend", width: "40" },
       { 
         id: "desc", header: "Description", fillspace: true
       },
