@@ -125,7 +125,7 @@ export default class Oscilloscope {
         let stream = this.channels[chNum].stream;
         if (stream) {
             this.channels[chNum].stream.push(null);
-            this.channels[chNum].stream.destroy;
+            this.channels[chNum].stream.destroy();
             this.channels[chNum].stream = null;
         }
     }

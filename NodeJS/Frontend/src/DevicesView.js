@@ -535,7 +535,7 @@ const showSelectChartWindow = () => {
                       let item2 = table1.getItem(item.row);
                       item2.line = 0;
                   });
-                  table1.refresh;
+//                table1.refresh;
                   Info.paramToChart = [];
                 }
             }

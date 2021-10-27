@@ -15,7 +15,7 @@ export class Param {
         this.valueUnit = '';
         this.valueFormat = 0;
         this.valueScale = 0.0;
-        this.valueTexts;
+        this.valueTexts = [];
         
         this.value = new ParamValue();
 
@@ -95,7 +95,7 @@ export class Param {
             this.buffer = [];
             this.buffObjectCount = (buffObjectCount !== undefined) ? buffObjectCount : this.buffObjectCount;
             if (this.buffObjectCount === 0) {
-                this.buffObjectCount === 1
+                this.buffObjectCount = 1
             }
 
             for (var i = 0; i < this.buffObjectCount; i++) {
