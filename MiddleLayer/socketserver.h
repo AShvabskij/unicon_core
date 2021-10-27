@@ -84,7 +84,6 @@ private slots:
     void onCloseConnection();
     void processMessage(const QString &message);
     void binaryProcessMessage(const QByteArray &message);
-    void socketDisconnected();
 
 private:
 

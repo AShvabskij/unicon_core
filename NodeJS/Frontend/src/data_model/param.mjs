@@ -73,8 +73,8 @@ export class Param {
 
     displayValue(value) {
         switch (this.valueFormat) {
-            case 3: return value.toFixed(3)
-            case 5: return this.valueTexts[value]
+            case ValueFormatEnum.Float: return value.toFixed(3)
+            case ValueFormatEnum.Text: return this.valueTexts[value]
             default: return value
         }
     }
@@ -83,7 +83,7 @@ export class Param {
         try {
 
             if (this.stream !== null) {
-                this.closeValueStream();
+                await this.closeValueStream();
             }
     
             this._timeLabel = new Date().getTime();
@@ -242,7 +242,7 @@ class ParamValue {
         this.format = ValueFormatEnum.Undefined;
         this.valueTime = 0;
         this.scale = 0.0;
-        this.value = -1.0;
+        this.value = 0.0;
     }
 
     deserialize(data) {

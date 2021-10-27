@@ -110,13 +110,13 @@ void SocketServer::stop()
 void SocketServer::onNewConnection()
 {
     QWebSocket* pSocket = m_socketServer->nextPendingConnection();
-    QTextStream(stdout) << getIdentifier(pSocket) << " connected!\n";
+    QTextStream(stdout) << getIdentifier(pSocket) << " connected! " << "port = " << m_port << "\n";
     pSocket->setParent(this);
 
     connect(pSocket, &QWebSocket::textMessageReceived,
             this, &SocketServer::processMessage);
     connect(pSocket, &QWebSocket::disconnected,
-            this, &SocketServer::socketDisconnected);
+            this, &SocketServer::onCloseConnection);
 
     connect(pSocket, &QWebSocket::binaryMessageReceived,
             this, &SocketServer::binaryProcessMessage);
@@ -126,11 +126,12 @@ void SocketServer::onNewConnection()
 
 void SocketServer::onCloseConnection()
 {
-    QWebSocket* pSocket = m_socketServer->nextPendingConnection();
-
-    QTextStream(stdout) << "close connection from " << pSocket->origin();
-
-    m_response->unregisterClient(pSocket);
+    QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
+    QTextStream(stdout) << getIdentifier(pClient) << " disconnected!\n";
+    if (pClient) {
+        m_response->unregisterClient(pClient);
+        pClient->deleteLater();
+    }
 }
 
 void SocketServer::processMessage(const QString &message)
@@ -159,14 +160,4 @@ QByteArray SocketServer::byteArrayFromJson(const QJsonObject& in)
 {
     QJsonDocument doc(in);
     return doc.toJson();
-}
-
-void SocketServer::socketDisconnected()
-{
-    QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
-    QTextStream(stdout) << getIdentifier(pClient) << " disconnected!\n";
-    if (pClient) {
-        m_response->unregisterClient(pClient);
-        pClient->deleteLater();
-    }
 }

@@ -9,12 +9,8 @@ let deviceIcons = ["developer_board", "dns", "broken_image", "corporate_fare", "
 
 const updateParameters = (indexDevice) => {
     console.log("indexDevice = " + indexDevice);
-    // console.log("indexDevice="+indexDevice);
-    
     let deviceItem = Info.model.devices()[indexDevice];
-    // for (let i = 0; i < 3; i++) {
-    //     removeButtonClick();
-    // }
+
     let dt1 = [];
     let dtt = [];
     let i = 1;
@@ -24,14 +20,9 @@ const updateParameters = (indexDevice) => {
     let desc = $$("descriptionDevice");
     desc.setValue(infoCurrentDivice);
     deviceItem.modules.forEach(function(item, index, array) {
-        // console.log(item.params);
         dtt = [];
         item.params.forEach(function(itemP, indexP, array) {
-            // console.log("itemP.rw");
-            // console.log(itemP.rw);
-            // console.log(item);
             infoCurrentDivice = infoCurrentDivice + " [" + Number(itemP.deviceId).toString(16) + "]" + "</br>Chanal: " + item.interfaceName;
-            // if(=="Can")
             dtt.push({id: "m"+i, // name: itemP.moduleId,  //"[" + itemP.deviceId + "] " + item.name + " [" + itemP.moduleId + "]", 
             name:itemP.name + " ["+ Number(itemP.moduleId).toString(16) + "." + Number(itemP.id).toString(16) + "]", 
             value:" ", dimension:itemP.valueUnit, time:" ", 
@@ -40,7 +31,6 @@ const updateParameters = (indexDevice) => {
             numchart:"",
             param:itemP,
             rw: itemP.rw,
-            // rw: "R",
         })
             i++;
         });
@@ -67,7 +57,12 @@ const updateLeftMenuBase = (devicesArr) => {
         devices.cols.push( { view:"toggle", label:'<span class="material-icons">' + deviceIcons[index] + '</span> ' + item.name + "</br>Channel: " + item.interfaceName, minWidth: minWidthBut, height: 80, css: "webix_primary", modules: item.modules,
         click:function(id,event){
             let tree = $$("parametersGrid");
+            let arr = tree.getOpenItems();
+            arr.forEach(function (item) {
+              tree.close(item);
+            });
             tree.clearAll();
+
             updateParameters(index);
             
             let s1 = $$(id).getParentView();
