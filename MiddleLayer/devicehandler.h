@@ -6,10 +6,10 @@
 enum ChannelType
 {
     Undefined = 0,
-    CAN,
+    CAN_UAV,
     CAN_OPEN,
     MOD_BUS,
-    FO
+    MOD_BUS_FO
 };
 
 struct Device
@@ -17,7 +17,7 @@ struct Device
     int id = 0;
     QString name;
     QString desc;
-    ChannelType channel = CAN;
+    ChannelType channel = Undefined;
     QVector<int> modules;
 };
 typedef QVector<Device> DeviceList;
@@ -52,6 +52,8 @@ private:
     int requestDevices(int requestId);
     int requestDeviceHeader(int deviceId, int requestId);
     int requestModuleHeader(int deviceId, int moduleId, int requestId);
+
+    ChannelType channelType(QString chName);
 };
 
 #endif // DEVICE_HANDLER_H

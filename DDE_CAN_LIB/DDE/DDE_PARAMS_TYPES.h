@@ -76,6 +76,12 @@ struct DEVICE_PARAMS
     GLIO_ELEMENT_VALUE el[PARAMS_ID_MAX + 1];
 };
 
+struct DDE_GET_SUBSYSTEM
+{
+    char name[DDE_PARAMS_NAME_LENGTH];
+    char descr[DDE_PARAMS_DESCR_LENGTH];
+};
+
 struct DDE_GET_PARAMS_HEADER
 {
     uint16_t device_ID = 0;
