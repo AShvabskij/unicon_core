@@ -87,7 +87,7 @@
     font-size: 5px !important;
 }
 
-.deviceLabel{
+.deviceLabel > div {
     background-color: #1CA1C1  !important;
     color: #FFFFFF !important;
     height: 38px;
@@ -98,8 +98,8 @@
     padding: 3px 2px !important;
 }
 
-.webix_view.webix_layout_accordion {
-    height: 100vh !important;
+.webix_view .webix_layout_accordion {
+    /* height: 100vh !important; */
 }
 /* .webix_view.webix_dtable {
     height: calc( var(--height) - 95px) !important;

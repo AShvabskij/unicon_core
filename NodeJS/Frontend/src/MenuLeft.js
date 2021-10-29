@@ -30,6 +30,7 @@ function hidePages(arrPages,visibeElements) {
     view:"accordion",
     width: 0,
     id:"accmain",
+    height:1200,
     multi : false,
     collapsed:true,
     select:true,
@@ -47,7 +48,7 @@ function hidePages(arrPages,visibeElements) {
           let newHeight = 42;
           switch(id)  {
             case "DeviceInit":
-              newHeight = 220;
+              newHeight = 500;
               hidePages(pages,["deviceView"]);
               break;
 

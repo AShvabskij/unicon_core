@@ -412,7 +412,6 @@ const showSelectChartWindow = () => {
               console.log("onCheck");
               let table1 = $$("showSelectChartWindowData");
               let item = table1.getItem(row);
-                  
               if (item.name != "—") {
                   let showParam = {name: item.name, channel: item.channel, idParam: item.idParam, row: row};
                   
@@ -514,6 +513,9 @@ const showSelectChartWindow = () => {
                 click: function (id, event) {
                   // console.log("webixButton");
                   $$("showSelectChartWindow").hide();
+                  colorsArrTab = [];
+                  Info.paramToChart = [];
+
                 }
             },
             { "label": "Apply", "view": "button", "height": 0, 
@@ -537,6 +539,7 @@ const showSelectChartWindow = () => {
                   });
                   table1.refresh;
                   Info.paramToChart = [];
+                  colorsArrTab = [];
                 }
             }
           ]
