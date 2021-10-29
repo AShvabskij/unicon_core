@@ -12,6 +12,8 @@ public:
 
 	_dde_func_return_t init(int mode);
 
+    _dde_func_return_t get_subsystem_header(DDE_GET_SUBSYSTEM& p);
+
 	_dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p);
 	_dde_func_return_t get_params_data(DDE_GET_PARAMS_DATA& p);
 	_dde_func_return_t set_params_data(DDE_SET_PARAMS_DATA& p);

@@ -8,6 +8,7 @@ import WebixComponent from './WebixComponent';
 import { $$ } from 'webix';
 import { Info } from './Context';
 import moment from 'moment';
+import {ValueFormatEnum} from './data_model/param.mjs'
 
 async function getValue(param, rowId) {
   let value = await param.currentValue();
@@ -28,6 +29,8 @@ async function getValue(param, rowId) {
 }
 
 let isInterval = false;
+let currentCellParam = null;
+
 async function getValue2(param, rowId) {
   let value = await param.lastValue();
   updateRowValue(value, param, rowId);
@@ -100,7 +103,7 @@ function getUImainMenu(props) {
       ]      
       },
       { id: "value", header: "Value", width: "170", cssFormat:mark_items_edit, 
-          editor:"",
+          editor:"inline-text", liveEdit:false
           // template:"<input type='text' value='#value#' style='width:155px;'>"
         },
       { id: "dimension", header: "Dimension", width: "80" },
@@ -147,19 +150,17 @@ function getUImainMenu(props) {
 			onBeforeEditStart:function(id){
 				console.log("onBeforeEditStart");
         // console.log(id);
-        let paramCell = Info.model.devices()[Info.states.indexDevice].params[id.row.substr(1)-1];
-        
-        console.log(paramCell.rw);
+        let cellParam = Info.model.devices()[Info.states.indexDevice].params[id.row.substr(1)-1];
+        console.log(cellParam.rw);
 				
-        if((id.column === "value") && (paramCell.rw == "W")){
+        if((id.column === "value") && (cellParam.rw == "W")){
 				  // let currentEd = this.getColumnConfig(id.column).editor;
-          console.log(paramCell.valueFormat);
-				  if (paramCell.valueFormat == "5") {
+				  if (cellParam.valueFormat == ValueFormatEnum.Text) {
 			  		let column = this.getColumnConfig(id.column);
               column.collection = [];
               let val;
-              for(let key in paramCell.valueTexts) {
-                val = paramCell.valueTexts[key];
+              for(let key in cellParam.valueTexts) {
+                val = cellParam.valueTexts[key];
                 column.collection.push({id:val, value: val});
               }
             column.editor = "richselect";
@@ -167,16 +168,29 @@ function getUImainMenu(props) {
           else this.getColumnConfig(id.column).editor = "text"; // "inline-text";
 			  }
 			},
-      onAfterEditStop: function (state, editor, ignoreUpdate) {
-        console.log("onAfterEditStop");
-        console.log(state); 
-        // console.log(editor);
-        // console.log(ignoreUpdate);
-
-        // if(state.value != state.old){
-        //   webix.message("Cell value was changed")
-        // }
+      onAfterEditStart:function(id){
+        currentCellParam = Info.model.devices()[Info.states.indexDevice].params[id.row.substr(1)-1];
       },
+      onAfterEditStop: function (state, editor, ignoreUpdate) {
+      if (state.value === state.old) {
+        return;
+      }
+      
+      let value = null;
+      switch(currentCellParam.valueFormat) {
+        case ValueFormatEnum.Text: {
+          for(let key in currentCellParam.valueTexts) {
+            if (currentCellParam.valueTexts[key] === state.value) {
+              value = Number(key);
+              break;
+            }
+          }
+        } break;
+        default: value = Number(state.value);
+      }
+
+      currentCellParam.setValue(value);
+    },
       onAfterClose: function (id) {
         let tree = $$("parametersGrid");
         let rows = getItems(tree, id);

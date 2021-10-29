@@ -2,7 +2,7 @@ const { DeviceProvider } = require("./services/fr_deviceprovider.mjs");
 const Stream = require('stream-browserify');
 const { RequestHelper } = require("./services/fr_requesthelper.mjs");
 
-const OSC_MAX_CHANNELS = 20;
+const OSC_MAX_CHANNELS = 48;
 
 export default class Oscilloscope {
     constructor() {
@@ -125,7 +125,7 @@ export default class Oscilloscope {
         let stream = this.channels[chNum].stream;
         if (stream) {
             this.channels[chNum].stream.push(null);
-            this.channels[chNum].stream.destroy;
+            this.channels[chNum].stream.destroy();
             this.channels[chNum].stream = null;
         }
     }

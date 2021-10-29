@@ -18,7 +18,15 @@ _dde_func_return_t DDE_CAN::init(int /*mode*/)
     m_osc = new DDE_OSC();
     m_evlog = new DDE_EVLOG();
 
-	return 0;
+    return 0;
+}
+
+_dde_func_return_t DDE_CAN::get_subsystem_header(DDE_GET_SUBSYSTEM &p)
+{
+    strcpy(p.name, "UAV_CAN");
+    strcpy(p.descr,"UAV CAN subsystem");
+
+    return 0;
 }
 
 _dde_func_return_t DDE_CAN::get_params_header(DDE_GET_PARAMS_HEADER& p)

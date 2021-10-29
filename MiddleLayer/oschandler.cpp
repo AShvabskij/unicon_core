@@ -250,6 +250,7 @@ long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
         OscChannelDescr ch;
         ch.channelNum = elem.chNum;
         ch.paramId = elem.param.param_ID;
+        ch.moduleId = elem.param.module_ID;
         ch.paramName = elem.param.name;
         ch.scale = elem.scale;
         ch.min = elem.param.min;

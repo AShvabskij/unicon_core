@@ -159,7 +159,9 @@ function disableEnableElement(id, show) {
 
 function showElementChart(chartID, visibility = "visible") {
   var sc = document.getElementById(chartID);
-  sc.style.setProperty("visibility", visibility);
+  if (sc != undefined) {
+    sc.style.setProperty("visibility", visibility);
+  }
 }
 
 function showChart(chartID, parentID) {
@@ -386,8 +388,8 @@ const showSelectChartWindow = () => {
           // },
           columns:[
             { id:"channel", header:"Channel", width:120, css:"center"},
-            { id:"name", header:"Name", fillspace:1 },
-            { id:"status", header:"Show", width:80, css:"center", 
+            { id:"name", header:["Name", {content:"textFilter" }], fillspace:1,  },
+            { id:"status", header:["Show", {content:"masterCheckbox"}], width:80, css:"center", 
                   template:"{common.checkbox()}"},
             { id:"line",	//editor:"combo", 
              cssFormat:mark_votes,
@@ -537,7 +539,7 @@ const showSelectChartWindow = () => {
                       let item2 = table1.getItem(item.row);
                       item2.line = 0;
                   });
-                  table1.refresh;
+//                table1.refresh;
                   Info.paramToChart = [];
                   colorsArrTab = [];
                 }
@@ -548,6 +550,16 @@ const showSelectChartWindow = () => {
     }
   }
   return v;
+}
+
+function setStatus(){
+  console.log("!!!");
+  /*
+  const table = $$("car_rental_table");
+  table.filter(); 
+  table.showItem(table.getFirstId()); 
+  table.setState({filter:{}}); 
+*/
 }
 
 const addButtonClick = async () => {
@@ -562,7 +574,7 @@ const addButtonClick = async () => {
       if (device != undefined) {
         let osc = await device.getOsc();
         osc.channels.forEach(function(item, index, array) {
-          let name1 = item.name + " [" + item.param_id + "]";
+          let name1 = item.name + " [" + item.module_id + "."+ item.param_id + "]";
           if (item.name == "") name1 = "—";
           dataForChoose.push({ id:index, channel:item.num, name:name1,  
             color:item.color, status:0, idParam: item.param_id,
@@ -586,6 +598,8 @@ const addButtonClick = async () => {
 const removeButtonClick = () => {
   // console.log("removeButtonClick");
   if (chartsArrVisible.length > 0) {
+    if (document.getElementById(chartsArrVisible.at(-1)) == undefined) return;
+  
     let chartToHidden = chartsArrVisible.pop();
     chartsArrHidden.unshift(chartToHidden);
     

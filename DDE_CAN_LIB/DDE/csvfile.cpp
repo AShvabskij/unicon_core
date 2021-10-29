@@ -56,7 +56,7 @@ int CsvFile::open(const string &fileName)
 
 std::ifstream CsvFile::openFile(const std::string& fileName)
 {
-    std::ifstream file(".\\data\\" + fileName);
+    std::ifstream file("/home/pi/Desktop/Release/" + fileName);
     if (!file.is_open()) {
         file.open(fileName);
     }

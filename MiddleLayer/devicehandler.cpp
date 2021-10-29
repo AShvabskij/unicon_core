@@ -71,12 +71,19 @@ int DeviceHandler::requestDevices(int requestId)
     header.device_ID = 0;
     m_dde->get_params_header(header);
 
+    DDE_GET_SUBSYSTEM system;
+    m_dde->get_subsystem_header(system);
+
     for (int i = 0; i < header.el_count; i++) {
         Device d;
         d.id = header.el_descr[i].id;
         d.name = header.el_descr[i].name;
         d.desc = header.el_descr[i].descr;
-        d.channel = ChannelType::CAN; // Suppose all devices are from CAN Channel
+        if (i == 0 ) {
+            d.channel = channelType(system.name);
+        } else {
+            d.channel = ChannelType::MOD_BUS_FO;
+        }
 
         devices << d;
     }
@@ -94,7 +101,6 @@ int DeviceHandler::requestDevices(int requestId)
     }
 
     QJsonObject response = createResponse(requestId, devices);
-
     send(response);
 
     return 0;
@@ -169,6 +175,19 @@ int DeviceHandler::requestModuleHeader(int deviceId, int moduleId, int requestId
     send(response);
 
     return 0;
+}
+
+ChannelType DeviceHandler::channelType(QString chName)
+{
+    if (chName == "UAV_CAN") {
+        return ChannelType::CAN_UAV;
+    } else if (chName == "MOD_BUS") {
+        return ChannelType::MOD_BUS;
+    } else if (chName == "MOD_BUS_FO") {
+        return ChannelType::MOD_BUS_FO;
+    }
+
+    return ChannelType::Undefined;
 }
 
 QJsonObject DeviceHandler::createResponse(int requestId, const DeviceList& devices)

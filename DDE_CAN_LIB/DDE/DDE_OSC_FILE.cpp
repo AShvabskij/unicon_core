@@ -25,7 +25,7 @@ std::ifstream DDE_OSC_FILE::openOscFile(int fileNumber)
 {
 
     string fileName = "osc_data_" + to_string(fileNumber)+ ".csv";
-    std::ifstream file(".\\data\\" + fileName);
+    std::ifstream file("/home/pi/Desktop/Release/" + fileName);
     if (!file.is_open()) {
         file.open(fileName);
     }
@@ -90,6 +90,7 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
 
     for (int i = 0; i <= OSC_CHANNELS; i++) {
         p.ch_descr[i].param.param_ID = m_header->ch_descr[i].param_ID;
+        p.ch_descr[i].param.module_ID = 64; //m_header->ch_descr[i].param_ID;
         p.ch_descr[i].chNum = m_header->ch_descr[i].chNum;
         strcpy(p.ch_descr[i].param.name, m_header->ch_descr[i].name);
         p.ch_descr[i].scale = m_header->ch_descr[i].gain;

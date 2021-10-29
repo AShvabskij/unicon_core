@@ -10,10 +10,12 @@ let deviceIcons = ["developer_board", "dns", "broken_image", "corporate_fare", "
 const updateParameters = (indexDevice) => {
     console.log("indexDevice = " + indexDevice);
     let deviceItem = Info.model.devices()[indexDevice];
-    // При переключении девайсов сбрасывать графики
-    // for (let i = 0; i < 3; i++) {
-    //     removeButtonClick();
-    // }
+   // При переключении девайсов сбрасывать графики
+   if (Info.states.indexDevice != indexDevice) {
+        for (let i = 0; i < 3; i++) {
+            removeButtonClick();
+        }
+    }
 
     let dt1 = [];
     let dtt = [];
@@ -58,7 +60,7 @@ const updateLeftMenuBase = (devicesArr) => {
     view:"flexlayout",cols:[]};
     devicesArr.forEach(function(item, index, array) {
         // console.log(item, index);
-        devices.cols.push( { view:"toggle", label:'<span class="material-icons">' + deviceIcons[index] + '</span> ' + item.name + "</br>Channel: " + item.interfaceName, minWidth: minWidthBut, height: 80, css: "webix_primary", modules: item.modules,
+        devices.cols.push( { view:"toggle", label:'<span class="material-icons">' + deviceIcons[index] + '</span> ' + item.name + "</br>" + item.interfaceName, minWidth: minWidthBut, height: 80, css: "webix_primary", modules: item.modules,
         click:function(id,event){
             let tree = $$("parametersGrid");
             let arr = tree.getOpenItems();

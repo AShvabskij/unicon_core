@@ -96,3 +96,8 @@ _dde_func_return_t DDE::init(int)
 
     return 0;
 }
+
+_dde_func_return_t DDE::get_subsystem_header(DDE_GET_SUBSYSTEM& )
+{
+    return 0;
+}
