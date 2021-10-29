@@ -60,6 +60,7 @@ export class Param {
     }
 
     async setValue(value) {
+        if (!value || isNaN(value)) return;
 
         try {
             let valueData = await this.paramProvider.setParamValue(this.deviceId, this.id, value);
@@ -257,7 +258,7 @@ class ParamValue {
 
 }
 
-class ValueFormatEnum {
+export class ValueFormatEnum {
     static Undefined = 0;
     static Bin = 1;
     static Int = 2;
