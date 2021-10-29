@@ -595,6 +595,8 @@ const addButtonClick = async () => {
 const removeButtonClick = () => {
   // console.log("removeButtonClick");
   if (chartsArrVisible.length > 0) {
+    if (document.getElementById(chartsArrVisible.at(-1)) == undefined) return;
+  
     let chartToHidden = chartsArrVisible.pop();
     chartsArrHidden.unshift(chartToHidden);
     

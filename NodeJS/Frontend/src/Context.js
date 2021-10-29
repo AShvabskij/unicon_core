@@ -11,8 +11,10 @@ const updateParameters = (indexDevice) => {
     console.log("indexDevice = " + indexDevice);
     let deviceItem = Info.model.devices()[indexDevice];
    // При переключении девайсов сбрасывать графики
-    for (let i = 0; i < 3; i++) {
-        removeButtonClick();
+   if (Info.states.indexDevice != indexDevice) {
+        for (let i = 0; i < 3; i++) {
+            removeButtonClick();
+        }
     }
 
     let dt1 = [];
