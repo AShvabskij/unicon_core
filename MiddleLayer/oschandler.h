@@ -5,7 +5,7 @@
 #include <QTimer>
 #include <QColor>
 
-#define OSC_CHANNELS_MAX 20
+#define OSC_CHANNELS_MAX 47
 struct OscChannelValues
 {
     int channelNum = 0;
@@ -28,6 +28,7 @@ struct OscChannelDescr
 {
     int channelNum = 0;
     uint16_t paramId = 0;
+    uint16_t moduleId = 0;
     QString paramName = "";
     float scale = 0.0;
     float min;
@@ -86,6 +87,7 @@ struct OscHeader
             const OscChannelDescr& ch = channels.value(chNum);
             obj["num"] = chNum;
             obj["param_id"] = ch.paramId;
+            obj["module_id"] = ch.moduleId;
             obj["name"] = ch.paramName;
             obj["scale"] = ch.scale;
             obj["color"] = ch.color.name(QColor::NameFormat::HexRgb);
