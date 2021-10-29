@@ -25,7 +25,7 @@ std::ifstream DDE_OSC_FILE::openOscFile(int fileNumber)
 {
 
     string fileName = "osc_data_" + to_string(fileNumber)+ ".csv";
-    std::ifstream file(".\\data\\" + fileName);
+    std::ifstream file("/home/pi/Desktop/Release/" + fileName);
     if (!file.is_open()) {
         file.open(fileName);
     }
