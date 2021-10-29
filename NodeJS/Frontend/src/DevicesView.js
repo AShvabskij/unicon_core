@@ -363,6 +363,17 @@ let paramToChart = [];
 //   return paramArr;
 // }; 
 
+const clearDataTable = () => {
+  let table1 = $$("showSelectChartWindowData");
+  Info.paramToChart.forEach(function(item, index, array) {
+    let item2 = table1.getItem(item.row);
+    item2.line = 0;
+  });
+  table1.refresh();
+  Info.paramToChart = [];
+  colorsArrTab = [];
+}
+
 const showSelectChartWindow = () => {
   let v = {
     view:"window",
@@ -427,9 +438,9 @@ const showSelectChartWindow = () => {
                       let newParamArr = [];
                       let newColorsArrTab = [];
                       Info.paramToChart.forEach(function(item3, index, array) {
-                          console.log(item3);  
+                          //console.log(item3);  
                           if(item3.channel == item.channel) {
-                            console.log("continue");
+                            //console.log("continue");
                           }
                           else {
                             newParamArr.push(item3);
@@ -515,9 +526,7 @@ const showSelectChartWindow = () => {
                 click: function (id, event) {
                   // console.log("webixButton");
                   $$("showSelectChartWindow").hide();
-                  colorsArrTab = [];
-                  Info.paramToChart = [];
-
+                  clearDataTable();
                 }
             },
             { "label": "Apply", "view": "button", "height": 0, 
@@ -534,14 +543,7 @@ const showSelectChartWindow = () => {
                     document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
                     showElementChart(chartToVisible);
                   $$("showSelectChartWindow").hide();
-                  let table1 = $$("showSelectChartWindowData");
-                  Info.paramToChart.forEach(function(item, index, array) {
-                      let item2 = table1.getItem(item.row);
-                      item2.line = 0;
-                  });
-//                table1.refresh;
-                  Info.paramToChart = [];
-                  colorsArrTab = [];
+                  clearDataTable();
                 }
             }
           ]

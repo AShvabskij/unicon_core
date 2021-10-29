@@ -210,3 +210,13 @@
     width: 550px !important;
     background-repeat: no-repeat;
 }
+
+#ViewGraphicTrends {
+    visibility: hidden;
+}
+#ViewCPlotWeb {
+    visibility: hidden;
+}
+#ViewPLC {
+    visibility: hidden;
+}

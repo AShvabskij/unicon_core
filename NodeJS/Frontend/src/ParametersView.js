@@ -103,7 +103,7 @@ function getUImainMenu(props) {
       ]      
       },
       { id: "value", header: "Value", width: "170", cssFormat:mark_items_edit, 
-          editor:"inline-text", liveEdit:false
+          editor:"",
           // template:"<input type='text' value='#value#' style='width:155px;'>"
         },
       { id: "dimension", header: "Dimension", width: "80" },

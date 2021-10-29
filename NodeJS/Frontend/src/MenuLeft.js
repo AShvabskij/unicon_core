@@ -41,7 +41,7 @@ function hidePages(arrPages,visibeElements) {
       },
       onAfterExpand:function(id){
           // console.log("onAfterExpand")
-          let pages = ["deviceView","ViewCPlotWeb","ViewPLC","ViewGraphicTrends"]
+          let pages = ["deviceView","ViewCPlotWeb","ViewPLC","ViewGraphicTrends"];
           console.log(id)
           // console.log($$(id)) 
           let changeId = $$(id);
