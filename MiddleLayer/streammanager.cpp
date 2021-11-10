@@ -25,7 +25,7 @@ int StreamManager::stream(QJsonObject value)
 
 //      client->sendTextMessage(strJson);
         client->sendBinaryMessage(dataToSend);
-        int bytes = client->bytesToWrite();
+        qint64 bytes = client->bytesToWrite();
         QTextStream(stdout) << " bytes to write = " << bytes << "\n" ;
         m_totalBytes += bytes;
 
