@@ -16,7 +16,7 @@ StreamManager::~StreamManager()
 int StreamManager::stream(QJsonObject value)
 {
     QJsonDocument doc(value);
-    QString strJson(doc.toJson(QJsonDocument::Compact));
+//  QString strJson(doc.toJson(QJsonDocument::Compact));
 
     QCborValue v = QCborValue::fromJsonValue(value);
     QByteArray dataToSend = v.toCbor(QCborValue::UseFloat);
