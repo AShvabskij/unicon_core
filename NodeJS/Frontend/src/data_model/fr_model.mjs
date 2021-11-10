@@ -4,8 +4,8 @@
 import React, { useEffect } from "react";
 import * as cbor from './../cbor.js';
 import Oscilloscope from './oscilloscope.mjs'
-import {Device, SysModule, SysInterfacesEnum} from './device.mjs'
-import {Param} from './param.mjs'
+import { Device, SysModule, SysInterfacesEnum } from './device.mjs'
+import { Param } from './param.mjs'
 
 // import {ParamProvider} from "./services/paramprovider.mjs"
 // import {DeviceProvider} from "./services/deviceprovider.mjs"
@@ -86,16 +86,22 @@ export class Model extends Events {
                 console.warn("The model is not loaded on receive message!");
                 return;
             }
-            // cbor.decode([message],1,1);
-            // cbor.decodeFirst(message, {float: true, preferWeb: true}).then(o => {
-            //     console.log(JSON.stringify(o, null, 2))
-            //   });
-            /*
-                        cbor.decodeFirst(message, {float: true, preferWeb: true}).then(o => {
-                            console.log(JSON.stringify(o, null, 2))
-                          });
-            */
-            var messageData = JSON.parse(message.data);
+
+            var messageData;
+            var data = message.data;
+            if (data instanceof Blob) {
+                var buffer = await data.arrayBuffer();
+                messageData = cbor.decode(buffer);
+            } else {
+                messageData = JSON.parse(message.data);
+            }
+
+            
+/*
+            cbor.decodeFirst(message, { float: true, preferWeb: true }).then(o => {
+                console.log(JSON.stringify(o, null, 2))
+            });
+*/
 
             let paramId = messageData.p_id;
             if (paramId != undefined) {

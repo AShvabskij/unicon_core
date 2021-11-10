@@ -7,7 +7,7 @@ const QString CMD_TYPE_CLOSE_STREAM = "close_stream";
 const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
 const int DATA_YELD_INTERVAL_MSC = 50;
-const int STREAM_OBJECT_LIMIT = 4000;
+const int STREAM_OBJECT_LIMIT = 10000;
 
 const int STOP_STREAM_CODE = 2; //*100;
 
