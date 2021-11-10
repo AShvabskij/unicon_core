@@ -11,6 +11,7 @@ class StreamManager : public ResponseManager
 
 public:
     StreamManager();
+    ~StreamManager() override;
 
     static StreamManager* instance() {
         static StreamManager i;
@@ -29,6 +30,7 @@ private:
     void threadProcess();
 
     QQueue<QWebSocket*> m_clients;
+    qint64 m_totalBytes = 0;
 };
 
 #endif // STREAM_MANAGER_H
