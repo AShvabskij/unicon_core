@@ -1,0 +1,51 @@
+import React, { useState,useEffect } from "react";
+import {Context} from './Context';
+
+function demo() {
+    console.log("demo");
+    console.log(this);
+}
+
+
+function View( {name}) {
+    // Объявление переменной состояния, которую мы назовём "count"
+    const [count, setCount] = useState(0);
+    const [isOnline, setIsOnline] = useState(null);
+    // [Context.count, Context.actions.update] = useState(0);
+    //Context.actions.update = setCount;
+    
+    const increment = () => {
+        Context.count = Context.count+1;
+        Context.title = "aaa";
+        Context.devices = [{name:"qwe"}];
+        console.log("Context.count="+Context.count);
+        setCount(count + 1)
+      }
+
+    useEffect(() => {
+        document.title = Context.title+"," + count;
+    }, [Context.title]);
+
+    useEffect(() => {
+        function handleStatusChange(status) {
+            setIsOnline(status.isOnline);
+        }
+
+        // ChatAPI.subscribeToFriendStatus(friendID, handleStatusChange);
+        return () => {
+        // ChatAPI.unsubscribeFromFriendStatus(friendID, handleStatusChange);
+        };
+    });
+
+    return (
+      <div>
+        <p>Вы кликнули {count}  - {Context.title} раз</p>
+        {/* <button onClick={() => Context.actions.update(count + 5)}> */}
+        <button onClick={increment}>
+          View Нажми на меня {name} demo
+        </button>
+      </div>
+    );
+  }
+  
+  export default View;

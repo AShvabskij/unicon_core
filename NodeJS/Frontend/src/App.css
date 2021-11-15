@@ -1,5 +1,10 @@
 .App {
     text-align: center;
+    display: flex;
+    /* width: 100vw; */
+    background: rgb(80, 78, 78);
+    height: 100vh;
+    flex-direction: column;
 }
 
 .App-logo {
@@ -37,186 +42,36 @@
     }
 }
 
-.leftMenu {
-    /* width: 20%; */
-    /* background-color: red; */
-    float: left;
+.mainrow {
+    display: flex;
+    flex-direction: row;
 }
 
-.mainMenu {
-    /* width: 80%; */
-    /* background-color: rgb(206, 178, 178); */
-    float: left;
+.left {
+    background: rgb(255, 176, 73);
+    height: 90vh;
+    width: 20vw;
 }
 
-.c1 {
-    /* background-color: red; */
-    width: 23%;
-    float: left;
-    font-size: 10px;
+.left > div {
+    /* height: 100%; */
 }
 
-.c2 {
-    /* background-color: saddlebrown; */
-    width: 77%;
-    float: right;
+.webixitem {
+    height: 100%;
+    width: 100%;
 }
 
-.c3 {
-    background-color: #9a9a9a;
-    height: 50px;
+.main {
+    background: rgb(197, 255, 115);
+    flex-grow: 1;
 }
 
-.chart1 {
-    /* background-color: red; */
-    /* width: 23%;
-    float: left; */
+.footer {
+    height: 10vh;
+    background: #61dafb;
 }
 
-.chart2 {
-    /* background-color: saddlebrown; */
-    /* width: 77%;
-    float: right; */
-}
-
-.devices {
-    font-size: 5px;
-}
-
-.webix_segment_0 {
-    font-size: 5px !important;
-}
-
-.deviceLabel > div {
-    background-color: #1CA1C1  !important;
-    color: #FFFFFF !important;
-    height: 38px;
-}
-
-.webix_el_box{
-    /* color: #FFFFFF !important; */
-    padding: 3px 2px !important;
-}
-
-.webix_view .webix_layout_accordion {
-    /* height: 100vh !important; */
-}
-/* .webix_view.webix_dtable {
-    height: calc( var(--height) - 95px) !important;
-} */
-
-:root{
-    --height: 100vh;
-    --h1: 10vh;
-    /* --chartheight:30vh; */
-    --chartcount : 1;
-    /* --chartheight : calc(calc( var(--height) / var(--chartcount)) - 140px); */
-    --chartheight : calc( calc( ( var(--height) - 140px )) / var(--chartcount));
-}
-.webix_view.webix_multiview {
-    height: 100vh !important;
-}
-/* #showSelectChartWindowData {
-    height: 200px !important;
-} */
-.showSelectChartWindowData {
-    height: calc( var(--height) - 95px) !important;
-}
-
-.logoUniCon {
-    background-image: url(./logo/uc_5.jpg) !important;
-    height: 38px!important;
-    /* width: 10vh !important; */
-    width: 100% !important;
-}
-
-.tabParam .webix_view .webix_dtable {
-    height: calc( var(--height) - 95px ) !important;
-}
-
-.showSelectChartWindowData .webix_view .webix_dtable {
-    height: calc( var(--height) - 95px ) !important;
-}
-
-.no_editable {
-    /* border: 0px solid white !important; */
-    /* background: white !important; */
-}
-
-.editable {
-    border: 2px solid #b6e2ec !important;
-    /* border: 1px solid #454e50 !important;
-    background: #d3eaf0 !important; */
-}
-
-.infoPic0 {
-    background-image: url(./pictures/HRVS_DN_PowerStart.jpg) !important;
-    height: 547px !important;
-    /* width: 10vh !important; */
-    width: 300px !important;
-    background-repeat: no-repeat;
-}
-
-.infoPic1 {
-    background-image: url(./pictures/pic2.jpg) !important;
-    height: 547px !important;
-    background-size: contain;
-    /* width: 10vh !important; */
-    width: 550px !important;
-    background-repeat: no-repeat;
-}
-
-.infoPic2 {
-    background-image: url(./pictures/pic3.jpg) !important;
-    height: 547px !important;
-    /* width: 10vh !important; */
-    background-size: contain;
-    width: 550px !important;
-    background-repeat: no-repeat;
-}
-
-.infoPic3 {
-    background-image: url(./pictures/pic4.jpg) !important;
-    height: 547px !important;
-    /* width: 10vh !important; */
-    background-size: contain;
-    width: 550px !important;
-    background-repeat: no-repeat;
-}
-
-.infoPic4 {
-    background-image: url(./pictures/pic5.jpg) !important;
-    height: 547px !important;
-    /* width: 10vh !important; */
-    background-size: contain;
-    width: 550px !important;
-    background-repeat: no-repeat;
-}
-
-.infoPic5 {
-    background-image: url(./pictures/pic6.jpg) !important;
-    height: 547px !important;
-    /* width: 10vh !important; */
-    background-size: contain;
-    width: 550px !important;
-    background-repeat: no-repeat;
-}
-
-.infoPic6 {
-    background-image: url(./pictures/pic7.jpg) !important;
-    height: 547px !important;
-    /* width: 10vh !important; */
-    background-size: contain;
-    width: 550px !important;
-    background-repeat: no-repeat;
-}
-
-#ViewGraphicTrends {
-    visibility: hidden;
-}
-#ViewCPlotWeb {
-    visibility: hidden;
-}
-#ViewPLC {
-    visibility: hidden;
+.demoscroll {
+    height: 50vh;
 }
