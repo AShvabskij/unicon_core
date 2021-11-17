@@ -1,17 +1,20 @@
 {
-  "name": "Power",
-  "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
+  "name": "react-demo1",
+  "version": "0.1.0",
+  "private": true,
   "dependencies": {
+    "@testing-library/jest-dom": "^5.15.0",
+    "@testing-library/react": "^11.2.7",
+    "@testing-library/user-event": "^12.8.3",
     "copy-files-from-to": "^3.2.1",
+    "core-js": "^3.19.1",
     "mobx": "^6.3.7",
     "mobx-react": "^7.2.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-scripts": "^4.0.3",
+    "react-scripts": "^3.4.4",
     "scichart": "^2.0.2139",
-    "web-vitals": "^2.1.2",
+    "web-vitals": "^1.1.2",
     "webix": "^9.1.0"
   },
   "scripts": {
