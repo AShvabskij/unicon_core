@@ -31,7 +31,7 @@ import { Context } from "./Context"
 
 // import classes from "../../../../Examples/Examples.module.scss";
 // import image from "./javascript-line-chart.jpg";
-
+console.log("view chart");
 const LICENSE_KEY = Context.chartkey;
 // let scs: SciChartSurface;
 // let timerId: NodeJS.Timeout;
@@ -314,7 +314,8 @@ export default function Chart(props) {
   // Info.chartList[props.id].setColorsArr = setColorsArr;
   let currentChartID = props.id+"_"+suffixChartID;
   return (
-         <div id={currentChartID} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
+        //  <div id={currentChartID} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
+        <div id={currentChartID} className="chart" ></div>
           );
 }
 

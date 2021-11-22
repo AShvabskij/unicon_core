@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import logo from './logo.svg';
 import View from './View';
 import Button from './Button';
+import ButtonChart from './ButtonChart';
 import LocalName from './LocalName';
 import ViewBase from './ViewBase';
 import TimerMobix from './TimerMobix'
@@ -27,7 +28,12 @@ function App() {
           </div>
           <div className="main">
           <TimerMobix/>
-          <Chart id="chart4" title="&nbsp;"  />
+          <Chart id="chart4" className="chart" title="&nbsp;"  />
+          <Chart id="chart5" className="chart" title="&nbsp;"  />
+          <Chart id="chart6" className="chart" title="&nbsp;"  />
+           <ButtonChart name="chart4" />
+           <ButtonChart name="chart5" />
+           <ButtonChart name="chart6" />
            <Button name="Кнопка 1"/>
            <Button name="Кнопка 2"/>
            <ViewBase/>
