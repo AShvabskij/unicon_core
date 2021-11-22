@@ -1,17 +1,13 @@
 import React, { useState } from "react";
 import logo from './logo.svg';
-import View from './View';
-import Button from './Button';
-import ButtonChart from './ButtonChart';
 import LocalName from './LocalName';
 import ViewBase from './ViewBase';
-import TimerMobix from './TimerMobix'
+import ViewTest from './ViewTest';
 import {Context} from './Context';
 import {Provider} from "mobx-react";
 import CompMobix from "./CompMobix";
 import MenuLeft from "./MenuLeft";
 import Tabbar from "./Tabbar";
-import Chart from './Chart';
 import './App.css';
 
 window.addEventListener('resize', function(event) {
@@ -24,22 +20,12 @@ function App() {
     <div className="App">
       <div className="mainrow">
           <div className="left">
-          <MenuLeft/>
+            <MenuLeft/>
           </div>
           <div className="main">
-          <TimerMobix/>
-          {Context.chartList.map((chart) => (
-            <Chart id={chart.id} className="chart" title="&nbsp;"  />
-          ))}
-          {/* <Chart id="chart4" className="chart" title="&nbsp;"  />
-          <Chart id="chart5" className="chart" title="&nbsp;"  />
-          <Chart id="chart6" className="chart" title="&nbsp;"  /> */}
-           <ButtonChart name="chart4" />
-           <ButtonChart name="chart5" />
-           <ButtonChart name="chart6" />
-           <Button name="Кнопка 1"/>
-           <Button name="Кнопка 2"/>
-           <ViewBase/>
+          
+           {/* <ViewBase/> */}
+           <ViewTest/>
           </div>
       </div>
       <div className="footer">footer</div>
