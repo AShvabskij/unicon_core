@@ -9,6 +9,12 @@ export const Context = {
     elements:{},
     devices :[{name:"dev1a"},{name:"dev2b"},{name:"dev3c"}],
     states:{indexDevice:1},
+    chartList: [
+        {id:"chart1",dev:"",index:0},
+        {id:"chart2",dev:"",index:1},
+        // {id:"chart3",dev:""},
+        // {id:"chart4",dev:""}
+    ],
     resize :function(event) {
         console.log("resize");
         //let elements = ["$scrollview1"];

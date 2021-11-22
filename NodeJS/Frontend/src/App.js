@@ -28,9 +28,12 @@ function App() {
           </div>
           <div className="main">
           <TimerMobix/>
-          <Chart id="chart4" className="chart" title="&nbsp;"  />
+          {Context.chartList.map((chart) => (
+            <Chart id={chart.id} className="chart" title="&nbsp;"  />
+          ))}
+          {/* <Chart id="chart4" className="chart" title="&nbsp;"  />
           <Chart id="chart5" className="chart" title="&nbsp;"  />
-          <Chart id="chart6" className="chart" title="&nbsp;"  />
+          <Chart id="chart6" className="chart" title="&nbsp;"  /> */}
            <ButtonChart name="chart4" />
            <ButtonChart name="chart5" />
            <ButtonChart name="chart6" />
