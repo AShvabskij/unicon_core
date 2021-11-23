@@ -1,16 +1,17 @@
 import React, { useState,useEffect } from "react";
 import {Context} from './Context';
+import {model} from './Setup'
 
 function demo() {
     console.log("demo");
     console.log(this);
 }
 
-
 function View( {name}) {
     // Объявление переменной состояния, которую мы назовём "count"
     const [count, setCount] = useState(0);
     const [isOnline, setIsOnline] = useState(null);
+    const [isLoading, setIsLoading] = useState(null);
     // [Context.count, Context.actions.update] = useState(0);
     //Context.actions.update = setCount;
     
@@ -36,6 +37,23 @@ function View( {name}) {
         // ChatAPI.unsubscribeFromFriendStatus(friendID, handleStatusChange);
         };
     });
+
+    useEffect(() => {
+      load()
+    }, []);
+
+    function load() {
+      setIsLoading(true)
+
+      model.load().then(result => {
+        console.log("loadDataModel result:");
+        console.log(model.devices());
+        setIsLoading(false);
+      }, error => {
+        console.log("loadDataModel error");
+        console.log(error);
+      });
+    }
 
     return (
       <div>
