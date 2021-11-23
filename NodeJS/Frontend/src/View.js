@@ -1,6 +1,5 @@
 import React, { useState,useEffect } from "react";
 import {Context} from './Context';
-import {model} from './Setup'
 
 function demo() {
     console.log("demo");
