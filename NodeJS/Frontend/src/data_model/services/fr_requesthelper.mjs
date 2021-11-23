@@ -77,4 +77,5 @@ class _RequestHelper {
 }
 
 const RequestHelper = new _RequestHelper();
-module.exports = RequestHelper;
+export default RequestHelper;
+// module.exports = RequestHelper;

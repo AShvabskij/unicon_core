@@ -1,17 +1,10 @@
-// import { createRequire } from "module";
-// const require = createRequire(import.meta.url);
+import EventEmitter from 'events'
+import cbor from 'cbor'
+import Stream from 'stream'
 
-const Events = require('events');
-var cbor = require('cbor');
-
-// import {ParamProvider} from "./services/paramprovider.mjs"
-// import {DeviceProvider} from "./services/deviceprovider.mjs"
-
-const RequestHelper = require("./services/fr_requesthelper.mjs");
-const { ParamProvider } = require("./services/fr_paramprovider.mjs");
-const { DeviceProvider } = require("./services/fr_deviceprovider.mjs");
-
-const Stream = require('stream-browserify');
+import { ParamProvider } from "./services/fr_paramprovider.mjs";
+import { DeviceProvider } from "./services/fr_deviceprovider.mjs";
+import {default as RequestHelper} from "./services/fr_requesthelper.mjs";
 
 const STATUS_OK = 200;
 const ERROR_RESPONSE = {
@@ -19,7 +12,7 @@ const ERROR_RESPONSE = {
     msg: ""
 }
 
-class SysInterfacesEnum {
+export class SysInterfacesEnum {
     static Can = 1;
     static CanOpen = 2;
     static ModBus = 3;
@@ -31,7 +24,10 @@ class ValueFormatEnum {
     static Float = 2;
 }
 
-class StatusEnum {
+export class StatusEnum {
+    static Loaded = 'DATA_LOADED';
+    static Inited = "MODEL_INITED";
+    static ReInited = "MODEL_REINITED";
     static Changed = 'DATA_CHANGED';
     static Cancelled = 'DATA_CANCELLED';
     static UnChanged = 'DATA_UNCHANGED';
@@ -49,7 +45,7 @@ let startTime = new Date().getTime();
 
 const RECEIVED_DATA_ERROR = "Received data error!";
 
-export class Model extends Events {
+export class Model extends EventEmitter {
     constructor(srvHost) {
         super();
 
@@ -58,6 +54,7 @@ export class Model extends Events {
         this.m_trends = [];
         this.m_capturedParam = new Param();
         this.m_inited = false;
+        this.m_firstInited = false;
         this.m_host = srvHost;
 
         this.paramProvider = new ParamProvider();
@@ -78,6 +75,12 @@ export class Model extends Events {
         this.streamSocket.onopen = (event) => {
             console.log(`Stream socket ${this.streamSocket.url} opened successfully.`);
             this.m_inited = true;
+            if (!this.m_firstInited) {
+                this.m_firstInited = true;
+                this.emit('system_status', StatusEnum.Inited);
+            } else {
+                this.emit('system_status', StatusEnum.ReInited);
+            }
         };
 
         this.streamSocket.onerror = (error) => {
@@ -114,7 +117,7 @@ export class Model extends Events {
 
             if (valueData === undefined || deviceId === undefined || paramId === undefined) {
                 console.log(RECEIVED_DATA_ERROR);
-                this.emit('error', RECEIVED_DATA_ERROR);
+//              this.emit('error', RECEIVED_DATA_ERROR);
                 return;
             }
 
@@ -253,7 +256,7 @@ export class Model extends Events {
                 this.clear()
             }
 
-            this.emit('system_status', res.system_status);
+//          this.emit('system_status', res.system_status);
 
         }, 5000)
     }
@@ -465,8 +468,9 @@ class ParamValue {
         this.value = -1.0;
     }
 }
-
+/*
 module.exports = {
     Model,
     SysInterfacesEnum
 };
+*/

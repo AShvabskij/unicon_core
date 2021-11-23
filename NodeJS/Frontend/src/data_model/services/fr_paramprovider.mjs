@@ -1,12 +1,12 @@
-// import {RequestHelper} from "./requesthelper.mjs"
-const RequestHelper = require("./fr_requesthelper.mjs");
+//const RequestHelper = require("./fr_requesthelper.mjs");
+import {default as RequestHelper} from "./fr_requesthelper.mjs";
 
 const REQ_GET_PARAMS = "GET_PARAMS"
 const REQ_GET_PARAMS_DATA = "GET_PARAMS_DATA"
 const REQ_GET_PARAMS_STREAM_OPEN = "GET_PARAMS_STREAM_OPEN"
 const REQ_GET_PARAMS_STREAM_CLOSE = "GET_PARAMS_STREAM_CLOSE"
 
-class ParamProvider
+export class ParamProvider
 {
         static streamIdList = [];
 
@@ -121,7 +121,8 @@ class ParamProvider
         return res;
     }    
 }
-
+/*
 module.exports = {
     ParamProvider: ParamProvider
 };
+*/

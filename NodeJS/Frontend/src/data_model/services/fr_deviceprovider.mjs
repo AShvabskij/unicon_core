@@ -1,10 +1,11 @@
-// import {RequestHelper} from "./requesthelper.mjs"
-const RequestHelper = require("./fr_requesthelper.mjs");
+
+// const RequestHelper = require("./fr_requesthelper.mjs");
+import RequestHelper from "./fr_requesthelper.mjs";
 
 const REQ_GET_DEVICES = "GET_DEVICE"
 const REQ_GET_STATUS = "GET_STATUS"
 
-class DeviceProvider
+export class DeviceProvider
 {
     constructor() 
     {
@@ -89,6 +90,8 @@ class DeviceProvider
     }
 }
 
+/*
 module.exports = {
     DeviceProvider: DeviceProvider
 };
+*/

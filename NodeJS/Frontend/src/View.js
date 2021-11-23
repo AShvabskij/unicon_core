@@ -44,15 +44,6 @@ function View( {name}) {
 
     function load() {
       setIsLoading(true)
-
-      model.load().then(result => {
-        console.log("loadDataModel result:");
-        console.log(model.devices());
-        setIsLoading(false);
-      }, error => {
-        console.log("loadDataModel error");
-        console.log(error);
-      });
     }
 
     return (
