@@ -1,6 +1,9 @@
 import EventEmitter from 'events'
 import cbor from 'cbor'
-import Stream from 'stream'
+import Config from '../.config.js';
+
+import { Device, SysModule, SysInterfacesEnum } from './device.mjs'
+import { Param } from './param.mjs'
 
 import { ParamProvider } from "./services/fr_paramprovider.mjs";
 import { DeviceProvider } from "./services/fr_deviceprovider.mjs";
@@ -11,18 +14,7 @@ const ERROR_RESPONSE = {
     status: 500, // any server error
     msg: ""
 }
-
-export class SysInterfacesEnum {
-    static Can = 1;
-    static CanOpen = 2;
-    static ModBus = 3;
-    static FO = 4;
-}
-
-class ValueFormatEnum {
-    static Int = 1;
-    static Float = 2;
-}
+const CONNECTION_TIMEOUT_MSC = 5000;
 
 export class StatusEnum {
     static Loaded = 'DATA_LOADED';
@@ -34,16 +26,11 @@ export class StatusEnum {
 }
 
 let checkstatusIntervalId = 0;
+let _messageDataLength = 0
+
 const STREAM_SERVER_PORT = 1237;
-
-// Переменные для измерения производительности
-let byteCount = 0;
-let msgCount = 0;
-
-let timeLabel = new Date().getTime();
-let startTime = new Date().getTime();
-
 const RECEIVED_DATA_ERROR = "Received data error!";
+const CAPTURED_PARAMS_MAX = 32;
 
 export class Model extends EventEmitter {
     constructor(srvHost) {
@@ -51,14 +38,16 @@ export class Model extends EventEmitter {
 
         this.m_name = 'Unicon';
         this.m_devices = [];
+        this.m_oscs = [];
         this.m_trends = [];
-        this.m_capturedParam = new Param();
         this.m_inited = false;
         this.m_firstInited = false;
         this.m_host = srvHost;
 
-        this.paramProvider = new ParamProvider();
-        this.deviceProvider = new DeviceProvider();
+        this._capturedParams = [];
+
+        this.paramProvider = new ParamProvider(RequestHelper);
+        this.deviceProvider = new DeviceProvider(RequestHelper);
     }
 
     init() {
@@ -66,20 +55,26 @@ export class Model extends EventEmitter {
             return;
         }
 
-        RequestHelper.initConnection(this.m_host);
+        if (!this.m_firstInited) {
+            RequestHelper.initConnection(this.m_host);
+        }
 
         let streamSocketUrl = "ws://" + this.m_host + ":" + STREAM_SERVER_PORT;
-
         this.streamSocket = new WebSocket(streamSocketUrl);
 
-        this.streamSocket.onopen = (event) => {
+        this.streamSocket.onopen = async (event) => {
             console.log(`Stream socket ${this.streamSocket.url} opened successfully.`);
-            this.m_inited = true;
-            if (!this.m_firstInited) {
-                this.m_firstInited = true;
-                this.emit('system_status', StatusEnum.Inited);
-            } else {
-                this.emit('system_status', StatusEnum.ReInited);
+            try {
+                await RequestHelper.waitIsConnected()
+                this.m_inited = true;
+                if (!this.m_firstInited) {
+                    this.m_firstInited = true;
+                    this.emit('system_status', StatusEnum.Inited);
+                } else {
+                    this.emit('system_status', StatusEnum.ReInited);
+                }    
+            } catch(error) {
+                console.error(error);
             }
         };
 
@@ -87,103 +82,116 @@ export class Model extends EventEmitter {
             console.log('Stream error: ' + error.message);
         };
 
-        this.streamSocket.onclose = () => {
-            console.log('Stream closed.');
+        this.streamSocket.onclose = (event) => {
+            console.log('Stream closed, reason = ' + event.reason);
 
             this.m_inited = false;
-            this.m_socket = null;
+            this.streamSocket = null;
 
             setTimeout(async () => {
                 this.init();
-            }, 5000);
+            }, CONNECTION_TIMEOUT_MSC);
 
             return;
         };
 
-        this.streamSocket.onmessage = (message) => {
-/*
-            new Response(message.data).arrayBuffer()
-                .then(function(data){
-                    console.log(cbor.decodeFirstSync(data));
-                });
-*/
-
-            var messageData = JSON.parse(message.data);
-            // console.log(message.data);
-
-            let valueData = messageData.value;
-            let deviceId = messageData.d_id;
-            let paramId = messageData.p_id;
-
-            if (valueData === undefined || deviceId === undefined || paramId === undefined) {
-                console.log(RECEIVED_DATA_ERROR);
-//              this.emit('error', RECEIVED_DATA_ERROR);
+        this.streamSocket.onmessage = async (message) => {
+            if (!this.loaded()) {
+                console.warn("The model is not loaded on receive message!");
                 return;
             }
 
-            byteCount += message.data.length;
-            msgCount++;
+            var messageData;
+            var data = message.data;
+            if (data instanceof Blob) {
+                var buffer = await data.arrayBuffer();
+                messageData = cbor.decode(buffer);
+            } else {
+                messageData = JSON.parse(message.data);
+            }
 
-            this.pushValue(deviceId, paramId, valueData);
             
+/*
+            cbor.decodeFirst(message, { float: true, preferWeb: true }).then(o => {
+                console.log(JSON.stringify(o, null, 2))
+            });
+*/
+
+            let paramId = messageData.p_id;
+            if (paramId != undefined) {
+                _messageDataLength = message.data.length;
+
+                let valueData = messageData.value;
+                let deviceId = messageData.d_id;
+                await this._streamParamValue(deviceId, paramId, valueData);
+                return;
+            }
+
+            let deviceId = messageData.d_id;
+            if (deviceId != undefined) {
+                await this._streamOscValue(deviceId, messageData);
+                return;
+            }
         };
 
         this.m_inited = true;
     }
 
-    pushValue(deviceId, paramId, valueData) {
-
-        if (this.m_capturedParam.id != paramId || this.m_capturedParam.deviceId != deviceId) {
-            console.log("devices = " + this.m_devices.length);
-
-            let device = this.device(deviceId);
-            if (device == undefined || device == null) {
-                console.warn(`device ${deviceId} error!`)
-                return;
-            }
-
-            this.m_capturedParam = this.device(deviceId).param(paramId);
-        }
-
-        let pValue = new ParamValue();
-        pValue.paramId = this.m_capturedParam.id;
-        pValue.deviceId = this.m_capturedParam.deviceId;
-        pValue.value = valueData.value;
-        pValue.valueFormat = valueData.format;
-        pValue.valueTime = valueData.time;
-        pValue.scale = valueData.scale;
-
-        let currTime = new Date().getTime();
-        let pValueDeltaTime = pValue.valueTime > 0 ? currTime - pValue.valueTime : 0
-
-        if (pValueDeltaTime > 50) {
-            console.warn(`Param value actuality = ${pValueDeltaTime}`)
-        }
-
-        const timeDelta = currTime - startTime;
-        const isFinished = (pValue.value == -1);
-
-        if (timeDelta >= 1000 || isFinished === true) {
-            console.log(`Received ${byteCount} bytes, ${msgCount} items per ${timeDelta}ms`);
-            startTime = currTime;
-        }
-
-        if (isFinished === true) {
-            console.log(`The stream is finished`);
-            console.timeEnd(`The stream elapsed time(${timeLabel}):`);
-
-            byteCount = 0;
-            msgCount = 0;
-
-            this.m_capturedParam.stream.push(null);
-            this.m_capturedParam.stream.destroy();
-
-            this.m_capturedParam = new Param();
+    async _streamParamValue(deviceId, paramId, valueData) {
+        if (valueData == undefined) {
+            console.warn(RECEIVED_DATA_ERROR);
             return;
         }
 
-        //          console.log(`Received: ${JSON.stringify(pValue)}`);
-        this.m_capturedParam.stream.push(JSON.stringify(pValue));
+        let param = this._capturedParams.find((item) => {
+            return item.id === paramId && item.deviceId === deviceId
+        });
+
+        if (param === undefined) {
+            param = this.device(deviceId).param(paramId);
+            if (param !== undefined) {
+                if (this._capturedParams.length > CAPTURED_PARAMS_MAX) {
+                    console.info("Clearing captured params cache");
+                    this._capturedParams = [];
+                }
+
+                this._capturedParams.push(param);
+            }
+        }
+
+        if (param === undefined) {
+            await this.forceCloseStream(deviceId, paramId);
+            console.warn(RECEIVED_DATA_ERROR);
+            return;
+        }
+
+        await param.streamValue(valueData, _messageDataLength);
+    }
+
+    async forceCloseStream(deviceId, paramId) {
+        try {
+            await this.paramProvider.reqParamValue(deviceId, null, paramId, "off")
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async _streamOscValue(deviceId, valueData) {
+        if (!this._capturedOscilloscope || this._capturedOscilloscope.deviceId !== deviceId) {
+            let device = this.device(deviceId);
+            if (device) {
+                this._capturedOscilloscope = device.osc;
+            }
+        }
+
+        let osc = this._capturedOscilloscope
+        if (osc === undefined || osc === null || valueData == undefined) {
+            console.warn("Unable to receive osc stream data. The osc is deactivated now");
+            await this.deviceProvider.reqCloseOscStream(deviceId);
+            return;
+        }
+
+        await osc.stream(valueData);
     }
 
     async load() {
@@ -203,9 +211,12 @@ export class Model extends EventEmitter {
 
                     let item = devices[i];
                     let device = new Device();
+
                     device.name = item.name;
                     device.id = item.id;
                     device.desc = item.desc;
+                    device.interface = item.channel;
+                    device.interfaceName = SysInterfacesEnum.toString(item.channel);
 
                     for (var ii = 0; ii < item.modules.length; ii++) {
                         let moduleId = item.modules[ii];
@@ -219,19 +230,17 @@ export class Model extends EventEmitter {
                         let module = this._createModuleFromJson(device.id, moduleInfo);
 
                         for (var iii = 0; iii < paramInfoList.length; iii++) {
-                            let param = this._createParamFromJson(device.id, moduleId, paramInfoList[iii]);
+                            let param = this._createParamFromJson(paramInfoList[iii]);
                             module.params.push(param);
                             device.params.push(param);
                         }
 
                         device.modules.push(module);
                     }
-
                     this.m_devices.push(device)
                 }
 
                 console.log("loaded devices  = " + this.m_devices.length);
-
                 resolve({ result: 'true', status: 200 });
 
             } catch (err) {
@@ -240,6 +249,11 @@ export class Model extends EventEmitter {
             }
         });
     }
+
+    loaded() {
+        return this.m_devices.length > 0;
+    }
+
 
     enablePeriodicCheck() {
         if (checkstatusIntervalId > 0) {
@@ -256,12 +270,16 @@ export class Model extends EventEmitter {
                 this.clear()
             }
 
-//          this.emit('system_status', res.system_status);
+            this.emit('system_status', res.system_status);
 
         }, 5000)
     }
 
     disablePeriodicCheck() {
+        if (checkstatusIntervalId === 0) {
+            return;
+        }
+
         clearInterval(checkstatusIntervalId);
         checkstatusIntervalId = 0;
     }
@@ -271,6 +289,7 @@ export class Model extends EventEmitter {
 
         this.m_devices = [];
         this.m_trends = [];
+        this._capturedParams = [];
     }
 
     device(id) {
@@ -283,14 +302,14 @@ export class Model extends EventEmitter {
             return this.m_devices;
         }
 
-        let result = this.m_devices.filter(item => item.interface === sysInterface);
+        let result = this.m_devices.filter(item => item.interfaceName === sysInterface);
         return result;
     }
 
     sysInterfaces() {
         let result = this.m_devices.reduce((res, current) => {
-            if (!(current.interface in res)) {
-                res.push(current.interface);
+            if (!(current.interfaceName in res)) {
+                res.push(current.interfaceName);
             }
         }, []);
 
@@ -309,165 +328,14 @@ export class Model extends EventEmitter {
         return res;
     }
 
-    _createParamFromJson(deviceId, moduleId, paramInfo) {
+    _createParamFromJson(paramInfo) {
         let res = new Param();
-
-        res.deviceId = deviceId;
-        res.moduleId = moduleId;
-        res.id = paramInfo.param_id;
-        res.name = paramInfo.name;
-        res.desc = paramInfo.desc;
+        res.deserialize(paramInfo);
 
         return res;
     }
 }
 
-class Device {
-    constructor() {
-        this.id = ''
-        this.name = ''
-        this.desc = ''
-        this.image = 0
-        this.osc = new Osciloscope()
-        this.interface = SysInterfacesEnum.Can
-        this.modules = []
-        this.params = []
-    }
-
-    module(moduleId) {
-        let result = this.modules.find(item => item.id == moduleId);
-        return result;
-    }
-
-    param(paramId) {
-        let result = this.params.find(item => item.id == paramId);
-        return result;
-    }
-}
-
-class Osciloscope {
-    constructor() {
-        this.id = ''
-        this.name = ''
-        this.desc = ''
-    }
-}
-
-class SysModule {
-    constructor() {
-        this.id = 0;
-        this.deviceId = 0;
-        this.name = '';
-        this.desc = '';
-        this.params = [];
-    }
-}
-
-class Param {
-    constructor() {
-        this.id = 0;
-        this.deviceId = 0;
-        this.moduleId = 0;
-        this.name = '';
-        this.desc = '';
-        this.value = new ParamValue();
-
-        this.stream = new Stream.Readable({
-            read() { }
-        });
-
-        this.lastError = 0;
-
-        this.paramProvider = new ParamProvider();
-    }
-
-    async lastValue() {
-
-        setTimeout(() => {
-            this.currentValue();
-        }, 0)
-
-        return this.value;
-    }
-
-    async currentValue() {
-
-        try {
-            let valueData = await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id);
-            this.value = Param.paramValueFromJson(valueData)
-            this.lastError = 0;
-        } catch (err) {
-            this.value = new ParamValue()
-            this.lastError = err;
-        }
-
-        return this.value;
-    }
-
-    async openValueStream() {
-        try {
-            timeLabel = new Date().getTime();
-            startTime = new Date().getTime();
-            console.time(`The stream elapsed time(${timeLabel}):`);
-
-            this.stream = new Stream.Readable({
-                read() { }
-            });
-
-            let stream = "on";
-            this.lastError = 0;
-            this.value = new ParamValue()
-
-            await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream);
-        } catch (error) {
-            this.value = new ParamValue()
-            this.lastError = error;
-            console.log(error);
-        }
-
-        return this.stream;
-    }
-
-    async closeValueStream() {
-        try {
-            let stream = "off";
-            await this.paramProvider.reqParamValue(this.deviceId, this.moduleId, this.id, stream)
-            this.stream.push(null);
-
-            this.lastError = 0;
-        } catch (error) {
-            this.lastError = error;
-        }
-    }
-
-    lastError() {
-        return this.lastError;
-    }
-
-    static paramValueFromJson(data) {
-        // формат ожидаемых данных: {param_id: , device_id:, value:{value, format, time, scale}}
-        let res = new ParamValue();
-        res.paramId = data.param_id;
-        res.deviceId = data.device_id;
-        res.value = data.value.value;
-        res.valueFormat = data.value.format;
-        res.valueTime = data.value.time;
-        res.scale = data.value.scale;
-
-        return res;
-    }
-}
-
-class ParamValue {
-    constructor() {
-        this.paramId = 0;
-        this.deviceId = 0;
-        this.valueFormat = ValueFormatEnum.Int
-        this.valueTime = 0;
-        this.scale = 0.0;
-        this.value = -1.0;
-    }
-}
 /*
 module.exports = {
     Model,
