@@ -63,7 +63,6 @@ export class DeviceProvider {
         return this.request(reqCmd);
     }
 
-
     async reqStatus() {
         let reqCmd = this._createDeviceReqCmd(REQ_GET_STATUS);
 
