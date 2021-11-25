@@ -4,6 +4,7 @@ import LocalName from './LocalName';
 import ViewBase from './ViewBase';
 import ViewTest from './ViewTest';
 import {Context} from './Context';
+import {Setup} from './Setup';
 import {Provider} from "mobx-react";
 import CompMobix from "./CompMobix";
 import MenuLeft from "./MenuLeft";
