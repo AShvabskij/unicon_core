@@ -38,7 +38,7 @@ export default class Oscilloscope {
             channels = []
             for (var i = 0; i < this.channels.length; ++i) {
                 let channel = this.channels[i];
-                if (channel.name !== '' || channel.param_id !== 0)
+                if (channel.name !== '' || channel.var_id !== 0)
                     channels.push(channel.num)
             }
         }

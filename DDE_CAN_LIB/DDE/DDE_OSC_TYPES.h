@@ -5,21 +5,8 @@
 
 #include "DDE_PARAMS_TYPES.h"
 
-#define OSC_CHANNELS 47
-
-struct OSC_PARAM
-{
-    uint16_t device_ID;
-    uint16_t module_ID;
-    uint16_t param_ID;
-    std::string group;
-
-    float min;
-    float max;
-
-    char name[DDE_PARAMS_NAME_LENGTH];
-    char value_unit[6];
-};
+#define OSC_ANALOG_CHANNELS 47
+#define OSC_DISCRETE_CHANNELS 128
 
 struct RGB {
     uint8_t Red;
@@ -27,18 +14,42 @@ struct RGB {
     uint8_t Blue;
 };
 
-struct OSC_CHANNEL_DESCR
+struct OSC_VAR
+{
+    uint16_t device_id;
+    uint16_t id;
+    char name[DDE_PARAMS_NAME_LENGTH];
+    char measure_unit[6];
+    float min = 0.0;
+    float max = 0.0;
+    RGB color;
+};
+
+struct OSC_ANALOG_CHANNEL
 {
     uint16_t chNum;
-    RGB color;
-    OSC_PARAM param;
+    OSC_VAR var;
 
     float scale;
 };
 
-struct OSC_CH_DATA
+struct OSC_DISCRETE_CHANNEL
+{
+    uint16_t chNum;
+    OSC_VAR var;
+
+    uint8_t firstBit;
+    uint8_t lastBit;
+};
+
+struct OSC_ANALOG_DATA
 {
     float buff[0x10000];
+};
+
+struct OSC_DISCRETE_DATA
+{
+    uint32_t buff[0x10000];
 };
 
 struct OSC_SETTING
@@ -54,9 +65,11 @@ struct OSC_SETTING
 
 struct DDE_GET_OSC_HEADER
 {
-    uint16_t device_ID;
+    uint16_t device_id;
 
-    OSC_CHANNEL_DESCR ch_descr[OSC_CHANNELS + 1];
+    OSC_ANALOG_CHANNEL analog_channels[OSC_ANALOG_CHANNELS + 1];
+    OSC_DISCRETE_CHANNEL discrete_channels[OSC_DISCRETE_CHANNELS + 1];
+
     OSC_SETTING settings;
 
     uint16_t page_size;		//
@@ -72,7 +85,9 @@ struct DDE_GET_OSC_DATA
     uint16_t data_length;   // The length of a data in OSC_CH_DATA
     uint16_t overflow;  // flag if  buffer is overflowed (for debugging only)
     bool next_ready;    // flag if next data frame is ready
-    OSC_CH_DATA ch_data[OSC_CHANNELS + 1];
+
+    OSC_ANALOG_DATA analog_data[OSC_ANALOG_CHANNELS + 1];
+    OSC_DISCRETE_DATA discret_data[OSC_DISCRETE_CHANNELS +1];
 };
 
 struct DDE_SET_OSC_DATA
