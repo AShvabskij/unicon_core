@@ -247,10 +247,10 @@ const MenuLeft = observer(({  }) => {
   // let devArr = [{name:"dev1"},{name:"dev2"},{name:"dev3"}];
   useEffect(() => {
     console.log("Render MenuLeft");
-    updateLeftMenuBase(Context.devices);
+    updateLeftMenuBase(Context.model.m_devices);
   })
   return ( 
-      <WebixComponent ui={accordion()} data={accordionInit} devices={Context.devices} />
+      <WebixComponent ui={accordion()} data={accordionInit} devices={ Context.updateModel  } />
   );
 });
 

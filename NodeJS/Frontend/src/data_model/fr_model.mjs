@@ -38,6 +38,7 @@ export class Model extends EventEmitter {
 
         this.m_name = 'Unicon';
         this.m_devices = [];
+        this.m_devices_hash = ""; 
         this.m_oscs = [];
         this.m_trends = [];
         this.m_inited = false;

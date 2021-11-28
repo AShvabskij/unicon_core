@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import {Context} from './Context';
 
 function updateTitle(name) {
-  Context.title = name+"-qwe12";
+  Context.title = name+"-qwe12 ";
+  Context.model1.m_devices_hash = name;
+  // Context.model.m_devices = [];
+  console.log(Context.model1.m_devices_hash);
+  Context.model.m_devices.push("");
 }
 
 function Button(props) {

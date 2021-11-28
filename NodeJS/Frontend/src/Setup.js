@@ -12,6 +12,7 @@ model.on('system_status', (status) => {
         model.load().then(result => {
             console.log("loadDataModel result:" + result);
             console.log(model.devices());
+            Context.updateModel = Date.now();
         }, error => {
             console.log("loadDataModel error");
             console.log(error);
