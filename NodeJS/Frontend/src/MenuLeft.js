@@ -250,7 +250,7 @@ const MenuLeft = observer(({  }) => {
     updateLeftMenuBase(Context.model.m_devices);
   })
   return ( 
-      <WebixComponent ui={accordion()} data={accordionInit} devices={ Context.updateModel  } />
+      <WebixComponent ui={accordion()} data={accordionInit} updateModel={ Context.updateModel  } />
   );
 });
 
