@@ -37,8 +37,17 @@ function hidePages(arrPages,visibeElements) {
   });
 }
 
+function setScroll(body) {
+  return {
+    view:"scrollview",
+    scroll:"y", // vertical scrolling
+    body:body
+  }
+}
+
 function buttons(params) {
-  return {view:"scrollview",
+  return {
+    view:"scrollview",
     id:"verses",
     scroll:"y", // vertical scrolling
     
@@ -201,11 +210,12 @@ function demo(params) {
     }
   }
 }
-
+// flex-basis: 40%;
+//         flex-grow: 1;
 const updateLeftMenuBase = (devicesArr) => {
   let options = [];
-  let minWidthBut = 170;
-  if ((devicesArr.length % 3) == 0) minWidthBut = 95;
+  let minWidthBut = "130";
+  // if ((devicesArr.length % 3) == 0) minWidthBut = 95;
   let devices = { margin:10, padding:0, type:"wide",
   view:"flexlayout",cols:[]};
   devicesArr.forEach(function(item, index, array) {
@@ -228,8 +238,8 @@ const updateLeftMenuBase = (devicesArr) => {
       // }
       })
 });
- 
-  webix.ui(devices,$$("DeviceInit"), 0);
+  let scrollDev = setScroll(devices);
+  webix.ui(scrollDev,$$("DeviceInit"), 0);
   // $$("descriptionDevice").$view.children[0].style.color = "white";
 } 
 
