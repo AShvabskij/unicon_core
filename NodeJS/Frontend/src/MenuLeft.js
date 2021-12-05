@@ -90,8 +90,8 @@ function buttons(params) {
 }
 
  function accordion() {
-   let v = scroll(buttons(),"qwe1");
-   v= buttons();
+  //  let v = scroll(buttons(),"qwe1");
+  //  v= buttons();
   return {
     view:"accordion",
     // width: 0,
@@ -103,8 +103,8 @@ function buttons(params) {
     type:"wide",
     select:true,
     rows:[
-        {header:"col 1", body:v},
-        { body:"Content 2", height: 35}
+        {header:"col 1", body:"text"},
+        // { body:"Content 2", height: 35}
     ],
     on:{
       onChange: function(newValue, oldValue, config){

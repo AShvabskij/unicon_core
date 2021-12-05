@@ -1,3 +1,6 @@
+:root {
+    --footer-size: 30px;
+}
 .App {
     text-align: center;
     display: flex;
@@ -49,7 +52,7 @@
 
 .left {
     background: rgb(255, 176, 73);
-    height: 90vh;
+    height: calc(100vh - var(--footer-size));
     width: 20vw;
 }
 
@@ -68,7 +71,7 @@
 }
 
 .footer {
-    height: 10vh;
+    height: var(--footer-size);
     background: #61dafb;
 }
 
