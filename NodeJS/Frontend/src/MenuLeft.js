@@ -22,21 +22,6 @@ const accordionInit = [
   // { header:"Devices9", id:"DeviceInit9" ,body: "" },
 ];
 
-function showPage(pageID, parentID = "") {
-  var sc = document.getElementById(pageID);
-  sc.style.setProperty("visibility", "visible");
-}
-
-function hidePages(arrPages,visibeElements) {
-  arrPages.forEach(element => {
-    document.getElementById(element).style.display = "none";
-  });
-  visibeElements.forEach(element => {
-    document.getElementById(element).style.display = "";
-    document.getElementById(element).style.visibility = "visible";
-  });
-}
-
 function setScroll(body) {
   return {
     view:"scrollview",
@@ -103,41 +88,47 @@ function buttons(params) {
     type:"wide",
     select:true,
     rows:[
-        {header:"col 1", body:"text"},
+        // {header:"col 1", body:"text"},
         // { body:"Content 2", height: 35}
     ],
     on:{
       onChange: function(newValue, oldValue, config){
           console.log(newValue)
       },
-      // onAfterExpand:function(id){
+      onAfterExpand:function(id){
       //     // console.log("onAfterExpand")
-      //     let pages = ["deviceView","ViewCPlotWeb","ViewPLC","ViewGraphicTrends"];
+          let pages = ["deviceView","ViewCPlotWeb","ViewPLC","ViewGraphicTrends"];
       //     console.log(id)
       //     // console.log($$(id)) 
-      //     let changeId = $$(id);
-      //     let newHeight = 42;
-      //     switch(id)  {
-      //       case "DeviceInit":
-      //         newHeight = 500;
-      //         hidePages(pages,["deviceView"]);
-      //         break;
+          let changeId = $$(id);
+          let newHeight = 42;
+          switch(id)  {
+            case "DeviceInit":
+              newHeight = 0;
+              Context.showPages(["deviceView"]);
+              // hidePages(pages,["deviceView"]);
+              break;
 
-      //       case "cPlotWeb":
-      //         hidePages(pages,["ViewCPlotWeb","chartCPlotWeb"]);
-      //         break;
+            case "cPlotWeb":
+              Context.showPages(["ViewCPlotWeb","chartCPlotWeb"]);
+              // hidePages(pages,["ViewCPlotWeb","chartCPlotWeb"]);
+              break;
 
-      //       case "PLC":
-      //         hidePages(pages,["ViewPLC"]);
-      //         break;
+            case "PLC":
+              Context.showPages(["ViewPLC"]);
+              // hidePages(pages,["ViewPLC"]);
+              break;
 
-      //       case "GraphicTrends":
-      //         hidePages(pages,["ViewGraphicTrends","chartTrends"]);
-      //         break;
-      //     }
-      //     changeId.config.height = newHeight;
-      //     changeId.resize();
-      // }
+            case "GraphicTrends":
+              Context.showPages(["ViewGraphicTrends","chartTrends"]);
+              // hidePages(pages,["ViewGraphicTrends","chartTrends"]);
+              break;
+            default:
+              break;
+          }
+          changeId.config.height = newHeight;
+          changeId.resize();
+      }
     }
   }
 }
@@ -219,23 +210,23 @@ const updateLeftMenuBase = (devicesArr) => {
   let devices = { margin:10, padding:0, type:"wide",
   view:"flexlayout",cols:[]};
   devicesArr.forEach(function(item, index, array) {
-      // console.log(item, index);
+//       // console.log(item, index);
       devices.cols.push( { view:"toggle", label:'<span class="material-icons">' +  '</span> ' + item.name , minWidth: minWidthBut, height: 80, css: "webix_primary",
-      // click:function(id,event){
-      //     let tree = $$("parametersGrid");
-      //     let arr = tree.getOpenItems();
-      //     arr.forEach(function (item) {
-      //       tree.close(item);
-      //     });
-      //     tree.clearAll();
+//       // click:function(id,event){
+//       //     let tree = $$("parametersGrid");
+//       //     let arr = tree.getOpenItems();
+//       //     arr.forEach(function (item) {
+//       //       tree.close(item);
+//       //     });
+//       //     tree.clearAll();
 
-      //     updateParameters(index);
+//       //     updateParameters(index);
           
-      //     let s1 = $$(id).getParentView();
-      //     s1._cells.forEach(element => {
-      //         element.setValue(0);
-      //     });
-      // }
+//       //     let s1 = $$(id).getParentView();
+//       //     s1._cells.forEach(element => {
+//       //         element.setValue(0);
+//       //     });
+//       // }
       })
 });
   let scrollDev = setScroll(devices);

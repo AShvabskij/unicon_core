@@ -21,12 +21,13 @@ function App() {
     <div className="App">
       <div className="mainrow">
           <div className="left">
+            <div className="headerlogo"></div>
             <MenuLeft/>
           </div>
           <div className="main">
-          
-           {/* <ViewBase/> */}
-           <ViewTest/>
+          <div className="header"></div>
+           <ViewBase/>
+           {/* <ViewTest/> */}
           </div>
       </div>
       <div className="footer">footer</div>
