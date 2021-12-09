@@ -75,6 +75,7 @@
 .webixitem {
     height: 100%;
     width: 100%;
+    background: #ebedf0;
 }
 
 .main {
@@ -147,6 +148,7 @@
     width: 50% !important;
 } */
 
-.webixitem {
-    background: #ebedf0;
+.pages {
+    visibility: hidden;
+    /* display: none; */
 }

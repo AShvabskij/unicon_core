@@ -97,7 +97,6 @@ function buttons(params) {
       },
       onAfterExpand:function(id){
       //     // console.log("onAfterExpand")
-          let pages = ["deviceView","ViewCPlotWeb","ViewPLC","ViewGraphicTrends"];
       //     console.log(id)
       //     // console.log($$(id)) 
           let changeId = $$(id);
@@ -105,23 +104,19 @@ function buttons(params) {
           switch(id)  {
             case "DeviceInit":
               newHeight = 0;
-              Context.showPages(["deviceView"]);
-              // hidePages(pages,["deviceView"]);
+              Context.showPages(["ViewDevices"]);
               break;
 
             case "cPlotWeb":
               Context.showPages(["ViewCPlotWeb","chartCPlotWeb"]);
-              // hidePages(pages,["ViewCPlotWeb","chartCPlotWeb"]);
               break;
 
             case "PLC":
               Context.showPages(["ViewPLC"]);
-              // hidePages(pages,["ViewPLC"]);
               break;
 
             case "GraphicTrends":
               Context.showPages(["ViewGraphicTrends","chartTrends"]);
-              // hidePages(pages,["ViewGraphicTrends","chartTrends"]);
               break;
             default:
               break;

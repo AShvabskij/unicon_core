@@ -16,7 +16,7 @@ export const Context = {
     title: "t1",
     elements:{},
     devices :[{name:"dev1a"},{name:"dev2b"},{name:"dev3c"}],
-    pages : ["deviceView","ViewCPlotWeb","ViewPLC","ViewGraphicTrends"],
+    pages : ["ViewDevices","ViewCPlotWeb","ViewPLC","ViewGraphicTrends"],
     states:{indexDevice:1},
     chartList: [
         {id:"chart1",dev:"",index:0},
