@@ -51,7 +51,7 @@ function ViewPLC(props) {
   // console.log(props.devtitle);
 
   return (
-    <div id="ViewPLC">
+    <div id="ViewPLC" className="pages">
       <ControlView/>
     </div>
   );
