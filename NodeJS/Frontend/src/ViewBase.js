@@ -10,9 +10,9 @@ import ViewCPlotWeb from "./ViewCPlotWeb";
 function ViewBase(props) {
   return (
    <div>
+    <ViewDevices/>
     <ViewGraphicTrends/>
     <ViewCPlotWeb/>
-    <ViewDevices/>
    </div>
  );
 }

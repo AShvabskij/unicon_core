@@ -107,9 +107,34 @@ function getControl1(props) {
         id: "info",
         header: "Info",
         body: {
+          id: "infoContent",
+          view: "htmlform",
+          content: "viewdevicesinfo"
         }
       }
-    ]
+    ],
+    tabbar: {
+      on: {
+
+        onAfterTabClick: function (id, ev) {
+          if (id == "oscilloscopeContent") {
+            //showChart("chart2", "memo1");
+            // showElementChart("chart3");
+            // showElementChart("chart4")
+            // showElementChart("chart5")
+          }
+          if (id == "controlContent") {
+            let cv = document.getElementById("controlview");
+            cv.style.visibility = "visible";
+          }
+
+          // if (id == "controlContent") {
+          //   showChart("chart1", "memo2")
+          // }
+          Context.resize();
+        }
+      }
+    }
   }
 }
 
@@ -131,8 +156,10 @@ export default class ViewDevices extends React.Component {
     return (
       <div id="ViewDevices" className="page">
         <WebixComponent ui={getControl1(this.props)} data={[]} />
+        
         {/* Context.states.indexDevice */}
         hi
+        <ViewDevicesInfo id="viewdevicesinfo" />
              {/* <ViewDevicesInfo id="asd" data={""} /> */}
       </div>
     )

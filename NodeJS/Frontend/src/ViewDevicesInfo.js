@@ -40,13 +40,14 @@ function ViewDevicesInfo(props) {
   let text= textArr[props.data];
   return (
     
-    <div>
-      <table>  
+    <div id={props.id}>
+      "ViewDevicesInfo"
+      {/* <table>  
         <tr>
           <td><div class={className}> </div></td>
           <td>{text}</td>
         </tr>
-      </table>
+      </table> */}
      </div>
   );
 }
