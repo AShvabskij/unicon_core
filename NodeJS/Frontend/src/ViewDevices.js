@@ -9,10 +9,12 @@ import React from "react";
 // import ParametersView from './ParametersView';
 // import ControlView from './ControlView';
 import ViewDevicesInfo from './ViewDevicesInfo';
+import ViewDevicesControl from "./ViewDevicesControl";
+import ViewDevicesParameters from "./ViewDevicesParameters";
 import Config from './.config.js';
 import { Model } from "./data_model/fr_model.mjs";
 import { observer } from "mobx-react";
-import { Context } from "./Context";
+import { Context, setVisibleElements } from "./Context";
 
 
 function tabview1(props) {
@@ -81,35 +83,37 @@ function getControl(props) {
   }
 }
 
-function getControl1(props) {
+function tabViewControl(props) {
+  let cellsArr = ["devicesParametersTab","devicesОscilloscopeTab","devicesControlTab","devicesInfoTab"];
   return {
     view: "tabview",
     cells: [
       {
-        id: "parameters",
+        // id: "parameters",
         header: "Parameters",
         body: {
+          id: "devicesParametersTab",
         }
       },
       {
-        id: "oscilloscope",
+        // id: "oscilloscope",
         header: "Оscilloscope",
         body: {
+          id: "devicesОscilloscopeTab",
         }
       },
       {
-        id: "control",
+        // id: "control",
         header: "Control",
         body: {
+          id: "devicesControlTab",
         }
       },
       {
-        id: "info",
+        // id: "info",
         header: "Info",
         body: {
-          id: "infoContent",
-          view: "htmlform",
-          content: "viewdevicesinfo"
+          id: "devicesInfoTab",
         }
       }
     ],
@@ -117,6 +121,12 @@ function getControl1(props) {
       on: {
 
         onAfterTabClick: function (id, ev) {
+          console.log("onAfterTabClick="+id);
+          console.log(ev);
+          setVisibleElements([id],cellsArr);
+          if (id == "devicesInfoTab") {
+            //setVisibleElements([id],cellsArr);
+          }
           if (id == "oscilloscopeContent") {
             //showChart("chart2", "memo1");
             // showElementChart("chart3");
@@ -125,7 +135,7 @@ function getControl1(props) {
           }
           if (id == "controlContent") {
             let cv = document.getElementById("controlview");
-            cv.style.visibility = "visible";
+           // cv.style.visibility = "visible";
           }
 
           // if (id == "controlContent") {
@@ -155,11 +165,11 @@ export default class ViewDevices extends React.Component {
 
     return (
       <div id="ViewDevices" className="page">
-        <WebixComponent ui={getControl1(this.props)} data={[]} />
-        
+        <WebixComponent ui={tabViewControl(this.props)} data={[]} />
         {/* Context.states.indexDevice */}
-        hi
-        <ViewDevicesInfo id="viewdevicesinfo" />
+        <ViewDevicesInfo id="devicesInfoTab" />
+        <ViewDevicesControl id="devicesControlTab" />
+        <ViewDevicesParameters id="devicesParametersTab"/>
              {/* <ViewDevicesInfo id="asd" data={""} /> */}
       </div>
     )

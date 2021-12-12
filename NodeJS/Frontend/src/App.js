@@ -7,7 +7,7 @@ import {Context} from './Context';
 import {Setup} from './Setup';
 import {Provider} from "mobx-react";
 import CompMobix from "./CompMobix";
-import MenuLeft from "./MenuLeft";
+import BaseMenuLeft from "./MenuLeft";
 import Tabbar from "./Tabbar";
 import './App.css';
 
@@ -22,7 +22,7 @@ function App() {
       <div className="mainrow">
           <div className="left">
             <div className="headerlogo"></div>
-            <MenuLeft/>
+            <BaseMenuLeft/>
           </div>
           <div className="main">
           <div className="header"></div>

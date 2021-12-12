@@ -206,8 +206,12 @@ const updateLeftMenuBase = (devicesArr) => {
   view:"flexlayout",cols:[]};
   devicesArr.forEach(function(item, index, array) {
 //       // console.log(item, index);
-      devices.cols.push( { view:"toggle", label:'<span class="material-icons">' +  '</span> ' + item.name , minWidth: minWidthBut, height: 80, css: "webix_primary",
-//       // click:function(id,event){
+      devices.cols.push( { view:"toggle", deviceID: item.id ,label:'<span class="material-icons">' +  '</span> ' + item.name , minWidth: minWidthBut, height: 80, css: "webix_primary",
+      click:function(id,event){
+              console.log("updateLeftMenuBase id="+index);
+              console.log(devices.cols[index].deviceID);
+              // Изменяем текущий номер устройства
+              Context.states.indexDevice = devices.cols[index].deviceID;
 //       //     let tree = $$("parametersGrid");
 //       //     let arr = tree.getOpenItems();
 //       //     arr.forEach(function (item) {
@@ -217,11 +221,12 @@ const updateLeftMenuBase = (devicesArr) => {
 
 //       //     updateParameters(index);
           
-//       //     let s1 = $$(id).getParentView();
-//       //     s1._cells.forEach(element => {
-//       //         element.setValue(0);
-//       //     });
-//       // }
+          // Подсветка нужной кнопки при нажатии и отжатие остальных
+          let s1 = $$(id).getParentView();
+          s1._cells.forEach(element => {
+              element.setValue(0);
+          });
+      }
       })
 });
   let scrollDev = setScroll(devices);
@@ -238,11 +243,18 @@ const updateLeftMenuBase = (devicesArr) => {
 //   )
 // });
 
-// function MenuLeft(props) {
+function BaseMenuLeft(props) {
+  return ( 
+    <MenuLeft/>
+  );
+}
+
 const MenuLeft = observer(({  }) => {
   // let devArr = [{name:"dev1"},{name:"dev2"},{name:"dev3"}];
   useEffect(() => {
     console.log("Render MenuLeft");
+    console.log(Context.model.devices());
+    console.log(Context.model.m_devices);
     updateLeftMenuBase(Context.model.m_devices);
   })
   return ( 
@@ -250,4 +262,4 @@ const MenuLeft = observer(({  }) => {
   );
 });
 
-export default MenuLeft;
+export default BaseMenuLeft;

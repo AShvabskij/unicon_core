@@ -40,7 +40,7 @@ function ViewDevicesInfo(props) {
   let text= textArr[props.data];
   return (
     
-    <div id={props.id}>
+    <div id={props.id} className="pages">
       "ViewDevicesInfo"
       {/* <table>  
         <tr>

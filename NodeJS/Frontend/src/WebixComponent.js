@@ -84,7 +84,8 @@ function UpdateItems(current,dataList) {
 function WebixComponent({data, ui}){
   const webixRef  = createRef()
   const uiState   = useRef()     
-
+  console.log("WebixComponent redraw");
+  console.log(ui);
   const setWebixData= (dataToUpdate) => {
     console.log(uiState.current);
     if (uiState.current["setValues"])
@@ -133,7 +134,6 @@ function WebixComponent({data, ui}){
       }
   }, [data])
 
-  
   return (
     <div className="webixitem" ref={webixRef}></div>
   );
