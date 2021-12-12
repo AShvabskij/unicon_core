@@ -37,7 +37,7 @@ export const Context = {
     resize :function(event) {
         console.log("resize");
         //let elements = ["$scrollview1"];
-        let elements = ["accmain","scrollacc"];
+        let elements = ["accmain","scrollacc","tabViewControl"];
         
         elements.forEach(function(item, index, array) {
             //if(item == "controlview") $$(item).resize();

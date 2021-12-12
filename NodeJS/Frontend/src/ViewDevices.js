@@ -87,6 +87,7 @@ function tabViewControl(props) {
   let cellsArr = ["devicesParametersTab","devicesОscilloscopeTab","devicesControlTab","devicesInfoTab"];
   return {
     view: "tabview",
+    id: "tabViewControl",
     cells: [
       {
         // id: "parameters",
