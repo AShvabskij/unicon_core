@@ -223,6 +223,7 @@ export default class ViewCPlotWeb extends React.Component {
       <div id="ViewCPlotWeb" className="pages" style={{visibility:"hidden"}}>
         <WebixComponent ui={toolBar()} />
         <Chart id="chartCPlotWeb" title="&nbsp;" addFunction={addFunction} />
+        <Chart id="chartCPlotWeb1" title="&nbsp;" addFunction={addFunction} />
       </div>    
     )
   }

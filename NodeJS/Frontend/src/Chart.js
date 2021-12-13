@@ -25,8 +25,8 @@ import { TSciChart } from "scichart/types/TSciChart";
 // import { IXyDataSeriesOptions} from "scichart/Charting/Model/XyDataSeries";
 
 // import Webix from './Webix';
-import * as webix from 'webix/webix.js';
-import Config from './.config.js';
+// import * as webix from 'webix/webix.js';
+// import Config from './.config.js';
 import { Context } from "./Context"
 
 // import classes from "../../../../Examples/Examples.module.scss";
@@ -74,6 +74,12 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
 
   // Create an X,Y Axis and add to the chart
   const xAxis = new NumericAxis(wasmContext, { autoRange: EAutoRange.Once });
+//   chart1XAxis = new CategoryAxis(wasmContext, {
+//     drawLabels: false,
+//     drawMajorTickLines: false,
+//     drawMinorTickLines: false
+// });
+  xAxis.drawLabels = true;
   xAxis.drawMajorGridLines = true;
   xAxis.drawMinorGridLines = true;
 
