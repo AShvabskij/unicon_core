@@ -7,6 +7,10 @@ function setStyleByID(id,cssproperties,val){
     }
 }
 
+export const showElementChart = (chartID, visibility = "visible") =>{
+    setStyleByID(chartID,"visibility", visibility);
+};
+
 export function setVisibleElements(visibleElementIDArr, hiddenElementsArr = []){
     hiddenElementsArr.forEach(id => {
         setStyleByID(id,"display","none");

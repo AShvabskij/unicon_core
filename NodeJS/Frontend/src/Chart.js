@@ -329,4 +329,7 @@ function ChartControls() {
   return chartControls;
 }
 
-export { ChartControls, colorsArrDefaults, colorsTitleArr };
+function drawValueRange(chart, xValues, yValues, line) {
+  chart.addVarPointRange(xValues, yValues, line)
+}
+export { ChartControls, colorsArrDefaults, colorsTitleArr , drawValueRange};

@@ -11,6 +11,7 @@ import React from "react";
 import ViewDevicesInfo from './ViewDevicesInfo';
 import ViewDevicesControl from "./ViewDevicesControl";
 import ViewDevicesParameters from "./ViewDevicesParameters";
+import ViewDevicesOscilloscope from "./ViewDevicesOscilloscope"
 import Config from './.config.js';
 import { Model } from "./data_model/fr_model.mjs";
 import { observer } from "mobx-react";
@@ -171,6 +172,7 @@ export default class ViewDevices extends React.Component {
         <ViewDevicesInfo id="devicesInfoTab" />
         <ViewDevicesControl id="devicesControlTab" />
         <ViewDevicesParameters id="devicesParametersTab"/>
+        <ViewDevicesOscilloscope id="devicesОscilloscopeTab" />
              {/* <ViewDevicesInfo id="asd" data={""} /> */}
       </div>
     )
