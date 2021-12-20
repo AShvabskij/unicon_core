@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
 import { $$, template } from 'webix';
 import { Context,showElementChart } from './Context';
-import { ChartControls,drawValueRange } from './Chart';
+import Chart, { ChartControls,drawValueRange } from './Chart';
 import ViewDevicesSelectChart  from "./ViewDevicesSelectChart";
 
 export const chartsArrVisible = [];
@@ -54,7 +54,7 @@ const addButtonClick = async () => {
       // console.log(comp);
 
       let indexDevice = Context.states.indexDevice;
-      let device = Context.model.devices()[indexDevice];
+      let device = Context.model.device(indexDevice);
       let dataForChoose = [];
       if (device != undefined) {
         let osc = await device.getOsc();
@@ -97,16 +97,22 @@ const removeButtonClick = () => {
 }
 
 async function startOsc(indexDevice) {
-  let device = Context.model.devices()[indexDevice];
+  console.log("startOsc indexDevice="+indexDevice);
+  let device = Context.model.device(indexDevice);
+  console.log(device);
   let osc = await device.getOsc();
 
   let chart = chartsArrVisible.slice(-1);
+  console.log("startOsc");
+  console.log(chart);
+  console.log(Context.paramToCharts);
   if (chart == undefined || Context.paramToCharts[chart] == undefined) {
     return;
   }
 
   let charts = ChartControls();
-
+  console.log("ChartControls charts");
+  console.log(charts);
   let channels = [];
   Context.paramToCharts[chart].forEach(function(item, index, array) {
     channels.push(item.channel);
@@ -130,7 +136,7 @@ async function startOsc(indexDevice) {
 }
 
 async function stopOsc(deviceId) {
-  let device = Context.model.devices()[deviceId];
+  let device = Context.model.device(deviceId);
   let osc = device.osc;
 
   if (osc != null) {
@@ -161,6 +167,12 @@ function getInfo(props) {
    
   }
 
+//Временная генерация данных
+function addFunction(x) {
+    // console.log("addFunction");
+    return Math.sin(x * 0.01) * (1 + 0.5 * Math.random());
+}
+
 
 function ViewDevicesOscilloscope(props) {
   console.log("InfoView");
@@ -180,6 +192,11 @@ function ViewDevicesOscilloscope(props) {
       "ViewDevicesInfo"
       <WebixComponent ui={toolBar()} />
       <ViewDevicesSelectChart />
+      {
+      Context.oscilloscopeChartList.map((item) => (
+                        <Chart id={item} title="&nbsp;" addFunction={addFunction} />
+                ))
+      }
       {/* <table>  
         <tr>
           <td><div class={className}> </div></td>

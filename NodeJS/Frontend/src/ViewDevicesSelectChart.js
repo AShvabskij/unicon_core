@@ -3,6 +3,7 @@ import 'webix/webix.css';
 import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
 import { $$, template } from 'webix';
+import {ChartControls} from "./Chart";
 import { Context,showElementChart } from './Context';
 import {chartsArrVisible,chartsArrHidden} from "./ViewDevicesOscilloscope"
 
@@ -196,11 +197,22 @@ const ViewDevicesSelectChartUI = () => {
                     Context.paramToChart.forEach(function(item, index, array) {
                         paramArr.push(item.name);
                       });
-                      Context.paramToCharts[chartToVisible] = Context.paramToChart;
-                      Context.chartList[chartToVisible].setColorsArr(colorsArrTab);
-                      Context.chartList[chartToVisible].setNamesArr(paramArr);
+                    Context.paramToCharts[chartToVisible] = Context.paramToChart;
+                    console.log("Context.chartList");
+                    console.log(Context.chartList);
+                    Context.chartList[chartToVisible].setColorsArr(colorsArrTab);
+                    Context.chartList[chartToVisible].setNamesArr(paramArr);
                     chartsArrVisible.push(chartToVisible);
+                    console.log("Select chart click");
+                    let chControl = ChartControls();
+                    console.log(chControl[chartToVisible]);
+                    // chControl[chartToVisible].setColorsArr(colorsArrTab);
+                    // chControl[chartToVisible].setNamesArr(paramArr);
+                    console.log("chartToVisible="+chartToVisible);
+                    console.log(colorsArrTab);
+                    console.log(paramArr);
                     document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
+                    // Alex
                     showElementChart(chartToVisible);
                   $$("showSelectChartWindow").hide();
                   clearDataTable();

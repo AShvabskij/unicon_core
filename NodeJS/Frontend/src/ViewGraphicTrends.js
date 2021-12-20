@@ -28,7 +28,7 @@ function drawValueRange(chart, xValues, yValues, line) {
 }
 
 async function startOsc(indexDevice) {
-  let device = Context.model.devices()[indexDevice];
+  let device = Context.model.device(indexDevice);
   let osc = await device.getOsc();
 
   let chart = chartsArrVisible.slice(-1);
@@ -61,7 +61,7 @@ async function startOsc(indexDevice) {
 }
 
 async function stopOsc(deviceId) {
-  let device = Context.model.devices()[deviceId];
+  let device = Context.model.device(deviceId);
   let osc = device.osc;
 
   if (osc != null) {
@@ -163,8 +163,8 @@ const addButtonClick = async () => {
       let comp = $$("showSelectChartWindowData");
       // console.log(comp);
 
-      let indexDevice = Context.states.indexDevice;
-      let device = Context.model.devices()[indexDevice];
+      // let indexDevice = Context.states.indexDevice;
+      let device = Context.model.device(Context.states.indexDevice);
       let dataForChoose = [];
       if (device != undefined) {
         let osc = await device.getOsc();
@@ -215,6 +215,7 @@ function addFunction(x) {
 export default class ViewGraphicTrends extends React.Component {
   constructor(props) {
     super(props);
+    console.log("create ViewGraphicTrends");
   };
 
   //visibility:"hidden", display:"none"

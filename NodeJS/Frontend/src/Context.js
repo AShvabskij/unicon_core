@@ -32,12 +32,30 @@ export const Context = {
     devices :[{name:"dev1a"},{name:"dev2b"},{name:"dev3c"}],
     pages : ["ViewDevices","ViewCPlotWeb","ViewPLC","ViewGraphicTrends"],
     states:{indexDevice:1},
-    chartList: [
+    //Хранит набор параметров для отображения на Chart
+    oscilloscopeChartList: ["chart3","chart4","chart5"],
+    paramToChart:[],
+    paramToCharts:{"chart3":{}, "chart4":{}, "chart5":{}},
+    chartList:{"chart3":{setNamesArr: () => {}, setColorsArr: () => {}}, 
+            "chart4":{setNamesArr: () => {}, setColorsArr: () => {}}, 
+            "chart5":{setNamesArr: () => {}, setColorsArr: () => {}},
+            "chartTrends":{setNamesArr: () => {}, setColorsArr: () => {}},
+            "chartCPlotWeb":{setNamesArr: () => {}, setColorsArr: () => {}},
+        },
+    // Временный лист для создания общео списка графиков
+    chartListTemporary: [
         {id:"chart1",dev:"",index:0},
         {id:"chart2",dev:"",index:1},
         // {id:"chart3",dev:""},
         // {id:"chart4",dev:""}
     ],
+    addNamesColor :function(chartID,setNamesArr,setColorsArr) {
+        if (! this.chartList[chartID]) {
+            this.chartList[chartID] = {};
+        }
+        this.chartList[chartID]["setNamesArr"] = setNamesArr;
+        this.chartList[chartID]["setColorsArr"] = setColorsArr
+    },
     resize :function(event) {
         console.log("resize");
         //let elements = ["$scrollview1"];

@@ -135,8 +135,8 @@ function getUImainMenu(props) {
       onItemClick:function(id){
 				console.log("onItemClick");
 				// console.log(id);
-        console.log(Context.model.devices()[Context.states.indexDevice].params);
-        let paramCell = Context.model.devices()[Context.states.indexDevice].params[id.row.substr(1)-1];
+        console.log(Context.model.device(Context.states.indexDevice).params);
+        let paramCell = Context.model.device(Context.states.indexDevice).params[id.row.substr(1)-1];
         console.log(paramCell);
         // console.log(id);
         if (paramCell != undefined) {
@@ -148,7 +148,7 @@ function getUImainMenu(props) {
 			onBeforeEditStart:function(id){
 				console.log("onBeforeEditStart");
         // console.log(id);
-        let cellParam = Context.model.devices()[Context.states.indexDevice].params[id.row.substr(1)-1];
+        let cellParam = Context.model.device(Context.states.indexDevice).params[id.row.substr(1)-1];
         console.log(cellParam.rw);
 				
         if((id.column === "value") && (cellParam.rw == "W")){
@@ -167,7 +167,7 @@ function getUImainMenu(props) {
 			  }
 			},
       onAfterEditStart:function(id){
-        currentCellParam = Context.model.devices()[Context.states.indexDevice].params[id.row.substr(1)-1];
+        currentCellParam = Context.model.device(Context.states.indexDevice).params[id.row.substr(1)-1];
       },
       onAfterEditStop: function (state, editor, ignoreUpdate) {
       if (state.value === state.old) {
@@ -236,7 +236,7 @@ function getUImainMenu(props) {
 
 const updateParameters = (indexDevice) => {
   console.log("indexDevice = " + indexDevice);
-  let deviceItem = Context.model.devices()[indexDevice];
+  let deviceItem = Context.model.device(indexDevice);
   console.log("updateParameters");
   console.log(deviceItem);
   let dt1 = [];

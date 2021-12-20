@@ -181,7 +181,13 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
   }
 
   const clearChart = (line) => {
-    arrayLines[line-1].dataSeries.clear();
+    console.log(clearChart);
+    console.log(arrayLines);
+    if (arrayLines[line-1]) {
+      arrayLines[line-1].dataSeries.clear();
+    } else {
+      console.log("Error clearChart arrayLines[line-1] - not exists");
+    }
   }
 
   const addVarPoint = (x,y,line) => {
@@ -287,6 +293,10 @@ export default function Chart(props) {
   console.log(colorsArr);
   React.useEffect(() => {
     (async () => {
+      console.log("namesArr");
+      console.log(namesArr);
+      console.log("colorsArr");
+      console.log(colorsArr);
         const res = await initSciChart(props.id,props.addFunction,namesArr,colorsArr);
       // scs = res.sciChartSurface;
       setControls(res.controls);
@@ -300,10 +310,12 @@ export default function Chart(props) {
       });
 
       res.sciChartSurface.chartModifiers.add(lm);
-
+ 
       // if (props.id) { 
       //   this.id = props.id
+      console.log("props.id="+props.id);
       chartControls[props.id] = res.controls;
+      console.log(chartControls);
       // }
       //autoStartTimerId = setTimeout(res.controls.startDemo, 3000);
     })();
@@ -315,13 +327,17 @@ export default function Chart(props) {
       //scs?.delete();
     };
   }, [namesArr], [colorsArr]);
-  //Lesya
-  // Info.chartList[props.id].setNamesArr = setNamesArr;
-  // Info.chartList[props.id].setColorsArr = setColorsArr;
+  console.log("chart Context.chartList");
+  console.log(Context.chartList);
+  Context.addNamesColor(props.id,setNamesArr,setColorsArr);
+  //Context.chartList[props.id].setNamesArr = setNamesArr;
+  //Context.chartList[props.id].setColorsArr = setColorsArr;
   let currentChartID = props.id+"_"+suffixChartID;
   return (
         //  <div id={currentChartID} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
-        <div id={currentChartID} className="chart" ></div>
+        <div id={props.id}  style={{ visibility:"hidden" }} >
+          <div id={currentChartID} className="chart" ></div>
+        </div>
           );
 }
 
