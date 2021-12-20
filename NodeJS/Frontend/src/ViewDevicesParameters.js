@@ -235,10 +235,12 @@ function getUImainMenu(props) {
 }
 
 const updateParameters = (indexDevice) => {
-  console.log("indexDevice = " + indexDevice);
+  ClearTableParams();
+  console.log("updateParameters indexDevice = " + indexDevice);
   let deviceItem = Context.model.device(indexDevice);
   console.log("updateParameters");
   console.log(deviceItem);
+  console.log(Context.model.devices());
   let dt1 = [];
   if (deviceItem) {
     // При переключении девайсов сбрасывать графики
@@ -295,16 +297,29 @@ function ParametersView(props) {
   );
 }
 
+const ClearTableParams = () =>{
+  let tree = $$("parametersGrid");
+  if (tree) {
+      let arr = tree.getOpenItems();
+        arr.forEach(function (item) {
+                tree.close(item);
+        });
+      tree.clearAll();
+  }
+
+}
+
 const ParametersViewObserver = observer(({  }) => {
   // let devArr = [{name:"dev1"},{name:"dev2"},{name:"dev3"}];
   useEffect(() => {
     console.log("Render ParametersView");
     console.log(Context.model.devices());
     console.log(Context.states.indexDevice);
+    // 
     // updateLeftMenuBase(Context.model.m_devices);
   })
   return ( 
-      <WebixComponent ui={getUImainMenu()} data={updateParameters(1)} updateModel={ Context.states.indexDevice } />
+      <WebixComponent ui={getUImainMenu()} data={updateParameters(Context.states.indexDevice)} updateModel={ Context.states.indexDevice } />
   );
 });
 
