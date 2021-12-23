@@ -44,8 +44,8 @@ export default class Oscilloscope {
         }
 
         for (var i = 0; i < channels.length; ++i) {
-            let channel = channels[i];
-            this.channels[channel].stream = new Stream.Readable({
+            let channelNum = channels[i];
+            this.channel(channelNum).stream = new Stream.Readable({
                 highWaterMark: 1, //STREAM_BUFFER_OBJECTS,
                 objectMode: true,
                 read() { }
@@ -122,18 +122,17 @@ export default class Oscilloscope {
             this._capturedChannels.splice(index, 1)
         }
 
-        let stream = this.channels[chNum].stream;
+        let stream = this.channel(chNum).stream;
         if (stream) {
-            this.channels[chNum].stream.push(null);
-            this.channels[chNum].stream.destroy();
-            this.channels[chNum].stream = null;
+            stream.push(null);
+            stream.destroy();
         }
     }
 
     _pushChannelData(chNum, data) {
-        let stream = this.channels[chNum].stream;
+        let stream = this.channel(chNum).stream;
         if (stream) {
-            this.channels[chNum].stream.push(data);
+            stream.push(data);
         }
         return;
     }
@@ -169,5 +168,10 @@ export default class Oscilloscope {
             return { val, time };
         })
         return values;
+    }
+
+    channel(chNum) {
+        let result = this.channels.find(item => item.num === chNum)
+        return result;
     }
 }

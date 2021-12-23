@@ -59,10 +59,10 @@ const addButtonClick = async () => {
       if (device != undefined) {
         let osc = await device.getOsc();
         osc.channels.forEach(function(item, index, array) {
-          let name1 = item.name + " [" + item.module_id + "."+ item.param_id + "]";
+          let name1 = item.name + " [" + device.id + "."+ item.var_id + "]";
           if (item.name == "") name1 = "—";
           dataForChoose.push({ id:index, channel:item.num, name:name1,  
-            color:item.color, status:0, idParam: item.param_id,
+            color:item.color, status:0, idParam: item.var_id,
           });
           // console.log(dataForChoose);
         })
@@ -97,42 +97,100 @@ const removeButtonClick = () => {
 }
 
 async function startOsc(indexDevice) {
-  console.log("startOsc indexDevice="+indexDevice);
   let device = Context.model.device(indexDevice);
-  console.log(device);
   let osc = await device.getOsc();
 
   let chart = chartsArrVisible.slice(-1);
-  console.log("startOsc");
-  console.log(chart);
-  console.log(Context.paramToCharts);
   if (chart == undefined || Context.paramToCharts[chart] == undefined) {
     return;
   }
 
+  let chart2 = chartsArrVisible.slice(-2, -1);
+  let chart3 = chartsArrVisible.slice(-3, -2);
+
+  let isChart2 = Context.paramToCharts[chart2] !== undefined;
+  let isChart3 = Context.paramToCharts[chart3] !== undefined;
+
   let charts = ChartControls();
-  console.log("ChartControls charts");
-  console.log(charts);
-  let channels = [];
+
+  let allChannels = [];
+  let channelItems1 = [];
   Context.paramToCharts[chart].forEach(function(item, index, array) {
-    channels.push(item.channel);
     charts[chart].clearChart(index + 1);
+    let chItem = osc.channel(item.channel)
+    channelItems1.push(chItem);
+    allChannels.push(item.channel)
   })
-  
-  if (channels.length == 0) {
+
+  let channelItems2 = [];
+  if (isChart2) {
+    Context.paramToCharts[chart2].forEach(function(item, index, array) {
+      charts[chart2].clearChart(index + 1);
+      let chItem = osc.channel(item.channel)
+      channelItems2.push(chItem);
+      allChannels.push(item.channel)
+    })
+  }
+
+  let channelItems3 = [];
+  if (isChart3) {
+    Context.paramToCharts[chart3].forEach(function(item, index, array) {
+      charts[chart3].clearChart(index + 1);
+      let chItem = osc.channel(item.channel)
+      channelItems3.push(chItem);
+      allChannels.push(item.channel)
+    })
+  }
+
+  if (allChannels.length == 0) {
     console.log("There is no any selected channel!")
     return;
   }
 
-  osc.openDataStream(channels);
-  
-  Context.paramToCharts[chart].forEach(function(item, index, array) {
-      osc.channels[item.channel].stream.on('data', values => {
+  osc.openDataStream(allChannels);
+
+  startDrawData(chart, channelItems1);
+  startDrawData(chart2, channelItems2);
+  startDrawData(chart3, channelItems3);
+}
+
+async function startDrawData(chart, channelItems) {
+  let charts = ChartControls();
+
+  let freqHz = 50;
+
+  let timerId = setInterval(() => {
+    channelItems.forEach(function(ch, index, array) {
+      let values = ch.stream.read();
+      if (values) {
+        let xValues = values.map(valObj => { return valObj.time });
+        let yValues = values.map(valObj => { return valObj.val });
+        drawValueRange(charts[chart], xValues, yValues, index + 1);
+      }
+    })
+  }, freqHz);
+
+  channelItems.forEach(function(item, index, array) {
+    item.stream.on('end', values => {
+      if (timerId != 0) {
+        clearInterval(timerId);
+        timerId = 0;
+      }
+    })
+  });
+    
+/*  
+  Info.paramToCharts[chart].forEach(function(item, index, array) {
+    let ch = osc.channel(item.channel);
+      ch.stream.on('data', values => {
           let xValues = values.map(valObj => { return valObj.time });
           let yValues = values.map(valObj => { return valObj.val });
           drawValueRange(charts[chart], xValues, yValues, index + 1);
+
       })
   })
+*/
+
 }
 
 async function stopOsc(deviceId) {

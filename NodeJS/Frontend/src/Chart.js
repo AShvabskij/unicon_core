@@ -8,8 +8,8 @@ import { ZoomPanModifier } from "scichart/Charting/ChartModifiers/ZoomPanModifie
 import { RubberBandXyZoomModifier } from "scichart/Charting/ChartModifiers/RubberBandXyZoomModifier";
 import { MouseWheelZoomModifier } from "scichart/Charting/ChartModifiers/MouseWheelZoomModifier";
 import { XAxisDragModifier } from "scichart/Charting/ChartModifiers/XAxisDragModifier";
-import { EDragMode } from "scichart/types/DragMode";
 import { YAxisDragModifier } from "scichart/Charting/ChartModifiers/YAxisDragModifier";
+import { EDragMode } from "scichart/types/DragMode";
 import { ZoomExtentsModifier } from "scichart/Charting/ChartModifiers/ZoomExtentsModifier";
 import { ENumericFormat } from "scichart/types/NumericFormat";
 import { EAutoRange } from "scichart/types/AutoRange";
@@ -18,10 +18,14 @@ import { LegendModifier } from "scichart/Charting/ChartModifiers/LegendModifier"
 import { ELegendOrientation, ELegendPlacement } from "scichart/Charting/Visuals/Legend/SciChartLegendBase";
 
 import { NumberRange } from "scichart/Core/NumberRange"; import { WaveAnimation } from "scichart/Charting/Visuals/RenderableSeries/Animations/WaveAnimation";
+import {EZoomState} from "scichart/types/ZoomState";
+import { EXyDirection } from "scichart/types/XyDirection";
+import { EExecuteOn } from "scichart/types/ExecuteOn";
 
 // import { EllipsePointMarker } from "scichart/Charting/Visuals/PointMarkers/EllipsePointMarker";
 import { RolloverModifier } from "scichart/Charting/ChartModifiers/RolloverModifier";
 import { TSciChart } from "scichart/types/TSciChart";
+import { SciChartOverview } from "scichart/Charting/Visuals/SciChartOverview";
 // import { IXyDataSeriesOptions} from "scichart/Charting/Model/XyDataSeries";
 
 // import Webix from './Webix';
@@ -38,6 +42,7 @@ const LICENSE_KEY = Context.chartkey;
 const visiblePoints = 10000;
 const intervalAddPoint = 40;
 const suffixChartID = "scichart-root";
+const suffixChartOverviewID = "scichart-overview";
 let chartControls = [];
 
 const colorsArrDefaults = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000", "white"];
@@ -48,6 +53,14 @@ const colorsTitleArr = ["black","black","black", "black", "black", "black", "whi
 // const namesArr = ["Param 1","Param 2","Param 3","Param 4", "Param 5", "Param 6"];
 // const namesArr = ["Param 1","Param 2","Param 3","Param 4"];
 
+class myZoomExtents extends ZoomExtentsModifier
+{
+  myScichart = null;
+  modifierDoubleClick(args) {
+    this.myScichart.zoomExtents();
+  }
+
+}
 
 async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesArr = [], colorsArr = []) {
   const seriesArr = [];
@@ -60,10 +73,11 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
   // This Expires in 30 days - or 14th November 2020
   // Set this license key once in your app before calling SciChartSurface.create, e.g.
     const divElementId = chartID+"_"+suffixChartID;
-  let timerLocalID
-  SciChartSurface.setRuntimeLicenseKey(
-    LICENSE_KEY
-  );
+    const divOverviewId = chartID+"_"+suffixChartOverviewID;    
+    let timerLocalID
+    SciChartSurface.setRuntimeLicenseKey(
+      LICENSE_KEY
+    );
 
   // Create the SciChartSurface in the div 'scichart-root'
   // The SciChartSurface, and webassembly context 'wasmContext' are paired. This wasmContext
@@ -71,6 +85,8 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
   const { sciChartSurface, wasmContext } = await SciChartSurface.create(
     divElementId
   );
+
+  SciChartOverview.create(sciChartSurface, divOverviewId);
 
   // Create an X,Y Axis and add to the chart
   const xAxis = new NumericAxis(wasmContext, { autoRange: EAutoRange.Once });
@@ -82,6 +98,7 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
   xAxis.drawLabels = true;
   xAxis.drawMajorGridLines = true;
   xAxis.drawMinorGridLines = true;
+  xAxis.zoomExtentsToInitialRange = true; 
 
   let yMin = -4000;
   let yMax = 4000;
@@ -91,16 +108,20 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
   yAxis.labelProvider.formatLabel = (dataValue: number) => dataValue.toFixed(3);
   yAxis.autoRange = EAutoRange.Once;
   yAxis.visibleRange = new NumberRange(yMin, yMax);
+  yAxis.zoomExtentsToInitialRange = true; 
+  yAxis.growBy = new NumberRange(0.1, 0.2);
 
   sciChartSurface.xAxes.add(xAxis);
   sciChartSurface.yAxes.add(yAxis);
 
   sciChartSurface.chartModifiers.add(
-    new RubberBandXyZoomModifier(),
-    new MouseWheelZoomModifier(),
+    new RubberBandXyZoomModifier({ xyDirection: EXyDirection.XDirection, executeOn: EExecuteOn.MouseRightButton }),
+//    new RubberBandXyZoomModifier({ xyDirection: EXyDirection.XyDirection, executeOn: EExecuteOn.MouseLeftButton }),
+    new MouseWheelZoomModifier({ xyDirection: EXyDirection.YDirection }),
     new XAxisDragModifier({ dragMode: EDragMode.Panning }),
     new YAxisDragModifier({ dragMode: EDragMode.Panning }),
     new ZoomExtentsModifier(),
+    new ZoomPanModifier(),    
     new RolloverModifier()
   );
 
@@ -197,7 +218,6 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
 
   const addVarPointRange = (xValues = [], yValues = [], line) => {
     arrayLines[line-1].dataSeries.appendRange(xValues, yValues);
-    xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
 
     var curMin = Math.min.apply(null, yValues),
     curMax = Math.max.apply(null, yValues);
@@ -214,7 +234,10 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
       yMin = curMin - g*curMin;
     } 
 
-    yAxis.visibleRange = new NumberRange(yMin, yMax);    
+    if (sciChartSurface.zoomState !== EZoomState.UserZooming) {
+      xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
+      yAxis.visibleRange = new NumberRange(yMin, yMax);
+    }   
   }
 
   const addVarPoint2 = (x,y) => {
@@ -333,10 +356,13 @@ export default function Chart(props) {
   //Context.chartList[props.id].setNamesArr = setNamesArr;
   //Context.chartList[props.id].setColorsArr = setColorsArr;
   let currentChartID = props.id+"_"+suffixChartID;
+  let overviewChartID = props.id+"_"+suffixChartOverviewID;
+
   return (
         //  <div id={currentChartID} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
         <div id={props.id}  style={{ visibility:"hidden" }} >
           <div id={currentChartID} className="chart" ></div>
+          <div id={overviewChartID} style={{ width:"auto", height: 50, margin: "auto"}} ></div>          
         </div>
           );
 }
