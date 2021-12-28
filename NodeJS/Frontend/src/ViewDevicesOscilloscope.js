@@ -47,8 +47,6 @@ const toolBar = () => {
           },
         ]        
       },
-
-
       {
         view: "toolbar",
         id: "myToolbar2",
@@ -301,7 +299,6 @@ function ViewDevicesOscilloscope(props) {
   return (
     
     <div id={props.id} className="pages">
-      "ViewDevicesInfo"
       <WebixComponent ui={toolBar()} />
       <ViewDevicesSelectChart />
       {

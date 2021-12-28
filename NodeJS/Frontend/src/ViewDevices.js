@@ -169,7 +169,7 @@ export default class ViewDevices extends React.Component {
       <div id="ViewDevices" className="page">
         <WebixComponent ui={tabViewControl(this.props)} data={[]} />
         {/* Context.states.indexDevice */}
-        <ViewDevicesInfo id="devicesInfoTab" />
+        <ViewDevicesInfo id="devicesInfoTab" data={Context.states.indexDevice} />
         <ViewDevicesControl id="devicesControlTab" />
         <ViewDevicesParameters id="devicesParametersTab"/>
         <ViewDevicesOscilloscope id="devicesОscilloscopeTab" />

@@ -31,7 +31,7 @@ export const Context = {
     elements:{},
     devices :[{name:"dev1a"},{name:"dev2b"},{name:"dev3c"}],
     pages : ["ViewDevices","ViewCPlotWeb","ViewPLC","ViewGraphicTrends"],
-    states:{indexDevice:-100},
+    states:{indexDevice:0},
     //Хранит набор параметров для отображения на Chart
     oscilloscopeChartList: ["chart3","chart4","chart5"],
     paramToChart:[],

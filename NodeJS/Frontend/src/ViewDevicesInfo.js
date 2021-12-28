@@ -41,13 +41,12 @@ function ViewDevicesInfo(props) {
   return (
     
     <div id={props.id} className="pages">
-      "ViewDevicesInfo"
-      {/* <table>  
+      <table>  
         <tr>
           <td><div class={className}> </div></td>
           <td>{text}</td>
         </tr>
-      </table> */}
+      </table>
      </div>
   );
 }
