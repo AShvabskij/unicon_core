@@ -257,7 +257,7 @@ const updateParameters = (indexDevice) => {
       let infoCurrentDivice = deviceItem.desc + ". Channel: " + deviceItem.interfaceName;
       Context.states.indexDevice = indexDevice;
       let desc = $$("descriptionDevice");
-      // desc.setValue(infoCurrentDivice);
+      desc.setValue(infoCurrentDivice);
       deviceItem.modules.forEach(function(item, index, array) {
           dtt = [];
           item.params.forEach(function(itemP, indexP, array) {

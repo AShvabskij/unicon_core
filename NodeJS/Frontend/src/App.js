@@ -10,6 +10,7 @@ import CompMobix from "./CompMobix";
 import BaseMenuLeft from "./MenuLeft";
 import Tabbar from "./Tabbar";
 import './App.css';
+import WebixComponent, {scroll} from './WebixComponent';
 
 window.addEventListener('resize', function(event) {
   Context.resize();   
@@ -25,7 +26,9 @@ function App() {
             <BaseMenuLeft/>
           </div>
           <div className="main">
-          <div className="header"></div>
+          <div className="header">
+            <WebixComponent ui={{ "label": " ", "view": "label", "css":"deviceLabel", "id":"descriptionDevice"}} />            
+          </div>
            <ViewBase/>
            {/* <ViewTest/> */}
           </div>
