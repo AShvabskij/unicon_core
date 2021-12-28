@@ -141,8 +141,8 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
     new XAxisDragModifier({ dragMode: EDragMode.Panning }),
     new YAxisDragModifier({ dragMode: EDragMode.Scaling }),
     new ZoomExtentsModifier({isAnimated: true, animationDuration: 400, easingFunction: easing.outExpo}),
-    new ZoomPanModifier(),    
-    new MyRubberBandZoomModifier({ xyDirection: EXyDirection.XyDirection, executeOn: EExecuteOn.MouseRightButton, receiveHandledEvents: true}),
+    new ZoomPanModifier({executeOn: EExecuteOn.MouseRightButton}),    
+    new MyRubberBandZoomModifier({ xyDirection: EXyDirection.XyDirection, executeOn: EExecuteOn.MouseLeftButton, receiveHandledEvents: true}),
     cursor
   );
 

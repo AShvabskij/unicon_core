@@ -68,7 +68,7 @@ const toolBar = () => {
     
           },
           {
-            view: "button", value: "X", width: 30, align: "left",
+            view: "button", value: "Cursor", width: 100, align: "left",
             click: async function (id, event) {
               await SwitchCursor();
             }
