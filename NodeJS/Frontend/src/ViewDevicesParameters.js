@@ -85,7 +85,7 @@ function getUImainMenu(props) {
     // height:0,
     // id: "dataview",
     id: "parametersGrid",
-    height: 400,
+    height: 800,
     /* rules:{
       value:function(obj){ 
         console.log(obj);
