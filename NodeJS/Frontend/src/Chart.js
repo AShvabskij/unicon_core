@@ -11,6 +11,8 @@ import { XAxisDragModifier } from "scichart/Charting/ChartModifiers/XAxisDragMod
 import { YAxisDragModifier } from "scichart/Charting/ChartModifiers/YAxisDragModifier";
 import { EDragMode } from "scichart/types/DragMode";
 import { ZoomExtentsModifier } from "scichart/Charting/ChartModifiers/ZoomExtentsModifier";
+import { ChartModifierBase2D } from "scichart/Charting/ChartModifiers/ChartModifierBase2D";
+
 import { ENumericFormat } from "scichart/types/NumericFormat";
 import { EAutoRange } from "scichart/types/AutoRange";
 import { SciChartLegend } from "scichart/Charting/Visuals/Legend/SciChartLegend";
@@ -21,11 +23,13 @@ import { NumberRange } from "scichart/Core/NumberRange"; import { WaveAnimation 
 import {EZoomState} from "scichart/types/ZoomState";
 import { EXyDirection } from "scichart/types/XyDirection";
 import { EExecuteOn } from "scichart/types/ExecuteOn";
+import { easing } from "scichart/Core/Animations/EasingFunctions";
 
 // import { EllipsePointMarker } from "scichart/Charting/Visuals/PointMarkers/EllipsePointMarker";
 import { RolloverModifier } from "scichart/Charting/ChartModifiers/RolloverModifier";
 import { TSciChart } from "scichart/types/TSciChart";
 import { SciChartOverview } from "scichart/Charting/Visuals/SciChartOverview";
+import { SciChartVerticalGroup } from "scichart/Charting/LayoutManager/SciChartVerticalGroup";
 // import { IXyDataSeriesOptions} from "scichart/Charting/Model/XyDataSeries";
 
 // import Webix from './Webix';
@@ -44,22 +48,37 @@ const intervalAddPoint = 40;
 const suffixChartID = "scichart-root";
 const suffixChartOverviewID = "scichart-overview";
 let chartControls = [];
+let chartSurfaces = [];
 
 const colorsArrDefaults = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000", "white"];
-// let colorsArr = colorsArrDefaults;
-
 const colorsTitleArr = ["black","black","black", "black", "black", "black", "white", "white", "white", "white","white","white"];
+const verticalGroup = new SciChartVerticalGroup();
 
-// const namesArr = ["Param 1","Param 2","Param 3","Param 4", "Param 5", "Param 6"];
-// const namesArr = ["Param 1","Param 2","Param 3","Param 4"];
-
-class myZoomExtents extends ZoomExtentsModifier
+class MyRubberBandZoomModifier extends RubberBandXyZoomModifier // ChartModifierBase2D
 {
-  myScichart = null;
-  modifierDoubleClick(args) {
-    this.myScichart.zoomExtents();
-  }
+  modifierMouseDown(args) {
+    console.log("args.button = " + args.button)
+    console.log("args.ctrlKey = " + args.ctrlKey)
+    if (args.ctrlKey == true)  {
+      var pointTo = args.mousePoint;
+      pointTo.x = args.mousePoint.x + 1000;
+//    this.performZoom(args.mousePoint, pointTo)
+      var xAxis = this.parentSurface.getXAxisById(this.xAxisId)
+      if (xAxis) {
+        xAxis.zoomBy(-0.25, -0.25);
+      }
+    }
 
+    if (args.shiftKey == true)  {
+      var xAxis = this.parentSurface.getXAxisById(this.xAxisId)
+      if (xAxis) {
+        xAxis.zoomBy(0.25, 0.25);
+      }
+    }
+
+    args.handled = false;
+    super.modifierMouseDown(args)
+  }
 }
 
 async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesArr = [], colorsArr = []) {
@@ -86,7 +105,7 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
     divElementId
   );
 
-  SciChartOverview.create(sciChartSurface, divOverviewId);
+// SciChartOverview.create(sciChartSurface, divOverviewId);
 
   // Create an X,Y Axis and add to the chart
   const xAxis = new NumericAxis(wasmContext, { autoRange: EAutoRange.Once });
@@ -109,20 +128,22 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
   yAxis.autoRange = EAutoRange.Once;
   yAxis.visibleRange = new NumberRange(yMin, yMax);
   yAxis.zoomExtentsToInitialRange = true; 
-  yAxis.growBy = new NumberRange(0.1, 0.2);
+  yAxis.growBy = new NumberRange(0.2, 0.2);
 
   sciChartSurface.xAxes.add(xAxis);
   sciChartSurface.yAxes.add(yAxis);
 
+  const cursor = new RolloverModifier({modifierGroup: "first"});
+  cursor.visibility = true;
   sciChartSurface.chartModifiers.add(
-    new RubberBandXyZoomModifier({ xyDirection: EXyDirection.XDirection, executeOn: EExecuteOn.MouseRightButton }),
 //    new RubberBandXyZoomModifier({ xyDirection: EXyDirection.XyDirection, executeOn: EExecuteOn.MouseLeftButton }),
-    new MouseWheelZoomModifier({ xyDirection: EXyDirection.YDirection }),
+    new MouseWheelZoomModifier({ xyDirection: EXyDirection.XyDirection }),
     new XAxisDragModifier({ dragMode: EDragMode.Panning }),
-    new YAxisDragModifier({ dragMode: EDragMode.Panning }),
-    new ZoomExtentsModifier(),
+    new YAxisDragModifier({ dragMode: EDragMode.Scaling }),
+    new ZoomExtentsModifier({isAnimated: true, animationDuration: 400, easingFunction: easing.outExpo}),
     new ZoomPanModifier(),    
-    new RolloverModifier()
+    new MyRubberBandZoomModifier({ xyDirection: EXyDirection.XyDirection, executeOn: EExecuteOn.MouseRightButton, receiveHandledEvents: true}),
+    cursor
   );
 
   const arrayLines = [];
@@ -250,6 +271,21 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
         xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
   }
 
+  const ScalePlus = () => {
+    xAxis.zoomBy(-0.25, -0.25);
+    yAxis.zoomBy(-0.25, -0.25);
+  };
+
+  const ScaleMinus = () => {
+    xAxis.zoomBy(0.25, 0.25);
+    yAxis.zoomBy(0.25, 0.25);
+  };
+
+  const SwitchCursor = () => {
+    console.log("SwitchCursor");
+    cursor.isEnabled = !cursor.isEnabled;
+  };
+  
   const startDemo = () => {
     console.log("startDemo");
     // xds.append(200, 0);
@@ -275,10 +311,10 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
     //sciChartSurface.renderableSeries.add(lineSeries);
   };
 
-
-  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPoint2, addVarPointRange, addVarPointRange2, clearChart } };
+  verticalGroup.addSurfaceToGroup(sciChartSurface);
+  chartSurfaces.push(sciChartSurface);
+  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPoint2, addVarPointRange, addVarPointRange2, clearChart, ScalePlus, ScaleMinus, SwitchCursor} };
 }
-
 
 const webixButton = () => {
 
@@ -306,13 +342,12 @@ const WebixButton12 = () => {
     view:"button" })
 }
 
-
-
 export default function Chart(props) {
   const [namesArr, setNamesArr] = React.useState([]);
   // const [colorsArr, setColorsArr] = React.useState(colorsArrDefaults);
   const [colorsArr, setColorsArr] = React.useState([]);
-  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addVarPoint: () =>{}, addVarPoint2: () =>{}, addVarPointRange: () =>{}, addVarPointRange2: () =>{}, clearChart: () =>{}, });
+  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addVarPoint: () =>{}, addVarPoint2: () =>{}, addVarPointRange: () =>{}, addVarPointRange2: () =>{}, clearChart: () =>{}, 
+  ScalePlus: () => {}, ScaleMinus: () => {}, SwitchCursor: () => {}});
   console.log(colorsArr);
   React.useEffect(() => {
     (async () => {
@@ -360,9 +395,10 @@ export default function Chart(props) {
 
   return (
         //  <div id={currentChartID} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
+        //  <div id={overviewChartID} style={{ width:"auto", height: 70, margin: "auto"}} ></div>          
+
         <div id={props.id}  style={{ visibility:"hidden" }} >
           <div id={currentChartID} className="chart" ></div>
-          <div id={overviewChartID} style={{ width:"auto", height: 50, margin: "auto"}} ></div>          
         </div>
           );
 }
@@ -371,7 +407,23 @@ function ChartControls() {
   return chartControls;
 }
 
-function drawValueRange(chart, xValues, yValues, line) {
-  chart.addVarPointRange(xValues, yValues, line)
+function SyncCharts() {
+  verticalGroup.synchronizeAxisSizes();
+
+  let xAxes = []
+  chartSurfaces.forEach(chart => {
+    chart.zoomExtents();
+    let xAxis = chart.xAxes.items[0];
+    xAxes.push(xAxis);
+  })
+
+  xAxes.forEach(xAxis => {
+    xAxis.visibleRangeChanged.subscribe((data1) => {
+      xAxes.forEach(xAxis => {
+        xAxis.visibleRange = data1.visibleRange;
+      })
+    });        
+  });
 }
-export { ChartControls, colorsArrDefaults, colorsTitleArr , drawValueRange};
+
+export { ChartControls, SyncCharts, colorsArrDefaults, colorsTitleArr };

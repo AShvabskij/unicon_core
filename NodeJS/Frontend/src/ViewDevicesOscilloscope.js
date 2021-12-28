@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
 import { $$, template } from 'webix';
 import { Context,showElementChart } from './Context';
-import Chart, { ChartControls,drawValueRange } from './Chart';
+import Chart, { ChartControls, SyncCharts } from './Chart';
 import ViewDevicesSelectChart  from "./ViewDevicesSelectChart";
 
 export const chartsArrVisible = [];
@@ -12,38 +12,75 @@ export const chartsArrHidden = ["chart3","chart4","chart5"];
 
 const toolBar = () => {
   return {
-    view: "toolbar",
-    id: "myToolbar",
     cols: [
       {
-        view: "button", value: "Add Chart", width: 100, align: "left",
-        click: function (id, event) {
-          addButtonClick();
-        }
+        view: "toolbar",
+        id: "myToolbar",
+        cols: [
+          {
+            view: "button", value: "Add Chart", width: 100, align: "left",
+            click: function (id, event) {
+              addButtonClick();
+            }
+    
+          },
+          {
+            view: "button", value: "Remove Chart", autowidth: true, align: "center",
+            click: function (id, event) {
+              removeButtonClick();
+            }
+          },
+         
+          {
+            view: "button", value: "Start osc", autowidth: true, align: "center",
+            click: async function (id, event) {
+              console.log("Start osc");
+              startOsc(Context.states.indexDevice);
+            }
+          },
+          {
+            view: "button", value: "Stop osc", autowidth: true, align: "center",
+            click: async function (id, event) {
+              console.log("Stop osc");
+              stopOsc(Context.states.indexDevice);
+            }
+          },
+        ]        
+      },
 
-      },
+
       {
-        view: "button", value: "Remove Chart", autowidth: true, align: "center",
-        click: function (id, event) {
-          removeButtonClick();
-        }
-      },
-     
-      {
-        view: "button", value: "Start osc", autowidth: true, align: "center",
-        click: async function (id, event) {
-          console.log("Start osc");
-          startOsc(Context.states.indexDevice);
-        }
-      },
-      {
-        view: "button", value: "Stop osc", autowidth: true, align: "center",
-        click: async function (id, event) {
-          console.log("Stop osc");
-          stopOsc(Context.states.indexDevice);
-        }
-      },
+        view: "toolbar",
+        id: "myToolbar2",
+        margin:10, paddingX:0,
+        cols: [
+          {},
+          {
+            view: "button", value: "+", width: 30, align: "left",
+            click: async function (id, event) {
+              await ScalePlus();
+            }
+    
+          },
+          {
+            view: "button", value: "-", width: 30, align: "left",
+            click: async function (id, event) {
+              ScaleMinus();
+            }
+    
+          },
+          {
+            view: "button", value: "X", width: 30, align: "left",
+            click: async function (id, event) {
+              await SwitchCursor();
+            }
+    
+          },          
+          {}
+        ]
+      }
     ]
+
   }
 }
 
@@ -154,6 +191,27 @@ async function startOsc(indexDevice) {
   startDrawData(chart3, channelItems3);
 }
 
+async function ScalePlus() {
+  let charts = ChartControls();
+  chartsArrVisible.forEach(function(chart, index, array) {
+    charts[chart].ScalePlus();
+  });
+}
+
+async function ScaleMinus() {
+  let charts = ChartControls();
+  chartsArrVisible.forEach(function(chart, index, array) {
+    charts[chart].ScaleMinus();
+  });
+}
+
+async function SwitchCursor() {
+  let charts = ChartControls();
+  chartsArrVisible.forEach(function(chart, index, array) {
+    charts[chart].SwitchCursor();
+  });
+}
+
 async function startDrawData(chart, channelItems) {
   let charts = ChartControls();
 
@@ -165,16 +223,17 @@ async function startDrawData(chart, channelItems) {
       if (values) {
         let xValues = values.map(valObj => { return valObj.time });
         let yValues = values.map(valObj => { return valObj.val });
-        drawValueRange(charts[chart], xValues, yValues, index + 1);
+        charts[chart].addVarPointRange(xValues, yValues, index + 1);
       }
     })
-  }, freqHz);
+  }, 1000/freqHz);
 
   channelItems.forEach(function(item, index, array) {
     item.stream.on('end', values => {
       if (timerId != 0) {
         clearInterval(timerId);
         timerId = 0;
+        SyncCharts();
       }
     })
   });
@@ -202,9 +261,6 @@ async function stopOsc(deviceId) {
   }
 }
 
-
-
-
 function getInfo(props) {
   return {
     "cols": [
@@ -222,7 +278,6 @@ function getInfo(props) {
       }
     ]
   };
-   
   }
 
 //Временная генерация данных
@@ -230,7 +285,6 @@ function addFunction(x) {
     // console.log("addFunction");
     return Math.sin(x * 0.01) * (1 + 0.5 * Math.random());
 }
-
 
 function ViewDevicesOscilloscope(props) {
   console.log("InfoView");
