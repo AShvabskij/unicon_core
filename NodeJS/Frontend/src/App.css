@@ -6,7 +6,7 @@
     --footer-background: #1ca1c1;
     --body-background: white;
     --acc-background: #ebedf0;
-    --chartcount: 3; /* должно быть больше чем количество всех графиков */
+    --chartcount: 8; /* должно быть больше чем количество всех графиков */
     /* --body-background: rgb(80, 78, 78); */
 }
 .App {
@@ -117,7 +117,7 @@
     width: 100%;
     /* расчт высоты графика нужен для первоначальной загрузки и одновременного отображения нескольких графиков */
     height: calc(
-        calc(100vh - var(--footer-size) - var(--header-size) - 45px) /
+        calc(100vh - var(--footer-size) - var(--header-size) * 3) /
             var(--chartcount)
     );
 }
@@ -152,4 +152,83 @@
 .pages {
     visibility: hidden;
     /* display: none; */
+}
+
+.chart_height {
+    /* height: 10px; */
+}
+
+#devicesParametersTab {
+    height: calc(100vh - var(--footer-size) - var(--header-size) * 2);
+}
+.deviceLabel > div {
+    background-color: #1ca1c1 !important;
+    color: #ffffff !important;
+    /* height: 38px; */
+}
+
+.infoPic0 {
+    background-image: url(./pictures/HRVS_DN_PowerStart.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    width: 300px !important;
+    background-repeat: no-repeat;
+}
+
+.infoPic1 {
+    background-image: url(./pictures/pic2.jpg) !important;
+    height: 547px !important;
+    background-size: contain;
+    /* width: 10vh !important; */
+    width: 550px !important;
+    background-repeat: no-repeat;
+}
+
+.infoPic2 {
+    background-image: url(./pictures/pic3.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    background-size: contain;
+    width: 550px !important;
+    background-repeat: no-repeat;
+}
+
+.infoPic3 {
+    background-image: url(./pictures/pic4.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    background-size: contain;
+    width: 550px !important;
+    background-repeat: no-repeat;
+}
+
+.infoPic4 {
+    background-image: url(./pictures/pic5.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    background-size: contain;
+    width: 550px !important;
+    background-repeat: no-repeat;
+}
+
+.infoPic5 {
+    background-image: url(./pictures/pic6.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    background-size: contain;
+    width: 550px !important;
+    background-repeat: no-repeat;
+}
+
+.infoPic6 {
+    background-image: url(./pictures/pic7.jpg) !important;
+    height: 547px !important;
+    /* width: 10vh !important; */
+    background-size: contain;
+    width: 550px !important;
+    background-repeat: no-repeat;
+}
+
+.infoView {
+    /* background: #fbfbfb; */
 }

@@ -21,11 +21,10 @@ function mark_votes(value, config){
 
 const clearDataTable = () => {
   let table1 = $$("showSelectChartWindowData");
-  // Alex 
-  // Context.paramToChart.forEach(function(item, index, array) {
-  //   let item2 = table1.getItem(item.row);
-  //   item2.line = 0;
-  // });
+  Context.paramToChart.forEach(function(item, index, array) {
+    let item2 = table1.getItem(item.row);
+    item2.line = 0;
+  });
   if (table1) {
     table1.refresh();
   } else {

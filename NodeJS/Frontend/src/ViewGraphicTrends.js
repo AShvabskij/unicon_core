@@ -221,7 +221,7 @@ export default class ViewGraphicTrends extends React.Component {
   //visibility:"hidden", display:"none"
   render() {
   return (
-      <div id="ViewGraphicTrends" className="pages" style={{visibility:"hidden"}}>
+      <div id="ViewGraphicTrends" className="pages" >
         <WebixComponent ui={toolBar()} />
         <Chart id="chartTrends" title="&nbsp;" addFunction={addFunction} />
       </div>    

@@ -85,7 +85,7 @@ function getUImainMenu(props) {
     // height:0,
     // id: "dataview",
     id: "parametersGrid",
-    height: 400,
+    height: 0,
     /* rules:{
       value:function(obj){ 
         console.log(obj);
@@ -257,7 +257,7 @@ const updateParameters = (indexDevice) => {
       let infoCurrentDivice = deviceItem.desc + ". Channel: " + deviceItem.interfaceName;
       Context.states.indexDevice = indexDevice;
       let desc = $$("descriptionDevice");
-      // desc.setValue(infoCurrentDivice);
+      desc.setValue(infoCurrentDivice);
       deviceItem.modules.forEach(function(item, index, array) {
           dtt = [];
           item.params.forEach(function(itemP, indexP, array) {

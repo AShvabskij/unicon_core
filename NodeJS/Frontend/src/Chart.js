@@ -397,7 +397,7 @@ export default function Chart(props) {
         //  <div id={currentChartID} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
         //  <div id={overviewChartID} style={{ width:"auto", height: 70, margin: "auto"}} ></div>          
 
-        <div id={props.id}  style={{ visibility:"hidden" }} >
+        <div id={props.id}  className="chart_height" style={{ visibility:"hidden" }} >
           <div id={currentChartID} className="chart" ></div>
         </div>
           );
