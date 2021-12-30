@@ -167,6 +167,16 @@
     /* height: 38px; */
 }
 
+.no_editable {
+    /* border: 0px solid white !important; */
+    /* background: white !important; */
+}
+.editable {
+    border: 2px solid #b6e2ec !important;
+    /* border: 1px solid #454e50 !important;
+    background: #d3eaf0 !important; */
+}
+
 .infoPic0 {
     background-image: url(./pictures/HRVS_DN_PowerStart.jpg) !important;
     height: 547px !important;

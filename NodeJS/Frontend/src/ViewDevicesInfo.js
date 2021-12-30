@@ -44,10 +44,10 @@ function getInfo(props) {
   
     })
     let hash = [];
-    hash[1] = 1;
-    hash[12] = 2;
-    hash[23] = 3;
-    hash[34] = 4;
+    hash[1] = 0;
+    hash[12] = 1;
+    hash[23] = 2;
+    hash[34] = 3;
     let textArr = [];
   textArr.push("By using thyristors (SCRs) in a phase angle control mode, reduced voltage control can be achieved. Phase control makes it possible to gradually increase the motor terminal voltage from an initial set point up to the system supply voltage level. The related starting current and the starting torque can be optimally adjusted to the motor/load conditions.");
   textArr.push("Control Module- MVCP is the “brain” of the soft starter. It consists of the mBoard that includes: • Main CPU PCB. • HMI board: can be either placed in the Control Module box or at the cabinet door. • Fireboard PCB. • Powersupply. • Input/outputinterfaceterminals. • Optional PCBs (when ordered). </br>The Control Module for HRVS-DN-PowerStart is identical for all ratings and suitable for mounting in the L.V. compartment of the cabinet which should be fully segregated from the M.V. compartment. </br>Interposing relays should be connected to all HRVS-DN-PowerStart auxiliary contacts, three relays must be incorporated: Immediate, End of Acceleration and Fault.");
