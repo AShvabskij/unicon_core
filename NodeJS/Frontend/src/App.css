@@ -6,7 +6,7 @@
     --footer-background: #1ca1c1;
     --body-background: white;
     --acc-background: #ebedf0;
-    --chartcount: 3; /* должно быть больше чем количество всех графиков */
+    --chartcount: 8; /* должно быть больше чем количество всех графиков */
     /* --body-background: rgb(80, 78, 78); */
 }
 .App {
@@ -117,7 +117,7 @@
     width: 100%;
     /* расчт высоты графика нужен для первоначальной загрузки и одновременного отображения нескольких графиков */
     height: calc(
-        calc(100vh - var(--footer-size) - var(--header-size) - 45px) /
+        calc(100vh - var(--footer-size) - var(--header-size) * 3) /
             var(--chartcount)
     );
 }
@@ -160,11 +160,23 @@
     /* display: none; */
 }
 
+.chart_height {
+    /* height: 10px; */
+}
+
+#devicesParametersTab {
+    height: calc(100vh - var(--footer-size) - var(--header-size) * 2);
+}
+.deviceLabel > div {
+    background-color: #1ca1c1 !important;
+    color: #ffffff !important;
+    /* height: 38px; */
+}
+
 .no_editable {
     /* border: 0px solid white !important; */
     /* background: white !important; */
 }
-
 .editable {
     border: 2px solid #b6e2ec !important;
     /* border: 1px solid #454e50 !important;
@@ -231,4 +243,8 @@
     background-size: contain;
     width: 550px !important;
     background-repeat: no-repeat;
+}
+
+.infoView {
+    /* background: #fbfbfb; */
 }

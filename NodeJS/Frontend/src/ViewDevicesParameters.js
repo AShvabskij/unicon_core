@@ -13,7 +13,7 @@ async function getValue(param, rowId) {
   updateRowValue(value, param, rowId);
 
   console.log("try to get value streams...");
-  let frequency = 2; // кол-во значений в секунду
+  let frequency = 4; // кол-во значений в секунду
   let resStream = await param.openValueStream(frequency);
   if (resStream === undefined || resStream === null) {
     return;
@@ -85,7 +85,7 @@ function getUImainMenu(props) {
     // height:0,
     // id: "dataview",
     id: "parametersGrid",
-    height: 650,
+    height: 0,
     /* rules:{
       value:function(obj){ 
         console.log(obj);

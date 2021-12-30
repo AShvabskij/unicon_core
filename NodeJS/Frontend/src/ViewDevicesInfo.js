@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import 'webix/webix.css';
 import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
+import { observer } from "mobx-react";
+import {Context} from './Context';
 
 
 
@@ -26,6 +28,48 @@ function getInfo(props) {
   }
 
 
+  const InfoObserver = observer(({  }) => {
+    // let devArr = [{name:"dev1"},{name:"dev2"},{name:"dev3"}];
+    Context.model.label = "";
+    useEffect(() => {
+      console.log("Render InfoObserver");
+      console.log(Context.states.indexDevice);
+      // 1 12 23 34
+      // updateLeftMenuBase(Context.model.m_devices);
+      let deviceItem = Context.model.device(Context.states.indexDevice);
+      if (deviceItem ) {
+        Context.model.label =  deviceItem.desc + ". Channel: " + deviceItem.interfaceName;
+      }
+      
+  
+    })
+    let hash = [];
+    hash[1] = 0;
+    hash[12] = 1;
+    hash[23] = 2;
+    hash[34] = 3;
+    let textArr = [];
+  textArr.push("By using thyristors (SCRs) in a phase angle control mode, reduced voltage control can be achieved. Phase control makes it possible to gradually increase the motor terminal voltage from an initial set point up to the system supply voltage level. The related starting current and the starting torque can be optimally adjusted to the motor/load conditions.");
+  textArr.push("Control Module- MVCP is the “brain” of the soft starter. It consists of the mBoard that includes: • Main CPU PCB. • HMI board: can be either placed in the Control Module box or at the cabinet door. • Fireboard PCB. • Powersupply. • Input/outputinterfaceterminals. • Optional PCBs (when ordered). </br>The Control Module for HRVS-DN-PowerStart is identical for all ratings and suitable for mounting in the L.V. compartment of the cabinet which should be fully segregated from the M.V. compartment. </br>Interposing relays should be connected to all HRVS-DN-PowerStart auxiliary contacts, three relays must be incorporated: Immediate, End of Acceleration and Fault.");
+  textArr.push("Motor will start only if SOFT STOP (terminal 21) and STOP (terminal 22) terminals are connected to Control Input voltage.");
+  textArr.push("Control Input voltage (START, SOFT STOP, STOP, terminal inputs 20,21,22) can be the same as Control Supply (terminals 41, 42) or voltage from a different source.");
+  textArr.push("Text 5");
+  textArr.push("Text 6");
+
+    return ( 
+      <div updateModel={ Context.states.indexDevice } className="infoView" >
+      <table>  
+        <tr>
+          <td><div class={"infoPic"+hash[Context.states.indexDevice] }> </div></td>
+          <td>{textArr[hash[Context.states.indexDevice]]}</td>
+        </tr>
+      </table>
+
+      </div>
+    );
+  });
+
+
 function ViewDevicesInfo(props) {
   console.log("InfoView");
   console.log(props.data);
@@ -41,12 +85,8 @@ function ViewDevicesInfo(props) {
   return (
     
     <div id={props.id} className="pages">
-      <table>  
-        <tr>
-          <td><div class={className}> </div></td>
-          <td>{text}</td>
-        </tr>
-      </table>
+      <InfoObserver/>
+      
      </div>
   );
 }

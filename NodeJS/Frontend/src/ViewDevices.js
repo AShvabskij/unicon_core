@@ -2,7 +2,7 @@ import 'webix/webix.css';
 import WebixComponent, {scroll} from './WebixComponent';
 import { $$, template } from 'webix';
 import * as webix from 'webix/webix.js';
-import React from "react";
+import React,{useEffect} from "react";
 // import Chart from './ChartInteract';
 // import Chart2 from './Chart2';
 // import { ChartControls } from './Chart2';
@@ -84,8 +84,10 @@ function getControl(props) {
   }
 }
 
-function tabViewControl(props) {
+function tabViewControl() {
   let cellsArr = ["devicesParametersTab","devicesОscilloscopeTab","devicesControlTab","devicesInfoTab"];
+  console.log("tabViewControl");
+  // console.log(props.updateDevices);
   return {
     view: "tabview",
     id: "tabViewControl",
@@ -95,6 +97,7 @@ function tabViewControl(props) {
         header: "Parameters",
         body: {
           id: "devicesParametersTab",
+          select:true,
         }
       },
       {
@@ -150,6 +153,18 @@ function tabViewControl(props) {
   }
 }
 
+const TabViewObserver = observer(({  }) => {
+  // let devArr = [{name:"dev1"},{name:"dev2"},{name:"dev3"}];
+  useEffect(() => {
+    console.log("Render TabViewObserver");
+    console.log(Context.states.indexDevice);
+  })
+  return ( 
+      <WebixComponent ui={tabViewControl()} data={[]} />
+  );
+});
+
+
 export default class ViewDevices extends React.Component {
   constructor(props) {
     super(props);
@@ -167,7 +182,7 @@ export default class ViewDevices extends React.Component {
 
     return (
       <div id="ViewDevices" className="page">
-        <WebixComponent ui={tabViewControl(this.props)} data={[]} />
+        <TabViewObserver/>
         {/* Context.states.indexDevice */}
         <ViewDevicesInfo id="devicesInfoTab" data={Context.states.indexDevice} />
         <ViewDevicesControl id="devicesControlTab" />

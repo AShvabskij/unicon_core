@@ -16,7 +16,7 @@ export function setVisibleElements(visibleElementIDArr, hiddenElementsArr = []){
         setStyleByID(id,"display","none");
     });
     visibleElementIDArr.forEach(id => {
-        setStyleByID(id,"display","");
+        setStyleByID(id,"display","block");
         setStyleByID(id,"visibility","visible");
     });
 }
@@ -31,7 +31,7 @@ export const Context = {
     title: "t1",
     elements:{},
     devices :[{name:"dev1a"},{name:"dev2b"},{name:"dev3c"}],
-    pages : ["ViewDevices","ViewCPlotWeb","ViewPLC","ViewGraphicTrends"],
+    pages : ["ViewDevices","ViewCPlotWeb","ViewPLC","ViewGraphicTrends","devicesParametersTab"],
     states:{indexDevice:0},
     //Хранит набор параметров для отображения на Chart
     oscilloscopeChartList: ["chart3","chart4","chart5"],
