@@ -167,11 +167,6 @@
 #devicesParametersTab {
     height: calc(100vh - var(--footer-size) - var(--header-size) * 2);
 }
-.deviceLabel > div {
-    background-color: #1ca1c1 !important;
-    color: #ffffff !important;
-    /* height: 38px; */
-}
 
 .no_editable {
     /* border: 0px solid white !important; */

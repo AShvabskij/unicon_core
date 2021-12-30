@@ -184,7 +184,7 @@ export default class ViewDevices extends React.Component {
       <div id="ViewDevices" className="page">
         <TabViewObserver/>
         {/* Context.states.indexDevice */}
-        <ViewDevicesInfo id="devicesInfoTab" data={Context.states.indexDevice} />
+        <ViewDevicesInfo id="devicesInfoTab" />
         <ViewDevicesControl id="devicesControlTab" />
         <ViewDevicesParameters id="devicesParametersTab"/>
         <ViewDevicesOscilloscope id="devicesОscilloscopeTab" />

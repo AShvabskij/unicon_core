@@ -10,8 +10,8 @@ import CompMobix from "./CompMobix";
 import BaseMenuLeft from "./MenuLeft";
 import Tabbar from "./Tabbar";
 import { observer } from "mobx-react";
+import WebixComponent from './WebixComponent';
 import './App.css';
-import WebixComponent, {scroll} from './WebixComponent';
 
 window.addEventListener('resize', function(event) {
   Context.resize();   

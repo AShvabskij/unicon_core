@@ -32,7 +32,7 @@ export const Context = {
     elements:{},
     devices :[{name:"dev1a"},{name:"dev2b"},{name:"dev3c"}],
     pages : ["ViewDevices","ViewCPlotWeb","ViewPLC","ViewGraphicTrends","devicesParametersTab"],
-    states:{indexDevice:0},
+    states:{indexDevice:-100},
     //Хранит набор параметров для отображения на Chart
     oscilloscopeChartList: ["chart3","chart4","chart5"],
     paramToChart:[],
