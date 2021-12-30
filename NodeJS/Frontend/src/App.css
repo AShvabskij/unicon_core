@@ -141,12 +141,6 @@
     background: var(--footer-background);
 }
 
-.deviceLabel > div {
-    background-color: #1CA1C1  !important;
-    color: #FFFFFF !important;
-    height: 38px;
-}
-
 .webix_view .webix_scrollview {
     background: #ebedf0;
 }
