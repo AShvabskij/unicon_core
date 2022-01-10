@@ -7,13 +7,36 @@ function setStyleByID(id,cssproperties,val){
     }
 }
 
+export const removeCssClass = (id,cssStyle) => { 
+    let element = document.getElementById(id);
+    if (element) {
+      element.classList.remove(cssStyle);
+        // element.classList.add(cssStyle);
+    }
+}
+
+export const addCssClass = (id,cssStyle) => { 
+    console.log("addCssClass "+id+ " "+cssStyle);
+    let element = document.getElementById(id);
+    if (element) {
+        console.log("addCssClass "+id+ " "+cssStyle + " ok");
+        element.classList.add(cssStyle);
+    }
+}
+
 export const showElementChart = (chartID, visibility = "visible") =>{
     setStyleByID(chartID,"visibility", visibility);
+    if (visibility == "visible") {
+        setStyleByID(chartID,"display","block");
+    } else {
+        setStyleByID(chartID,"display","none");
+    }
 };
 
 export function setVisibleElements(visibleElementIDArr, hiddenElementsArr = []){
     hiddenElementsArr.forEach(id => {
         setStyleByID(id,"display","none");
+        setStyleByID(id,"visibility","hidden");
     });
     visibleElementIDArr.forEach(id => {
         setStyleByID(id,"display","block");

@@ -115,6 +115,7 @@
 
 .chart {
     width: 100%;
+    /* height: 100%; */
     /* расчт высоты графика нужен для первоначальной загрузки и одновременного отображения нескольких графиков */
     height: calc(
         calc(100vh - var(--footer-size) - var(--header-size) * 3) /
@@ -155,7 +156,14 @@
 }
 
 .chart_height {
-    /* height: 10px; */
+    height: 1px;
+}
+
+.chartSizeControl {
+    height: calc(
+        calc(100vh - var(--footer-size) - var(--header-size) * 3 - 30) /
+            var(--chartcount)
+    );
 }
 
 #devicesParametersTab {

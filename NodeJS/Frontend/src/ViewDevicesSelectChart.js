@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
 import { $$, template } from 'webix';
 import {ChartControls} from "./Chart";
-import { Context,showElementChart } from './Context';
+import { Context,showElementChart,addCssClass } from './Context';
 import {chartsArrVisible,chartsArrHidden} from "./ViewDevicesOscilloscope"
 
 let colorsArrTab = [];
@@ -213,6 +213,10 @@ const ViewDevicesSelectChartUI = () => {
                     document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
                     // Alex
                     showElementChart(chartToVisible);
+                    if (chartToVisible != "chart3") {
+                      addCssClass("chart3","chartSizeControl")
+                    }
+                    
                   $$("showSelectChartWindow").hide();
                   clearDataTable();
                 }
