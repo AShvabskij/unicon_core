@@ -211,10 +211,9 @@ const ViewDevicesSelectChartUI = () => {
                     console.log(colorsArrTab);
                     console.log(paramArr);
                     document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
-                    // Alex
                     showElementChart(chartToVisible);
-                    if (chartToVisible != "chart3") {
-                      addCssClass("chart3","chartSizeControl")
+                    if (chartsArrVisible[chartsArrVisible.length - 2]) {
+                      addCssClass(chartsArrVisible[chartsArrVisible.length - 2],"chartSizeControl")
                     }
                     
                   $$("showSelectChartWindow").hide();
