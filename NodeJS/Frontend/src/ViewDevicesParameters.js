@@ -80,18 +80,10 @@ function mark_items_edit(value, config){
 function getUImainMenu(props) {
 
   return {
-    view: "treetable", // "datatable"
-    // width:0,
-    // height:0,
-    // id: "dataview",
+    view: "treetable", 
     id: "parametersGrid",
     height: 0,
-    /* rules:{
-      value:function(obj){ 
-        console.log(obj);
-        return true; 
-      }
-   }, */
+    select:true,
     columns: [
       { id: "name", header: "Name", width: "300",
       template: "{common.treetable()} #name#",
@@ -101,8 +93,7 @@ function getUImainMenu(props) {
       ]      
       },
       { id: "value", header: "Value", width: "170", cssFormat:mark_items_edit, 
-          editor:"",
-          // template:"<input type='text' value='#value#' style='width:155px;'>"
+          editor:""
         },
       { id: "dimension", header: "Dimension", width: "80" },
       { id: "time", header: "Time" },
@@ -114,18 +105,7 @@ function getUImainMenu(props) {
       { 
         id: "desc", header: "Description", fillspace: true
       },
-
-      // { id:"votes", header:"Votes", template:function(obj){
-      //   if (obj.votes > 350000)
-      //     return "<span style='color:green;'>"+obj.votes+"</span>";
-      //   else
-      //     return "<span style='color:red;'>"+obj.votes+"</span>";
-      // },
-      //  width:100}
     ],
-    // autoheight:true,
-    // scrollX:false,
-    // scroll:"auto",
     select:"cell",
     navigation:true,
     editable:true,
@@ -133,11 +113,11 @@ function getUImainMenu(props) {
     // checkboxRefresh:true,
     on: {
       onItemClick:function(id){
-				console.log("onItemClick");
+				// console.log("onItemClick");
 				// console.log(id);
-        console.log(Context.model.device(Context.states.indexDevice).params);
+        // console.log(Context.model.device(Context.states.indexDevice).params);
         let paramCell = Context.model.device(Context.states.indexDevice).params[id.row.substr(1)-1];
-        console.log(paramCell);
+        // console.log(paramCell);
         // console.log(id);
         if (paramCell != undefined) {
             if (paramCell["rw"] == "W") {
@@ -146,10 +126,10 @@ function getUImainMenu(props) {
         }
 			},
 			onBeforeEditStart:function(id){
-				console.log("onBeforeEditStart");
+				// console.log("onBeforeEditStart");
         // console.log(id);
         let cellParam = Context.model.device(Context.states.indexDevice).params[id.row.substr(1)-1];
-        console.log(cellParam.rw);
+        // console.log(cellParam.rw);
 				
         if((id.column === "value") && (cellParam.rw == "W")){
 				  // let currentEd = this.getColumnConfig(id.column).editor;
@@ -199,7 +179,7 @@ function getUImainMenu(props) {
       onAfterOpen: function (id) {
         let tree = $$("parametersGrid");
         let rows = getItems(tree, id);
-        console.log("onAfterOpen=" + id);
+        // console.log("onAfterOpen=" + id);
         let arr = tree.getOpenItems();
         let index = arr.indexOf(id);
         arr.splice(index, 1);
@@ -236,11 +216,11 @@ function getUImainMenu(props) {
 
 const updateParameters = (indexDevice) => {
   ClearTableParams();
-  console.log("updateParameters indexDevice = " + indexDevice);
+  // console.log("updateParameters indexDevice = " + indexDevice);
   let deviceItem = Context.model.device(indexDevice);
-  console.log("updateParameters");
-  console.log(deviceItem);
-  console.log(Context.model.devices());
+  // console.log("updateParameters");
+  // console.log(deviceItem);
+  // console.log(Context.model.devices());
   let dt1 = [];
   if (deviceItem) {
     // При переключении девайсов сбрасывать графики
@@ -285,7 +265,7 @@ const updateParameters = (indexDevice) => {
       //  }));
 
    };
-   console.log(dt1);
+  //  console.log(dt1);
    return dt1;
 }
 
@@ -310,30 +290,14 @@ const ClearTableParams = () =>{
 }
 
 const ParametersViewObserver = observer(({  }) => {
-  // let devArr = [{name:"dev1"},{name:"dev2"},{name:"dev3"}];
   useEffect(() => {
-    console.log("Render ParametersView");
-    console.log(Context.model.devices());
-    console.log(Context.states.indexDevice);
-    // 
-    // updateLeftMenuBase(Context.model.m_devices);
+    // console.log("Render ParametersView");
+    // console.log(Context.model.devices());
+    // console.log(Context.states.indexDevice);
   })
   return ( 
       <WebixComponent ui={getUImainMenu()} data={updateParameters(Context.states.indexDevice)} updateModel={ Context.states.indexDevice } />
   );
 });
-
-// function ParametersView(props) {
-//   // console.log("MenuLeft ");
-//   // console.log(props.devtitle);
-//   console.log("!!!!!");
-//   console.log(props);
-
-//   return (
-//     <div id={props.id} className="pages" >
-//       <WebixComponent ui={getUImainMenu(props)} data={props.data} />
-//     </div>
-//   );
-// }
 
 export default ParametersView;
