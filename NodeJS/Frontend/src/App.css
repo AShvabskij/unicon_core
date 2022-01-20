@@ -1,11 +1,14 @@
 :root {
     --footer-size: 30px;
-    --header-size: 38px;
+    --header-size: 30px;
 
     --main-background: white;
     --footer-background: #1ca1c1;
     --body-background: white;
     --acc-background: #ebedf0;
+    --overview-size: 1px;    
+    --overview-visibility: hidden;
+    --vertical-margin-size: 30px;
     --chartcount: 8; /* должно быть больше чем количество всех графиков */
     /* --body-background: rgb(80, 78, 78); */
 }
@@ -117,9 +120,15 @@
     width: 100%;
     /* расчт высоты графика нужен для первоначальной загрузки и одновременного отображения нескольких графиков */
     height: calc(
-        calc(100vh - var(--footer-size) - var(--header-size) * 3) /
+        calc(100vh - var(--footer-size) - var(--vertical-margin-size) - var(--overview-size) - var(--header-size) * 3) /
             var(--chartcount)
     );
+}
+
+.chartoverview {
+    width: 100%;
+    height: calc(var(--overview-size));
+    visibility: var(--overview-visibility);
 }
 
 .chartauto {

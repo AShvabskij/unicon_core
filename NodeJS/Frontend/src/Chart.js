@@ -1,5 +1,4 @@
 import * as React from "react";
-// import { Grid, Row, Col } from 'react-flexbox-grid';
 import { SciChartSurface } from "scichart/Charting/Visuals/SciChartSurface";
 import { NumericAxis } from "scichart/Charting/Visuals/Axis/NumericAxis";
 import { FastLineRenderableSeries } from "scichart/Charting/Visuals/RenderableSeries/FastLineRenderableSeries";
@@ -94,19 +93,29 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
     const divElementId = chartID+"_"+suffixChartID;
     const divOverviewId = chartID+"_"+suffixChartOverviewID;    
     let timerLocalID
+/*
+    SciChartSurface.setServerLicenseEndpoint("http://localhost:3000/api/license");
+*/    
     SciChartSurface.setRuntimeLicenseKey(
       LICENSE_KEY
     );
 
+/*
+SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/api/license",  {mode: "no-cors"}).then(function (r) {
+  if (r.ok) {
+      console.log(r.text())
+      return r.text();
+  }
+  return "";
+}); });
+*/
   // Create the SciChartSurface in the div 'scichart-root'
   // The SciChartSurface, and webassembly context 'wasmContext' are paired. This wasmContext
   // instance must be passed to other types that exist on the same surface.
   const { sciChartSurface, wasmContext } = await SciChartSurface.create(
     divElementId
   );
-
-// SciChartOverview.create(sciChartSurface, divOverviewId);
-
+  
   // Create an X,Y Axis and add to the chart
   const xAxis = new NumericAxis(wasmContext, { autoRange: EAutoRange.Once });
 //   chart1XAxis = new CategoryAxis(wasmContext, {
@@ -134,14 +143,15 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
   sciChartSurface.yAxes.add(yAxis);
 
   const cursor = new RolloverModifier({modifierGroup: "first"});
-  cursor.visibility = true;
+  cursor.isEnabled = false;
+
   sciChartSurface.chartModifiers.add(
 //    new RubberBandXyZoomModifier({ xyDirection: EXyDirection.XyDirection, executeOn: EExecuteOn.MouseLeftButton }),
     new MouseWheelZoomModifier({ xyDirection: EXyDirection.XyDirection }),
     new XAxisDragModifier({ dragMode: EDragMode.Panning }),
     new YAxisDragModifier({ dragMode: EDragMode.Scaling }),
     new ZoomExtentsModifier({isAnimated: true, animationDuration: 400, easingFunction: easing.outExpo}),
-    new ZoomPanModifier({executeOn: EExecuteOn.MouseRightButton}),    
+    new ZoomPanModifier({executeOn: EExecuteOn.MouseRightButton}),
     new MyRubberBandZoomModifier({ xyDirection: EXyDirection.XyDirection, executeOn: EExecuteOn.MouseLeftButton, receiveHandledEvents: true}),
     cursor
   );
@@ -166,6 +176,7 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
   }
 
   let counter = 0;
+  var overview = await SciChartOverview.create(sciChartSurface, divOverviewId);
 
   const stopDemo = () => {
     console.log("stopDemo");
@@ -271,21 +282,32 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
         xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
   }
 
-  const ScalePlus = () => {
-    xAxis.zoomBy(-0.25, -0.25);
-    yAxis.zoomBy(-0.25, -0.25);
+  const Scale = (factorX, factorY) => {
+    xAxis.zoomBy(factorX, factorX);
+    yAxis.zoomBy(factorY, factorY);
   };
 
-  const ScaleMinus = () => {
-    xAxis.zoomBy(0.25, 0.25);
-    yAxis.zoomBy(0.25, 0.25);
+  const SwitchCursor = (value) => {
+    cursor.isEnabled = value;
   };
 
-  const SwitchCursor = () => {
-    console.log("SwitchCursor");
-    cursor.isEnabled = !cursor.isEnabled;
+  const SwitchPreview = async (isVisible) => {
+/*    
+    if (!overview) {
+      console.log("create overview");
+      overview = await SciChartOverview.create(sciChartSurface, divOverviewId);
+    }
+*/
+    var visibility = isVisible ? "visible" : "hidden";
+    document.getElementById(divOverviewId).style["visibility"] = visibility;
+
+    if (isVisible) {
+      document.documentElement.style.setProperty('--overview-size', '70px');
+    } else {
+      document.documentElement.style.setProperty('--overview-size', '1px');
+    }
   };
-  
+
   const startDemo = () => {
     console.log("startDemo");
     // xds.append(200, 0);
@@ -313,7 +335,7 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
 
   verticalGroup.addSurfaceToGroup(sciChartSurface);
   chartSurfaces.push(sciChartSurface);
-  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPoint2, addVarPointRange, addVarPointRange2, clearChart, ScalePlus, ScaleMinus, SwitchCursor} };
+  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPoint2, addVarPointRange, addVarPointRange2, clearChart, Scale, SwitchCursor, SwitchPreview} };
 }
 
 const webixButton = () => {
@@ -347,7 +369,7 @@ export default function Chart(props) {
   // const [colorsArr, setColorsArr] = React.useState(colorsArrDefaults);
   const [colorsArr, setColorsArr] = React.useState([]);
   const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addVarPoint: () =>{}, addVarPoint2: () =>{}, addVarPointRange: () =>{}, addVarPointRange2: () =>{}, clearChart: () =>{}, 
-  ScalePlus: () => {}, ScaleMinus: () => {}, SwitchCursor: () => {}});
+  Scale: (factorX, factorY) => {}, SwitchCursor: (value) => {}, SwitchPreview: (value) => {}});
   console.log(colorsArr);
   React.useEffect(() => {
     (async () => {
@@ -399,6 +421,7 @@ export default function Chart(props) {
 
         <div id={props.id}  className="chart_height" style={{ visibility:"hidden" }} >
           <div id={currentChartID} className="chart" ></div>
+          <div id={overviewChartID} className="chartoverview" ></div>          
         </div>
           );
 }

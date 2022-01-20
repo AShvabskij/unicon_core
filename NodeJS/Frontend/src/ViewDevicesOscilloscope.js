@@ -3,7 +3,7 @@ import 'webix/webix.css';
 import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
 import { $$, template } from 'webix';
-import { Context,showElementChart } from './Context';
+import { Context, showElementChart } from './Context';
 import Chart, { ChartControls, SyncCharts } from './Chart';
 import ViewDevicesSelectChart  from "./ViewDevicesSelectChart";
 
@@ -18,7 +18,7 @@ const toolBar = () => {
         id: "myToolbar",
         cols: [
           {
-            view: "button", value: "Add Chart", width: 100, align: "left",
+            view: "button", value: "Add Chart", width: 100, align: "left", 
             click: function (id, event) {
               addButtonClick();
             }
@@ -54,25 +54,32 @@ const toolBar = () => {
         cols: [
           {},
           {
-            view: "button", value: "+", width: 30, align: "left",
+            view: "button", value: "+", width: 40, align: "left",
             click: async function (id, event) {
               await ScalePlus();
             }
     
           },
           {
-            view: "button", value: "-", width: 30, align: "left",
+            view: "button", value: "-", width: 40, align: "left",
             click: async function (id, event) {
               ScaleMinus();
             }
     
           },
           {
-            view: "button", value: "Cursor", width: 100, align: "left",
+            view: "toggle", id: "cursor", onLabel: "Cursor on", offLabel: "Cursor off", width: 100, align: "left",
             click: async function (id, event) {
-              await SwitchCursor();
+              await SwitchCursor( $$(id).getValue());
+              $$(id).blur()
             }
-    
+          },
+          {
+            view: "toggle", id: "preview", label: "Preview", width: 100, align: "left",
+            click: async function (id, event) {
+              await SwitchPreview( $$(id).getValue());
+              $$(id).blur()
+            }
           },          
           {}
         ]
@@ -124,7 +131,10 @@ const removeButtonClick = () => {
   
     let chartToHidden = chartsArrVisible.pop();
     chartsArrHidden.unshift(chartToHidden);
-    
+
+    let charts = ChartControls();    
+    charts[chartToHidden].SwitchPreview(0);
+
     document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
     showElementChart(chartToHidden, "hidden");
   }
@@ -192,21 +202,28 @@ async function startOsc(indexDevice) {
 async function ScalePlus() {
   let charts = ChartControls();
   chartsArrVisible.forEach(function(chart, index, array) {
-    charts[chart].ScalePlus();
+    charts[chart].Scale(-0.25, -0.25);
   });
 }
 
 async function ScaleMinus() {
   let charts = ChartControls();
   chartsArrVisible.forEach(function(chart, index, array) {
-    charts[chart].ScaleMinus();
+    charts[chart].Scale(0.25, 0.25);
   });
 }
 
-async function SwitchCursor() {
+async function SwitchCursor(value) {
   let charts = ChartControls();
   chartsArrVisible.forEach(function(chart, index, array) {
-    charts[chart].SwitchCursor();
+    charts[chart].SwitchCursor(!value);
+  });
+}
+
+async function SwitchPreview(value) {
+  let charts = ChartControls();
+  chartsArrVisible.forEach(function(chart, index, array) {
+    charts[chart].SwitchPreview(!value);
   });
 }
 
