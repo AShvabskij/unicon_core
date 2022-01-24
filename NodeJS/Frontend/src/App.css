@@ -1,7 +1,7 @@
 :root {
     --footer-size: 30px;
     --header-size: 38px;
-
+    --tabbar-size: 42px;
     --main-background: white;
     --footer-background: #1ca1c1;
     --body-background: white;
@@ -104,10 +104,29 @@
     right: 0px;
     margin-bottom: 0px;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    flex-direction: row;
+    justify-content: stretch;
     color: white;
 }
+
+.footer > div {
+    background-color: var(--footer-background) !important;
+}
+
+.footer_label > div { 
+    color: white !important;
+    background-color: var(--footer-background);
+    text-align: left;
+    padding-left: 20px;
+}
+
+.footer_label_right > div { 
+    color: white !important;
+    background-color: var(--footer-background);
+    text-align: right;
+    padding-right: 20px;
+}
+
 
 .demoscroll {
     height: 50vh;
@@ -115,9 +134,10 @@
 
 .chart {
     width: 100%;
+    /* height: 100%; */
     /* расчт высоты графика нужен для первоначальной загрузки и одновременного отображения нескольких графиков */
     height: calc(
-        calc(100vh - var(--footer-size) - var(--header-size) * 3) /
+        calc(100vh - var(--footer-size) - var(--header-size) * 2 - var(--tabbar-size)) /
             var(--chartcount)
     );
 }
@@ -155,7 +175,14 @@
 }
 
 .chart_height {
-    /* height: 10px; */
+    height: 1px;
+}
+
+.chartSizeControl {
+    height: calc(
+        calc(100vh - var(--footer-size) - var(--header-size) * 3 - 30) /
+            var(--chartcount)
+    );
 }
 
 #devicesParametersTab {

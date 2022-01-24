@@ -10,16 +10,7 @@ const accordionInit = [
 	{ header:"Graphic trends", id:"GraphicTrends", body: ""},
 	{ header:"PLC", id:"PLC", body: "" },
 	{ header:"cPlotWeb", id:"cPlotWeb", body: ""},
-	{ header:"Devices", id:"DeviceInit" ,body: "" },
-  // { header:"Devices1", id:"DeviceInit1" ,body: "" },
-  // { header:"Devices2", id:"DeviceInit2" ,body: "" },
-  // { header:"Devices3", id:"DeviceInit3" ,body: "" },
-  // { header:"Devices4", id:"DeviceInit4" ,body: "" },
-  // { header:"Devices5", id:"DeviceInit5" ,body: "" },
-  // { header:"Devices6", id:"DeviceInit6" ,body: "" },
-  // { header:"Devices7", id:"DeviceInit7" ,body: "" },
-  // { header:"Devices8", id:"DeviceInit8" ,body: "" },
-  // { header:"Devices9", id:"DeviceInit9" ,body: "" },
+	{ header:"Devices", id:"DeviceInit" ,body: "" }
 ];
 
 function setScroll(body) {
@@ -30,49 +21,7 @@ function setScroll(body) {
   }
 }
 
-function buttons(params) {
-  return {
-    view:"scrollview",
-    id:"verses",
-    scroll:"y", // vertical scrolling
-    
-    body:{
-    rows:[{
-      view:"button", 
-      id:"my_button0", 
-      value:"Button", 
-      css:"webix_primary", 
-      inputWidth:100 
-  },
-  {
-    view:"button", 
-    id:"my_button1", 
-    value:"Button", 
-    css:"webix_primary", 
-    inputWidth:100 
-},
-{
-  view:"button", 
-  id:"my_button2", 
-  value:"Button", 
-  css:"webix_primary", 
-  inputWidth:100 
-},{
-  view:"button", 
-  id:"my_button3", 
-  value:"Button", 
-  css:"webix_primary", 
-  inputWidth:100 
-},
-{
-  view:"button", 
-  id:"my_button4", 
-  value:"Button", 
-  css:"webix_primary", 
-  inputWidth:100 
-}]
-    }}
-}
+
 
  function accordion() {
   //  let v = scroll(buttons(),"qwe1");
@@ -93,12 +42,9 @@ function buttons(params) {
     ],
     on:{
       onChange: function(newValue, oldValue, config){
-          console.log(newValue)
+          // console.log(newValue)
       },
       onAfterExpand:function(id){
-      //     // console.log("onAfterExpand")
-      //     console.log(id)
-      //     // console.log($$(id)) 
           let changeId = $$(id);
           let newHeight = 42;
           switch(id)  {
@@ -130,74 +76,7 @@ function buttons(params) {
 
 
 
-function demo(params) {
- return {
-    view: "scrollview",
-    id:"accmain",
-    scroll: "y",
-    body: {
-      type:"wide", 
-      cols:[
-        { width:30 },
-        { type:"wide", 
-         rows: [
-           { height: 30 },
-           {
-             multi:true,
-             view:"accordion", type:"wide",
-             rows:[
-               { header:"col 1", body:"content 1", height:150},
-               { body:"Content 2", height: 35},
-               { 
-                 collapsed:false, 
-                 header:"col 3",
-                 body:{
-                   multi:true,
-                   view:"accordion", type:"space",
-                   cols:[
-                     { header:"col 1", body:"content 1", width:150},
-                     { body:"Content 2" },
-                     { 
-                       collapsed:false, 
-                       header:"col 3",
-                       body:"content 3",
-                       width:150
-                     },
-                     { body:"Content 4" },
-                     { header:"col 5", body:"content 5", width:150}
-                   ]
-                 },
-                 height:150
-               },
-               { body:"Content 4", height: 35 },
-               { header:"col 5", body:"content 5", height:150}
-             ]
-           },
-           {
-             multi:false,
-             view:"accordion", type:"wide",
-             cols:[
-               { header:"col 1", body:"content 1", width:150 },
-               { body:"Content 2"},
-               { 
-                 header:"col 3",
-                 body:"content 3",
-                 width:150
-               },
-               { body:"Content 4" },
-               { header:"col 5", body:"content 5", width:150}
-             ]
-           },
-           { height: 30 }
-         ]
-        },
-        { width:30 }
-      ]
-    }
-  }
-}
-// flex-basis: 40%;
-//         flex-grow: 1;
+
 const updateLeftMenuBase = (devicesArr) => {
   let options = [];
   let minWidthBut = "130";
@@ -205,22 +84,10 @@ const updateLeftMenuBase = (devicesArr) => {
   let devices = { margin:10, padding:0, type:"wide",
   view:"flexlayout",cols:[]};
   devicesArr.forEach(function(item, index, array) {
-//       // console.log(item, index);
       devices.cols.push( { view:"toggle", deviceID: item.id ,label:'<span class="material-icons">' +  '</span> ' + item.name , minWidth: minWidthBut, height: 80, css: "webix_primary",
       click:function(id,event){
-              console.log("updateLeftMenuBase id="+index);
-              console.log(devices.cols[index].deviceID);
-              // Изменяем текущий номер устройства
+               // Изменяем текущий номер устройства
               Context.states.indexDevice = devices.cols[index].deviceID;
-//       //     let tree = $$("parametersGrid");
-//       //     let arr = tree.getOpenItems();
-//       //     arr.forEach(function (item) {
-//       //       tree.close(item);
-//       //     });
-//       //     tree.clearAll();
-
-//       //     updateParameters(index);
-          
           // Подсветка нужной кнопки при нажатии и отжатие остальных
           let s1 = $$(id).getParentView();
           s1._cells.forEach(element => {
@@ -231,17 +98,7 @@ const updateLeftMenuBase = (devicesArr) => {
 });
   let scrollDev = setScroll(devices);
   webix.ui(scrollDev,$$("DeviceInit"), 0);
-  // $$("descriptionDevice").$view.children[0].style.color = "white";
 } 
-
-// const TimerView = observer(({  }) => {
-//   useEffect(() => {
-//       console.log("Render TimerView");
-//   })
-//   return (
-//   <button >{Context.title} Seconds passed abc: {Context.title}</button>
-//   )
-// });
 
 function BaseMenuLeft(props) {
   return ( 
@@ -250,11 +107,10 @@ function BaseMenuLeft(props) {
 }
 
 const MenuLeft = observer(({  }) => {
-  // let devArr = [{name:"dev1"},{name:"dev2"},{name:"dev3"}];
   useEffect(() => {
-    console.log("Render MenuLeft");
-    console.log(Context.model.devices());
-    console.log(Context.model.m_devices);
+    // console.log("Render MenuLeft");
+    // console.log(Context.model.devices());
+    // console.log(Context.model.m_devices);
     updateLeftMenuBase(Context.model.m_devices);
   })
   return ( 

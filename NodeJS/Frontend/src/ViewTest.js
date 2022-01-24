@@ -5,12 +5,12 @@ import Button from './Button';
 import {Context} from './Context';
 import Chart from './Chart';
 import ButtonChart from './ButtonChart';
-import TimerMobix from './TimerMobix'
+// import TimerMobix from './TimerMobix'
 
 function ViewTest(props) {
   return (
    <div>
-     <TimerMobix/>
+     {/* <TimerMobix/> */}
     {Context.chartList.map((chart) => (
             <Chart id={chart.id} className="chart" title="&nbsp;"  />
           ))}

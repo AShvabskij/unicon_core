@@ -35,7 +35,7 @@ import { SciChartVerticalGroup } from "scichart/Charting/LayoutManager/SciChartV
 // import Webix from './Webix';
 // import * as webix from 'webix/webix.js';
 // import Config from './.config.js';
-import { Context } from "./Context"
+import { Context, showElementChart,removeCssClass } from "./Context"
 
 // import classes from "../../../../Examples/Examples.module.scss";
 // import image from "./javascript-line-chart.jpg";
@@ -313,6 +313,7 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
 
   verticalGroup.addSurfaceToGroup(sciChartSurface);
   chartSurfaces.push(sciChartSurface);
+  
   return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPoint2, addVarPointRange, addVarPointRange2, clearChart, ScalePlus, ScaleMinus, SwitchCursor} };
 }
 
@@ -355,7 +356,15 @@ export default function Chart(props) {
       console.log(namesArr);
       console.log("colorsArr");
       console.log(colorsArr);
-        const res = await initSciChart(props.id,props.addFunction,namesArr,colorsArr);
+      const res = await initSciChart(props.id,props.addFunction,namesArr,colorsArr);
+      
+      if (! Context.oscilloscopeChartList.includes(props.id) ) {
+        showElementChart(props.id,"hidden");
+        
+      } else {
+        // removeCssClass(props.id,"chart_height_new");
+      }
+      
       // scs = res.sciChartSurface;
       setControls(res.controls);
       chartControls[props.id] = res.controls;
@@ -374,6 +383,7 @@ export default function Chart(props) {
       console.log("props.id="+props.id);
       chartControls[props.id] = res.controls;
       console.log(chartControls);
+      
       // }
       //autoStartTimerId = setTimeout(res.controls.startDemo, 3000);
     })();
