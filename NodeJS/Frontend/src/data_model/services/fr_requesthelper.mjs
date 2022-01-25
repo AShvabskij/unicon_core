@@ -1,15 +1,14 @@
-import Config from './../../.config.js';
-const Events = require('events');
+import EventEmitter from 'events'
+import Config from '../../.config.js';
 
 let DATA_SERVER_PORT = 1235;
+let CONNECTION_TIMEOUT_MSC = 5000;
 
 export class _RequestHelper {
 
     m_connected = false;
-    // m_socketUrl = "ws://" + "127.0.0.1" + ":" + DATA_SERVER_PORT;
     m_socketUrl = "ws://" + Config.ip + ":" + DATA_SERVER_PORT;
-    m_socket = new WebSocket(this.m_socketUrl);
-    m_events = new Events();
+    m_events = new EventEmitter();
 
     constructor() {
     }
@@ -32,6 +31,7 @@ export class _RequestHelper {
 
         this.m_socket.onerror = (error) => {
             console.log('Connection error: ' + error.message);
+            this.m_connected = false;
         };
 
         this.m_socket.onclose = () => {
@@ -42,7 +42,8 @@ export class _RequestHelper {
 
             setTimeout(() => {
                 this.initConnection();
-            }, 5000);
+            }, CONNECTION_TIMEOUT_MSC);
+            
         };
 
         this.m_socket.onmessage = (message) => {
@@ -55,7 +56,28 @@ export class _RequestHelper {
         }
     }
 
-    request(cmd, timeout = 1000) {
+    waitIsConnected() {
+        return new Promise(async (resolve, reject) => {
+            if (this.m_connected) {
+                resolve();
+            }
+
+            let timerId = setTimeout(async () => {
+                if (this.m_connected) {
+                    clearTimeout(timerId);
+                    resolve();
+                }
+            }, 1000);
+
+            setTimeout(async () => {
+                clearTimeout(timerId);
+                reject();
+            }, CONNECTION_TIMEOUT_MSC);
+        })
+    }
+
+    request(cmd, timeout) {
+        timeout = timeout ?? (Config.requestTimeout ?? 1000);
 
         let promise = new Promise((resolve, reject) => {
 
@@ -86,5 +108,6 @@ export class _RequestHelper {
     };
 }
 
-export const RequestHelper = new _RequestHelper();
+const RequestHelper = new _RequestHelper();
+export default RequestHelper;
 // module.exports = RequestHelper;

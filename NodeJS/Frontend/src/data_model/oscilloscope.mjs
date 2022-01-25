@@ -1,8 +1,8 @@
-const { DeviceProvider } = require("./services/fr_deviceprovider.mjs");
-const Stream = require('stream-browserify');
-const { RequestHelper } = require("./services/fr_requesthelper.mjs");
+import { DeviceProvider } from "./services/fr_deviceprovider.mjs";
+import {default as RequestHelper} from "./services/fr_requesthelper.mjs";
+import Stream from 'stream'
 
-const OSC_MAX_CHANNELS = 20;
+const OSC_MAX_CHANNELS = 48;
 
 export default class Oscilloscope {
     constructor() {
@@ -38,14 +38,14 @@ export default class Oscilloscope {
             channels = []
             for (var i = 0; i < this.channels.length; ++i) {
                 let channel = this.channels[i];
-                if (channel.name !== '' || channel.param_id !== 0)
+                if (channel.name !== '' || channel.var_id !== 0)
                     channels.push(channel.num)
             }
         }
 
         for (var i = 0; i < channels.length; ++i) {
-            let channel = channels[i];
-            this.channels[channel].stream = new Stream.Readable({
+            let channelNum = channels[i];
+            this.channel(channelNum).stream = new Stream.Readable({
                 highWaterMark: 1, //STREAM_BUFFER_OBJECTS,
                 objectMode: true,
                 read() { }
@@ -122,18 +122,17 @@ export default class Oscilloscope {
             this._capturedChannels.splice(index, 1)
         }
 
-        let stream = this.channels[chNum].stream;
+        let stream = this.channel(chNum).stream;
         if (stream) {
-            this.channels[chNum].stream.push(null);
-            this.channels[chNum].stream.destroy;
-            this.channels[chNum].stream = null;
+            stream.push(null);
+            stream.destroy();
         }
     }
 
     _pushChannelData(chNum, data) {
-        let stream = this.channels[chNum].stream;
+        let stream = this.channel(chNum).stream;
         if (stream) {
-            this.channels[chNum].stream.push(data);
+            stream.push(data);
         }
         return;
     }
@@ -169,5 +168,10 @@ export default class Oscilloscope {
             return { val, time };
         })
         return values;
+    }
+
+    channel(chNum) {
+        let result = this.channels.find(item => item.num === chNum)
+        return result;
     }
 }

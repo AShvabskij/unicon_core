@@ -1,20 +1,20 @@
 import Oscilloscope from './oscilloscope.mjs'
 
-const { RequestHelper } = require("./services/fr_requesthelper.mjs");
-const { DeviceProvider } = require("./services/fr_deviceprovider.mjs");
+import { DeviceProvider } from "./services/fr_deviceprovider.mjs";
+import {default as RequestHelper} from "./services/fr_requesthelper.mjs";
 
 export class SysInterfacesEnum {
-    static Can = 1;
+    static CanUav = 1;
     static CanOpen = 2;
     static ModBus = 3;
-    static FO = 4;
+    static ModBusFO = 4;
 
     static toString(arg) {
         switch (arg) {
-            case SysInterfacesEnum.Can: return 'Can';
-            case SysInterfacesEnum.CanOpen: return 'CanOpen';
+            case SysInterfacesEnum.CanUav: return 'UAV CAN';
+            case SysInterfacesEnum.CanOpen: return 'CAN Open';
             case SysInterfacesEnum.ModBus: return 'ModBus';
-            case SysInterfacesEnum.FO: return 'FO';
+            case SysInterfacesEnum.ModBusFO: return 'ModBus+FO';
         }
     }
 }

@@ -1,28 +1,12 @@
-# Create React App Scichart Demo
+# react-demo
 
-## Project setup
-```
-npm install
-```
+https://mobx.js.org/getting-started
 
-### Compiles and hot-reloads for development
-```
-npm run dev
-```
+create .config.js
 
-### Compiles and minifies for production
-```
-npm run build
-```
+// const Config = {ip:"192.168.7.113"};
+const Config = {
+ip:"79.120.39.75"
+};
 
-### Run production build
-```
-npm start
-```
-
-### Load project 
-create file ".config.js" in "Frontend/src" folder
-
-const Config = {ip:"192.168.7.113"}
-// const Config = {ip:"79.120.39.75"}
 export default Config;

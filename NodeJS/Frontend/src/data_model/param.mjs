@@ -1,6 +1,6 @@
-const Stream = require('stream-browserify');
-const { RequestHelper } = require("./services/fr_requesthelper.mjs");
-const { ParamProvider } = require("./services/fr_paramprovider.mjs");
+import Stream from 'stream'
+import { ParamProvider } from "./services/fr_paramprovider.mjs";
+import {default as RequestHelper} from "./services/fr_requesthelper.mjs";
 
 const STREAM_BUFFER_OBJECTS = 1;
 
@@ -15,7 +15,7 @@ export class Param {
         this.valueUnit = '';
         this.valueFormat = 0;
         this.valueScale = 0.0;
-        this.valueTexts;
+        this.valueTexts = [];
         
         this.value = new ParamValue();
 
@@ -60,6 +60,7 @@ export class Param {
     }
 
     async setValue(value) {
+        if (!value || isNaN(value)) return;
 
         try {
             let valueData = await this.paramProvider.setParamValue(this.deviceId, this.id, value);
@@ -83,7 +84,7 @@ export class Param {
         try {
 
             if (this.stream !== null) {
-                this.closeValueStream();
+                await this.closeValueStream();
             }
     
             this._timeLabel = new Date().getTime();
@@ -95,7 +96,7 @@ export class Param {
             this.buffer = [];
             this.buffObjectCount = (buffObjectCount !== undefined) ? buffObjectCount : this.buffObjectCount;
             if (this.buffObjectCount === 0) {
-                this.buffObjectCount === 1
+                this.buffObjectCount = 1
             }
 
             for (var i = 0; i < this.buffObjectCount; i++) {
@@ -218,9 +219,6 @@ export class Param {
     }
 
     deserialize(data) {
-        if (data.param_id == 129) {
-            console.log("here it is");
-        }
         this.deviceId = data.device_id;
         this.moduleId = data.module_id;
         this.id = data.param_id;
@@ -242,7 +240,7 @@ class ParamValue {
         this.format = ValueFormatEnum.Undefined;
         this.valueTime = 0;
         this.scale = 0.0;
-        this.value = -1.0;
+        this.value = 0.0;
     }
 
     deserialize(data) {
@@ -257,7 +255,7 @@ class ParamValue {
 
 }
 
-class ValueFormatEnum {
+export class ValueFormatEnum {
     static Undefined = 0;
     static Bin = 1;
     static Int = 2;

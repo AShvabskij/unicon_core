@@ -1,26 +1,25 @@
-// import cbor from 'cbor' // from 'cbor-web'
-// import { createRequire } from "module";
-// const require = createRequire(import.meta.url);
-import React, { useEffect } from "react";
-import * as cbor from './../cbor.js';
-import Oscilloscope from './oscilloscope.mjs'
-import {Device, SysModule, SysInterfacesEnum} from './device.mjs'
-import {Param} from './param.mjs'
+import EventEmitter from 'events'
+import cbor from 'cbor'
+import Config from '../.config.js';
 
-// import {ParamProvider} from "./services/paramprovider.mjs"
-// import {DeviceProvider} from "./services/deviceprovider.mjs"
-const { RequestHelper } = require("./services/fr_requesthelper.mjs");
-const { ParamProvider } = require("./services/fr_paramprovider.mjs");
-const { DeviceProvider } = require("./services/fr_deviceprovider.mjs");
-const Events = require('events');
+import { Device, SysModule, SysInterfacesEnum } from './device.mjs'
+import { Param } from './param.mjs'
+
+import { ParamProvider } from "./services/fr_paramprovider.mjs";
+import { DeviceProvider } from "./services/fr_deviceprovider.mjs";
+import {default as RequestHelper} from "./services/fr_requesthelper.mjs";
 
 const STATUS_OK = 200;
 const ERROR_RESPONSE = {
     status: 500, // any server error
     msg: ""
 }
+const CONNECTION_TIMEOUT_MSC = 5000;
 
-class StatusEnum {
+export class StatusEnum {
+    static Loaded = 'DATA_LOADED';
+    static Inited = "MODEL_INITED";
+    static ReInited = "MODEL_REINITED";
     static Changed = 'DATA_CHANGED';
     static Cancelled = 'DATA_CANCELLED';
     static UnChanged = 'DATA_UNCHANGED';
@@ -33,15 +32,17 @@ const STREAM_SERVER_PORT = 1237;
 const RECEIVED_DATA_ERROR = "Received data error!";
 const CAPTURED_PARAMS_MAX = 32;
 
-export class Model extends Events {
+export class Model extends EventEmitter {
     constructor(srvHost) {
         super();
 
         this.m_name = 'Unicon';
         this.m_devices = [];
+        this.m_devices_hash = ""; 
         this.m_oscs = [];
         this.m_trends = [];
         this.m_inited = false;
+        this.m_firstInited = false;
         this.m_host = srvHost;
 
         this._capturedParams = [];
@@ -55,30 +56,42 @@ export class Model extends Events {
             return;
         }
 
-        RequestHelper.initConnection(this.m_host);
+        if (!this.m_firstInited) {
+            RequestHelper.initConnection(this.m_host);
+        }
 
         let streamSocketUrl = "ws://" + this.m_host + ":" + STREAM_SERVER_PORT;
-
         this.streamSocket = new WebSocket(streamSocketUrl);
 
-        this.streamSocket.onopen = (event) => {
+        this.streamSocket.onopen = async (event) => {
             console.log(`Stream socket ${this.streamSocket.url} opened successfully.`);
-            this.m_inited = true;
+            try {
+                await RequestHelper.waitIsConnected()
+                this.m_inited = true;
+                if (!this.m_firstInited) {
+                    this.m_firstInited = true;
+                    this.emit('system_status', StatusEnum.Inited);
+                } else {
+                    this.emit('system_status', StatusEnum.ReInited);
+                }    
+            } catch(error) {
+                console.error(error);
+            }
         };
 
         this.streamSocket.onerror = (error) => {
             console.log('Stream error: ' + error.message);
         };
 
-        this.streamSocket.onclose = () => {
-            console.log('Stream closed.');
+        this.streamSocket.onclose = (event) => {
+            console.log('Stream closed, reason = ' + event.reason);
 
             this.m_inited = false;
-            this.m_socket = null;
+            this.streamSocket = null;
 
             setTimeout(async () => {
                 this.init();
-            }, 5000);
+            }, CONNECTION_TIMEOUT_MSC);
 
             return;
         };
@@ -88,16 +101,22 @@ export class Model extends Events {
                 console.warn("The model is not loaded on receive message!");
                 return;
             }
-            // cbor.decode([message],1,1);
-            // cbor.decodeFirst(message, {float: true, preferWeb: true}).then(o => {
-            //     console.log(JSON.stringify(o, null, 2))
-            //   });
-            /*
-                        cbor.decodeFirst(message, {float: true, preferWeb: true}).then(o => {
-                            console.log(JSON.stringify(o, null, 2))
-                          });
-            */
-            var messageData = JSON.parse(message.data);
+
+            var messageData;
+            var data = message.data;
+            if (data instanceof Blob) {
+                var buffer = await data.arrayBuffer();
+                messageData = cbor.decode(buffer);
+            } else {
+                messageData = JSON.parse(message.data);
+            }
+
+            
+/*
+            cbor.decodeFirst(message, { float: true, preferWeb: true }).then(o => {
+                console.log(JSON.stringify(o, null, 2))
+            });
+*/
 
             let paramId = messageData.p_id;
             if (paramId != undefined) {

@@ -7,7 +7,7 @@ const QString CMD_TYPE_CLOSE_STREAM = "close_stream";
 const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
 const int DATA_YELD_INTERVAL_MSC = 50;
-const int STREAM_OBJECT_LIMIT = 4000;
+const int STREAM_OBJECT_LIMIT = 10000;
 
 const int STOP_STREAM_CODE = 2; //*100;
 
@@ -152,27 +152,21 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         return res;
     }
 
-    for (int chNum = 1; chNum <= OSC_CHANNELS_MAX; ++chNum) {
-         const OSC_CH_DATA& chData = m_oscRawDataBuff->ch_data[chNum];
+    for (int chInd : osc.analogChannels.keys()) {
 
-        if (!osc.channels.keys().contains(chNum)) {
+        const OSC_ANALOG_DATA& chData = m_oscRawDataBuff->analog_data[chInd];
+        const OscChannelDescr& chDescr = osc.analogChannels[chInd];
+
+        if (chDescr.varId == 0 && chDescr.varName.isEmpty()) {
             continue;
         }
 
-        const OscChannelDescr& chDescr = osc.channels[chNum];
-
-        if (chDescr.paramId == 0 && chDescr.paramName.isEmpty()) {
-            QTextStream(stdout) << "Error: The channel is not assigned" ;
-            continue;
-        }
-
-        OscChannelValues& chValues = out->chValues[chNum];
-
-        chValues.channelNum = chNum;
+        OscChannelValues& chValues = out->analogValues[chInd];
+        chValues.channelNum = chDescr.channelNum;
+        chValues.varId = chDescr.varId;
         chValues.valuesize = m_oscRawDataBuff->data_length;
         chValues.valueDensity = chValues.valuesize / DATA_YELD_INTERVAL_MSC;
         chValues.scale = chDescr.scale;
-        chValues.paramId = chDescr.paramId;
         chValues.values.clear();
 
         for (int i = 0; i < m_oscRawDataBuff->data_length; i++) {
@@ -180,10 +174,54 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         }
     }
 
+    for (int chInd : osc.discreteChannels.keys()) {
+
+        const OscChannelDescr& chDescr = osc.discreteChannels[chInd];
+
+        if (chDescr.varId == 0 && chDescr.varName.isEmpty()) {
+            continue;
+        }
+
+        OscChannelValues& chValues = out->discreteValues[chInd];
+        chValues.channelNum = chDescr.channelNum;
+        chValues.varId = chDescr.varId;
+        chValues.valuesize = m_oscRawDataBuff->data_length;
+        chValues.valueDensity = chValues.valuesize / DATA_YELD_INTERVAL_MSC;
+        chValues.values.clear();
+
+        const OSC_DISCRETE_DATA& chData = m_oscRawDataBuff->discret_data[chDescr.channelNum];
+        for (int i = 0; i < m_oscRawDataBuff->data_length; i++) {
+            uint32_t rawValue = chData.buff[i];
+            chValues.values << discreteValue(rawValue, chDescr.firstBit, chDescr.lastBit);
+        }
+    }
+
     qlonglong trigTimeNs = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
     out->timestamp = trigTimeNs  + ++m_dataCounter * m_oscRawDataBuff->data_length * osc.settings.timeResolutionNs;
 
     return res;
+}
+
+qint32 OscHandler::discreteValue(qint16 rawValue, qint8 firstBit, qint8 lastBit)
+{
+    uint16_t mask = 0x0001;
+    uint32_t ret = rawValue >> firstBit;
+
+    bool isBit = (firstBit == lastBit);
+    if (isBit) {
+        ret &= mask;
+        return ret;
+    }
+
+    uint16_t tmpVal = 0x000;
+    for (int i = 0; i <= lastBit - firstBit; i++) {
+        tmpVal |= mask;
+        mask = mask << 1;
+    }
+
+    ret &= tmpVal;
+
+    return ret;
 }
 
 void OscHandler::startPooling()
@@ -233,7 +271,7 @@ void OscHandler::stopStreamData(const OscHeader &osc)
 long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
 {
     DDE_GET_OSC_HEADER header;
-    header.device_ID = deviceId;
+    header.device_id = deviceId;
 
     _dde_func_return_t res = m_dde->get_osc_header(header);
     if (res < 0) {
@@ -244,23 +282,24 @@ long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
     out->id = deviceId;
     out->name = "osc";
     out->desc = "osc desc";
-    out->channels.clear();
+    out->analogChannels.clear();
 
-    for (const OSC_CHANNEL_DESCR& elem : header.ch_descr) {
-        OscChannelDescr ch;
-        ch.channelNum = elem.chNum;
-        ch.paramId = elem.param.param_ID;
-        ch.paramName = elem.param.name;
-        ch.scale = elem.scale;
-        ch.min = elem.param.min;
-        ch.max = elem.param.max;
-        ch.color = QColor(elem.color.Red, elem.color.Green, elem.color.Blue);
-
-        if (elem.param.param_ID <= 0) {
+    for (int chInd = 1; chInd <= OSC_ANALOG_CHANNELS; chInd++) {
+        const OSC_ANALOG_CHANNEL& channel = header.analog_channels[chInd];
+        if (channel.var.id <= 0) {
             continue;
         }
 
-        out->channels[elem.chNum] = ch;
+        out->analogChannels[chInd] = createAnalogChannel(channel);
+    }
+
+    for (int chInd = 1; chInd <= OSC_DISCRETE_CHANNELS; chInd++) {
+        const OSC_DISCRETE_CHANNEL& channel = header.discrete_channels[chInd];
+        if (channel.var.id <= 0) {
+            continue;
+        }
+
+        out->discreteChannels[chInd] = createDiscreteChannel(channel);
     }
 
     OscSettings settings;
@@ -279,6 +318,34 @@ long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
     return 0;
 }
 
+OscChannelDescr OscHandler::createAnalogChannel(const OSC_ANALOG_CHANNEL& channel)
+{
+    OscChannelDescr ret;
+    ret.channelNum = channel.chNum;
+    ret.varId = channel.var.id;
+    ret.varName = channel.var.name;
+    ret.scale = channel.scale;
+    ret.min = channel.var.min;
+    ret.max = channel.var.max;
+    ret.color = QColor(channel.var.color.Red, channel.var.color.Green, channel.var.color.Blue);
+
+    return ret;
+}
+
+OscChannelDescr OscHandler::createDiscreteChannel(const OSC_DISCRETE_CHANNEL& channel)
+{
+    OscChannelDescr ret;
+    ret.channelNum = channel.chNum;
+    ret.varId = channel.var.id;
+    ret.varName = channel.var.name;
+    ret.isDescrete = true;
+    ret.firstBit = channel.firstBit;
+    ret.lastBit = channel.lastBit;
+    ret.color = QColor(channel.var.color.Red, channel.var.color.Green, channel.var.color.Blue);
+
+    return ret;
+}
+
 QJsonObject OscHandler::createHeaderObj(int requestId, const OscHeader& header)
 {
     QJsonObject res;
@@ -294,7 +361,15 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
     QJsonArray channelValues;
     QJsonArray channels;
 
-    for (const OscChannelValues& chVal : data.chValues) {
+    for (const OscChannelValues& chVal : data.analogValues) {
+        if (chVal.channelNum == 0) continue;
+        if (!m_capturedChannels.empty() && !m_capturedChannels.contains(chVal.channelNum)) continue;
+
+        channels << chVal.channelNum;
+        channelValues << QJsonArray::fromVariantList(chVal.values);
+    }
+
+    for (const OscChannelValues& chVal : data.discreteValues) {
         if (chVal.channelNum == 0) continue;
         if (!m_capturedChannels.empty() && !m_capturedChannels.contains(chVal.channelNum)) continue;
 

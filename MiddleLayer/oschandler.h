@@ -5,12 +5,13 @@
 #include <QTimer>
 #include <QColor>
 
-#define OSC_CHANNELS_MAX 20
+#define OSC_CHANNELS_MAX 47
+#define OSC_DISCRETES_MAX 128
 struct OscChannelValues
 {
     int channelNum = 0;
-    uint16_t paramId = 0;
-    float scale;
+    uint16_t varId = 0;
+    float scale = 0.0;
     int valuesize = 0; // // number of points in values buffer
     int valueDensity = 0; // number of points per millisec
     QVariantList values;
@@ -20,18 +21,23 @@ struct OscData
 {
     uint16_t oscId;
     uint16_t deviceId;
-    OscChannelValues chValues[OSC_CHANNELS_MAX + 1];
+    OscChannelValues analogValues[OSC_CHANNELS_MAX + 1];
+    OscChannelValues discreteValues[OSC_DISCRETES_MAX + 1];
     qlonglong timestamp = 0;
 };
 
 struct OscChannelDescr
 {
     int channelNum = 0;
-    uint16_t paramId = 0;
-    QString paramName = "";
+    qint16 varId = 0;
+    QString varName = "";
     float scale = 0.0;
-    float min;
-    float max;
+    float min = 0.0;
+    float max = 0.0;
+
+    bool isDescrete = false;
+    qint8 firstBit = 0;
+    qint8 lastBit = 0;
 
     QColor color;
 };
@@ -61,7 +67,8 @@ struct OscHeader
     QString name = "";
     QString desc = "";
 
-    QMap<quint8/*channel num*/, OscChannelDescr> channels;
+    QMap<quint8/*channel index*/, OscChannelDescr> analogChannels;
+    QMap<quint8/*channel index*/, OscChannelDescr> discreteChannels;
     OscSettings settings;
 
     bool operator == (const OscHeader& o) const {
@@ -78,23 +85,38 @@ struct OscHeader
         res["trig_time"] = settings.trigDTime.toMSecsSinceEpoch();
         res["resolution_ns"] = settings.timeResolutionNs;
 
-
         QJsonArray channelsObj;
-        QJsonObject obj;
-
-        for (int chNum = 0; chNum <= OSC_CHANNELS_MAX; ++chNum) {
-            const OscChannelDescr& ch = channels.value(chNum);
-            obj["num"] = chNum;
-            obj["param_id"] = ch.paramId;
-            obj["name"] = ch.paramName;
+        for (quint8 chInd : analogChannels.keys()) {
+            const OscChannelDescr& ch = analogChannels.value(chInd);
+            QJsonObject obj;
+            obj["num"] = ch.channelNum;
+            obj["var_id"] = ch.varId;
+            obj["name"] = ch.varName;
             obj["scale"] = ch.scale;
+            obj["min"] = ch.min;
+            obj["max"] = ch.max;
             obj["color"] = ch.color.name(QColor::NameFormat::HexRgb);
 
             channelsObj << obj;
-
         }
 
         res["channels"] = channelsObj;
+
+        QJsonArray discretesObj;
+        for (quint8 chInd : discreteChannels.keys()) {
+            const OscChannelDescr& ch = discreteChannels.value(chInd);
+            QJsonObject obj;
+            obj["ind"] = chInd;
+            obj["num"] = ch.channelNum;
+            obj["var_id"] = ch.varId;
+            obj["name"] = ch.varName;
+            obj["color"] = ch.color.name(QColor::NameFormat::HexRgb);
+
+            discretesObj << obj;
+        }
+
+        res["discretes"] = discretesObj;
+
         return res;
     }
 };
@@ -125,6 +147,9 @@ private:
     QJsonObject createHeaderObj(int requestId, const OscHeader& header);
     QJsonObject createStreamDataObj(const OscData& data, int error = 0);
     QString oscDataToString(const QJsonObject &obj);
+    OscChannelDescr createAnalogChannel(const OSC_ANALOG_CHANNEL& channel);
+    OscChannelDescr createDiscreteChannel(const OSC_DISCRETE_CHANNEL& channel);
+    qint32 discreteValue(qint16 rawValue, qint8 firstBit, qint8 lastBit);
 
     void startPooling();
     void stopPooling();

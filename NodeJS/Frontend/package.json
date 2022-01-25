@@ -1,35 +1,28 @@
 {
-  "name": "power",
-  "version": "0.1.0",
-  "private": true,
+  "name": "Power",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
   "dependencies": {
-    "@testing-library/jest-dom": "^5.14.1",
-    "@testing-library/react": "^11.2.7",
-    "@testing-library/user-event": "^12.8.3",
-    "browserify": "^17.0.0",
-    "cbor": "^8.0.0",
-    "cbor-web": "^8.0.1",
+    "cbor": "^8.1.0",
+    "copy-files-from-to": "^3.2.1",
+    "events": "^3.3.0",
+    "mobx": "^6.3.7",
+    "mobx-react": "^7.2.1",
     "moment": "^2.29.1",
-    "copy-files-from-to": "^3.2.0",
-    "net": "^1.0.2",
-    "node-fetch": "^2.6.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-flexbox-grid": "^2.1.2",
-    "react-router-dom": "^5.2.0",
-    "react-scripts": "^1.1.5",
-    "react-use-websocket": "^2.7.1",
-    "scichart": "^1.4.1611",
+    "react-scripts": "^4.0.3",
+    "scichart": "^2.0.2139",
     "stream": "^0.0.2",
-    "web-vitals": "^1.1.2",
-    "webix": "^8.3.0",
-    "ws": "^7.5.3"
+    "web-vitals": "^2.1.2",
+    "webix": "^9.1.0"
   },
   "scripts": {
     "copyWasm": "copy-files-from-to --config copy-files-from-to.json",
     "dev": "npm run copyWasm && react-scripts start",
-    "build": "npm run copyWasm && react-scripts buil",
     "start": "react-scripts start",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -42,7 +35,7 @@
   "browserslist": {
     "production": [
       ">0.2%",
-      
+      "not dead",
       "not op_mini all"
     ],
     "development": [
