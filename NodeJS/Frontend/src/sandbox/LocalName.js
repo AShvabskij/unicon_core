@@ -1,5 +1,5 @@
 import React, { useState,useEffect } from "react";
-import {Context} from './Context';
+import {Context} from '../Context';
 
 function LocalName() {
   // аналогично useState, но первым аргументом является ключ значения, хранящегося в локальном хранилище

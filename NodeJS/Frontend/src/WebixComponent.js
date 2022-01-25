@@ -36,58 +36,17 @@ function UpdateItems(current,dataList) {
    for (var i = 0; i < n-1 ; i++) {
       current._cells[i].collapse();
    }
-  //   console.log("accordionItem._headlabel.innerText");
-  //   console.log(element.header);
-  //   let flagAdd = true;
-  //   for (var i = 0; i < n ; i++) {
-  //     if (current._cells[i]._headlabel.innerText == element.header) {
-  //       current._cells[i].body
-  //       current.removeView(current._cells[i].config.id);
-  //       flagAdd = false;
-  //       current.addView(
-  //           { view:"accordionitem",
-  //             header: element.header, 
-  //             body: element.body, 
-  //             // id:element.id 
-  //         }
-  //       );
-  //     }
-  //   }
-
-  //   if (accordionItem._headlabel.innerText == element.header) {
-  //       current.removeView(accordionItem.config.id);
-  //       flagAdd = false;
-  //       current.addView(
-  //           { view:"accordionitem",
-  //             header: element.header, 
-  //             body: element.body, 
-  //             // id:element.id 
-  //         }
-  //       );
-  //     }
-  //   if (flagAdd) {
-  //     current.addView(
-  //       { view:"accordionitem",
-  //         header: element.header, 
-  //         body: element.body, 
-  //         // id:element.id 
-  //     }
-  //   );
-
-  //   }
-  //   }
-  // );
-  // current.resize();
+  
 }
 
 
 function WebixComponent({data, ui}){
   const webixRef  = createRef()
   const uiState   = useRef()     
-  console.log("WebixComponent redraw");
-  console.log(ui);
+  // console.log("WebixComponent redraw");
+  // console.log(ui);
   const setWebixData= (dataToUpdate) => {
-    console.log(uiState.current);
+    // console.log(uiState.current);
     if (uiState.current["setValues"])
       uiState.current.setValues(dataToUpdate);
     else if (uiState.current.parse)
@@ -96,17 +55,17 @@ function WebixComponent({data, ui}){
       uiState.current.setValue(dataToUpdate)
     else if (uiState.current.addView) {
     //   uiState.current.rows = [{ header:"Graphic trends 12", body: ""}]; 
-      console.log("uiState.current.rows");
-      console.log(uiState.current.index);
+      // console.log("uiState.current.rows");
+      // console.log(uiState.current.index);
       let n = uiState.current._cells.length;
       //UpdateItems(uiState.current,dataToUpdate);
       
     }
 
     if (uiState.current["config"]["view"] == "scrollview"){
-      console.log("scrollview");
+      // console.log("scrollview");
       if (uiState.current["_body_cell"]["config"]["view"] == "accordion") {
-        console.log("accordion");
+        // console.log("accordion");
         UpdateItems(uiState.current["_body_cell"],dataToUpdate);
       }
     }
@@ -128,8 +87,8 @@ function WebixComponent({data, ui}){
 
   useEffect(() => {
       if (data){
-        console.log("data");
-        console.log(data);
+        // console.log("data");
+        // console.log(data);
         setWebixData(data);
       }
   }, [data])

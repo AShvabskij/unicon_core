@@ -15,7 +15,7 @@ const toolBar = () => {
     cols: [
       {
         view: "toolbar",
-        id: "myToolbar",
+        // id: "myToolbar",
         cols: [
           {
             view: "button", value: "Add Chart", width: 100, align: "left", 
@@ -49,7 +49,7 @@ const toolBar = () => {
       },
       {
         view: "toolbar",
-        id: "myToolbar2",
+        // id: "myToolbar2",
         margin:10, paddingX:0,
         cols: [
           {},
@@ -109,17 +109,11 @@ const addButtonClick = async () => {
           // console.log(dataForChoose);
         })
       }
-      // console.log(dataForChoose);
-      
       // if (chartsArrHidden.length > 0) {
         $$("showSelectChartWindow").show();
         comp.define({"data":dataForChoose});
-        
-        // console.log("indexDev " + Info.states.indexDevice);
-        
-        // Alex
-        // showSelectChartWindow();
-      // }
+    // }
+       
   }
 }
 
@@ -276,24 +270,6 @@ async function stopOsc(deviceId) {
   }
 }
 
-function getInfo(props) {
-  return {
-    "cols": [
-      {
-        "rows": [
-          { "label": "Label", "view": "label" },
-          {
-            "height": 0,
-            "cols": [
-              { "view": "template", "template": "You can place any widget here..", "role": "placeholder" },
-              { "label": "Label", "view": "label", "height": 0 }
-            ]
-          }
-        ]
-      }
-    ]
-  };
-  }
 
 //Временная генерация данных
 function addFunction(x) {
@@ -323,12 +299,6 @@ function ViewDevicesOscilloscope(props) {
                         <Chart id={item} title="&nbsp;" addFunction={addFunction} />
                 ))
       }
-      {/* <table>  
-        <tr>
-          <td><div class={className}> </div></td>
-          <td>{text}</td>
-        </tr>
-      </table> */}
      </div>
   );
 }

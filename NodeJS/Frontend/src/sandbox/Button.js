@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import {Context} from './Context';
+import {Context} from '../Context';
 
 function updateTitle(name) {
   Context.title = name+"-qwe12 ";

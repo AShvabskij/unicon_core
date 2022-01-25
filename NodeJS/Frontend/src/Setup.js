@@ -13,12 +13,15 @@ model.on('system_status', (status) => {
             console.log("loadDataModel result:" + result);
             console.log(model.devices());
             Context.updateModel = Date.now();
+            Context.status = "Connected";
         }, error => {
             console.log("loadDataModel error");
             console.log(error);
+            Context.status = "Connect error";
         });
     } else if (status === StatusEnum.Loaded) {
         Context.actions.update();
+        Context.status = "Loading...";
     }
 })
 

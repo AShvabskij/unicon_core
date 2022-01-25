@@ -1,5 +1,5 @@
 import React, { useState,useEffect } from "react";
-import {Context} from './Context';
+import {Context} from '../Context';
 
 function demo() {
     console.log("demo");
