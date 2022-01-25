@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
 import logo from './logo.svg';
 import { observer } from "mobx-react";
-import LocalName from './LocalName';
 import ViewBase from './ViewBase';
-import ViewTest from './ViewTest';
 import {Context} from './Context';
 import {Setup} from './Setup';
 import {Provider} from "mobx-react";
 import BaseMenuLeft from "./MenuLeft";
-import Tabbar from "./Tabbar";
 import { makeAutoObservable } from "mobx"
 
 import WebixComponent from './WebixComponent';

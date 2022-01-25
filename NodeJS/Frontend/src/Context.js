@@ -98,7 +98,8 @@ export const Context = {
     },
     showPages :function(visibeElements) {
         setVisibleElements(visibeElements,this.pages);
-        document.documentElement.style.setProperty('--chartcount', 1);  
+        document.documentElement.style.setProperty('--chartcount', 1);
+        // Этот код будет полезен для стека графиков  
         // this.pages.forEach(id => {
         //     setStyleByID(id,"display","none");
         //   });

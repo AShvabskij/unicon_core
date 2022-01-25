@@ -3,27 +3,17 @@ import WebixComponent, {scroll} from './WebixComponent';
 import { $$, template } from 'webix';
 import * as webix from 'webix/webix.js';
 import React,{useEffect} from "react";
-// import Chart from './ChartInteract';
-// import Chart2 from './Chart2';
-// import { ChartControls } from './Chart2';
-// import ParametersView from './ParametersView';
-// import ControlView from './ControlView';
+
 import ViewDevicesInfo from './ViewDevicesInfo';
 import ViewDevicesControl from "./ViewDevicesControl";
 import ViewDevicesParameters from "./ViewDevicesParameters";
 import ViewDevicesOscilloscope from "./ViewDevicesOscilloscope"
-import Config from './.config.js';
-import { Model } from "./data_model/fr_model.mjs";
 import { observer } from "mobx-react";
 import { Context, setVisibleElements } from "./Context";
 
-
-
-
 function tabViewControl() {
   let cellsArr = ["devicesParametersTab","devicesОscilloscopeTab","devicesControlTab","devicesInfoTab"];
-  // console.log("tabViewControl");
-  // console.log(props.updateDevices);
+
   return {
     view: "tabview",
     id: "tabViewControl",
@@ -82,7 +72,6 @@ const TabViewObserver = observer(({  }) => {
   );
 });
 
-
 export default class ViewDevices extends React.Component {
   constructor(props) {
     super(props);
@@ -92,26 +81,15 @@ export default class ViewDevices extends React.Component {
 
   };
 
-
   render() {
-
-    let component = this;
-    // Info.elements = { ...Info.elements, menuTop: this };
-
     return (
       <div id="ViewDevices" className="page">
         <TabViewObserver/>
-        {/* Context.states.indexDevice */}
         <ViewDevicesInfo id="devicesInfoTab" />
         <ViewDevicesControl id="devicesControlTab" />
         <ViewDevicesParameters id="devicesParametersTab"/>
         <ViewDevicesOscilloscope id="devicesОscilloscopeTab" />
-             {/* <ViewDevicesInfo id="asd" data={""} /> */}
       </div>
     )
   }
 };
-
-
-// export default MenuCenter;
-// export { removeButtonClick };

@@ -188,6 +188,7 @@ function getUImainMenu(props) {
         });
         rows.forEach(function (item, index, array) {
           getValue(item.row.param, item.id);
+          // Здесь представлены разные варианты редактирования ячеек в параметрах
           // let item4 = tree.getItem(item.row.id);
           // let editItem = false;
           // if (item4.rw == 'W') {
