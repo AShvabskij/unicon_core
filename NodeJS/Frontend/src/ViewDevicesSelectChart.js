@@ -133,7 +133,7 @@ const ViewDevicesSelectChartUI = () => {
                     // // chControl[chartToVisible].setColorsArr(colorsArrTab);
                     // // chControl[chartToVisible].setNamesArr(paramArr);
                 
-                    // document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
+                    document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
                     showElementChart(chartToVisible);
                     if (chartsArrVisible[chartsArrVisible.length - 2]) {
                       addCssClass(chartsArrVisible[chartsArrVisible.length - 2],"chartSizeControl")
