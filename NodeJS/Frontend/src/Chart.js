@@ -34,7 +34,7 @@ import { SciChartVerticalGroup } from "scichart/Charting/LayoutManager/SciChartV
 // import Webix from './Webix';
 // import * as webix from 'webix/webix.js';
 // import Config from './.config.js';
-import { Context, showElementChart,removeCssClass } from "./Context"
+import { Context, setStyleByID, removeCssClass } from "./Context"
 
 // import classes from "../../../../Examples/Examples.module.scss";
 // import image from "./javascript-line-chart.jpg";
@@ -368,27 +368,47 @@ export default function Chart(props) {
   const [namesArr, setNamesArr] = React.useState([]);
   // const [colorsArr, setColorsArr] = React.useState(colorsArrDefaults);
   const [colorsArr, setColorsArr] = React.useState([]);
+  const [visibility, _setVisibility] = React.useState('hidden');
   const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addVarPoint: () =>{}, addVarPoint2: () =>{}, addVarPointRange: () =>{}, addVarPointRange2: () =>{}, clearChart: () =>{}, 
-  Scale: (factorX, factorY) => {}, SwitchCursor: (value) => {}, SwitchPreview: (value) => {}});
-  console.log(colorsArr);
+  Scale: (factorX, factorY) => {}, SwitchCursor: (value) => {}, SwitchPreview: (value) => {},  setVisibility: (value) => {}});
+
+  const setVisibility = (value) => {
+    _setVisibility(value);
+  }
+
+  const _switchChartElement = (visibility = "visible") => {
+    let chartId = props.id;
+    setStyleByID(chartId, "visibility", visibility);
+/*    
+    if (visibility == "visible") {
+        setStyleByID(chartId, "display", "block");
+    } else {
+        setStyleByID(chartId, "display", "none");
+    }
+*/    
+  };
+
+  React.useEffect(() => {
+    _switchChartElement(visibility);
+  }, [visibility]); 
+
   React.useEffect(() => {
     (async () => {
       console.log("namesArr");
       console.log(namesArr);
       console.log("colorsArr");
       console.log(colorsArr);
-      const res = await initSciChart(props.id,props.addFunction,namesArr,colorsArr);
+      const res = await initSciChart(props.id, props.addFunction, namesArr, colorsArr);
       
       if (! Context.oscilloscopeChartList.includes(props.id) ) {
-        showElementChart(props.id,"hidden");
-        
+        _switchChartElement("hidden");
       } else {
         // removeCssClass(props.id,"chart_height_new");
       }
-      
-      // scs = res.sciChartSurface;
-      setControls(res.controls);
-      chartControls[props.id] = res.controls;
+
+      const controls = Object.assign({}, res.controls, {setVisibility});
+      setControls(controls);
+      chartControls[props.id] = controls;
       const lm = new LegendModifier({
         placement: ELegendPlacement.TopLeft,
         orientation: ELegendOrientation.Vertical,
@@ -398,16 +418,8 @@ export default function Chart(props) {
       });
 
       res.sciChartSurface.chartModifiers.add(lm);
- 
-      // if (props.id) { 
-      //   this.id = props.id
-      console.log("props.id="+props.id);
-      chartControls[props.id] = res.controls;
-      console.log(chartControls);
-      
-      // }
-      //autoStartTimerId = setTimeout(res.controls.startDemo, 3000);
     })();
+
     // Delete sciChartSurface on unmount component to prevent memory leak
     return () => {
       // controls.stopDemo();
@@ -428,7 +440,7 @@ export default function Chart(props) {
         //  <div id={currentChartID} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
         //  <div id={overviewChartID} style={{ width:"auto", height: 70, margin: "auto"}} ></div>          
 
-        <div id={props.id}  className="chart_height" style={{ visibility:"hidden" }} >
+        <div id={props.id}  className="chart_height" >
           <div id={currentChartID} className="chart" ></div>
           <div id={overviewChartID} className="chartoverview" ></div>          
         </div>

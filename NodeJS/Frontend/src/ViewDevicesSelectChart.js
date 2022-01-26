@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
 import { $$, template } from 'webix';
 import {ChartControls} from "./Chart";
-import { Context,showElementChart,addCssClass } from './Context';
+import { Context, addCssClass } from './Context';
 import {chartsArrVisible,chartsArrHidden} from "./ViewDevicesOscilloscope"
 
 let colorsArrTab = [];
@@ -133,14 +133,16 @@ const ViewDevicesSelectChartUI = () => {
                     // // chControl[chartToVisible].setColorsArr(colorsArrTab);
                     // // chControl[chartToVisible].setNamesArr(paramArr);
                 
+
+                    chControl[chartToVisible].setVisibility('visible', chartsArrVisible.length); 
                     document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
-                    showElementChart(chartToVisible);
+
                     if (chartsArrVisible[chartsArrVisible.length - 2]) {
                       addCssClass(chartsArrVisible[chartsArrVisible.length - 2],"chartSizeControl")
                     }
                     
-                  $$("showSelectChartWindow").hide();
-                  clearDataTable();
+                    $$("showSelectChartWindow").hide();
+                    clearDataTable();
                 }
             }
           ]
@@ -150,9 +152,6 @@ const ViewDevicesSelectChartUI = () => {
   }
   return v;
 }
-
-
-
 
 export default class ViewDevicesSelectChart extends React.Component {
   constructor(props) {

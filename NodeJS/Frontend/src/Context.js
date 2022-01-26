@@ -1,6 +1,7 @@
 import {$$} from 'webix';
 
-function setStyleByID(id,cssproperties,val){ 
+export const setStyleByID = (id, cssproperties, val) => { 
+    console.log("setStyleByID, id = " + id);
     let element = document.getElementById(id);
     if (element) {
       element.style[cssproperties] = val;

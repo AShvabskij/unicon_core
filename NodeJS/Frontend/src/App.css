@@ -140,9 +140,12 @@
     /* height: 100%; */
     /* расчт высоты графика нужен для первоначальной загрузки и одновременного отображения нескольких графиков */
     height: calc(
-        calc(100vh - var(--footer-size) - var(--vertical-margin-size) - var(--overview-size) - var(--header-size) * 2 - var(--tabbar-size)) /
-            var(--chartcount)
-    );
+        (100vh - var(--footer-size) - var(--vertical-margin-size) - var(--overview-size) - var(--header-size) * 2 - var(--tabbar-size)) /
+            var(--chartcount));
+
+    overflow: hidden;
+    position: relative;
+    touch-action: none;
 }
 
 .chartoverview {
