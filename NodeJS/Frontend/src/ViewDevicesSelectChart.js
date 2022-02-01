@@ -5,7 +5,6 @@ import WebixComponent from './WebixComponent';
 import { $$, template } from 'webix';
 import {ChartControls} from "./Chart";
 import { Context, addCssClass } from './Context';
-import {chartsArrVisible,chartsArrHidden} from "./ViewDevicesOscilloscope"
 
 let colorsArrTab = [];
 
@@ -116,7 +115,7 @@ const ViewDevicesSelectChartUI = () => {
             },
             { "label": "Apply", "view": "button", "height": 0, 
                 click: function (id, event) {
-                    let chartToVisible = chartsArrHidden.shift();
+                    let chartToVisible = Context.oscilloscopeChartList.shift();
                     let paramArr = [];
                     Context.paramToChart.forEach(function(item, index, array) {
                         paramArr.push(item.name);
@@ -126,21 +125,17 @@ const ViewDevicesSelectChartUI = () => {
                     // console.log(Context.chartList);
                     Context.chartList[chartToVisible].setColorsArr(colorsArrTab);
                     Context.chartList[chartToVisible].setNamesArr(paramArr);
-                    chartsArrVisible.push(chartToVisible);
+//                  chartsArrVisible.push(chartToVisible);
+                    if (!Context.deviceChartList.has(Context.states.indexDevice)) {
+                      Context.deviceChartList.set(Context.states.indexDevice, []);
+                    }
+                    Context.deviceChartList.get(Context.states.indexDevice).push(chartToVisible);
                     // console.log("Select chart click");
                     let chControl = ChartControls();
                     // console.log(chControl[chartToVisible]);
                     // // chControl[chartToVisible].setColorsArr(colorsArrTab);
                     // // chControl[chartToVisible].setNamesArr(paramArr);
                 
-
-                    chControl[chartToVisible].setVisibility('visible', chartsArrVisible.length); 
-                    document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
-
-                    if (chartsArrVisible[chartsArrVisible.length - 2]) {
-                      addCssClass(chartsArrVisible[chartsArrVisible.length - 2],"chartSizeControl")
-                    }
-                    
                     $$("showSelectChartWindow").hide();
                     clearDataTable();
                 }

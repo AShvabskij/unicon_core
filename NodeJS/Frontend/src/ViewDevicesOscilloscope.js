@@ -3,12 +3,11 @@ import 'webix/webix.css';
 import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
 import { $$, template } from 'webix';
-import { Context } from './Context';
+import { Context, addCssClass } from './Context';
 import Chart, { ChartControls, SyncCharts } from './Chart';
 import ViewDevicesSelectChart  from "./ViewDevicesSelectChart";
 
-export const chartsArrVisible = [];
-export const chartsArrHidden = ["chart3","chart4","chart5"];
+// const chartsArrVisible = [];
 
 const toolBar = () => {
   return {
@@ -89,15 +88,25 @@ const toolBar = () => {
   }
 }
 
-const addButtonClick = async () => {
-  // console.log("addButtonClick");
-  if (chartsArrVisible.length < 3) {
-      let comp = $$("showSelectChartWindowData");
-      // console.log(comp);
+const deviceCharts = (indexDevice) => {
+  let res = [];
+  let ind = indexDevice !== undefined ? indexDevice : Context.states.indexDevice;
+  
+  if (Context.deviceChartList.has(ind)) {
+    res = Context.deviceChartList.get(ind);
+  }
 
-      let indexDevice = Context.states.indexDevice;
+  return res;
+}
+
+const addButtonClick = async () => {
+  let indexDevice = Context.states.indexDevice;
+
+  if (deviceCharts(indexDevice).length < 3) {
+      let comp = $$("showSelectChartWindowData");
       let device = Context.model.device(indexDevice);
       let dataForChoose = [];
+
       if (device != undefined) {
         let osc = await device.getOsc();
         osc.channels.forEach(function(item, index, array) {
@@ -106,56 +115,54 @@ const addButtonClick = async () => {
           dataForChoose.push({ id:index, channel:item.num, name:name1,  
             color:item.color, status:0, idParam: item.var_id,
           });
-          // console.log(dataForChoose);
         })
       }
-      // if (chartsArrHidden.length > 0) {
-        $$("showSelectChartWindow").show();
-        comp.define({"data":dataForChoose});
-    // }
-       
+
+      $$("showSelectChartWindow").show();
+      comp.define({"data":dataForChoose});
   }
 }
 
 const removeButtonClick = () => {
-  console.log("removeButtonClick");
-  console.log(chartsArrVisible);
-  if (chartsArrVisible.length > 0) {
-    if (document.getElementById(chartsArrVisible.at(-1)) == undefined) return;
+  let visibleCharts = deviceCharts();
+  if (visibleCharts.length === 0) return;
+
+  let chartToHidden = visibleCharts.pop();
+//  chartsArrVisible.pop();
+//  console.log('visibleChrts = ' + visibleCharts);
+
+  if (!chartToHidden) return;
   
-    let chartToHidden = chartsArrVisible.pop();
-    chartsArrHidden.unshift(chartToHidden);
+  Context.oscilloscopeChartList.unshift(chartToHidden);
 
-    let charts = ChartControls();    
-    charts[chartToHidden].SwitchPreview(0);
-
-    charts[chartToHidden].setVisibility('hidden', chartsArrVisible.length);
-    document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
-  }
-  // then stop process — add
+  let actions = ChartControls();    
+  actions[chartToHidden].SwitchPreview(0);
+  actions[chartToHidden].setVisibility('hidden');
+  document.documentElement.style.setProperty('--chartcount', visibleCharts.length);
 }
 
 async function startOsc(indexDevice) {
-  let device = Context.model.device(indexDevice);
-  let osc = await device.getOsc();
+  let visibleCharts = deviceCharts(indexDevice);
 
-  let chart = chartsArrVisible.slice(-1);
+  let chart = visibleCharts.slice(-1);
   if (chart == undefined || Context.paramToCharts[chart] == undefined) {
     return;
   }
 
-  let chart2 = chartsArrVisible.slice(-2, -1);
-  let chart3 = chartsArrVisible.slice(-3, -2);
+  let chart2 = visibleCharts.slice(-2, -1);
+  let chart3 = visibleCharts.slice(-3, -2);
 
   let isChart2 = Context.paramToCharts[chart2] !== undefined;
   let isChart3 = Context.paramToCharts[chart3] !== undefined;
 
-  let charts = ChartControls();
+  let device = Context.model.device(indexDevice);
+  let osc = await device.getOsc();
+  let actions = ChartControls();
 
   let allChannels = [];
   let channelItems1 = [];
   Context.paramToCharts[chart].forEach(function(item, index, array) {
-    charts[chart].clearChart(index + 1);
+    actions[chart].clearChart(index + 1);
     let chItem = osc.channel(item.channel)
     channelItems1.push(chItem);
     allChannels.push(item.channel)
@@ -164,7 +171,7 @@ async function startOsc(indexDevice) {
   let channelItems2 = [];
   if (isChart2) {
     Context.paramToCharts[chart2].forEach(function(item, index, array) {
-      charts[chart2].clearChart(index + 1);
+      actions[chart2].clearChart(index + 1);
       let chItem = osc.channel(item.channel)
       channelItems2.push(chItem);
       allChannels.push(item.channel)
@@ -174,7 +181,7 @@ async function startOsc(indexDevice) {
   let channelItems3 = [];
   if (isChart3) {
     Context.paramToCharts[chart3].forEach(function(item, index, array) {
-      charts[chart3].clearChart(index + 1);
+      actions[chart3].clearChart(index + 1);
       let chItem = osc.channel(item.channel)
       channelItems3.push(chItem);
       allChannels.push(item.channel)
@@ -194,36 +201,43 @@ async function startOsc(indexDevice) {
 }
 
 async function ScalePlus() {
-  let charts = ChartControls();
-  chartsArrVisible.forEach(function(chart, index, array) {
-    charts[chart].Scale(-0.25, -0.25);
+  let charts = deviceCharts();
+
+  let actions = ChartControls();
+  charts.forEach(function(chart, index, array) {
+    actions[chart].Scale(-0.25, -0.25);
   });
 }
 
 async function ScaleMinus() {
-  let charts = ChartControls();
-  chartsArrVisible.forEach(function(chart, index, array) {
-    charts[chart].Scale(0.25, 0.25);
+  let charts = deviceCharts();
+  let actions = ChartControls();
+
+  charts.forEach(function(chart, index, array) {
+    actions[chart].Scale(0.25, 0.25);
   });
 }
 
 async function SwitchCursor(value) {
-  let charts = ChartControls();
-  chartsArrVisible.forEach(function(chart, index, array) {
-    charts[chart].SwitchCursor(!value);
+  let charts = deviceCharts();
+  let actions = ChartControls();
+
+  charts.forEach(function(chart, index, array) {
+    actions[chart].SwitchCursor(!value);
   });
 }
 
 async function SwitchPreview(value) {
-  let charts = ChartControls();
-  chartsArrVisible.forEach(function(chart, index, array) {
-    charts[chart].SwitchPreview(!value);
+  let charts = deviceCharts();
+  let actions = ChartControls();
+
+  charts.forEach(function(chart, index, array) {
+    actions[chart].SwitchPreview(!value);
   });
 }
 
 async function startDrawData(chart, channelItems) {
-  let charts = ChartControls();
-
+  let actions = ChartControls();
   let freqHz = 50;
 
   let timerId = setInterval(() => {
@@ -232,7 +246,7 @@ async function startDrawData(chart, channelItems) {
       if (values) {
         let xValues = values.map(valObj => { return valObj.time });
         let yValues = values.map(valObj => { return valObj.val });
-        charts[chart].addVarPointRange(xValues, yValues, index + 1);
+        actions[chart].addVarPointRange(xValues, yValues, index + 1);
       }
     })
   }, 1000/freqHz);
@@ -279,17 +293,63 @@ function addFunction(x) {
 
 function ViewDevicesOscilloscope(props) {
   console.log('View devices props = ' + props.data);
+  const [charts, setCharts] = React.useState([]);
+
+  const _showCharts = () => {
+    let chControl = ChartControls();
+    let visibleCharts = Context.deviceChartList;
+
+    for (let deviceIndex of visibleCharts.keys()) {
+      if (deviceIndex === Context.states.indexDevice) continue;
+
+      let charts = visibleCharts.get(deviceIndex);
+      let length = charts.length;
+      for (var i = 0; i < charts.length; ++i) {
+        let chartId = charts[i];
+        chControl[chartId].setVisibility('hidden');
+        document.documentElement.style.setProperty('--chartcount', --length);
+
+        addCssClass(chartId,"chartSizeControl")
+      }
+    };
+
+    visibleCharts = deviceCharts(Context.states.indexDevice);
+    visibleCharts.forEach( chartId => {
+        chControl[chartId].setVisibility('visible');
+        document.documentElement.style.setProperty('--chartcount', visibleCharts.length);
+
+        addCssClass(chartId,"chartSizeControl")
+      });
+  };
+
+  Context.actions.updateOscilloscope = (charts) => {
+    setCharts(charts);
+    _showCharts();
+  };
+
+  React.useEffect(() => {
+    _showCharts(charts);
+  }, [props.deviceId]);
 
   return (
-    
-    <div id={props.id} className="pages">
-      <WebixComponent ui={toolBar()} />
-      <ViewDevicesSelectChart />
+/*      
       {
       Context.oscilloscopeChartList.map((item) => (
                         <Chart id={item} title="&nbsp;" addFunction={addFunction} />
                 ))
       }
+*/      
+    <div id={props.id} className="pages">
+      <WebixComponent ui={toolBar()} />
+      <ViewDevicesSelectChart />
+      <div className="pageChart" style = {{position: 'absolute'}}>
+      <Chart id="chart3" title="&nbsp;" addFunction={addFunction} style = {{position: 'relative'}} />
+      <Chart id="chart4" title="&nbsp;" addFunction={addFunction} style = {{position: 'relative'}} />
+      </div> 
+      <div className="pageChart" style = {{position: 'absolute'}}>
+      <Chart id="chart5" title="&nbsp;" addFunction={addFunction} style = {{position: 'relative'}} />
+      </div> 
+
      </div>
   );
 }

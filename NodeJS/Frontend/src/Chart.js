@@ -292,12 +292,6 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
   };
 
   const SwitchPreview = async (isVisible) => {
-/*    
-    if (!overview) {
-      console.log("create overview");
-      overview = await SciChartOverview.create(sciChartSurface, divOverviewId);
-    }
-*/
     var visibility = isVisible ? "visible" : "hidden";
     document.getElementById(divOverviewId).style["visibility"] = visibility;
 
@@ -306,7 +300,6 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
     } else {
       document.documentElement.style.setProperty('--overview-size', '1px');
     }
-    
   };
 
   const startDemo = () => {

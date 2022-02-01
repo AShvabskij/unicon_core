@@ -76,9 +76,8 @@ export default class ViewDevices extends React.Component {
   constructor(props) {
     super(props);
     this.title = "first title"
-    this.state = { title: "state title", dt: [] };
+    this.state = { title: "state title", dt: [], deviceId: 0 };
     this.updateDevices = props.updateDevices;
-
   };
 
   render() {

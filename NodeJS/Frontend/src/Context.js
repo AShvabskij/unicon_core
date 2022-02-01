@@ -34,7 +34,7 @@ export const showElementChart = (chartID, visibility = "visible") =>{
     }
 };
 
-export function setVisibleElements(visibleElementIDArr, hiddenElementsArr = []){
+export function setVisibleElements(visibleElementIDArr, hiddenElementsArr = []) {
     hiddenElementsArr.forEach(id => {
         setStyleByID(id,"display","none");
         setStyleByID(id,"visibility","hidden");
@@ -51,7 +51,7 @@ export const Context = {
     model:{m_devices_hash:""},
     status:"Loading...",
     updateModel : 0,
-    actions:{update:"updateLeftMenu",updateParameters:"updateParameters"},
+    actions:{update:"updateLeftMenu",updateParameters:"updateParameters", updateOscilloscope: "updateOscilloscope"},
     count: 0,
     title: "t1",
     elements:{},
@@ -68,13 +68,12 @@ export const Context = {
             "chartTrends":{setNamesArr: () => {}, setColorsArr: () => {}},
             "chartCPlotWeb":{setNamesArr: () => {}, setColorsArr: () => {}},
         },
-    // Временный лист для создания общео списка графиков
-    chartListTemporary: [
-        {id:"chart1",dev:"",index:0},
-        {id:"chart2",dev:"",index:1},
-        // {id:"chart3",dev:""},
-        // {id:"chart4",dev:""}
-    ],
+    
+    deviceChartList: new Map(),
+    /*[ // лист для создания списка графиков по устройствам
+        {deviceId:0, charts:["chart0"]}
+    ], */
+
     addNamesColor :function(chartID,setNamesArr,setColorsArr) {
         if (! this.chartList[chartID]) {
             this.chartList[chartID] = {};
