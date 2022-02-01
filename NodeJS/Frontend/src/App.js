@@ -34,7 +34,6 @@ const CaptionObserver = observer(({  }) => {
   );
 });
 
-
 function App() {
   return (
     <div className="App">

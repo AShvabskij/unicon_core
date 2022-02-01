@@ -179,14 +179,9 @@ const addButtonClick = async () => {
       }
       // console.log(dataForChoose);
       
-      // if (chartsArrHidden.length > 0) {
-        $$("showSelectChartWindow").show();
-        comp.define({"data":dataForChoose});
+      $$("showSelectChartWindow").show();
+      comp.define({"data":dataForChoose});
         
-        // console.log("indexDev " + Info.states.indexDevice);
-
-        // showSelectChartWindow();
-      // }
   }
 }
 
@@ -194,7 +189,6 @@ const removeButtonClick = () => {
   // console.log("removeButtonClick");
   if (chartsArrVisible.length > 0) {
     let chartToHidden = chartsArrVisible.pop();
-    // chartsArrHidden.unshift(chartToHidden);
     
     document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
     showElementChart(chartToHidden, "hidden");

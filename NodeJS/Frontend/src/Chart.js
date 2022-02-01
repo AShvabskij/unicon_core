@@ -46,7 +46,7 @@ const visiblePoints = 10000;
 const intervalAddPoint = 40;
 const suffixChartID = "scichart-root";
 const suffixChartOverviewID = "scichart-overview";
-let chartControls = [];
+let chartControls = []; // перенести в Context
 let chartSurfaces = [];
 
 const colorsArrDefaults = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000", "white"];
@@ -306,6 +306,7 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
     } else {
       document.documentElement.style.setProperty('--overview-size', '1px');
     }
+    
   };
 
   const startDemo = () => {
@@ -378,6 +379,8 @@ export default function Chart(props) {
 
   const _switchChartElement = (visibility = "visible") => {
     let chartId = props.id;
+//  SwitchPreview(0);
+
     setStyleByID(chartId, "visibility", visibility);
 /*    
     if (visibility == "visible") {
