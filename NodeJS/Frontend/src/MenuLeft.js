@@ -3,7 +3,7 @@ import WebixComponent, {scroll} from './WebixComponent';
 import React,{useEffect} from "react";
 import {$$} from 'webix';
 import * as webix from 'webix/webix.js';
-import {Context} from './Context';
+import {Context,showPageAndHiddenElements} from './Context';
 import { observer } from "mobx-react"
 
 const accordionInit = [
@@ -30,11 +30,12 @@ function setScroll(body) {
     view:"accordion",
     // width: 0,
     id:"accmain",
-    height:0,
+    type: {
+      height: "auto"
+    },
     multi : false,
     scroll: "y",
     collapsed:true,
-    type:"wide",
     select:true,
     rows:[
         // {header:"col 1", body:"text"},
@@ -51,6 +52,7 @@ function setScroll(body) {
             case "DeviceInit":
               newHeight = 0;
               Context.showPages(["ViewDevices"]);
+              showPageAndHiddenElements("");
               break;
 
             case "cPlotWeb":

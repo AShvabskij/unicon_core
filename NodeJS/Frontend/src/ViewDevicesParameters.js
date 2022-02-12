@@ -82,7 +82,9 @@ function getUImainMenu(props) {
   return {
     view: "treetable", 
     id: "parametersGrid",
-    height: 0,
+    type:{
+      height:"auto"
+    },
     select:true,
     columns: [
       { id: "name", header: "Name", width: "300",

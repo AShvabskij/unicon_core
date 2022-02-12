@@ -17,6 +17,9 @@ function tabViewControl() {
   return {
     view: "tabview",
     id: "tabViewControl",
+    type:{
+      height:"auto"
+    },
     cells: [
       {
         id: "parameters",
@@ -24,7 +27,8 @@ function tabViewControl() {
         body: {
           id: "devicesParametersTab",
           select:true,
-        }
+        },
+        
       },
       {
         // id: "oscilloscope",
