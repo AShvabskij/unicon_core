@@ -11,9 +11,11 @@ import ViewDevicesOscilloscope from "./ViewDevicesOscilloscope"
 import { observer } from "mobx-react";
 import { Context, setVisibleElements } from "./Context";
 
-function tabViewControl() {
-  let cellsArr = ["devicesParametersTab","devicesОscilloscopeTab","devicesControlTab","devicesInfoTab"];
+const cellsArr = ["devicesParametersTab","devicesОscilloscopeTab","devicesControlTab","devicesInfoTab"];
 
+
+function tabViewControl() {
+  
   return {
     view: "tabview",
     id: "tabViewControl",
@@ -68,11 +70,12 @@ function tabViewControl() {
 
 const TabViewObserver = observer(({  }) => {
   useEffect(() => {
-    // console.log("Render TabViewObserver");
+    console.log("Render TabViewObserver");
     // console.log(Context.states.indexDevice);
+    setVisibleElements(["devicesParametersTab"],cellsArr);
   })
   return ( 
-      <WebixComponent ui={tabViewControl()} data={[]} />
+      <WebixComponent ui={tabViewControl()} data={[]} updateModel={Context.states.indexDevice}/>
   );
 });
 
