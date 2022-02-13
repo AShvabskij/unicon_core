@@ -73,8 +73,10 @@ const TabViewObserver = observer(({  }) => {
   useEffect(() => {
     console.log("Render TabViewObserver");
     // console.log(Context.states.indexDevice);
-    setVisibleElements(["devicesParametersTab"],cellsArr);
+   
     $$("tabViewControl").getTabbar().setValue("devicesParametersTab");
+    setVisibleElements(["devicesParametersTab"],cellsArr);
+    Context.resize();
   })
   return ( 
       <WebixComponent ui={tabViewControl()} data={[]} updateModel={Context.states.indexDevice}/>
