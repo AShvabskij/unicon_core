@@ -15,7 +15,6 @@
 .App {
     text-align: center;
     display: flex;
-    /* width: 100vw; */
     background: var(--body-background);
     height: 100vh;
     flex-direction: column;

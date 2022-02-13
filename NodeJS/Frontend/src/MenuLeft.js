@@ -110,6 +110,7 @@ function BaseMenuLeft(props) {
 
 const MenuLeft = observer(({  }) => {
   useEffect(() => {
+    // Update model
     // console.log("Render MenuLeft");
     // console.log(Context.model.devices());
     // console.log(Context.model.m_devices);
