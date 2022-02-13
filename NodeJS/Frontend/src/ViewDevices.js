@@ -26,6 +26,7 @@ function tabViewControl() {
       {
         id: "parameters",
         header: "Parameters",
+        select:true,
         body: {
           id: "devicesParametersTab",
           select:true,
@@ -73,6 +74,7 @@ const TabViewObserver = observer(({  }) => {
     console.log("Render TabViewObserver");
     // console.log(Context.states.indexDevice);
     setVisibleElements(["devicesParametersTab"],cellsArr);
+    $$("tabViewControl").getTabbar().setValue("devicesParametersTab");
   })
   return ( 
       <WebixComponent ui={tabViewControl()} data={[]} updateModel={Context.states.indexDevice}/>
