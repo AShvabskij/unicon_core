@@ -126,6 +126,10 @@ function getUImainMenu(props) {
                 this.editRow(id);
             }
         }
+        if (id.column == "chart") {
+          this.getItem(id.row).chart = !this.getItem(id).chart;
+          this.refresh(id.row);
+        }
 			},
 			onBeforeEditStart:function(id){
 				// console.log("onBeforeEditStart");
