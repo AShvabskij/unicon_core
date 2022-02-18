@@ -3,7 +3,6 @@ import 'webix/webix.css';
 import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
 import { $$, template } from 'webix';
-import {ChartControls} from "./Chart";
 import { Context, addCssClass } from './Context';
 
 let colorsArrTab = [];
@@ -15,8 +14,6 @@ function mark_votes(value, config){
   else 
       return { "background":colorsArrTab[12], "color":"white" };
 };
-
-
 
 const clearDataTable = () => {
   let table1 = $$("showSelectChartWindowData");
@@ -66,7 +63,7 @@ const ViewDevicesSelectChartUI = () => {
               let table1 = $$("showSelectChartWindowData");
               let item = table1.getItem(row);
               if (item.name !== "—") {
-                  let showParam = {name: item.name, channel: item.channel, idParam: item.idParam, row: row};
+                  let showParam = {name: item.name, channel: item.channel, idParam: item.idParam, row: row, color: item.color};
                   
                   if (state == 1) {
                     Context.paramToChart.push(showParam);
@@ -115,29 +112,33 @@ const ViewDevicesSelectChartUI = () => {
             },
             { "label": "Apply", "view": "button", "height": 0, 
                 click: function (id, event) {
-                    let chartToVisible = Context.oscilloscopeChartList.shift();
+
+                  let visibleCharts = Context.deviceCharts(Context.states.indexDevice);
+                  let difference = Context.oscilloscopeChartList.filter(x => !visibleCharts.includes(x));
+                  let chartToVisible = difference.shift();
+                  if (chartToVisible) {
+
                     let paramArr = [];
                     Context.paramToChart.forEach(function(item, index, array) {
                         paramArr.push(item.name);
-                      });
-                    Context.paramToCharts[chartToVisible] = Context.paramToChart;
-                    // console.log("Context.chartList");
-                    // console.log(Context.chartList);
+                    });
+                    let chartParams = new Map();
+                    if (Context.paramToCharts.has(Context.states.indexDevice)) {
+                      chartParams = Context.paramToCharts.get(Context.states.indexDevice);
+                    }
+                    chartParams.set(chartToVisible, Context.paramToChart);
+
+                    Context.paramToCharts.set(Context.states.indexDevice, chartParams);
+                    let params = Context.paramToCharts.get(Context.states.indexDevice);
+
                     Context.chartList[chartToVisible].setColorsArr(colorsArrTab);
                     Context.chartList[chartToVisible].setNamesArr(paramArr);
-//                  chartsArrVisible.push(chartToVisible);
-                    if (!Context.deviceChartList.has(Context.states.indexDevice)) {
-                      Context.deviceChartList.set(Context.states.indexDevice, []);
-                    }
-                    Context.deviceChartList.get(Context.states.indexDevice).push(chartToVisible);
-                    // console.log("Select chart click");
-                    let chControl = ChartControls();
-                    // console.log(chControl[chartToVisible]);
-                    // // chControl[chartToVisible].setColorsArr(colorsArrTab);
-                    // // chControl[chartToVisible].setNamesArr(paramArr);
-                
-                    $$("showSelectChartWindow").hide();
-                    clearDataTable();
+
+                    Context.addChart(Context.states.indexDevice, chartToVisible);
+                  }
+              
+                  $$("showSelectChartWindow").hide();
+                  clearDataTable();
                 }
             }
           ]
@@ -153,7 +154,6 @@ export default class ViewDevicesSelectChart extends React.Component {
     super(props);
     
   };
-
 
   render() {
 

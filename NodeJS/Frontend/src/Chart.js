@@ -46,7 +46,6 @@ const visiblePoints = 10000;
 const intervalAddPoint = 40;
 const suffixChartID = "scichart-root";
 const suffixChartOverviewID = "scichart-overview";
-let chartControls = []; // перенести в Context
 let chartSurfaces = [];
 
 const colorsArrDefaults = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000", "white"];
@@ -80,16 +79,37 @@ class MyRubberBandZoomModifier extends RubberBandXyZoomModifier // ChartModifier
   }
 }
 
-async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesArr = [], colorsArr = []) {
+async function parametriseSciChart(sciChartSurface /*: SciChartSurface*/, wasmContext /*: TSciChart*/, namesArr = [], colorsArr = []) {
+
   const seriesArr = [];
   for (let k = 0; k < namesArr.length; k++) {
       seriesArr.push({color:colorsArr[k],name:namesArr[k],colorText:colorsTitleArr[k]});
-    // seriesArr[0].color;
   }
 
-  // Below find a trial / BETA key for SciChart.js.
-  // This Expires in 30 days - or 14th November 2020
-  // Set this license key once in your app before calling SciChartSurface.create, e.g.
+  if (sciChartSurface.renderableSeries) {
+    sciChartSurface.renderableSeries.clear();
+  }
+
+  const arrayLines = [];
+  for (let m = 0; m < seriesArr.length; m++) {
+    arrayLines.push(new FastLineRenderableSeries(wasmContext, {
+      stroke: seriesArr[m].color,
+      strokeThickness: 2,
+      dataSeries: new XyDataSeries(wasmContext, { dataSeriesName: seriesArr[m].name }),
+      animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
+    }))
+    arrayLines[m].rolloverModifierProps.tooltipTitle = seriesArr[m].name;
+    arrayLines[m].rolloverModifierProps.tooltipLabelX = "X";
+    arrayLines[m].rolloverModifierProps.tooltipLabelY = "Y";
+    arrayLines[m].rolloverModifierProps.markerColor = seriesArr[m].color;
+    arrayLines[m].rolloverModifierProps.tooltipColor = seriesArr[m].color;
+    arrayLines[m].rolloverModifierProps.tooltipTextColor = seriesArr[m].colorText;
+
+    await sciChartSurface.renderableSeries.add(arrayLines[m]);
+  }
+}
+
+async function initSciChart(chartID , namesArr = [], colorsArr = []) {
     const divElementId = chartID+"_"+suffixChartID;
     const divOverviewId = chartID+"_"+suffixChartOverviewID;    
     let timerLocalID
@@ -99,6 +119,8 @@ async function initSciChart(chartID , onAddFunction = (i) => {return 0}, namesAr
     SciChartSurface.setRuntimeLicenseKey(
       LICENSE_KEY
     );
+
+    console.log("iniscichart!")
 
 /*
 SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/api/license",  {mode: "no-cors"}).then(function (r) {
@@ -118,11 +140,6 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
   
   // Create an X,Y Axis and add to the chart
   const xAxis = new NumericAxis(wasmContext, { autoRange: EAutoRange.Once });
-//   chart1XAxis = new CategoryAxis(wasmContext, {
-//     drawLabels: false,
-//     drawMajorTickLines: false,
-//     drawMinorTickLines: false
-// });
   xAxis.drawLabels = true;
   xAxis.drawMajorGridLines = true;
   xAxis.drawMinorGridLines = true;
@@ -145,6 +162,14 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
   const cursor = new RolloverModifier({modifierGroup: "first"});
   cursor.isEnabled = false;
 
+  const lm = new LegendModifier({
+    placement: ELegendPlacement.TopLeft,
+    orientation: ELegendOrientation.Vertical,
+    showLegend: true,
+    showCheckboxes: true,
+    showSeriesMarkers: true
+  });
+
   sciChartSurface.chartModifiers.add(
 //    new RubberBandXyZoomModifier({ xyDirection: EXyDirection.XyDirection, executeOn: EExecuteOn.MouseLeftButton }),
     new MouseWheelZoomModifier({ xyDirection: EXyDirection.XyDirection }),
@@ -153,47 +178,22 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
     new ZoomExtentsModifier({isAnimated: true, animationDuration: 400, easingFunction: easing.outExpo}),
     new ZoomPanModifier({executeOn: EExecuteOn.MouseRightButton}),
     new MyRubberBandZoomModifier({ xyDirection: EXyDirection.XyDirection, executeOn: EExecuteOn.MouseLeftButton, receiveHandledEvents: true}),
+    lm,
     cursor
   );
-
-  const arrayLines = [];
-  for (let m = 0; m < seriesArr.length; m++) {
-    arrayLines.push(new FastLineRenderableSeries(wasmContext, {
-      stroke: seriesArr[m].color,
-      strokeThickness: 2,
-      dataSeries: new XyDataSeries(wasmContext, { dataSeriesName: seriesArr[m].name }),
-      animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
-    }))
-    arrayLines[m].rolloverModifierProps.tooltipTitle = seriesArr[m].name;
-    arrayLines[m].rolloverModifierProps.tooltipLabelX = "X";
-    arrayLines[m].rolloverModifierProps.tooltipLabelY = "Y";
-    arrayLines[m].rolloverModifierProps.markerColor = seriesArr[m].color;
-    arrayLines[m].rolloverModifierProps.tooltipColor = seriesArr[m].color;
-    arrayLines[m].rolloverModifierProps.tooltipTextColor = seriesArr[m].colorText;
-    sciChartSurface.renderableSeries.add(arrayLines[m]);
-    console.log("m="+m);
-    console.log(seriesArr[m]);
-  }
 
   let counter = 0;
   var overview = await SciChartOverview.create(sciChartSurface, divOverviewId);
 
-  const stopDemo = () => {
-    console.log("stopDemo");
-    console.log("timerId = stopDemo");
-    console.log(timerLocalID);
-    clearInterval(timerLocalID);
+  if (namesArr.length != 0 && colorsArr.length != 0) {
+    await parametriseSciChart(sciChartSurface, wasmContext, namesArr, colorsArr)
+  }
 
-    console.log(timerLocalID);
+  const stopDemo = () => {
+    clearInterval(timerLocalID);
     xAxis.autoRange = EAutoRange.Once;
-    // console.log("sciChartSurface.renderableSeries");
-    // console.log(sciChartSurface.renderableSeries.items[0].isVisible);
-    // sciChartSurface.renderableSeries.items[0].isVisible = ! sciChartSurface.renderableSeries.items[0].isVisible;
   };
 
-  const defFunct = (j) => {
-    return onAddFunction(j);
-  }
   const defFunct1 = (j) => {
     return Math.cos(j* 0.01)*Math.sin((j+150)* 0.01)*(1+0.5*Math.random());
   }
@@ -210,22 +210,19 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
     return Math.cos(j* 0.01)*Math.sin((j+650)* 0.01)*(1+0.5*Math.random());
   }
 
-  const defFuncts = [defFunct, defFunct1, defFunct2, defFunct3, defFunct4, defFunct5];
+  const defFuncts = [defFunct1, defFunct2, defFunct3, defFunct4, defFunct5];
 
   const addPoint = () => {
+    let arrayLines = sciChartSurface.renderableSeries.items;
     const step = 100;
 
     for(let i = counter; i < (counter+step); i++) {
-      // console.log("i="+i);
-      let v = onAddFunction(i);
-
-      for (let m = 0; m < seriesArr.length; m++) {
+      for (let m = 0; m < arrayLines.length; m++) {
         console.log("defFunct5" + defFuncts[m]);
         arrayLines[m].dataSeries.append(i, defFuncts[m](i));
       }
 
       if (i>1000000) {
-        // xds.removeAt(0);
         arrayLines[0].dataSeries.removeAt(0);
       }
     }
@@ -234,21 +231,23 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
   }
 
   const clearChart = (line) => {
-    console.log(clearChart);
-    console.log(arrayLines);
+    let arrayLines = sciChartSurface.renderableSeries.items;
     if (arrayLines[line-1]) {
       arrayLines[line-1].dataSeries.clear();
     } else {
       console.log("Error clearChart arrayLines[line-1] - not exists");
     }
+   
   }
 
   const addVarPoint = (x,y,line) => {
+    let arrayLines = sciChartSurface.renderableSeries.items;
       arrayLines[line-1].dataSeries.append(x, y);
       xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
   }
 
   const addVarPointRange = (xValues = [], yValues = [], line) => {
+    let arrayLines = sciChartSurface.renderableSeries.items;
     arrayLines[line-1].dataSeries.appendRange(xValues, yValues);
 
     var curMin = Math.min.apply(null, yValues),
@@ -270,14 +269,22 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
       xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
       yAxis.visibleRange = new NumberRange(yMin, yMax);
     }   
+    
+  }
+
+  const addVarPointMegaRange = (xValues = [], yValues = [], line) => {
+    let arrayLines = sciChartSurface.renderableSeries.items;
+    arrayLines[line-1].dataSeries.appendRange(xValues, yValues);
   }
 
   const addVarPoint2 = (x,y) => {
+    let arrayLines = sciChartSurface.renderableSeries.items;
     arrayLines[1].dataSeries.append(x, y);
         xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
   }
 
   const addVarPointRange2 = (xValues = [], yValues = []) => {
+    let arrayLines = sciChartSurface.renderableSeries.items;
     arrayLines[1].dataSeries.appendRange(xValues, yValues);
         xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
   }
@@ -303,33 +310,13 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
   };
 
   const startDemo = () => {
-    console.log("startDemo");
-    // xds.append(200, 0);
-    // lineSeries.dataSeries = xds;
-    // lineSeries1.dataSeries = xds1;
-    //xds.clear();
-    //counter = 0;
-    //xAxis.autoRange = EAutoRange.Always;
-    console.log("timerId = setInterval");
-    console.log(timerLocalID);
     clearInterval(timerLocalID);
     timerLocalID = setInterval(addPoint, intervalAddPoint);
-    console.log(timerLocalID);
-
-    //   for(let i = 0; i < 10000; i++) {
-    //     xds.append(i, Math.sin(i* 0.01));
-    // }
-    // xds.append(0, 0);
-    // xds.append(50, 50);
-    // xds.append(150, 150);
-    // xds.append(250, 0);
-    // xAxis.autoRange = EAutoRange.Once;
-    //sciChartSurface.renderableSeries.add(lineSeries);
   };
 
   verticalGroup.addSurfaceToGroup(sciChartSurface);
   chartSurfaces.push(sciChartSurface);
-  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPoint2, addVarPointRange, addVarPointRange2, clearChart, Scale, SwitchCursor, SwitchPreview} };
+  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPoint2, addVarPointRange, addVarPointMegaRange, addVarPointRange2, clearChart, Scale, SwitchCursor, SwitchPreview} };
 }
 
 const webixButton = () => {
@@ -359,8 +346,11 @@ const WebixButton12 = () => {
 }
 
 export default function Chart(props) {
+  const [loaded, setLoaded] = React.useState(false);  
   const [namesArr, setNamesArr] = React.useState([]);
-  // const [colorsArr, setColorsArr] = React.useState(colorsArrDefaults);
+  const [sciChartSurface, setSciChartSurface] = React.useState(null);
+  const [wasmContext, setWasmContext] = React.useState(null);
+
   const [colorsArr, setColorsArr] = React.useState([]);
   const [visibility, _setVisibility] = React.useState('hidden');
   const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addVarPoint: () =>{}, addVarPoint2: () =>{}, addVarPointRange: () =>{}, addVarPointRange2: () =>{}, clearChart: () =>{}, 
@@ -390,45 +380,46 @@ export default function Chart(props) {
 
   React.useEffect(() => {
     (async () => {
-      console.log("namesArr");
-      console.log(namesArr);
-      console.log("colorsArr");
-      console.log(colorsArr);
-      const res = await initSciChart(props.id, props.addFunction, namesArr, colorsArr);
-      
+
+      if (sciChartSurface?.renderableSeries) {
+        for (let line of sciChartSurface.renderableSeries.items) {
+          line.dataSeries.clear();
+        }
+        sciChartSurface.renderableSeries.clear();
+      }
+    
+      sciChartSurface?.delete();
+
+      const res = await initSciChart(props.id, namesArr, colorsArr);
+
+      const controls = Object.assign({}, res.controls, {setVisibility});
+      setControls(controls);
+      Context.chartControls[props.id] = controls;
+      setSciChartSurface(res.sciChartSurface);
+      setWasmContext(res.wasmContext);
+
       if (! Context.oscilloscopeChartList.includes(props.id) ) {
         _switchChartElement("hidden");
       } else {
         // removeCssClass(props.id,"chart_height_new");
       }
 
-      const controls = Object.assign({}, res.controls, {setVisibility});
-      setControls(controls);
-      chartControls[props.id] = controls;
-      const lm = new LegendModifier({
-        placement: ELegendPlacement.TopLeft,
-        orientation: ELegendOrientation.Vertical,
-        showLegend: true,
-        showCheckboxes: true,
-        showSeriesMarkers: true
-      });
+      if (props.loadData) {
+        props.loadData();
+        setLoaded(true);
+      }
 
-      res.sciChartSurface.chartModifiers.add(lm);
     })();
 
     // Delete sciChartSurface on unmount component to prevent memory leak
     return () => {
-      // controls.stopDemo();
-      // clearTimeout(timerId);
-      // clearTimeout(autoStartTimerId);
-      //scs?.delete();
+      sciChartSurface?.delete();
     };
-  }, [namesArr], [colorsArr]);
-  console.log("chart Context.chartList");
-  console.log(Context.chartList);
+
+  }, [namesArr, colorsArr]);
+  
+
   Context.addNamesColor(props.id,setNamesArr,setColorsArr);
-  //Context.chartList[props.id].setNamesArr = setNamesArr;
-  //Context.chartList[props.id].setColorsArr = setColorsArr;
   let currentChartID = props.id+"_"+suffixChartID;
   let overviewChartID = props.id+"_"+suffixChartOverviewID;
 
@@ -443,10 +434,6 @@ export default function Chart(props) {
           );
 }
 
-function ChartControls() {
-  return chartControls;
-}
-
 function SyncCharts() {
   verticalGroup.synchronizeAxisSizes();
 
@@ -455,6 +442,9 @@ function SyncCharts() {
     chart.zoomExtents();
     let xAxis = chart.xAxes.items[0];
     xAxes.push(xAxis);
+
+    let yAxis = chart.yAxes.items[0];
+    yAxis.growBy = new NumberRange(0.2, 0.2);
   })
 
   xAxes.forEach(xAxis => {
@@ -466,4 +456,4 @@ function SyncCharts() {
   });
 }
 
-export { ChartControls, SyncCharts, colorsArrDefaults, colorsTitleArr };
+export { SyncCharts, colorsArrDefaults, colorsTitleArr };

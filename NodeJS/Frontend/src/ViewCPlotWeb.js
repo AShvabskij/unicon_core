@@ -3,7 +3,7 @@ import { $$, template } from 'webix';
 import * as webix from 'webix/webix.js';
 import WebixComponent, {scroll} from './WebixComponent';
 import React from "react";
-import Chart,{ChartControls, colorsArrDefaults, colorsTitleArr } from './Chart';
+import Chart, {colorsArrDefaults, colorsTitleArr } from './Chart';
 import { Model } from "./data_model/fr_model.mjs";
 import {Context} from './Context';
 
@@ -36,7 +36,7 @@ async function startOsc(indexDevice) {
     return;
   }
 
-  let charts = ChartControls();
+  let charts = Context.chartControls;
 
   let channels = [];
   Context.paramToCharts[chart].forEach(function(item, index, array) {

@@ -147,17 +147,6 @@
     /* position: relative; */
 }
 
-.pageChart {
-    width: 100%;
-    /* height: 100%; */
-    /* расчт высоты графика нужен для первоначальной загрузки и одновременного отображения нескольких графиков */
-    height: calc(
-        (100vh - var(--footer-size) - var(--vertical-margin-size) - var(--overview-size) - var(--header-size) * 2 - var(--tabbar-size)));
-
-    overflow: hidden;
-    /* position: relative; */
-}
-
 .chartoverview {
     width: 100%;
     height: calc(var(--overview-size));

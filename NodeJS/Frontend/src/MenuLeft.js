@@ -88,7 +88,6 @@ const updateLeftMenuBase = (devicesArr) => {
       click:function(id,event){
                // Изменяем текущий номер устройства
               Context.states.indexDevice = devices.cols[index].deviceID;
-              Context.actions.updateOscilloscope(Context.deviceChartList)
           // Подсветка нужной кнопки при нажатии и отжатие остальных
           let s1 = $$(id).getParentView();
           s1._cells.forEach(element => {
