@@ -6,6 +6,7 @@ import { $$, template } from 'webix';
 import { Context, addCssClass } from './Context';
 
 let colorsArrTab = [];
+let paramToChart = [];
 
 function mark_votes(value, config){
   if (value > 0)
@@ -17,7 +18,7 @@ function mark_votes(value, config){
 
 const clearDataTable = () => {
   let table1 = $$("showSelectChartWindowData");
-  Context.paramToChart.forEach(function(item, index, array) {
+  paramToChart.forEach(function(item, index, array) {
     let item2 = table1.getItem(item.row);
     item2.line = 0;
   });
@@ -26,7 +27,7 @@ const clearDataTable = () => {
   } else {
     console.log("Error ViewDevicesSelectChart not exist element #showSelectChartWindowData");
   }
-  Context.paramToChart = [];
+  paramToChart = [];
   colorsArrTab = [];
 }
 
@@ -66,15 +67,15 @@ const ViewDevicesSelectChartUI = () => {
                   let showParam = {name: item.name, channel: item.channel, idParam: item.idParam, row: row, color: item.color};
                   
                   if (state == 1) {
-                    Context.paramToChart.push(showParam);
+                      paramToChart.push(showParam);
                       //console.log(colorsArrTab);
                       colorsArrTab.push(item.color);
-                      item.line = Context.paramToChart.length;
+                      item.line = paramToChart.length;
                   }
                   if (state == 0) {
                       let newParamArr = [];
                       let newColorsArrTab = [];
-                      Context.paramToChart.forEach(function(item3, index, array) {
+                      paramToChart.forEach(function(item3, index, array) {
                           //console.log(item3);  
                           if(item3.channel == item.channel) {
                           }
@@ -83,10 +84,10 @@ const ViewDevicesSelectChartUI = () => {
                             newColorsArrTab.push(colorsArrTab[index]);
                           }
                       });
-                      Context.paramToChart = newParamArr;
+                      paramToChart = newParamArr;
                       colorsArrTab = newColorsArrTab;
                       item.line = 0;
-                      Context.paramToChart.forEach(function(item2, index, array) {
+                      paramToChart.forEach(function(item2, index, array) {
                         let item4 = table1.getItem(item2.row);
                         item4.line = index + 1;
                         table1.updateItem(item2.row, item4);
@@ -119,14 +120,14 @@ const ViewDevicesSelectChartUI = () => {
                   if (chartToVisible) {
 
                     let paramArr = [];
-                    Context.paramToChart.forEach(function(item, index, array) {
+                    paramToChart.forEach(function(item, index, array) {
                         paramArr.push(item.name);
                     });
                     let chartParams = new Map();
                     if (Context.paramToCharts.has(Context.states.indexDevice)) {
                       chartParams = Context.paramToCharts.get(Context.states.indexDevice);
                     }
-                    chartParams.set(chartToVisible, Context.paramToChart);
+                    chartParams.set(chartToVisible, paramToChart);
 
                     Context.paramToCharts.set(Context.states.indexDevice, chartParams);
                     let params = Context.paramToCharts.get(Context.states.indexDevice);

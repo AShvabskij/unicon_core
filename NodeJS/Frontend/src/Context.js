@@ -68,7 +68,6 @@ export const Context = {
     states:{indexDevice:-100},
     chartControls: [], // ["chart3" : [addVarPointRange, clearChart, scale, setVisibility, ...]]
     oscilloscopeChartList: ["chart3","chart4","chart5"], //Хранит набор параметров для отображения на Chart
-    paramToChart:[],
     paramToCharts: new Map(), // { deviceId: {"chart3":{}, "chart4":{}, "chart5":{}} }
     chartList:{"chart3":{setNamesArr: () => {}, setColorsArr: () => {}}, 
             "chart4":{setNamesArr: () => {}, setColorsArr: () => {}}, 
