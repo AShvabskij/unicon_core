@@ -24,9 +24,9 @@ public:
     uint8_t _error_TX = 0;
     int sock;
 
-    static long init();	//this should be replaced by HAL implemantation
-    static long canPush(CanardFrame*);	//this should be replaced by HAL implemantation
-    static long canPop(CanardFrame*);	//this should be replaced by HAL implementation
+    long init();	//this should be replaced by HAL implemantation
+    long canPush(CanardFrame*);	//this should be replaced by HAL implemantation
+    long canPop(CanardFrame*);	//this should be replaced by HAL implementation
 
 protected: // Protected members are accessible in the class that defines them and in classes that inherit from that class.
 

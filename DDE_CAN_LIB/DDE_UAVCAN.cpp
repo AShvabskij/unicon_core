@@ -101,7 +101,7 @@ _dde_func_return_t DDE_UAVCAN::update()
 	CanardRxTransfer rx_transfer;
 	CanardRxTransfer* rx = &rx_transfer;
 
-	res = uavcan_master.ReceiveProcess(&rx_transfer);
+	res = uavcan_master.ReceiveProcess(rx); //was (&rx_transfer);
 	if (res == 1) 
 	{   //this is a node trying to say smthing
 		if (rx->metadata.remote_node_id < 127) 

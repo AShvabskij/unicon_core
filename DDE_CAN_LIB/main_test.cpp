@@ -48,7 +48,7 @@ int main()
 	//CAN_ETHERNET* can_eth = new CAN_ETHERNET(0x10101010, 345);
 	//can_eth->init(0);
 
-	CAN_MCP2518FD* can_mcp2518fd = new CAN_MCP2518FD();
+	CAN_MCP2518FD can_mcp2518fd =  CAN_MCP2518FD_DEFAULTS();
 	can_mcp2518fd->init();
 	
 	
