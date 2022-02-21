@@ -1,4 +1,3 @@
-// import Chart from "./Chart2";
 import React from "react";
 // import * as webix from 'webix/webix.js';
 import 'webix/webix.css';

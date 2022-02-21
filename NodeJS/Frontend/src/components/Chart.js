@@ -34,7 +34,7 @@ import { SciChartVerticalGroup } from "scichart/Charting/LayoutManager/SciChartV
 // import Webix from './Webix';
 // import * as webix from 'webix/webix.js';
 // import Config from './.config.js';
-import { Context, setStyleByID, removeCssClass } from "./Context"
+import { Context, setStyleByID, removeCssClass } from "../Context"
 
 // import classes from "../../../../Examples/Examples.module.scss";
 // import image from "./javascript-line-chart.jpg";
