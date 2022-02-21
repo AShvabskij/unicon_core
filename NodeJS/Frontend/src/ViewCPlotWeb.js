@@ -3,7 +3,7 @@ import { $$, template } from 'webix';
 import * as webix from 'webix/webix.js';
 import WebixComponent, {scroll} from './WebixComponent';
 import React from "react";
-import Chart, {colorsArrDefaults, colorsTitleArr } from './Chart';
+import Chart, {colorsArrDefaults, colorsTitleArr } from './components/Chart';
 import { Model } from "./data_model/fr_model.mjs";
 import {Context} from './Context';
 
