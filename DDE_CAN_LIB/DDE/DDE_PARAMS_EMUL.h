@@ -3,7 +3,8 @@
 #include "DDE_PARAMS_TYPES.h"
 #include "my_func.h"
 
-#define PARAMS_ID_MAX		0xfff
+//#define PARAMS_ID_MAX		0xfff
+
 #define PARAMS_REQUEST_TIMOUT_MS	1000
 #define DDE_PARAMS_NAME_LENGTH 64
 
@@ -43,11 +44,11 @@ public:
     DDE_PARAMS_EMUL();
     ~DDE_PARAMS_EMUL();
 
-    virtual int get(DDE_GET_PARAMS_HEADER& p);
-    virtual int get(DDE_GET_PARAMS_DATA& p);
-    virtual int set(DDE_SET_PARAMS_DATA& p);
+    virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p);
+    virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p);
+    virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p);
 	
-    virtual int init();
+    virtual _dde_func_return_t init();
 
 protected:
     uint32_t get_list_maxsize;

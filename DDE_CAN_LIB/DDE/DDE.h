@@ -3,8 +3,11 @@
 
 #include "DDE_TYPES.h"
 #include "DDE_PARAMS_TYPES.h"
+//#include "DDE_PARAMS.h"
 #include "DDE_OSC_TYPES.h"
+//#include "DDE_OSC.h"
 #include "DDE_EVLOG_TYPES.h"
+//#include "DDE_EVLOG.h"
 
 //---------------------------------------------------------------------------
 
@@ -51,10 +54,10 @@ public:
     virtual _dde_func_return_t set_evlog_data(DDE_SET_EVLOG_DATA& p);
 
 protected: // Protected members are accessible in the class that defines them and in classes that inherit from that class.
-    IDDE_PARAMS *m_params;
-    IDDE_OSC *m_osc;
-    IDDE_OSC *m_mvcp;
-    IDDE_EVLOG *m_evlog;
+    IDDE_PARAMS *params;
+    IDDE_OSC *osc;
+    IDDE_OSC *mvcp;
+    IDDE_EVLOG *evlog;
 };
 
 // ---------------- DISCUSSION LIST

@@ -1,0 +1,23 @@
+#include "DDE_UAVCAN_VIRT_DEVICES.h"
+
+
+DDE_UAVCAN_VIRT_DEVICES::DDE_UAVCAN_VIRT_DEVICES()
+{
+}
+
+DDE_UAVCAN_VIRT_DEVICES::~DDE_UAVCAN_VIRT_DEVICES() 
+{
+}
+
+int DDE_UAVCAN_VIRT_DEVICES::update()
+{
+
+
+}
+
+int DDE_UAVCAN_VIRT_DEVICES::add(interface_CAN*p, int node_ID)
+{
+
+
+
+}

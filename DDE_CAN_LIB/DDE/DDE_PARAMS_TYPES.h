@@ -1,8 +1,11 @@
 #pragma once
 
+#include "DDE_TYPES.h"
 #include "my_func.h"
 
-#define PARAMS_ID_MAX		0xfff
+#define PARAMS_ID_MAX		    0xfff
+#define PARAMS_DEVICES_MAX      127
+
 //#define SUB_INDEX_MAX	0x3f
 //#define ADDRESS_MAX		0xfff
 
@@ -26,7 +29,7 @@ struct GLIO_ELEMENT_VALUE {
 	int32_t ivalue;
 	float	fvalue;
 	//uint8_t text[8];
-	time_t timestamp;
+	time_t timestamp = 0;
 	GLIO_ELEMENT_FORMAT format;  // 0 - not defined 1-int 2-float 3-BIT /œ≈–≈◊»—À≈Õ»ﬂ
     float scale = 1;
     bool deprecated = false;
@@ -38,6 +41,7 @@ struct GLIO_ELEMENT_DESCR
     uint16_t id;				//INDEX_MAX max = 64
 	//uint8_t sub_index;			//SUB_INDEX_MAX max = 64
 	//uint8_t params_count;
+	uint16_t param_ID; // TODO exclude this is not needed as all info is in ID tag
 	char name[DDE_PARAMS_NAME_LENGTH];
 	//GLIO_ELEMENT el;
 
@@ -46,7 +50,7 @@ struct GLIO_ELEMENT_DESCR
 // all parameters of the device
 struct DEVICE_PARAMS	
 {
-	uint8_t device_ID; //INDEX_MAX max = 64
+	//uint8_t device_ID; //INDEX_MAX max = 64 A&D excluded 25.10.2021 Discussed with ASw may be restored
 	//uint8_t modules_count;
 	char name[DDE_PARAMS_NAME_LENGTH];
 
@@ -82,8 +86,9 @@ struct DDE_GET_PARAMS_DATA
 
 struct DDE_SET_PARAMS_DATA
 {
-	uint16_t index;
-	//uint sub_index;
+	uint16_t device_ID;
+	uint16_t module_ID;
+	uint16_t param_ID;
 
     GLIO_ELEMENT_VALUE el; //just one
 	//void (*callback_func)();
@@ -95,9 +100,15 @@ public:
 
     virtual ~IDDE_PARAMS() {};
 
-    virtual int get(DDE_GET_PARAMS_HEADER& p) = 0;
-    virtual int get(DDE_GET_PARAMS_DATA& p) = 0;
-    virtual int set(DDE_SET_PARAMS_DATA& p) = 0;
+    virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p) = 0;
+    virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p) = 0;
+    virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p) = 0;
+
+	virtual _dde_func_return_t direct_write(DDE_SET_PARAMS_DATA& p) = 0;
+	virtual _dde_func_return_t direct_read(DDE_GET_PARAMS_DATA& p) = 0;
+
+	virtual _dde_func_return_t pop_next_get_request(DDE_GET_PARAMS_DATA& p) = 0;
+	virtual _dde_func_return_t pop_next_set_request(DDE_SET_PARAMS_DATA& p) = 0;
 	
-    virtual int init() = 0;
+    virtual _dde_func_return_t init() = 0;
 };

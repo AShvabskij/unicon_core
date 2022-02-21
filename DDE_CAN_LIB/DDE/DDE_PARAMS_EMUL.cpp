@@ -26,7 +26,7 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
     dev_settings[56] = {25, 1, 0.0000001};
 
     for (int ii = 1; ii < devices_count * devices_step; ii = ii + devices_step)	{
-		device[ii].device_ID = ii;
+		//device[ii].device_ID = ii; A&D excluded 
 		sprintf(device[ii].name, "Device Emul Andrei Branch Unit Type %d", ii);
 		
 		string s;
@@ -68,7 +68,7 @@ DDE_PARAMS_EMUL::~DDE_PARAMS_EMUL()
 
 }
 
-int DDE_PARAMS_EMUL::init() {
+_dde_func_return_t DDE_PARAMS_EMUL::init() {
 
     std::thread*thr_params = new std::thread(&DDE_PARAMS_EMUL::thread_proc, this);
 
@@ -79,7 +79,7 @@ int DDE_PARAMS_EMUL::init() {
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-int DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
+_dde_func_return_t DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
 {
     //this func provices description for device, modules and params
 
@@ -147,7 +147,7 @@ int DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
     return 0;
 }
 
-int DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_DATA& p)
+_dde_func_return_t DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_DATA& p)
 {
 	int ii = 0;
 
@@ -173,7 +173,7 @@ int DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_DATA& p)
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-int DDE_PARAMS_EMUL::set(DDE_SET_PARAMS_DATA& p)
+_dde_func_return_t DDE_PARAMS_EMUL::set(DDE_SET_PARAMS_DATA& p)
 {
 	return 0;
 }
@@ -353,7 +353,7 @@ int DDE_PARAMS_EMUL::thread_proc() //TODO this may be splited to thread_process_
 		//	assert("msg_queue.size < queue_max_size");
 		//	overflow++;
 		//}
-		std::cout << "thread_proc params" << std::endl;
+		//std::cout << "thread_proc params" << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 

@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="CAN_layer">
+      <UniqueIdentifier>{39355e35-382e-4f1e-9ffe-c59a45f717a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UAVCAN">
+      <UniqueIdentifier>{dcdf51f6-8dd9-4708-9414-42cbbb05b81d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DDE_CAN_LIB">
+      <UniqueIdentifier>{eb670de8-aa21-43ff-8ae4-067e47750959}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\CAN_layer\socketcan.c">
+      <Filter>CAN_layer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libcanard-2\libcanard\canard.c">
+      <Filter>UAVCAN</Filter>
+    </ClCompile>
+    <ClCompile Include="DDE_UAVCAN_NODE.c" />
+    <ClCompile Include="DDE_NODE_EMUL.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\CAN_layer\socketcan.h">
+      <Filter>CAN_layer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libcanard-2\libcanard\canard.h">
+      <Filter>UAVCAN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libcanard-2\libcanard\cavl.h">
+      <Filter>UAVCAN</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE_UAVCAN_defs.h">
+      <Filter>DDE_CAN_LIB</Filter>
+    </ClInclude>
+    <ClInclude Include="params_dictionary.h" />
+    <ClInclude Include="DDE_UAVCAN_NODE.h" />
+    <ClInclude Include="DDE_NODE_EMUL.h" />
+  </ItemGroup>
+</Project>
