@@ -9,7 +9,7 @@ class BaseReqHandler : public IReqHandler
 {
     Q_OBJECT
 public:
-    BaseReqHandler();
+    BaseReqHandler(IDDE* dde);
     ~BaseReqHandler() {};
 
     virtual int handle(const QJsonObject& request);

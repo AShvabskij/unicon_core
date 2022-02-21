@@ -13,15 +13,26 @@
 #define PARAMS_REQUEST_TIMOUT_MS	1000
 
 #define DDE_PARAMS_NAME_LENGTH 64
+#define DDE_PARAMS_DESCR_LENGTH 256
 
-enum GLIO_ELEMENT_FORMAT
+enum GLIO_ELEMENT_FORMAT_ENUM
 {
 	 FORMAT_UNDEFINED =0,
+     FORMAT_BIN,
 	 FORMAT_INT,
 	 FORMAT_FLOAT,
-	 FORMAT_BIN,
 	 FORMAT_HEX32,
 	 FORMAT_TEXT
+};
+
+enum GLIO_ELEMENT_UNIT_ENUM
+{
+    UNIT_UNDEFINED =0,
+    UNIT_AMPERE,
+    INT_VOLTS,
+    UNIT_WATT,
+    UNIT_CELSIUS,
+    UNIT_SEC
 };
 
 struct GLIO_ELEMENT_VALUE {
@@ -29,8 +40,8 @@ struct GLIO_ELEMENT_VALUE {
 	int32_t ivalue;
 	float	fvalue;
 	//uint8_t text[8];
-	time_t timestamp = 0;
-	GLIO_ELEMENT_FORMAT format;  // 0 - not defined 1-int 2-float 3-BIT /œ≈–≈◊»—À≈Õ»ﬂ
+	time_t timestamp;
+    GLIO_ELEMENT_FORMAT_ENUM format;  // 0 - not defined 1-int 2-float 3-BIT
     float scale = 1;
     bool deprecated = false;
 };
@@ -41,8 +52,11 @@ struct GLIO_ELEMENT_DESCR
     uint16_t id;				//INDEX_MAX max = 64
 	//uint8_t sub_index;			//SUB_INDEX_MAX max = 64
 	//uint8_t params_count;
-	uint16_t param_ID; // TODO exclude this is not needed as all info is in ID tag
 	char name[DDE_PARAMS_NAME_LENGTH];
+    char descr[DDE_PARAMS_DESCR_LENGTH];
+    char value_unit[6];
+    bool readable = false;
+
 	//GLIO_ELEMENT el;
 
 };
@@ -53,6 +67,7 @@ struct DEVICE_PARAMS
 	//uint8_t device_ID; //INDEX_MAX max = 64 A&D excluded 25.10.2021 Discussed with ASw may be restored
 	//uint8_t modules_count;
 	char name[DDE_PARAMS_NAME_LENGTH];
+    char descr[DDE_PARAMS_DESCR_LENGTH];
 
 	GLIO_ELEMENT_DESCR el_descr[PARAMS_ID_MAX + 1];
     GLIO_ELEMENT_VALUE el[PARAMS_ID_MAX + 1];

@@ -4,6 +4,10 @@ const QString CMD_DEVICE_HEADER = "device_header";
 const QString CMD_SYSTEM_STATUS = "system_status";
 const QString CMD_TYPE = "get";
 
+DeviceHandler::DeviceHandler(IDDE *dde): BaseReqHandler(dde)
+{
+}
+
 int DeviceHandler::handle(const QJsonObject &request)
 {
     QJsonObject cmdObj = request.value("cmd").toObject();
@@ -71,6 +75,8 @@ int DeviceHandler::requestDevices(int requestId)
         Device d;
         d.id = header.el_descr[i].id;
         d.name = header.el_descr[i].name;
+        d.desc = header.el_descr[i].descr;
+        d.channel = ChannelType::CAN; // Suppose all devices are from CAN Channel
 
         devices << d;
     }
@@ -106,6 +112,7 @@ int DeviceHandler::requestDeviceHeader(int deviceId, int requestId)
     for (int i = 0; i < header.el_count; i++) {
         if (header.el_descr[i].id == deviceId) {
             device.name = header.el_descr[i].name;
+            device.desc = header.el_descr[i].descr;
         }
     }
 
@@ -142,6 +149,7 @@ int DeviceHandler::requestModuleHeader(int deviceId, int moduleId, int requestId
     for (int i = 0; i < header.el_count; i++) {
         if (header.el_descr[i].id == moduleId) {
             module.name = header.el_descr[i].name;
+            module.desc = header.el_descr[i].descr;
         }
     }
 
@@ -172,7 +180,7 @@ QJsonObject DeviceHandler::createResponse(int requestId, const DeviceList& devic
         obj["id"] = d.id;
         obj["name"] = d.name;
         obj["desc"] = d.desc;
-        obj["interface"] = d.interface;
+        obj["channel"] = d.channel;
 
         QJsonArray modules;
         for (int moduleId : d.modules) {

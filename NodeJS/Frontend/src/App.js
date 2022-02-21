@@ -1,40 +1,102 @@
-import React from "react";
+import React, { useState } from "react";
 import { Grid, Row, Col } from 'react-flexbox-grid';
 import logo from "./logo.svg";
 import "./App.css";
-import { HashRouter as Router, Route, NavLink} from 'react-router-dom';
-import Home from './Home';
-// import FilmsView from './FilmsView';
-// import Chart from './Chart';
-import MenuTop from './MenuTop';
+import {$$} from 'webix';
+import * as webix from 'webix/webix.js';
+// import { HashRouter as Router, Route, NavLink} from 'react-router-dom';
+import { Link, BrowserRouter as Router, Route } from 'react-router-dom';
+import {useHistory} from 'react-router'
+import DevicesView from './DevicesView';
 import MenuLeft from './MenuLeft';
-import DataView from './DataView';
-// import Chart from './ChartInteract';
-// import Chart2 from './Chart2';
-// import MenuTest from './MenuTest';
-// import MenuInfo from './MenuInfo';
-// import MenuDemo from './MenuDemo';
+import { accordionInit } from './data/config.js';
+import {AddCounter,Info} from "./Context"
 
-/* const {Model, SysInterfacesEnum}  = require("./data_model/model.js");
-let model = new Model();
+const DevicesPage = () => {
+    return (
+        <div className="c2">
+        {/* <DevicesView updateDevices={Info.actions.setDevicesName}/> */}
+        <DevicesView/>
+    </div>
+    );
+  }; 
 
-const deviceId = 12;
-const paramId = 65;
+const CPLotWebPage = () => {
+    return (
+        <div className="c2">
+            cPlotWebPage
+         </div>
+    );
+  }; 
 
-async function loaderDataModel() {
-  
-  let param = model.device(deviceId).param(paramId);
-  let resStream = await param.openValueStream();
 
-  resStream.on('data', chunk => {
-    let stringifiedRes = chunk.toString();
-    console.log(`Received from stream: ${stringifiedRes}`);
+  const Button = () => {
+    const hist = useHistory();
+    return (
+        <button onClick={() => updateLeftMenu1()}>Show cPlotWebPage</button>
+    );
+  }; 
 
-    // if (frontWebSocket) {
-    //   frontWebSocket.send(stringifiedRes);
-    // }
-  });
-}  */
+  const updateLeftMenu1= () => {
+    let v= $$("DeviceInit");
+    v.define("header","new header");
+    // v.expand();
+  }
+
+  const updateLeftMenu = () => {
+        let v= $$("DeviceInit");
+    console.log(v)
+    // v.define("header","new header");
+    // v.body = "new header 1";
+    // v.define("value","new header 1");
+    // v.define({body:{view: "button", value: "Add Chart 2",  align: "left"}});
+    // v.refresh();
+    webix.ui({
+        view: "button", value: "Add Chart 2",  align: "left"}
+      , $$("DeviceInit"), 0);
+    let comp = {view:"segmented", height:100, multiview:true, value:1, options:[
+        { id:"1", value:"Section A <br>sdf sdff 12 " }, // the initially selected segment
+        { id:"2", value:"Section B <br>fsdf f sdf f s" }, 
+        { id:"3", value:"Section C <br>fsdf fsdf  fsdf" }
+    
+        ],
+        click:function(id,event){
+            // console.log(id)
+        },
+        on:{
+            onChange: function(newValue, oldValue, config){
+                console.log(newValue)
+            },
+            onItemClick:function(id,ev){
+                console.log(id)
+                console.log(ev)
+            }
+          }
+    }
+      webix.ui({ view: "toolbar",
+            cols: [ {view: "button", value: "Add Chart 2",  align: "left",animate:{ type:"flip", subtype:"vertical" }},
+            {view: "button", value: "Add Chart 3",  align: "left",}
+    ],animate:{ type:"flip", subtype:"vertical" }},$$("DeviceInit"), 0);
+
+    webix.ui(comp,$$("DeviceInit"), 0);
+
+    v.refresh();
+    // v.setValue("123");
+  }
+
+
+  const Button1 = () => {
+    // const hist = useHistory();
+    return (
+        <button onClick={() => updateLeftMenu()}>new header</button>
+    );
+  }; 
+
+  window.addEventListener('resize', function(event) {
+    Info.resize();   
+  }, true);
+
+
 
 function App() {
   // React.useEffect(() => {
@@ -42,35 +104,23 @@ function App() {
   //   //initSciChart();
   // }, []);
   //loaderDataModel();
-  window.chartEvents = [];
+
+  // const [name, setName] = useState("");
+  const [devicesD, setDevicesName] = useState(accordionInit);
+  Info.actions = {...Info.actions,setDevicesName:setDevicesName};
+  
+
  return (
-    
-    <div className="App">
+  <div className="App">
+      <Router>
       <div className="c1">
-          <MenuLeft />
+          <div><span class='webix_icon mdi mdi-file-video logoUniCon'></span></div>
+          <MenuLeft devtitle={devicesD}/>
       </div>
-
-      <div className="c2">
-          <MenuTop />
-      </div>
-
-      {/* <div className="c3">
-
-          123
-      </div>
-       */}
-      
-     {/*  <Row >
-              <Col className = "c1" xs={2}  > 
-                  <MenuLeft />
-              </Col>
-              <Col className = "c2" xs={10}   > 
-              <MenuTop />
-              </Col>
-              
-        </Row>
- */}
-     
+        <DevicesPage/>
+        {/* <Route exact path="/" component={DevicesPage} />   
+        <Route exact path="/CPLotWebPage" component={CPLotWebPage} />  */}
+      </Router>
       
     </div>
   );

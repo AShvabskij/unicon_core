@@ -4,10 +4,10 @@
 const QString CMD_PARAMS_HEADER = "param_header";
 const QString CMD_TYPE = "get";
 const QString CMD_PARAMS_DATA = "param_data";
-const int TIMER_POOLING_INTERVAL_MSC = 5;
+const int DATA_YELD_INTERVAL_MSC = 100;
 const int STREAM_OBJECT_LIMIT = 6000;//*100;
 
-ParamsHandler::ParamsHandler()
+ParamsHandler::ParamsHandler(IDDE* dde): BaseReqHandler(dde)
 {
     m_streamTimer = new QTimer(this);
     m_streamTimer->setTimerType(Qt::PreciseTimer);
@@ -116,7 +116,6 @@ int ParamsHandler::handleOpenStream(const QJsonObject& request)
         return -1;
     }
 
-    m_requestId = requestId;
     int deviceId = cmdBody.value("device_id").toInt();
     int paramId  = cmdBody.value("param_id").toInt();
 
@@ -134,7 +133,11 @@ int ParamsHandler::handleOpenStream(const QJsonObject& request)
     QJsonObject response = createValueObj(requestId, p, val);
     send(response);
 
-    startPooling();
+
+    int freq = cmdBody.value("frequency").toInt();
+    int interval = (freq == 0) ? DATA_YELD_INTERVAL_MSC : (1000 / freq);
+
+    startPooling(interval);
 
     return 0;
 }
@@ -148,10 +151,6 @@ int ParamsHandler::handleCloseStream(const QJsonObject &request)
         return -1;
     }
 
-    if (m_requestId != requestId) {
-        return -1;
-    }
-
     int deviceId = cmdBody.value("device_id").toInt();
     int paramId  = cmdBody.value("param_id").toInt();
 
@@ -161,8 +160,6 @@ int ParamsHandler::handleCloseStream(const QJsonObject &request)
             break;
         }
     }
-
-    m_requestId = 0;
 
     if (m_capturedParams.isEmpty()) {
         stopPooling();
@@ -180,6 +177,7 @@ ParamValue ParamsHandler::valueFrom(const GLIO_ELEMENT_VALUE& el)
     ParamValue res;
     res.scale = el.scale;
     res.timestamp = el.timestamp; //QDateTime::currentMSecsSinceEpoch();
+    res.valueFormat = el.format;
 
     switch (el.format) {
     case FORMAT_INT:
@@ -197,12 +195,12 @@ ParamValue ParamsHandler::valueFrom(const GLIO_ELEMENT_VALUE& el)
     return res;
 }
 
-void ParamsHandler::startPooling()
+void ParamsHandler::startPooling(int intervalMsc)
 {
 
     m_streamValCount = 0;
 
-    m_streamTimer->setInterval(TIMER_POOLING_INTERVAL_MSC);
+    m_streamTimer->setInterval(intervalMsc);
     m_streamTimer->start();
 
     // connect(this, SIGNAL(requestStreamValue()), this, SLOT(slotTimerAlarm()), Qt::QueuedConnection);
@@ -309,6 +307,8 @@ long ParamsHandler::getParamHeader(int deviceId, int paramId, Param *out)
     for (const GLIO_ELEMENT_DESCR& elem : header.el_descr) {
         if (elem.id == paramId) {
             out->name = elem.name;
+            out->valueUnit = elem.value_unit;
+            out->readable = elem.readable;
             return 0;
         }
     }
@@ -341,6 +341,9 @@ long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)
         p.moduleId = moduleId;
         p.id = elem.id;
         p.name = elem.name;
+        p.desc = elem.descr;
+        p.valueUnit = elem.value_unit;
+        p.readable = elem.readable;
 
         *out << p;
     }
@@ -359,6 +362,8 @@ QJsonObject ParamsHandler::createHeaderObj(int requestId, const ParamList& param
         obj["param_id"] = param.id;
         obj["name"] = param.name;
         obj["desc"] = param.desc;
+        obj["value_unit"] = param.valueUnit;
+        obj["rw"] = param.readable ? "R" : "W";
 
         body << obj;
 

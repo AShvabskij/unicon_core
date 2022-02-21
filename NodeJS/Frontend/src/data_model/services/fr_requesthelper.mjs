@@ -1,9 +1,12 @@
+import Config from './../../.config.js';
+
 let DATA_SERVER_PORT = 1235;
 
 export class _RequestHelper {
 
     m_connected = false;
-    m_socketUrl = "ws://" + "127.0.0.1" + ":" + DATA_SERVER_PORT;
+    // m_socketUrl = "ws://" + "127.0.0.1" + ":" + DATA_SERVER_PORT;
+    m_socketUrl = "ws://" + Config.ip + ":" + DATA_SERVER_PORT;
     m_socket = new WebSocket(this.m_socketUrl);
 
     constructor() {
@@ -35,28 +38,29 @@ export class _RequestHelper {
             this.m_connected = false;
             this.m_socket = null;
 
-            setTimeout(async () => {
+            setTimeout(() => {
                 this.initConnection();
             }, 5000);
         };
 
-        this.m_connected = true;        
+        //this.m_connected = true;        
     }
 
-    request(cmd) {
+    request(cmd, timeout = 1000) {
 
         let promise = new Promise((resolve, reject) => {
 
             if (!this.m_connected) {
                 reject({ status: 500, msg: "The web socket is not connected now." });
             }
-
-            let cmdStr = JSON.stringify(cmd);
-            this.m_socket.send(cmdStr);
-            console.log('sended cmd = ' + cmdStr);
-
-            setTimeout(() => reject({ status: 500, msg: `Request time out for cmd = ${cmdStr}` }), 1000)
-
+            let cmdStr;
+            if (this.m_connected) {
+                cmdStr = JSON.stringify(cmd);
+                this.m_socket.send(cmdStr);
+                console.log('sended cmd = ' + cmdStr);
+           
+                setTimeout(() => reject({ status: 500, msg: `Request time out for cmd = ${cmdStr}` }), timeout)
+            }
             this.m_socket.onmessage = (message) => {
                 var messageData = JSON.parse(message.data);
                 if (messageData.request_id !== cmd.request_id) {

@@ -1,6 +1,9 @@
 #include "DDE_EMUL.h"
 
 #include "DDE/DDE_PARAMS_EMUL.h"
+#include "DDE/DDE_OSC_EMUL.h"
+#include "DDE/DDE_OSC_FILE.h"
+#include "DDE/DDE_PARAMS_FILE.h"
 
 DDE_EMUL::DDE_EMUL()
 {
@@ -13,7 +16,10 @@ DDE_EMUL::~DDE_EMUL()
 
 _dde_func_return_t DDE_EMUL::init(int /*mode*/)
 {
-    m_params = new DDE_PARAMS_EMUL();
+    m_params = new DDE_PARAMS_FILE();
+    m_osc = new DDE_OSC_FILE();
+
+    m_params->init();
 
 	return 0;
 }
@@ -33,15 +39,14 @@ _dde_func_return_t DDE_EMUL::set_params_data(DDE_SET_PARAMS_DATA&)
 	return 0;
 }
 
-
-_dde_func_return_t DDE_EMUL::get_osc_header(DDE_GET_OSC_HEADER&)
+_dde_func_return_t DDE_EMUL::get_osc_header(DDE_GET_OSC_HEADER& p)
 {
-	return 0;
+    return m_osc->get(p);
 }
 
-_dde_func_return_t DDE_EMUL::get_osc_data(DDE_GET_OSC_DATA&)
+_dde_func_return_t DDE_EMUL::get_osc_data(DDE_GET_OSC_DATA& p)
 {
-	return 0;
+    return m_osc->get(p);
 }
 
 _dde_func_return_t DDE_EMUL::set_osc_data(DDE_SET_OSC_DATA&)

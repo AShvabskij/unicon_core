@@ -1,10 +1,9 @@
 #include "basereqhandler.h"
 #include "../DDE_CAN_LIB/DDE_EMUL.h"
 
-BaseReqHandler::BaseReqHandler()
+BaseReqHandler::BaseReqHandler(IDDE *dde)
 {
-    m_dde = new DDE_EMUL();
-    m_dde->init(0); //run thread
+    m_dde = dde;
 }
 
 int BaseReqHandler::handle(const QJsonObject &request)

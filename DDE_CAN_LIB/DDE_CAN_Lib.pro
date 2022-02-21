@@ -13,9 +13,13 @@ SOURCES += \
     DDE/DDE.cpp \
     DDE/DDE_EVLOG.cpp \
     DDE/DDE_OSC.cpp \
+    DDE/DDE_OSC_EMUL.cpp \
+    DDE/DDE_OSC_FILE.cpp \
     DDE/DDE_PARAMS.cpp \
     DDE/DDE_PARAMS_EMUL.cpp \
+    DDE/DDE_PARAMS_FILE.cpp \
     DDE_EMUL.cpp \
+    DDE/csvfile.cpp \
     dde_lib.cpp \
     DDE_CAN.cpp
 
@@ -24,13 +28,17 @@ HEADERS += \
     DDE/DDE_EVLOG.h \
     DDE/DDE_EVLOG_TYPES.h \
     DDE/DDE_OSC.h \
+    DDE/DDE_OSC_EMUL.h \
+    DDE/DDE_OSC_FILE.h \
     DDE/DDE_OSC_TYPES.h \
     DDE/DDE_PARAMS.h \
     DDE/DDE_PARAMS_EMUL.h \
+    DDE/DDE_PARAMS_FILE.h \
     DDE/DDE_PARAMS_TYPES.h \
     DDE/DDE_TYPES.h \
     DDE/my_func.h \
     DDE_EMUL.h \
+    DDE/csvfile.h \
     dde_lib.h \
     DDE_CAN.h
 

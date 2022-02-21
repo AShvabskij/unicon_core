@@ -7,7 +7,8 @@
 struct ParamValue
 {
     QVariant value;
-    uint8_t valueFormat = 0;
+    qint8 valueFormat = 0;
+
     qlonglong timestamp = 0;
     float scale = 0.0;
     bool isValid() {
@@ -33,12 +34,12 @@ struct Param
     int moduleId = 0;
     QString name = "";
     QString desc = "";
+    QString valueUnit = 0;
+    bool readable = false;
 
     bool operator == (const Param& p) const {
         return this->id == p.id && this->deviceId == p.deviceId && this->moduleId == p.moduleId;
     }
-
-    ParamValue value;
 };
 typedef QVector<Param> ParamList;
 
@@ -46,7 +47,7 @@ class ParamsHandler : public BaseReqHandler
 {
     Q_OBJECT
 public:
-    ParamsHandler();
+    ParamsHandler(IDDE* dde);
     virtual int handle(const QJsonObject& request);
 
 signals:
@@ -71,7 +72,7 @@ private:
     QJsonObject createValueObj(int requestId, const Param& param, const ParamValue& value);
     QJsonObject createStreamValueObj(const Param& param, const ParamValue& value, int error = 0);
 
-    void startPooling();
+    void startPooling(int intervalMsc);
     void stopPooling();
     long streamParamsValue();
     void stopStreamsParamValue();
@@ -80,7 +81,6 @@ private:
     ParamList m_capturedParams;
 
     int m_streamValCount = 0;
-    int m_requestId;
     QTimer* m_streamTimer;
 };
 

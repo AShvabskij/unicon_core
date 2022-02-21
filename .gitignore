@@ -107,13 +107,3 @@ compile_commands.json
 
 # End of https://www.toptal.com/developers/gitignore/api/qt
 NodeJS/Frontend/public/static/js/scichart2d.wasm
-NodeJS/Frontend/public/static/js/scichart2d.wasm
-/.vs
-/DDE_CAN_LIB/.vs
-/DDE_CAN_LIB/build
-/DDE_CAN_LIB/ConsoleApplication1
-/DDE_CAN_LIB/ConsoleApplication2
-/DDE_CAN_LIB/DDE_CAN_LIB/out/build/x64-Debug (default)
-/DDE_CAN_LIB/DDE_CAN_LIB/obj/ARM/Debug/DDE_CAN_LIB.tlog
-/DDE_CAN_LIB/DDE_UAVCAN_DEV_EMUL/obj/x64/Debug
-/DDE_CAN_LIB/DDE_UAVCAN_DEV_EMUL/SYS_VID800
