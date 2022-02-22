@@ -99,6 +99,7 @@ const deviceCharts = (indexDevice) => {
     return res;
 }
 
+
 const OscilloscopeChartsObserver = observer(({  }) => {
     useEffect(() => {
       console.log("Render oscilloscope for the device = " + Context.states.indexDevice);
