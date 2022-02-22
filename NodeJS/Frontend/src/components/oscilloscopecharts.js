@@ -4,7 +4,7 @@ import Chart, {SyncCharts} from './Chart';
 import { observer } from "mobx-react";
 
 function initOscParams(indexDevice) {
-    let visibleCharts = deviceCharts(indexDevice);
+    let visibleCharts = Context.deviceCharts(indexDevice);
     let params = Context.paramToCharts.get(indexDevice);
     if (!params) return;
   
@@ -20,7 +20,7 @@ function initOscParams(indexDevice) {
   
 async function loadOscData() {
 let indexDevice = Context.states.indexDevice;
-let visibleCharts = deviceCharts(indexDevice);
+let visibleCharts = Context.deviceCharts(indexDevice);
 let params = Context.paramToCharts.get(indexDevice);
 if (!params || !visibleCharts || visibleCharts.length == 0) return;
 
@@ -107,7 +107,7 @@ const OscilloscopeChartsObserver = observer(({  }) => {
     });
   
     return (
-        <OscilloscopeCharts deviceId = {Context.states.indexDevice} charts = {deviceCharts(Context.states.indexDevice)} chartsLength = {Context.chartsLength}
+        <OscilloscopeCharts deviceId = {Context.states.indexDevice} charts = {Context.deviceCharts()} chartsLength = {Context.chartsLength}
         chartControls = {Context.chartControls} chartPool = {Context.oscilloscopeChartList}/>
     );
 });

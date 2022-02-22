@@ -117,6 +117,17 @@ export const Context = {
         this.chartsLength = charts.length; 
     },
 
+    deviceCharts: function(indexDevice) {
+        let res = [];
+        let ind = indexDevice !== undefined ? indexDevice : Context.states.indexDevice;
+        
+        if (Context.deviceChartList.has(ind)) {
+          res = Context.deviceChartList.get(ind);
+        }
+      
+        return res;
+    },
+    
     addNamesColor :function(chartID,setNamesArr,setColorsArr) {
         if (! this.chartList[chartID]) {
             this.chartList[chartID] = {};
