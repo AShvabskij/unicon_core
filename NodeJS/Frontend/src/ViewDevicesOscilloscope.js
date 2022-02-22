@@ -87,21 +87,10 @@ const toolBar = () => {
   }
 }
 
-const deviceCharts = (indexDevice) => {
-  let res = [];
-  let ind = indexDevice !== undefined ? indexDevice : Context.states.indexDevice;
-  
-  if (Context.deviceChartList.has(ind)) {
-    res = Context.deviceChartList.get(ind);
-  }
-
-  return res;
-}
-
 const addButtonClick = async () => {
   let indexDevice = Context.states.indexDevice;
 
-  if (deviceCharts(indexDevice).length < 3) {
+  if (Context.deviceCharts(indexDevice).length < 3) {
       let comp = $$("showSelectChartWindowData");
       let device = Context.model.device(indexDevice);
       let dataForChoose = [];
@@ -128,7 +117,7 @@ const removeButtonClick = () => {
 }
 
 async function startOsc(indexDevice) {
-  let visibleCharts = deviceCharts(indexDevice);
+  let visibleCharts = Context.deviceCharts(indexDevice);
   let params = Context.paramToCharts.get(indexDevice);
   if (!params) return;
 
@@ -190,7 +179,7 @@ async function startOsc(indexDevice) {
 }
 
 async function ScalePlus() {
-  let charts = deviceCharts();
+  let charts = Context.deviceCharts();
 
   let actions = Context.chartControls;
   charts.forEach(function(chart, index, array) {
@@ -199,7 +188,7 @@ async function ScalePlus() {
 }
 
 async function ScaleMinus() {
-  let charts = deviceCharts();
+  let charts = Context.deviceCharts();
   let actions = Context.chartControls;
 
   charts.forEach(function(chart, index, array) {
@@ -208,7 +197,7 @@ async function ScaleMinus() {
 }
 
 async function SwitchCursor(value) {
-  let charts = deviceCharts();
+  let charts = Context.deviceCharts();
   let actions = Context.chartControls;
 
   charts.forEach(function(chart, index, array) {
@@ -217,7 +206,7 @@ async function SwitchCursor(value) {
 }
 
 async function SwitchPreview(value) {
-  let charts = deviceCharts();
+  let charts = Context.deviceCharts();
   let actions = Context.chartControls;
 
   charts.forEach(function(chart, index, array) {
