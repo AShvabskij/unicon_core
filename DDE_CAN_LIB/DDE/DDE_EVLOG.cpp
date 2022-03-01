@@ -44,7 +44,6 @@ int DDE_EVLOG::set(DDE_SET_EVLOG_DATA& /*p*/)
 
 }
 
-
 void DDE_EVLOG::thread_proc()
 {
 	time_t system_time;
@@ -52,7 +51,6 @@ void DDE_EVLOG::thread_proc()
 	DDE_EVLOG_MSG msg;
 	msg.code_ID = 0;
 	msg.source_ID = 0;
-
 
 	while (1)
 	{
@@ -70,5 +68,4 @@ void DDE_EVLOG::thread_proc()
 		std::cout << "thread_proc evlog" << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 	}
-
 }
