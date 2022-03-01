@@ -3,14 +3,11 @@ import { $$, template } from 'webix';
 import * as webix from 'webix/webix.js';
 import WebixComponent, {scroll} from './WebixComponent';
 import React from "react";
-import Chart,{colorsArrDefaults, colorsTitleArr } from './components/Chart';
+import Chart from './components/Chart';
 import { Model } from "./data_model/fr_model.mjs";
 import {Context} from './Context';
 
-let colorsArrTab = [];
-colorsArrTab = colorsArrDefaults;
 let chartsArrVisible;
-
 
 let _interval = 5;
 function drawValueRange(chart, xValues, yValues, line) {

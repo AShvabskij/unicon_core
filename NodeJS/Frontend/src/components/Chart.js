@@ -41,6 +41,8 @@ const intervalAddPoint = 40;
 const suffixChartID = "scichart-root";
 const suffixChartOverviewID = "scichart-overview";
 let chartSurfaces = [];
+// const colorsArrDefaults = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000", "white"];
+const colorsTitleArr = ["black","black","black", "black", "black", "black", "white", "white", "white", "white","white","white"];
 
 const verticalGroup = new SciChartVerticalGroup();
 
