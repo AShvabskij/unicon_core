@@ -119,21 +119,23 @@ const ViewDevicesSelectChartUI = () => {
                   let chartToVisible = difference.shift();
                   if (chartToVisible) {
 
+/*                    
                     let paramArr = [];
                     selectedParams.forEach(function(item, index, array) {
                         paramArr.push(item.name);
                     });
-                    let chartParams = new Map();
+*/                    
+                    let params = new Map();
                     if (Context.paramToCharts.has(Context.states.indexDevice)) {
-                      chartParams = Context.paramToCharts.get(Context.states.indexDevice);
+                      params = Context.paramToCharts.get(Context.states.indexDevice);
                     }
-                    chartParams.set(chartToVisible, selectedParams);
+                    params.set(chartToVisible, selectedParams);
+                    Context.paramToCharts.set(Context.states.indexDevice, params);
 
-                    Context.paramToCharts.set(Context.states.indexDevice, chartParams);
-                    let params = Context.paramToCharts.get(Context.states.indexDevice);
-
-                    Context.chartList[chartToVisible].setColorsArr(colorsArrTab);
-                    Context.chartList[chartToVisible].setNamesArr(paramArr);
+                    let chartParams = [];
+                    for (let param of selectedParams) {
+                      chartParams.push(param);
+                    }
 
                     Context.addChart(Context.states.indexDevice, chartToVisible);
                   }

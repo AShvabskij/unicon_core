@@ -31,25 +31,17 @@ import { SciChartOverview } from "scichart/Charting/Visuals/SciChartOverview";
 import { SciChartVerticalGroup } from "scichart/Charting/LayoutManager/SciChartVerticalGroup";
 // import { IXyDataSeriesOptions} from "scichart/Charting/Model/XyDataSeries";
 
-// import Webix from './Webix';
-// import * as webix from 'webix/webix.js';
-// import Config from './.config.js';
 import { Context, setStyleByID, removeCssClass } from "../Context"
 
 // import classes from "../../../../Examples/Examples.module.scss";
 // import image from "./javascript-line-chart.jpg";
-console.log("view chart");
 const LICENSE_KEY = Context.chartkey;
-// let scs: SciChartSurface;
-// let timerId: NodeJS.Timeout;
 const visiblePoints = 10000;
 const intervalAddPoint = 40;
 const suffixChartID = "scichart-root";
 const suffixChartOverviewID = "scichart-overview";
 let chartSurfaces = [];
 
-const colorsArrDefaults = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000", "white"];
-const colorsTitleArr = ["black","black","black", "black", "black", "black", "white", "white", "white", "white","white","white"];
 const verticalGroup = new SciChartVerticalGroup();
 
 class MyRubberBandZoomModifier extends RubberBandXyZoomModifier // ChartModifierBase2D
@@ -79,37 +71,7 @@ class MyRubberBandZoomModifier extends RubberBandXyZoomModifier // ChartModifier
   }
 }
 
-async function parametriseSciChart(sciChartSurface /*: SciChartSurface*/, wasmContext /*: TSciChart*/, namesArr = [], colorsArr = []) {
-
-  const seriesArr = [];
-  for (let k = 0; k < namesArr.length; k++) {
-      seriesArr.push({color:colorsArr[k],name:namesArr[k],colorText:colorsTitleArr[k]});
-  }
-
-  if (sciChartSurface.renderableSeries) {
-    sciChartSurface.renderableSeries.clear();
-  }
-
-  const arrayLines = [];
-  for (let m = 0; m < seriesArr.length; m++) {
-    arrayLines.push(new FastLineRenderableSeries(wasmContext, {
-      stroke: seriesArr[m].color,
-      strokeThickness: 2,
-      dataSeries: new XyDataSeries(wasmContext, { dataSeriesName: seriesArr[m].name }),
-      animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
-    }))
-    arrayLines[m].rolloverModifierProps.tooltipTitle = seriesArr[m].name;
-    arrayLines[m].rolloverModifierProps.tooltipLabelX = "X";
-    arrayLines[m].rolloverModifierProps.tooltipLabelY = "Y";
-    arrayLines[m].rolloverModifierProps.markerColor = seriesArr[m].color;
-    arrayLines[m].rolloverModifierProps.tooltipColor = seriesArr[m].color;
-    arrayLines[m].rolloverModifierProps.tooltipTextColor = seriesArr[m].colorText;
-
-    await sciChartSurface.renderableSeries.add(arrayLines[m]);
-  }
-}
-
-async function initSciChart(chartID , namesArr = [], colorsArr = []) {
+async function initSciChart(chartID , params) {
     const divElementId = chartID+"_"+suffixChartID;
     const divOverviewId = chartID+"_"+suffixChartOverviewID;    
     let timerLocalID
@@ -185,10 +147,48 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
   let counter = 0;
   var overview = await SciChartOverview.create(sciChartSurface, divOverviewId);
 
-  if (namesArr.length != 0 && colorsArr.length != 0) {
+  if (params) {
+    let namesArr = []; 
+    let colorsArr = [];
+    
+    for (let param of params) {
+      namesArr.push(param.name);
+      colorsArr.push(param.color);
+    }
+
     await parametriseSciChart(sciChartSurface, wasmContext, namesArr, colorsArr)
   }
 
+  async function parametriseSciChart(sciChartSurface /*: SciChartSurface*/, wasmContext /*: TSciChart*/, namesArr = [], colorsArr = []) {
+
+    const seriesArr = [];
+    for (let k = 0; k < namesArr.length; k++) {
+        seriesArr.push({color:colorsArr[k],name:namesArr[k],colorText:colorsTitleArr[k]});
+    }
+  
+    if (sciChartSurface.renderableSeries) {
+      sciChartSurface.renderableSeries.clear();
+    }
+  
+    const arrayLines = [];
+    for (let m = 0; m < seriesArr.length; m++) {
+      arrayLines.push(new FastLineRenderableSeries(wasmContext, {
+        stroke: seriesArr[m].color,
+        strokeThickness: 2,
+        dataSeries: new XyDataSeries(wasmContext, { dataSeriesName: seriesArr[m].name }),
+        animation: new WaveAnimation({ zeroLine: -1, pointDurationFraction: 0.5, duration: 100 })
+      }))
+      arrayLines[m].rolloverModifierProps.tooltipTitle = seriesArr[m].name;
+      arrayLines[m].rolloverModifierProps.tooltipLabelX = "X";
+      arrayLines[m].rolloverModifierProps.tooltipLabelY = "Y";
+      arrayLines[m].rolloverModifierProps.markerColor = seriesArr[m].color;
+      arrayLines[m].rolloverModifierProps.tooltipColor = seriesArr[m].color;
+      arrayLines[m].rolloverModifierProps.tooltipTextColor = seriesArr[m].colorText;
+  
+      await sciChartSurface.renderableSeries.add(arrayLines[m]);
+    }
+  }
+  
   const stopDemo = () => {
     clearInterval(timerLocalID);
     xAxis.autoRange = EAutoRange.Once;
@@ -237,7 +237,6 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
     } else {
       console.log("Error clearChart arrayLines[line-1] - not exists");
     }
-   
   }
 
   const addVarPoint = (x,y,line) => {
@@ -277,18 +276,6 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
     arrayLines[line-1].dataSeries.appendRange(xValues, yValues);
   }
 
-  const addVarPoint2 = (x,y) => {
-    let arrayLines = sciChartSurface.renderableSeries.items;
-    arrayLines[1].dataSeries.append(x, y);
-        xAxis.visibleRange = new NumberRange(x-visiblePoints,x);
-  }
-
-  const addVarPointRange2 = (xValues = [], yValues = []) => {
-    let arrayLines = sciChartSurface.renderableSeries.items;
-    arrayLines[1].dataSeries.appendRange(xValues, yValues);
-        xAxis.visibleRange = new NumberRange(xValues[0]-visiblePoints, xValues[0]);
-  }
-
   const Scale = (factorX, factorY) => {
     xAxis.zoomBy(factorX, factorX);
     yAxis.zoomBy(factorY, factorY);
@@ -316,7 +303,7 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
 
   verticalGroup.addSurfaceToGroup(sciChartSurface);
   chartSurfaces.push(sciChartSurface);
-  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPoint2, addVarPointRange, addVarPointMegaRange, addVarPointRange2, clearChart, Scale, SwitchCursor, SwitchPreview} };
+  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPointRange, addVarPointMegaRange, clearChart, Scale, SwitchCursor, SwitchPreview} };
 }
 
 const webixButton = () => {
@@ -347,13 +334,12 @@ const WebixButton12 = () => {
 
 export default function Chart(props) {
   const [loaded, setLoaded] = React.useState(false);  
-  const [namesArr, setNamesArr] = React.useState([]);
+  const [inited, setInited] = React.useState(false);  
   const [sciChartSurface, setSciChartSurface] = React.useState(null);
   const [wasmContext, setWasmContext] = React.useState(null);
 
-  const [colorsArr, setColorsArr] = React.useState([]);
   const [visibility, _setVisibility] = React.useState('hidden');
-  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addVarPoint: () =>{}, addVarPoint2: () =>{}, addVarPointRange: () =>{}, addVarPointRange2: () =>{}, clearChart: () =>{}, 
+  const [controls, setControls] = React.useState({ startDemo: () => {}, stopDemo: () => {}, addVarPoint: () =>{}, addVarPointRange: () =>{}, clearChart: () =>{}, 
   Scale: (factorX, factorY) => {}, SwitchCursor: (value) => {}, SwitchPreview: (value) => {},  setVisibility: (value) => {}});
 
   const setVisibility = (value) => {
@@ -377,10 +363,9 @@ export default function Chart(props) {
   React.useEffect(() => {
     _switchChartElement(visibility);
   }, [visibility]); 
-
+ 
   React.useEffect(() => {
     (async () => {
-
       if (sciChartSurface?.renderableSeries) {
         for (let line of sciChartSurface.renderableSeries.items) {
           line.dataSeries.clear();
@@ -390,24 +375,19 @@ export default function Chart(props) {
     
       sciChartSurface?.delete();
 
-      const res = await initSciChart(props.id, namesArr, colorsArr);
+      setInited(false);
+      setLoaded(false);
 
-      const controls = Object.assign({}, res.controls, {setVisibility});
-      setControls(controls);
-      Context.chartControls[props.id] = controls;
+      let res = await initSciChart(props.id, props.params);
+      if (!res) return;
+
+      setInited(true);
+
+      const newControls = Object.assign({}, res.controls, {setVisibility});
+      setControls(newControls);
+      Context.chartControls[props.id] = newControls;
       setSciChartSurface(res.sciChartSurface);
       setWasmContext(res.wasmContext);
-
-      if (! Context.oscilloscopeChartList.includes(props.id) ) {
-        _switchChartElement("hidden");
-      } else {
-        // removeCssClass(props.id,"chart_height_new");
-      }
-
-      if (props.loadData) {
-        props.loadData();
-        setLoaded(true);
-      }
 
     })();
 
@@ -416,10 +396,17 @@ export default function Chart(props) {
       sciChartSurface?.delete();
     };
 
-  }, [namesArr, colorsArr]);
-  
+  }, [props.params]);
 
-  Context.addNamesColor(props.id,setNamesArr,setColorsArr);
+  React.useEffect(() => {
+    (async () => {
+      if (!loaded && props.loadData) {
+        await props.loadData(props.id);
+        setLoaded(true);
+      }
+    })();
+  }, [loaded]);
+
   let currentChartID = props.id+"_"+suffixChartID;
   let overviewChartID = props.id+"_"+suffixChartOverviewID;
 
@@ -456,4 +443,4 @@ function SyncCharts() {
   });
 }
 
-export { SyncCharts, colorsArrDefaults, colorsTitleArr };
+export { SyncCharts };

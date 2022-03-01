@@ -271,12 +271,6 @@ function addFunction(x) {
 function ViewDevicesOscilloscope(props) {
 
   return (
-/*
-      {Context.oscilloscopeChartList.map((item) => (
-                          <Chart id={item} title="&nbsp;" loadData={loadOscData} />
-                  ))}
-
-*/    
     <div id={props.id} className="pages">
       <WebixComponent ui={toolBar()} />
       <ViewDevicesSelectChart />

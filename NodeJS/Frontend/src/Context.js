@@ -66,18 +66,12 @@ export const Context = {
     devices :[{name:"dev1a"},{name:"dev2b"},{name:"dev3c"}],
     pages : ["ViewDevices","ViewCPlotWeb","ViewPLC","ViewGraphicTrends","devicesParametersTab"],
     states:{indexDevice:-100},
-    chartControls: [], // ["chart3" : [addVarPointRange, clearChart, scale, setVisibility, ...]]
+
+    chartControls: [], 
     oscilloscopeChartList: ["chart3","chart4","chart5"], //Хранит набор параметров для отображения на Chart
+
     paramToCharts: new Map(), // { deviceId: {"chart3":{}, "chart4":{}, "chart5":{}} }
-    chartList:{"chart3":{setNamesArr: () => {}, setColorsArr: () => {}}, 
-            "chart4":{setNamesArr: () => {}, setColorsArr: () => {}}, 
-            "chart5":{setNamesArr: () => {}, setColorsArr: () => {}},
-            "chartTrends":{setNamesArr: () => {}, setColorsArr: () => {}},
-            "chartCPlotWeb":{setNamesArr: () => {}, setColorsArr: () => {}},
-        },
-    
     deviceChartList: new Map(),
-    chartsLength: 0,
     /*[ // лист для создания списка графиков по устройствам
         {deviceId:0, charts:["chart0"]}
     ], */
@@ -86,55 +80,43 @@ export const Context = {
         let res = [];
         let ind = indexDevice !== undefined ? indexDevice : Context.states.indexDevice;
         
-        if (Context.deviceChartList.has(ind)) {
-          res = Context.deviceChartList.get(ind);
+        if (this.deviceChartList.has(ind)) {
+          res = this.deviceChartList.get(ind);
         }
       
         return res;
     },
 
+    chartParams: function(chart) {
+        let deviceId = this.states.indexDevice;
+        let params = this.paramToCharts.get(deviceId);
+
+        let res = params?.get(chart);
+        return res;
+    },
+
     addChart: function(deviceIndex, chartId) {
-        if (!Context.deviceChartList.has(deviceIndex)) {
-            Context.deviceChartList.set(deviceIndex, []);
+        if (!this.deviceChartList.has(deviceIndex)) {
+            this.deviceChartList.set(deviceIndex, []);
         }
 
-        let charts = Context.deviceChartList.get(deviceIndex);
+        let charts = this.deviceChartList.get(deviceIndex);
         if (chartId) {
           charts.push(chartId);
-          this.chartsLength = charts.length
         }
     },
 
     popChart: function(deviceIndex) {
         let charts = [];
-        if (Context.deviceChartList.has(deviceIndex)) {
-            charts = Context.deviceChartList.get(deviceIndex);
+        if (this.deviceChartList.has(deviceIndex)) {
+            charts = this.deviceChartList.get(deviceIndex);
         }
   
         if (charts.length === 0) return;
       
         charts.pop();
-        this.chartsLength = charts.length; 
     },
 
-    deviceCharts: function(indexDevice) {
-        let res = [];
-        let ind = indexDevice !== undefined ? indexDevice : Context.states.indexDevice;
-        
-        if (Context.deviceChartList.has(ind)) {
-          res = Context.deviceChartList.get(ind);
-        }
-      
-        return res;
-    },
-    
-    addNamesColor :function(chartID,setNamesArr,setColorsArr) {
-        if (! this.chartList[chartID]) {
-            this.chartList[chartID] = {};
-        }
-        this.chartList[chartID]["setNamesArr"] = setNamesArr;
-        this.chartList[chartID]["setColorsArr"] = setColorsArr
-    },
     resize :function(event) {
         console.log("resize");
         //let elements = ["$scrollview1"];
