@@ -74,9 +74,9 @@ class MyRubberBandZoomModifier extends RubberBandXyZoomModifier // ChartModifier
 }
 
 async function initSciChart(chartID , params) {
-    const divElementId = chartID+"_"+suffixChartID;
-    const divOverviewId = chartID+"_"+suffixChartOverviewID;    
-    let timerLocalID
+    const divElementId = chartID + "_" + suffixChartID;
+    const divOverviewId = chartID + "_" + suffixChartOverviewID;    
+    let timerLocalID    
 /*
     SciChartSurface.setServerLicenseEndpoint("http://localhost:3000/api/license");
 */    
@@ -147,7 +147,7 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
   );
 
   let counter = 0;
-  var overview = await SciChartOverview.create(sciChartSurface, divOverviewId);
+// var overview = await SciChartOverview.create(sciChartSurface, divOverviewId);
 
   if (params) {
     let namesArr = []; 
@@ -289,7 +289,7 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
 
   const SwitchPreview = async (isVisible) => {
     var visibility = isVisible ? "visible" : "hidden";
-    document.getElementById(divOverviewId).style["visibility"] = visibility;
+//  document.getElementById(divOverviewId).style["visibility"] = visibility;
 
     if (isVisible) {
       document.documentElement.style.setProperty('--overview-size', '70px');
@@ -349,17 +349,10 @@ export default function Chart(props) {
   }
 
   const _switchChartElement = (visibility = "visible") => {
-    let chartId = props.id;
-//  SwitchPreview(0);
+    let chartId = props.id +"_" + suffixChartID;
 
+//  SwitchPreview(0);
     setStyleByID(chartId, "visibility", visibility);
-/*    
-    if (visibility == "visible") {
-        setStyleByID(chartId, "display", "block");
-    } else {
-        setStyleByID(chartId, "display", "none");
-    }
-*/    
   };
 
   React.useEffect(() => {
@@ -409,18 +402,18 @@ export default function Chart(props) {
     })();
   }, [loaded]);
 
-  let currentChartID = props.id+"_"+suffixChartID;
-  let overviewChartID = props.id+"_"+suffixChartOverviewID;
+  let currentChartID = props.id + "_" + suffixChartID;
+  let overviewChartID = props.id + "_" + suffixChartOverviewID;
 
   return (
-        //  <div id={currentChartID} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
-        //  <div id={overviewChartID} style={{ width:"auto", height: 70, margin: "auto"}} ></div>          
-
-        <div id={props.id}  className="chart_height" >
-          <div id={currentChartID} className="chart" ></div>
-          <div id={overviewChartID} className="chartoverview" ></div>          
-        </div>
-          );
+    //  <div id={currentChartID} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
+    //  <div id={overviewChartID} style={{ width:"auto", height: 70, margin: "auto"}} ></div>          
+    
+    <div id={currentChartID} className="chart">
+      {/*<div id={currentChartID} ></div>*/}
+      {/*<div id={overviewChartID} className="chartoverview"></div>*/}
+    </div>
+  );
 }
 
 function SyncCharts() {

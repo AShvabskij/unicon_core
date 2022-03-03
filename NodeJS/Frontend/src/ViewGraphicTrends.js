@@ -213,7 +213,7 @@ export default class ViewGraphicTrends extends React.Component {
   return (
       <div id="ViewGraphicTrends" className="pages" >
         <WebixComponent ui={toolBar()} />
-        <Chart id="chartTrends" title="&nbsp;" addFunction={addFunction} />
+        {/*<Chart id="chartTrends" title="&nbsp;" addFunction={addFunction} />*/}
       </div>    
     )
   }

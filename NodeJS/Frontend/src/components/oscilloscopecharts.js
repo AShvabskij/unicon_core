@@ -1,5 +1,5 @@
 import React, {useEffect} from "react";
-import {Context, addCssClass} from '../Context';
+import {Context, setStyleByID, addCssClass} from '../Context';
 import Chart, {SyncCharts} from './Chart';
 import { observer } from "mobx-react";
 
@@ -75,20 +75,15 @@ const OscilloscopeChartsObserver = observer(({  }) => {
       let charts = props.charts
   
       let difference = props.chartPool.filter(x => !charts.includes(x));
-  
-      for (let chartId of difference) {
+
+      for (let chartId of  difference) {
         if (!chartControls.hasOwnProperty(chartId)) continue;
-  
         chartControls[chartId].setVisibility('hidden');
-  //    setStyleByID(chartId, "visibility", 'hidden');
       };
-  
+
       for (let chartId of charts) {
         chartControls[chartId].setVisibility('visible');
-  //    setStyleByID(chartId, "visibility", 'visible');
-        
         document.documentElement.style.setProperty('--chartcount', charts.length);
-        addCssClass(chartId, "chartSizeControl")
       };
     };
         
@@ -101,10 +96,16 @@ const OscilloscopeChartsObserver = observer(({  }) => {
     }, [props.charts, props.chartsLength]);
 
     let params = props.params?.get(props.deviceId);
+    let charts = props.charts
+
+    let oscilloscopes = props.chartPool.map((item) => (
+      <Chart id = {item} title = "&nbsp;" loadData = {loadOscData} params = {params?.get(item)} chartCount = {charts.length} />
+    ));
+
     return (
-      Context.oscilloscopeChartList.map((item) => (
-        <Chart id = {item} title = "&nbsp;" loadData = {loadOscData} params = {params?.get(item)}/>
-      ))
+      <div id = "container" className = 'wrapper'>
+        {oscilloscopes}
+      </div>
     );
   }
   
