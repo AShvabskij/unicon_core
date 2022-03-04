@@ -44,7 +44,7 @@ let chartSurfaces = [];
 // const colorsArrDefaults = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000", "white"];
 const colorsTitleArr = ["black","black","black", "black", "black", "black", "white", "white", "white", "white","white","white"];
 
-const verticalGroup = new SciChartVerticalGroup();
+let verticalGroup = new SciChartVerticalGroup();
 
 class MyRubberBandZoomModifier extends RubberBandXyZoomModifier // ChartModifierBase2D
 {
@@ -84,8 +84,6 @@ async function initSciChart(chartID , params) {
     SciChartSurface.setRuntimeLicenseKey(
       LICENSE_KEY
     );
-
-    console.log("iniscichart!")
 
 /*
 SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/api/license",  {mode: "no-cors"}).then(function (r) {
@@ -349,6 +347,7 @@ export default function Chart(props) {
       }
     
       sciChartSurface?.delete();
+      setSciChartSurface(null);
 
       setInited(false);
       setLoaded(false);
@@ -370,7 +369,9 @@ export default function Chart(props) {
 
     return () => {
     // Delete sciChartSurface on unmount component to prevent memory leak
-    sciChartSurface?.delete();
+      verticalGroup = new SciChartVerticalGroup();
+      chartSurfaces = [];
+      sciChartSurface?.delete();
     };
 
   }, [props.params, props.chartCount]);
@@ -401,6 +402,7 @@ export default function Chart(props) {
 }
 
 function SyncCharts() {
+  
   verticalGroup.synchronizeAxisSizes();
 
   let xAxes = []
@@ -411,6 +413,7 @@ function SyncCharts() {
 
     let yAxis = chart.yAxes.items[0];
     yAxis.growBy = new NumberRange(0.2, 0.2);
+    
   })
 
   xAxes.forEach(xAxis => {
@@ -420,6 +423,7 @@ function SyncCharts() {
       })
     });        
   });
+  
 }
 
 export { SyncCharts };

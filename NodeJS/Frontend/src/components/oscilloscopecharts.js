@@ -22,7 +22,7 @@ async function loadOscData(chart) { // todo: вынести во вьюмоде�
   setTimeout(async () => {
     await loadDrawData(chart, channelItems);
     SyncCharts();
-  }, 300);
+  }, 400);
 
   return;
 }
@@ -41,20 +41,6 @@ async function loadDrawData(chart, channelItems) {
       }
   });
 }
-
-/*
-function initOscParams(visibleCharts, chartControls, params) {
-  if (!params) return;
-
-  for (let chartId of visibleCharts) {
-    let chControls = chartControls;
-    if (!chControls.hasOwnProperty(chartId)) continue;
-
-    let chartParams = params.get(chartId);
-    chControls[chartId].setParams(chartParams);
-  }
-}
-*/
 
 //create your forceUpdate hook
 function useForceUpdate(){
@@ -78,8 +64,6 @@ const OscilloscopeChartsObserver = observer(({  }) => {
 });
   
   function OscilloscopeCharts(props) {
-    const [deviceId, setDeviceId] = React.useState([]);
-
     const _showCharts = () => {
       let chartControls = props.chartControls;
   
@@ -99,10 +83,6 @@ const OscilloscopeChartsObserver = observer(({  }) => {
 
     };
     
-    React.useEffect(() => {
-      setDeviceId(props.deviceId);
-    }, [props.deviceId]);
-  
     React.useEffect(() => {
       _showCharts();    
     }, [props.charts, props.chartsLength]);
