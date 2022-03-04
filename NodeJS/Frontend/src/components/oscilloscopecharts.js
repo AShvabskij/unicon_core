@@ -56,37 +56,49 @@ function initOscParams(visibleCharts, chartControls, params) {
 }
 */
 
+//create your forceUpdate hook
+function useForceUpdate(){
+  const [value, setValue] = React.useState(0); // integer state
+  console.log("forse update");
+  return () => setValue(value => value + 1); // update the state to force render
+}
+
 const OscilloscopeChartsObserver = observer(({  }) => {
+
+  const forceUpdate = useForceUpdate();
+
     useEffect(() => {
       console.log("Render oscilloscope for the device = " + Context.states.indexDevice);
     });
   
     return (
-        <OscilloscopeCharts deviceId = {Context.states.indexDevice} charts = {Context.deviceCharts()} chartsLength = {Context.deviceCharts().length}
+        <OscilloscopeCharts deviceId = {Context.states.indexDevice} visibleCharts = {Context.deviceCharts()} chartsLength = {Context.deviceCharts().length}
         chartControls = {Context.chartControls} chartPool = {Context.oscilloscopeChartList} params = {Context.paramToCharts}/>
     );
 });
   
   function OscilloscopeCharts(props) {
     const [deviceId, setDeviceId] = React.useState([]);
-    
+
     const _showCharts = () => {
       let chartControls = props.chartControls;
-      let charts = props.charts
   
-      let difference = props.chartPool.filter(x => !charts.includes(x));
+      let difference = props.chartPool.filter(x => !props.visibleCharts.includes(x));
 
-      for (let chartId of  difference) {
+      for (let chartId of difference) {
         if (!chartControls.hasOwnProperty(chartId)) continue;
         chartControls[chartId].setVisibility('hidden');
       };
 
-      for (let chartId of charts) {
+      for (let chartId of props.visibleCharts) {
+        let chartControls = props.chartControls;
+
         chartControls[chartId].setVisibility('visible');
-        document.documentElement.style.setProperty('--chartcount', charts.length);
+        document.documentElement.style.setProperty('--chartcount', props.visibleCharts.length);
       };
+
     };
-        
+    
     React.useEffect(() => {
       setDeviceId(props.deviceId);
     }, [props.deviceId]);
@@ -96,10 +108,8 @@ const OscilloscopeChartsObserver = observer(({  }) => {
     }, [props.charts, props.chartsLength]);
 
     let params = props.params?.get(props.deviceId);
-    let charts = props.charts
-
     let oscilloscopes = props.chartPool.map((item) => (
-      <Chart id = {item} title = "&nbsp;" loadData = {loadOscData} params = {params?.get(item)} chartCount = {charts.length} />
+      <Chart id = {item} title = "&nbsp;" loadData = {loadOscData} params = {params?.get(item)} chartCount = {props.visibleCharts.length} />
     ));
 
     return (

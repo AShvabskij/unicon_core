@@ -31,9 +31,8 @@ import { SciChartOverview } from "scichart/Charting/Visuals/SciChartOverview";
 import { SciChartVerticalGroup } from "scichart/Charting/LayoutManager/SciChartVerticalGroup";
 // import { IXyDataSeriesOptions} from "scichart/Charting/Model/XyDataSeries";
 
-import { Context, setStyleByID, removeCssClass } from "../Context"
+import { Context, setStyleByID } from "../Context"
 
-// import classes from "../../../../Examples/Examples.module.scss";
 // import image from "./javascript-line-chart.jpg";
 const LICENSE_KEY = Context.chartkey;
 const visiblePoints = 10000;
@@ -41,6 +40,7 @@ const intervalAddPoint = 40;
 const suffixChartID = "scichart-root";
 const suffixChartOverviewID = "scichart-overview";
 let chartSurfaces = [];
+
 // const colorsArrDefaults = ["#f6bf02","#0aa547","#eb4646", "blue", "#368BC1", "#eeeeee", "#ff6600", "#9b2dce", "#228B22", "#ff0000","orange","#be0000", "white"];
 const colorsTitleArr = ["black","black","black", "black", "black", "black", "white", "white", "white", "white","white","white"];
 
@@ -76,7 +76,8 @@ class MyRubberBandZoomModifier extends RubberBandXyZoomModifier // ChartModifier
 async function initSciChart(chartID , params) {
     const divElementId = chartID + "_" + suffixChartID;
     const divOverviewId = chartID + "_" + suffixChartOverviewID;    
-    let timerLocalID    
+    let timerLocalID
+    var overviewElem = null;
 /*
     SciChartSurface.setServerLicenseEndpoint("http://localhost:3000/api/license");
 */    
@@ -147,7 +148,7 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
   );
 
   let counter = 0;
-// var overview = await SciChartOverview.create(sciChartSurface, divOverviewId);
+  
 
   if (params) {
     let namesArr = []; 
@@ -158,7 +159,7 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
       colorsArr.push(param.color);
     }
 
-    await parametriseSciChart(sciChartSurface, wasmContext, namesArr, colorsArr)
+    await parametriseSciChart(sciChartSurface, wasmContext, namesArr, colorsArr);
   }
 
   async function parametriseSciChart(sciChartSurface /*: SciChartSurface*/, wasmContext /*: TSciChart*/, namesArr = [], colorsArr = []) {
@@ -237,7 +238,7 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
     if (arrayLines[line-1]) {
       arrayLines[line-1].dataSeries.clear();
     } else {
-      console.log("Error clearChart arrayLines[line-1] - not exists");
+      console.log("Error clearChart arrayLines not exists, line = " + line);
     }
   }
 
@@ -293,6 +294,13 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
 
     if (isVisible) {
       document.documentElement.style.setProperty('--overview-size', '70px');
+      
+      if (!overviewElem) {
+        setTimeout( async ()=> {
+          overviewElem = await SciChartOverview.create(sciChartSurface, divOverviewId);
+        }, 100)
+      }
+      
     } else {
       document.documentElement.style.setProperty('--overview-size', '1px');
     }
@@ -306,32 +314,6 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
   verticalGroup.addSurfaceToGroup(sciChartSurface);
   chartSurfaces.push(sciChartSurface);
   return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPointRange, addVarPointMegaRange, clearChart, Scale, SwitchCursor, SwitchPreview} };
-}
-
-const webixButton = () => {
-
-  return (
-    {
-      view:"button", 
-      // id:"my_button", 
-      value:"Button", 
-      css:"webix_primary", 
-      //inputWidth:100 ,
-      click:function(id,event){
-        console.log("webixButton");
-        console.log(this.onclickMessage);
-        this.onclickMessage();
-      }
-      // click: props.removeLine
-
-    }
-  )
-}
-
-const WebixButton12 = () => {
-  // webix.ui({ view:"button", click:handler })
-  return ( {
-    view:"button" })
 }
 
 export default function Chart(props) {
@@ -349,10 +331,8 @@ export default function Chart(props) {
   }
 
   const _switchChartElement = (visibility = "visible") => {
-    let chartId = props.id +"_" + suffixChartID;
-
-//  SwitchPreview(0);
-    setStyleByID(chartId, "visibility", visibility);
+    let elemId = props.id;
+    setStyleByID(elemId, "visibility", visibility);
   };
 
   React.useEffect(() => {
@@ -373,25 +353,27 @@ export default function Chart(props) {
       setInited(false);
       setLoaded(false);
 
-      let res = await initSciChart(props.id, props.params);
-      if (!res) return;
 
-      setInited(true);
+      setTimeout(async () => { 
+        let res = await initSciChart(props.id, props.params); // отложенная опреацию создания необходима, так как диаграммы требует фиксированной высоты div блока, которая должна успеть рассчитаться
+        if (!res) return;
+  
+        setInited(true);
 
-      const newControls = Object.assign({}, res.controls, {setVisibility});
-      setControls(newControls);
-      Context.chartControls[props.id] = newControls;
-      setSciChartSurface(res.sciChartSurface);
-      setWasmContext(res.wasmContext);
-
+        const newControls = Object.assign({}, res.controls, {setVisibility});
+        setControls(newControls);
+        Context.chartControls[props.id] = newControls;
+        setSciChartSurface(res.sciChartSurface);
+        setWasmContext(res.wasmContext);
+      }, 10) 
     })();
 
-    // Delete sciChartSurface on unmount component to prevent memory leak
     return () => {
-      sciChartSurface?.delete();
+    // Delete sciChartSurface on unmount component to prevent memory leak
+    sciChartSurface?.delete();
     };
 
-  }, [props.params]);
+  }, [props.params, props.chartCount]);
 
   React.useEffect(() => {
     (async () => {
@@ -402,16 +384,18 @@ export default function Chart(props) {
     })();
   }, [loaded]);
 
-  let currentChartID = props.id + "_" + suffixChartID;
-  let overviewChartID = props.id + "_" + suffixChartOverviewID;
+  const divElementId = props.id + "_" + suffixChartID;
+  const divOverviewId = props.id + "_" + suffixChartOverviewID;    
+
+  console.log('Chart component: render()')
 
   return (
-    //  <div id={currentChartID} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
-    //  <div id={overviewChartID} style={{ width:"auto", height: 70, margin: "auto"}} ></div>          
+    //  <div id={divElementId} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
+    //  <div id={divOverviewId} style={{ width:"auto", height: 70, margin: "auto"}} ></div>          
     
-    <div id={currentChartID} className="chart">
-      {/*<div id={currentChartID} ></div>*/}
-      {/*<div id={overviewChartID} className="chartoverview"></div>*/}
+    <div id={props.id} className="chartContainer" style={{ display:"grid"}}>
+      <div id={divElementId} className="chart"></div>
+      <div id={divOverviewId} className="chartoverview"></div>
     </div>
   );
 }

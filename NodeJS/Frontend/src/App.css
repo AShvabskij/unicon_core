@@ -8,7 +8,6 @@
     --body-background: white;
     --acc-background: #ebedf0;
     --overview-size: 1px;    
-    --overview-visibility: hidden;
     --vertical-margin-size: 7px;
     --chartcount: 3; /* должно быть больше чем количество всех графиков */
     /* --body-background: rgb(80, 78, 78); */
@@ -137,17 +136,21 @@
     height: 50vh;
 }
 
+.chartContainer {
+    width: 100%;
+    height: calc(var(--chartArea) / var(--chartcount));
+}
+
 .chart {
     width: 100%;
-    /* height: 100%; */
-    /* расчт высоты графика нужен для первоначальной загрузки и одновременного отображения нескольких графиков */
-    height: calc(var(--chartArea) / var(--chartcount));
+    /*Расчёт высоты графика нужен, чтобы автоматически изменять размеры диаграмм при изменении высоты окна браузера*/
+    height: calc(var(--chartArea)  / var(--chartcount) - var(--overview-size));  
 
     overflow: hidden;
 }
 
 .wrapper {
-    border: 3px solid #ebedf0;
+    border: 2px solid #ebedf0;
     background-color: white;
     display: grid;
     
@@ -160,10 +163,7 @@
  
 .chartoverview {
     width: 100%;
-/*   height: calc(var(--overview-size));*/
-    height: 10px;
-
-    visibility: var(--overview-visibility);
+    height: calc(var(--overview-size));
 }
 
 .chartauto {
