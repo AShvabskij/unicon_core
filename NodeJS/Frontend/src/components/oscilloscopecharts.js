@@ -19,10 +19,11 @@ async function loadOscData(chart) { // todo: вынести во вьюмоде�
     channelItems.push(chItem);
   })
 
+  await loadDrawData(chart, channelItems);
+
   setTimeout(async () => {
-    await loadDrawData(chart, channelItems);
     SyncCharts();
-  }, 400);
+  }, 0);
 
   return;
 }
@@ -40,6 +41,8 @@ async function loadDrawData(chart, channelItems) {
       }
       }
   });
+
+  actions.zoomExtents();
 }
 
 //create your forceUpdate hook
@@ -68,12 +71,12 @@ const OscilloscopeChartsObserver = observer(({  }) => {
       let chartControls = props.chartControls;
   
       let difference = props.chartPool.filter(x => !props.visibleCharts.includes(x));
-
+/*
       for (let chartId of difference) {
         if (!chartControls.hasOwnProperty(chartId)) continue;
         chartControls[chartId].setVisibility('hidden');
       };
-
+*/
       for (let chartId of props.visibleCharts) {
         let chartControls = props.chartControls;
 
@@ -88,7 +91,7 @@ const OscilloscopeChartsObserver = observer(({  }) => {
     }, [props.charts, props.chartsLength]);
 
     let params = props.params?.get(props.deviceId);
-    let oscilloscopes = props.chartPool.map((item) => (
+    let oscilloscopes = props.visibleCharts.map((item) => (
       <Chart id = {item} title = "&nbsp;" loadData = {loadOscData} params = {params?.get(item)} chartCount = {props.visibleCharts.length} />
     ));
 

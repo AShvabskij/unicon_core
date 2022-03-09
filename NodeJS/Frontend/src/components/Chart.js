@@ -277,6 +277,10 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
     arrayLines[line-1].dataSeries.appendRange(xValues, yValues);
   }
 
+  const zoomExtents = () => {
+    sciChartSurface.zoomExtents();
+  }
+
   const Scale = (factorX, factorY) => {
     xAxis.zoomBy(factorX, factorX);
     yAxis.zoomBy(factorY, factorY);
@@ -311,7 +315,7 @@ SciChartSurface.setLicenseCallback(function () { return fetch("localhost:3000/ap
 
   verticalGroup.addSurfaceToGroup(sciChartSurface);
   chartSurfaces.push(sciChartSurface);
-  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPointRange, addVarPointMegaRange, clearChart, Scale, SwitchCursor, SwitchPreview} };
+  return { wasmContext, sciChartSurface, controls: { startDemo, stopDemo, addVarPoint, addVarPointRange, addVarPointMegaRange, zoomExtents, clearChart, Scale, SwitchCursor, SwitchPreview} };
 }
 
 export default function Chart(props) {
@@ -352,6 +356,10 @@ export default function Chart(props) {
       setInited(false);
       setLoaded(false);
 
+      const newControls = {setVisibility};
+      setControls(newControls);
+      Context.chartControls[props.id] = newControls;
+
 
       setTimeout(async () => { 
         let res = await initSciChart(props.id, props.params); // отложенная опреацию создания необходима, так как диаграммы требует фиксированной высоты div блока, которая должна успеть рассчитаться
@@ -378,12 +386,14 @@ export default function Chart(props) {
 
   React.useEffect(() => {
     (async () => {
-      if (!loaded && props.loadData) {
-        await props.loadData(props.id);
-        setLoaded(true);
+      if (inited && !loaded && props.loadData) {
+        setTimeout(async () => {
+          await props.loadData(props.id);
+          setLoaded(true);
+        }, 300);
       }
     })();
-  }, [loaded]);
+  }, [inited, loaded]);
 
   const divElementId = props.id + "_" + suffixChartID;
   const divOverviewId = props.id + "_" + suffixChartOverviewID;    

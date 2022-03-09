@@ -234,7 +234,10 @@ async function startDrawData(chart, channelItems) {
       if (timerId != 0) {
         clearInterval(timerId);
         timerId = 0;
-        SyncCharts();
+        actions[chart].zoomExtents();
+        setTimeout(async () => {
+          SyncCharts();
+        }, 0);
       }
     })
   });
