@@ -398,8 +398,6 @@ export default function Chart(props) {
   const divElementId = props.id + "_" + suffixChartID;
   const divOverviewId = props.id + "_" + suffixChartOverviewID;    
 
-  console.log('Chart component: render()')
-
   return (
     //  <div id={divElementId} style={{ width:"auto", height: "calc(var(--chartheight))", margin: "auto"}} ></div>
     //  <div id={divOverviewId} style={{ width:"auto", height: 70, margin: "auto"}} ></div>          

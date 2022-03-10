@@ -33,15 +33,6 @@ export const addCssClass = (id,cssStyle) => {
     }
 }
 
-export const showElementChart = (chartID, visibility = "visible") =>{
-    setStyleByID(chartID,"visibility", visibility);
-    if (visibility == "visible") {
-        setStyleByID(chartID,"display","block");
-    } else {
-        setStyleByID(chartID,"display","none");
-    }
-};
-
 export function setVisibleElements(visibleElementIDArr, hiddenElementsArr = []) {
     hiddenElementsArr.forEach(id => {
         setStyleByID(id,"display","none");

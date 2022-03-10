@@ -8,7 +8,7 @@
     --body-background: white;
     --acc-background: #ebedf0;
     --overview-size: 1px;    
-    --vertical-margin-size: 7px;
+    --vertical-margin-size: 3px;
     --chartcount: 3; /* должно быть больше чем количество всех графиков */
     /* --body-background: rgb(80, 78, 78); */
     --chartArea: calc(100vh - var(--footer-size) - var(--vertical-margin-size) - var(--header-size) * 2 - var(--tabbar-size))    

@@ -69,17 +69,15 @@ const OscilloscopeChartsObserver = observer(({  }) => {
   function OscilloscopeCharts(props) {
     const _showCharts = () => {
       let chartControls = props.chartControls;
-  
+/*      
       let difference = props.chartPool.filter(x => !props.visibleCharts.includes(x));
-/*
+
       for (let chartId of difference) {
         if (!chartControls.hasOwnProperty(chartId)) continue;
         chartControls[chartId].setVisibility('hidden');
       };
 */
       for (let chartId of props.visibleCharts) {
-        let chartControls = props.chartControls;
-
         chartControls[chartId].setVisibility('visible');
         document.documentElement.style.setProperty('--chartcount', props.visibleCharts.length);
       };
