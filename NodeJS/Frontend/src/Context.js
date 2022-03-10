@@ -53,6 +53,22 @@ export function setVisibleElements(visibleElementIDArr, hiddenElementsArr = []) 
     });
 }
 
+function setNonVisibleAndHidden(id) {
+    setStyleByID(id,"display","none");
+    setStyleByID(id,"visibility","hidden");
+}
+
+export function showPageAndHiddenElements(page) {
+    // setNonVisibleAndHidden("ViewDevices");
+    setNonVisibleAndHidden("ViewGraphicTrends");
+    setNonVisibleAndHidden("ViewCPlotWeb");
+    setNonVisibleAndHidden("devicesInfoTab");
+    
+    
+    
+}
+
+
 export const Context = {
 //  chartkey :"gJx71maeV36Rp3a4YNg4n/MHqoSMB4AXXuu10wUT4kCUv2QEci+3D6WbWhilM/rWekgkEsJN3nT7AW5d1YUXmc+7q+1bpW1AIK4Rizbqg0Xn2zCODHB0aEaDpJqOxmb8t5pQLxEilkGI7pz1olyZML1t1XXeQngxcRnpefk1ZYBaIX+m06UeGhiSXlPAZWKcdepearGZIGajn8bn5c/smlnPZCoxCu02q+X5xbFUAhfTgz5lX/J6i6vTvMGZLK2mxRqvzrhUy3NnhDNTYjLfUSszJYswHX3L635QU9lIjIWIBF7Z9akMuiJ++qeVqCbg+TH4YD0hIRsThah+nMxikyeYLyqxUjqCgwBeCM0fqY7x6tBScMU9O2eFcBdZi9/NYwQLL/e4NY7JkBEIJRJX9uEvU5otyCC7eToaH3Zloq9BcPf5doGqxjgFyxJkOMTtqUXOmzfudfmt3HsG4oi/Ojwrt9qbX1sYlln9xlsO1fk1Rz4aNvWpk/KjrR9efK5pz5YETVrZMT4xmJPUQlhBxPkoX/oq1k65jnO1WiVmjLB+oY/iLRc1dksVnsQdbJvb",
     chartkey :"sfEa83FP+0EQ0l+ZJmuDoxvUMg7pFn7Dz8sL1p/A2/Qio7pYbQ9JSb3J9aFRSXe/v++/nx0clUpkAVbHRZw0t3G7Y74U0kaRPDWIT64SO8qoie6wRzdFUXVYWh6aPDZE+Bz/ye8kL0vwgwSWnQoIpvdvLKwwXmbk1h2Wsuc6MGaMfMvttPICImTQoUDIjwV0tndupRkJXwOjALmY+0CDY4v2pSoNcnkQIDv/kB7BG3SJ7luhe4WT7PkiAQkNq2e0fYLYzstm/2M7NqfE4LtsEj2v5/bBb763MeLMvxGb91LhpJMJUqCq/n4UORLgsiOrPhdB0OU+CP8alvSBuLoBiH2Pba3n/5gtv/sfE7+4BnFm3xQ/jmTKNtyXlFUk4qVcLG8BJPHhVBtRH0f62SV/XU9zKGF7Dy8jXQOxrb7Oje+MZPRf+LK3ln2bO9kB9T0aUR0ZaQsTGRERT8AIQZKmcI4mclROwHIRMzEoE33kRBliN1EOA7Jhkkb17ejUHneiLLMD9KIgMv4BKXC/ugX9JpvF6iwrFx4o7nHRWH92aAYY+Uof7ADA",
@@ -120,7 +136,7 @@ export const Context = {
     resize :function(event) {
         console.log("resize");
         //let elements = ["$scrollview1"];
-        let elements = ["accmain","scrollacc","tabViewControl"];
+        let elements = ["accmain","scrollacc","tabViewControl","devicesParametersTab","parametersGrid"];
         
         elements.forEach(function(item, index, array) {
             //if(item == "controlview") $$(item).resize();

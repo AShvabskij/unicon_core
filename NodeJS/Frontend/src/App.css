@@ -16,10 +16,10 @@
 .App {
     text-align: center;
     display: flex;
-    /* width: 100vw; */
     background: var(--body-background);
     height: 100vh;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .App-logo {
@@ -60,13 +60,14 @@
 .mainrow {
     display: flex;
     flex-direction: row;
-    height: 100%;
+    /* height: 100vh; */
+    height: calc(100vh - var(--footer-size));
 }
 
 .left {
     background: rgb(255, 255, 255);
     /* height: calc(100vh - var(--footer-size) - var(--header-size) + 4px); */
-    height: calc(100% - var(--header-size) + 10px);
+    /* height: calc(100% - var(--header-size) + 10px); */
     /* height: 100%; */
     width: 20vw;
     /* height: 30px; */
@@ -117,20 +118,19 @@
     background-color: var(--footer-background) !important;
 }
 
-.footer_label > div { 
+.footer_label > div {
     color: white !important;
     background-color: var(--footer-background);
     text-align: left;
     padding-left: 20px;
 }
 
-.footer_label_right > div { 
+.footer_label_right > div {
     color: white !important;
     background-color: var(--footer-background);
     text-align: right;
     padding-right: 20px;
 }
-
 
 .demoscroll {
     height: 50vh;
