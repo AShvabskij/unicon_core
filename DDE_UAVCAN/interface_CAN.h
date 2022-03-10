@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DDE/DDE_TYPES.h"
+#include "DDE_TYPES.h"
 
 #include "libcanard-2/libcanard/canard.h"
 //---------------------------------------------------------------------------

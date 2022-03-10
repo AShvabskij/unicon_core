@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "DDE/DDE_TYPES.h"
+#include "DDE_TYPES.h"
 #include "interface_CAN.h"
 
 //:public interface_CAN

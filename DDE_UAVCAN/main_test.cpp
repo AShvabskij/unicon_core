@@ -98,7 +98,7 @@ static void thread_proc_test_app_call() {
 
 	DEVICE_PARAMS req;
 
-	ipcInit();
+	IPCMEM_init();
 
 	static uint32_t  value;
 	while (1) {
@@ -115,7 +115,7 @@ static void thread_proc_test_app_call() {
 
 //1) check IPCMEM for requiest
 		uint16_t device_ID = 11;
-		getDataIPC(device_ID, &req);
+		//getDataIPC(device_ID, &req); TODO
 		if (req.cmd_flag != 0) { 
 
 			//TODO - add read and write element
@@ -129,7 +129,7 @@ static void thread_proc_test_app_call() {
 
 
 
-		putDataIPC(uint8_t id, DEVICE_PARAMS * rec)
+		//putDataIPC(id, DEVICE_PARAMS * rec) TODO replace
 		
 
 		usleep(1000000); //1 sec

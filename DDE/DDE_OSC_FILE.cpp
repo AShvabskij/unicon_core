@@ -2,6 +2,8 @@
 #include <cmath>
 #include <chrono>
 
+#include <assert.h>
+
 #include <string.h>
 #include <fstream>
 #include <sstream>

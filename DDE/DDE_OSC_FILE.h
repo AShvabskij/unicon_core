@@ -1,10 +1,10 @@
 #pragma once
 
 #include "DDE_TYPES.h"
-#include "DDE_OSC_TYPES.h"
 #include <string>
 #include <fstream>
 #include <vector>
+#include <thread>
 
 struct OSC_FILE_CHANNEL_DESCR
 {

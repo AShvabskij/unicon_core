@@ -1,5 +1,7 @@
 #include "ipcmem.h"
 
+
+
 //-----------------------------------------------------------------------
 const char *dirPath = "files";
 const char *nfPath = "/files/pass";
@@ -82,7 +84,7 @@ char named[MAX_FNAME_LEN];
 //-----------------------------------------------------------------------
 //         Make shared memory blocks 
 //         return : MAX_DEV_SUPPORT pointers in array pDev[]
-int ipcInit()
+int IPCMEM_init()
 {
 
     if (mkKeyFiles()) {
@@ -202,8 +204,9 @@ int IPCMEM_get_MODULE(DDE_GET_PARAMS_DATA* get_params)
     uint16_t mod_ID = get_params->module_ID;
     uint16_t par_ID = get_params->param_ID;
 
-    uint16_t addr = _2addr(mod_ID, 0); 
-    memcpy(&get_params->el[0], &pDev[dev_ID]->el[addr], sizeof(get_params->el));
+    //TODO
+    //uint16_t addr = _2addr(mod_ID, 0); 
+    //memcpy(&get_params->el[0], &pDev[dev_ID]->el[addr], sizeof(get_params->el));
     
     return 0;
 }
