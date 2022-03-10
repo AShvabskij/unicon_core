@@ -17,7 +17,7 @@
 
 #include "DDE_UAVCAN.h"
 
-//HI THIS IS NIKITA BRABSH
+
 
 #include "RPI3B_SPI/RPI3B_drv_spi.h"
 #include "RPI3B_SPI/RPI3B_SPI.h"
