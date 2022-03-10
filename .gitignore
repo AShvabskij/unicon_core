@@ -22,6 +22,7 @@ dist/
 # Maven
 target/
 dist/
+out/
 
 # JetBrains IDE
 .idea/
@@ -85,6 +86,10 @@ Makefile*
 *build-*
 *.qm
 *.prl
+*.tlog
+*.vcxproj.user
+*.vc
+
 
 # Qt unit tests
 target_wrapper.*
@@ -108,6 +113,13 @@ compile_commands.json
 # End of https://www.toptal.com/developers/gitignore/api/qt
 NodeJS/Frontend/public/static/js/scichart2d.wasm
 /.vs
-/DDE_CAN_LIB/.vs
-/DDE_CAN_LIB/build
-/DDE_CAN_LIB/bin/x86/Debug
+/DDE_UAVCAN/.vs
+/DDE_UAVCAN/build
+/DDE_UAVCAN/bin/x86/Debug
+/DDE_UAVCAN/DDE_UAVCAN_DEV_EMUL/SYS_VID800
+/DDE_UAVCAN/RPI3B_SPI/.vs/RPI3B_SPI/v15
+/DDE_UAVCAN/RPI3B_SPI/bin
+/DDE_UAVCAN/RPI3B_SPI/obj
+/DDE_UAVCAN/RPI3B_SPI/readme
+/DDE_UAVCAN/obj/ARM/Debug
+/DDE_UAVCAN/DDE_UAVCAN_DEV_EMUL/obj/x64/Debug
