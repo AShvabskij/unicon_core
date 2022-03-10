@@ -1,0 +1,192 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="interface_CAN.cpp" />
+    <ClCompile Include="CAN_MCP2518FD.c" />
+    <ClCompile Include="CAN_ETHERNET.cpp" />
+    <ClCompile Include="main_test.cpp" />
+    <ClCompile Include="libcanard-2\libcanard\canard.c">
+      <Filter>UAVCAN</Filter>
+    </ClCompile>
+    <ClCompile Include="libcanard-demos-main\differential_pressure_sensor\src\main.c">
+      <Filter>UAVCAN_DEMO</Filter>
+    </ClCompile>
+    <ClCompile Include="libcanard-demos-main\differential_pressure_sensor\src\register.c">
+      <Filter>UAVCAN_DEMO</Filter>
+    </ClCompile>
+    <ClCompile Include="libcanard-demos-main\differential_pressure_sensor\src\socketcan.c">
+      <Filter>UAVCAN_DEMO</Filter>
+    </ClCompile>
+    <ClCompile Include="DDE_UAVCAN.cpp" />
+    <ClCompile Include="DDE_UAVCAN_MASTER.c" />
+    <ClCompile Include="CAN_layer\socketcan.c">
+      <Filter>CAN_layer</Filter>
+    </ClCompile>
+    <ClCompile Include="DDE_UAVCAN_heartbeat.cpp" />
+    <ClCompile Include="DDE_UAVCAN_params.cpp" />
+    <ClCompile Include="DDE_UAVCAN_file_transfer.cpp" />
+    <ClCompile Include="DDE_UAVCAN_files.cpp" />
+    <ClCompile Include="RPI3B_SPI\RPI3B_SPI.cpp">
+      <Filter>RPI3B_SPI</Filter>
+    </ClCompile>
+    <ClCompile Include="RPI3B_SPI\mcp25xxfd_driver\canfdspi\drv_canfdspi_api.cpp">
+      <Filter>RPI3B_SPI\mcp25xxfd_driver</Filter>
+    </ClCompile>
+    <ClCompile Include="RPI3B_SPI\RPI3B_drv_spi.cpp">
+      <Filter>RPI3B_SPI</Filter>
+    </ClCompile>
+    <ClCompile Include="gabbi4ci-srv_cli-modbus\func.c">
+      <Filter>gabbi4ci_modbus</Filter>
+    </ClCompile>
+    <ClCompile Include="gabbi4ci-srv_cli-modbus\ipcmem.c">
+      <Filter>gabbi4ci_modbus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DDE\csvfile.cpp">
+      <Filter>DDE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DDE\DDE.cpp">
+      <Filter>DDE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DDE\DDE_EVLOG.cpp">
+      <Filter>DDE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DDE\DDE_OSC.cpp">
+      <Filter>DDE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DDE\DDE_OSC_EMUL.cpp">
+      <Filter>DDE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DDE\DDE_OSC_FILE.cpp">
+      <Filter>DDE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DDE\DDE_PARAMS.cpp">
+      <Filter>DDE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DDE\DDE_PARAMS_EMUL.cpp">
+      <Filter>DDE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DDE\DDE_PARAMS_FILE.cpp">
+      <Filter>DDE</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="DDE">
+      <UniqueIdentifier>{10ba41f7-9e26-446e-9005-92c37939a1e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CAN_layer">
+      <UniqueIdentifier>{2d63a694-c948-4b69-84c2-bccb4cf70a34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UAVCAN">
+      <UniqueIdentifier>{49c87f4f-bbad-4840-94c1-3eb990fd573d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UAVCAN_DEMO">
+      <UniqueIdentifier>{68820216-4b2d-4628-96fa-9fbd91683310}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RPI3B_SPI">
+      <UniqueIdentifier>{9fb35ffa-145c-4942-b8a6-6bcbc7fae319}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RPI3B_SPI\mcp25xxfd_driver">
+      <UniqueIdentifier>{c518011e-05f4-4962-9182-dc51d32e6ab5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gabbi4ci_modbus">
+      <UniqueIdentifier>{46daa92c-599b-4110-ae86-4078004a8fdd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="interface_CAN.h" />
+    <ClInclude Include="CAN_MCP2518FD.h" />
+    <ClInclude Include="CAN_ETHERNET.h" />
+    <ClInclude Include="libcanard-2\libcanard\canard.h">
+      <Filter>UAVCAN</Filter>
+    </ClInclude>
+    <ClInclude Include="libcanard-2\libcanard\cavl.h">
+      <Filter>UAVCAN</Filter>
+    </ClInclude>
+    <ClInclude Include="libcanard-demos-main\differential_pressure_sensor\src\register.h">
+      <Filter>UAVCAN_DEMO</Filter>
+    </ClInclude>
+    <ClInclude Include="libcanard-demos-main\differential_pressure_sensor\src\socketcan.h">
+      <Filter>UAVCAN_DEMO</Filter>
+    </ClInclude>
+    <ClInclude Include="DDE_UAVCAN_MASTER.h" />
+    <ClInclude Include="DDE_UAVCAN.h" />
+    <ClInclude Include="DDE_UAVCAN_defs.h" />
+    <ClInclude Include="CAN_layer\socketcan.h">
+      <Filter>CAN_layer</Filter>
+    </ClInclude>
+    <ClInclude Include="RPI3B_SPI\RPI3B_SPI.h">
+      <Filter>RPI3B_SPI</Filter>
+    </ClInclude>
+    <ClInclude Include="RPI3B_SPI\mcp25xxfd_driver\canfdspi\drv_canfdspi_api.h">
+      <Filter>RPI3B_SPI\mcp25xxfd_driver</Filter>
+    </ClInclude>
+    <ClInclude Include="RPI3B_SPI\mcp25xxfd_driver\canfdspi\drv_canfdspi_defines.h">
+      <Filter>RPI3B_SPI\mcp25xxfd_driver</Filter>
+    </ClInclude>
+    <ClInclude Include="RPI3B_SPI\mcp25xxfd_driver\canfdspi\drv_canfdspi_register.h">
+      <Filter>RPI3B_SPI\mcp25xxfd_driver</Filter>
+    </ClInclude>
+    <ClInclude Include="RPI3B_SPI\RPI3B_drv_spi.h">
+      <Filter>RPI3B_SPI</Filter>
+    </ClInclude>
+    <ClInclude Include="gabbi4ci-srv_cli-modbus\func.h">
+      <Filter>gabbi4ci_modbus</Filter>
+    </ClInclude>
+    <ClInclude Include="gabbi4ci-srv_cli-modbus\inc.h">
+      <Filter>gabbi4ci_modbus</Filter>
+    </ClInclude>
+    <ClInclude Include="gabbi4ci-srv_cli-modbus\ipcmem.h">
+      <Filter>gabbi4ci_modbus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\csvfile.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\DDE.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\DDE_EVLOG.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\DDE_EVLOG_TYPES.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\DDE_OSC.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\DDE_OSC_EMUL.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\DDE_OSC_FILE.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\DDE_OSC_TYPES.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\DDE_PARAMS.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\DDE_PARAMS_EMUL.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\DDE_PARAMS_FILE.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\DDE_PARAMS_TYPE.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\DDE_TYPES.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\my_func.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="gabbi4ci-srv_cli-modbus\src_def.csv">
+      <Filter>gabbi4ci_modbus</Filter>
+    </None>
+    <None Include="..\DDE\DDE_PARAMS_TYPES._h">
+      <Filter>DDE</Filter>
+    </None>
+  </ItemGroup>
+</Project>

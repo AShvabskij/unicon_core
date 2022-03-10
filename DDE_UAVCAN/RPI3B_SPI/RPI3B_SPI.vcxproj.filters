@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="CRC16.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="it_logger.cpp" />
+    <ClCompile Include="RPI3B_SPI.cpp" />
+    <ClCompile Include="mcp25xxfd_driver\canfdspi\drv_canfdspi_api.cpp">
+      <Filter>mcp25xxfd_driver</Filter>
+    </ClCompile>
+    <ClCompile Include="CANFD_MCP2518FD.c" />
+    <ClCompile Include="RPI3B_drv_spi.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CRC16.h" />
+    <ClInclude Include="it_logger.h" />
+    <ClInclude Include="RPI3B_SPI.h" />
+    <ClInclude Include="mcp25xxfd_driver\canfdspi\drv_canfdspi_api.h">
+      <Filter>mcp25xxfd_driver</Filter>
+    </ClInclude>
+    <ClInclude Include="mcp25xxfd_driver\canfdspi\drv_canfdspi_defines.h">
+      <Filter>mcp25xxfd_driver</Filter>
+    </ClInclude>
+    <ClInclude Include="mcp25xxfd_driver\canfdspi\drv_canfdspi_register.h">
+      <Filter>mcp25xxfd_driver</Filter>
+    </ClInclude>
+    <ClInclude Include="CANFD_MCP2518FD.h" />
+    <ClInclude Include="RPI3B_drv_spi.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="mcp25xxfd_driver">
+      <UniqueIdentifier>{c07d622a-9f22-49f7-b64d-234c369aab78}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
