@@ -3,7 +3,7 @@ import WebixComponent, {scroll} from './WebixComponent';
 import React,{useEffect} from "react";
 import {$$} from 'webix';
 import * as webix from 'webix/webix.js';
-import {Context} from './Context';
+import {Context,showPageAndHiddenElements} from './Context';
 import { observer } from "mobx-react"
 
 const accordionInit = [
@@ -30,11 +30,12 @@ function setScroll(body) {
     view:"accordion",
     // width: 0,
     id:"accmain",
-    height:0,
+    type: {
+      height: "auto"
+    },
     multi : false,
     scroll: "y",
     collapsed:true,
-    type:"wide",
     select:true,
     rows:[
         // {header:"col 1", body:"text"},
@@ -51,6 +52,7 @@ function setScroll(body) {
             case "DeviceInit":
               newHeight = 0;
               Context.showPages(["ViewDevices"]);
+              showPageAndHiddenElements("");
               break;
 
             case "cPlotWeb":
@@ -74,7 +76,22 @@ function setScroll(body) {
   }
 }
 
-
+const setActiveDevice = (devices,deviceID) => {
+  if (deviceID) {
+    devices.cols.forEach(function(item, index, array) {
+      if (item.deviceID == deviceID) {
+        Context.states.indexDevice = devices.cols[index].deviceID;
+        devices.cols[index].value = 1;  
+      } else {
+        devices.cols[index].value = 0;
+      }
+    })
+  } else {
+    if (devices.cols.length > 0) {
+      setActiveDevice(devices,devices.cols[0].deviceID);
+    }
+  }
+}
 
 
 const updateLeftMenuBase = (devicesArr) => {
@@ -84,10 +101,15 @@ const updateLeftMenuBase = (devicesArr) => {
   let devices = { margin:10, padding:0, type:"wide",
   view:"flexlayout",cols:[]};
   devicesArr.forEach(function(item, index, array) {
-      devices.cols.push( { view:"toggle", deviceID: item.id ,label:'<span class="material-icons">' +  '</span> ' + item.name , minWidth: minWidthBut, height: 80, css: "webix_primary",
+      devices.cols.push( { view:"toggle", deviceID: item.id ,
+      label:'<span class="material-icons">' +  '</span> ' + item.name , 
+      minWidth: minWidthBut, height: 80, 
+      css: "webix_primary",
+      value: 0,
       click:function(id,event){
                // Изменяем текущий номер устройства
-              Context.states.indexDevice = devices.cols[index].deviceID;
+               setActiveDevice(devices,devices.cols[index].deviceID);
+              // Context.states.indexDevice = devices.cols[index].deviceID;
           // Подсветка нужной кнопки при нажатии и отжатие остальных
           let s1 = $$(id).getParentView();
           s1._cells.forEach(element => {
@@ -95,7 +117,11 @@ const updateLeftMenuBase = (devicesArr) => {
           });
       }
       })
-});
+  });
+
+  // For default device 
+  setActiveDevice(devices,null);
+
   let scrollDev = setScroll(devices);
   webix.ui(scrollDev,$$("DeviceInit"), 0);
 } 
@@ -108,6 +134,7 @@ function BaseMenuLeft(props) {
 
 const MenuLeft = observer(({  }) => {
   useEffect(() => {
+    // Update model
     // console.log("Render MenuLeft");
     // console.log(Context.model.devices());
     // console.log(Context.model.m_devices);

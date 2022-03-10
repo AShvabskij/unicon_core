@@ -50,6 +50,7 @@ export default class Oscilloscope {
                 objectMode: true,
                 read() { }
             });
+            this.channel(channelNum).buffer = [];
         }
 
         this._byteCount = 0;
@@ -134,7 +135,18 @@ export default class Oscilloscope {
         if (stream) {
             stream.push(data);
         }
+
+        let chBuffer = this.channel(chNum).buffer;
+        if (chBuffer) {
+            chBuffer.push(data);
+        }
+
         return;
+    }
+
+    channelData(chNum) {
+        let chBuffer = this.channel(chNum).buffer;
+        return chBuffer;
     }
 
     parse(socketData, ch) {
@@ -167,6 +179,7 @@ export default class Oscilloscope {
 
             return { val, time };
         })
+
         return values;
     }
 

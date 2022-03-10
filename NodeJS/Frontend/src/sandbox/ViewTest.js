@@ -3,7 +3,7 @@ import {inject, observer} from "mobx-react";
 import View from './View';
 import Button from './Button';
 import {Context} from '../Context';
-import Chart from '../Chart';
+import Chart from '../components/Chart';
 import ButtonChart from './ButtonChart';
 // import TimerMobix from './TimerMobix'
 

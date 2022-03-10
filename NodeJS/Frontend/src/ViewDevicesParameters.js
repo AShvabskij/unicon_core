@@ -82,7 +82,9 @@ function getUImainMenu(props) {
   return {
     view: "treetable", 
     id: "parametersGrid",
-    height: 0,
+    type:{
+      height:"auto"
+    },
     select:true,
     columns: [
       { id: "name", header: "Name", width: "300",
@@ -123,6 +125,10 @@ function getUImainMenu(props) {
             if (paramCell["rw"] == "W") {
                 this.editRow(id);
             }
+        }
+        if (id.column == "chart") {
+          this.getItem(id.row).chart = !this.getItem(id).chart;
+          this.refresh(id.row);
         }
 			},
 			onBeforeEditStart:function(id){

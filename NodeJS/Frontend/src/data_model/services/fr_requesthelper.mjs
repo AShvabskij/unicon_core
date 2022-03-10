@@ -92,7 +92,7 @@ export class _RequestHelper {
             setTimeout(() => reject({ status: 500, msg: `Request time out for cmd = ${cmdStr}` }), timeout)
 
             this.m_events.once(cmd.request_id, (data) => {
-                console.log("Received data: " + JSON.stringify(data));
+//              console.log("Received data: " + JSON.stringify(data));
 
                 let res = data.body
                 if (res === undefined) {

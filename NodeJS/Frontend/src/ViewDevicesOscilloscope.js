@@ -1,14 +1,12 @@
-import React from "react";
+import React, {useEffect} from "react";
 import 'webix/webix.css';
 import ReactDOM from 'react-dom';
 import WebixComponent from './WebixComponent';
-import { $$, template } from 'webix';
-import { Context, showElementChart } from './Context';
-import Chart, { ChartControls, SyncCharts } from './Chart';
+import {$$, template} from 'webix';
+import {Context} from './Context';
+import {SyncCharts} from './components/Chart';
 import ViewDevicesSelectChart  from "./ViewDevicesSelectChart";
-
-export const chartsArrVisible = [];
-export const chartsArrHidden = ["chart3","chart4","chart5"];
+import OscilloscopeChartsObserver  from "./components/oscilloscopecharts"
 
 const toolBar = () => {
   return {
@@ -90,14 +88,13 @@ const toolBar = () => {
 }
 
 const addButtonClick = async () => {
-  // console.log("addButtonClick");
-  if (chartsArrVisible.length < 3) {
-      let comp = $$("showSelectChartWindowData");
-      // console.log(comp);
+  let indexDevice = Context.states.indexDevice;
 
-      let indexDevice = Context.states.indexDevice;
+  if (Context.deviceCharts(indexDevice).length < 3) {
+      let comp = $$("showSelectChartWindowData");
       let device = Context.model.device(indexDevice);
       let dataForChoose = [];
+
       if (device != undefined) {
         let osc = await device.getOsc();
         osc.channels.forEach(function(item, index, array) {
@@ -106,56 +103,44 @@ const addButtonClick = async () => {
           dataForChoose.push({ id:index, channel:item.num, name:name1,  
             color:item.color, status:0, idParam: item.var_id,
           });
-          // console.log(dataForChoose);
         })
       }
-      // if (chartsArrHidden.length > 0) {
-        $$("showSelectChartWindow").show();
-        comp.define({"data":dataForChoose});
-    // }
-       
+
+      $$("showSelectChartWindow").show();
+      comp.define({"data":dataForChoose});
   }
 }
 
 const removeButtonClick = () => {
-  console.log("removeButtonClick");
-  console.log(chartsArrVisible);
-  if (chartsArrVisible.length > 0) {
-    if (document.getElementById(chartsArrVisible.at(-1)) == undefined) return;
-  
-    let chartToHidden = chartsArrVisible.pop();
-    chartsArrHidden.unshift(chartToHidden);
-
-    let charts = ChartControls();    
-    charts[chartToHidden].SwitchPreview(0);
-
-    document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
-    showElementChart(chartToHidden, "hidden");
-  }
-  // then stop process — add
+  let indexDevice = Context.states.indexDevice;
+  Context.popChart(indexDevice);
 }
 
 async function startOsc(indexDevice) {
-  let device = Context.model.device(indexDevice);
-  let osc = await device.getOsc();
+  let visibleCharts = Context.deviceCharts(indexDevice);
+  let params = Context.paramToCharts.get(indexDevice);
+  if (!params) return;
 
-  let chart = chartsArrVisible.slice(-1);
-  if (chart == undefined || Context.paramToCharts[chart] == undefined) {
+  let chart = visibleCharts.slice(-1).toString();
+  let chart2 = visibleCharts.slice(-2, -1).toString();
+  let chart3 = visibleCharts.slice(-3, -2).toString();
+
+  let isChart2 = chart2 !== '';
+  let isChart3 = chart3 !== '';
+
+  let paramsChart = params.get(chart);
+   if (chart == undefined || paramsChart == undefined) {
     return;
   }
 
-  let chart2 = chartsArrVisible.slice(-2, -1);
-  let chart3 = chartsArrVisible.slice(-3, -2);
-
-  let isChart2 = Context.paramToCharts[chart2] !== undefined;
-  let isChart3 = Context.paramToCharts[chart3] !== undefined;
-
-  let charts = ChartControls();
+  let device = Context.model.device(indexDevice);
+  let osc = await device.getOsc();
+  let actions = Context.chartControls;
 
   let allChannels = [];
   let channelItems1 = [];
-  Context.paramToCharts[chart].forEach(function(item, index, array) {
-    charts[chart].clearChart(index + 1);
+  params.get(chart).forEach(function(item, index, array) {
+    actions[chart].clearChart(index + 1);
     let chItem = osc.channel(item.channel)
     channelItems1.push(chItem);
     allChannels.push(item.channel)
@@ -163,8 +148,8 @@ async function startOsc(indexDevice) {
 
   let channelItems2 = [];
   if (isChart2) {
-    Context.paramToCharts[chart2].forEach(function(item, index, array) {
-      charts[chart2].clearChart(index + 1);
+    params.get(chart2).forEach(function(item, index, array) {
+      actions[chart2].clearChart(index + 1);
       let chItem = osc.channel(item.channel)
       channelItems2.push(chItem);
       allChannels.push(item.channel)
@@ -173,8 +158,8 @@ async function startOsc(indexDevice) {
 
   let channelItems3 = [];
   if (isChart3) {
-    Context.paramToCharts[chart3].forEach(function(item, index, array) {
-      charts[chart3].clearChart(index + 1);
+    params.get(chart3).forEach(function(item, index, array) {
+      actions[chart3].clearChart(index + 1);
       let chItem = osc.channel(item.channel)
       channelItems3.push(chItem);
       allChannels.push(item.channel)
@@ -194,36 +179,43 @@ async function startOsc(indexDevice) {
 }
 
 async function ScalePlus() {
-  let charts = ChartControls();
-  chartsArrVisible.forEach(function(chart, index, array) {
-    charts[chart].Scale(-0.25, -0.25);
+  let charts = Context.deviceCharts();
+
+  let actions = Context.chartControls;
+  charts.forEach(function(chart, index, array) {
+    actions[chart].Scale(-0.25, -0.25);
   });
 }
 
 async function ScaleMinus() {
-  let charts = ChartControls();
-  chartsArrVisible.forEach(function(chart, index, array) {
-    charts[chart].Scale(0.25, 0.25);
+  let charts = Context.deviceCharts();
+  let actions = Context.chartControls;
+
+  charts.forEach(function(chart, index, array) {
+    actions[chart].Scale(0.25, 0.25);
   });
 }
 
 async function SwitchCursor(value) {
-  let charts = ChartControls();
-  chartsArrVisible.forEach(function(chart, index, array) {
-    charts[chart].SwitchCursor(!value);
+  let charts = Context.deviceCharts();
+  let actions = Context.chartControls;
+
+  charts.forEach(function(chart, index, array) {
+    actions[chart].SwitchCursor(!value);
   });
 }
 
 async function SwitchPreview(value) {
-  let charts = ChartControls();
-  chartsArrVisible.forEach(function(chart, index, array) {
-    charts[chart].SwitchPreview(!value);
+  let charts = Context.deviceCharts();
+  let actions = Context.chartControls;
+
+  charts.forEach(function(chart, index, array) {
+    actions[chart].SwitchPreview(!value);
   });
 }
 
 async function startDrawData(chart, channelItems) {
-  let charts = ChartControls();
-
+  let actions = Context.chartControls;
   let freqHz = 50;
 
   let timerId = setInterval(() => {
@@ -232,7 +224,7 @@ async function startDrawData(chart, channelItems) {
       if (values) {
         let xValues = values.map(valObj => { return valObj.time });
         let yValues = values.map(valObj => { return valObj.val });
-        charts[chart].addVarPointRange(xValues, yValues, index + 1);
+        actions[chart].addVarPointRange(xValues, yValues, index + 1);
       }
     })
   }, 1000/freqHz);
@@ -242,7 +234,10 @@ async function startDrawData(chart, channelItems) {
       if (timerId != 0) {
         clearInterval(timerId);
         timerId = 0;
-        SyncCharts();
+        actions[chart].zoomExtents();
+        setTimeout(async () => {
+          SyncCharts();
+        }, 0);
       }
     })
   });
@@ -270,7 +265,6 @@ async function stopOsc(deviceId) {
   }
 }
 
-
 //Временная генерация данных
 function addFunction(x) {
     // console.log("addFunction");
@@ -278,28 +272,13 @@ function addFunction(x) {
 }
 
 function ViewDevicesOscilloscope(props) {
-  console.log("InfoView");
-  console.log(props.data);
-  let className= "infoPic"+props.data;
-  let textArr = [];
-  textArr.push("By using thyristors (SCRs) in a phase angle control mode, reduced voltage control can be achieved. Phase control makes it possible to gradually increase the motor terminal voltage from an initial set point up to the system supply voltage level. The related starting current and the starting torque can be optimally adjusted to the motor/load conditions.");
-  textArr.push("Control Module- MVCP is the “brain” of the soft starter. It consists of the mBoard that includes: • Main CPU PCB. • HMI board: can be either placed in the Control Module box or at the cabinet door. • Fireboard PCB. • Powersupply. • Input/outputinterfaceterminals. • Optional PCBs (when ordered). </br>The Control Module for HRVS-DN-PowerStart is identical for all ratings and suitable for mounting in the L.V. compartment of the cabinet which should be fully segregated from the M.V. compartment. </br>Interposing relays should be connected to all HRVS-DN-PowerStart auxiliary contacts, three relays must be incorporated: Immediate, End of Acceleration and Fault.");
-  textArr.push("Motor will start only if SOFT STOP (terminal 21) and STOP (terminal 22) terminals are connected to Control Input voltage.");
-  textArr.push("Control Input voltage (START, SOFT STOP, STOP, terminal inputs 20,21,22) can be the same as Control Supply (terminals 41, 42) or voltage from a different source.");
-  textArr.push("Text 5");
-  textArr.push("Text 6");
-  let text= textArr[props.data];
+
   return (
-    
     <div id={props.id} className="pages">
       <WebixComponent ui={toolBar()} />
       <ViewDevicesSelectChart />
-      {
-      Context.oscilloscopeChartList.map((item) => (
-                        <Chart id={item} title="&nbsp;" addFunction={addFunction} />
-                ))
-      }
-     </div>
+      <OscilloscopeChartsObserver />
+    </div>
   );
 }
 

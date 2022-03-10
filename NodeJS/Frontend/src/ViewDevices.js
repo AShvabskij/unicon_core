@@ -11,20 +11,27 @@ import ViewDevicesOscilloscope from "./ViewDevicesOscilloscope"
 import { observer } from "mobx-react";
 import { Context, setVisibleElements } from "./Context";
 
-function tabViewControl() {
-  let cellsArr = ["devicesParametersTab","devicesОscilloscopeTab","devicesControlTab","devicesInfoTab"];
+const cellsArr = ["devicesParametersTab","devicesОscilloscopeTab","devicesControlTab","devicesInfoTab"];
 
+
+function tabViewControl() {
+  
   return {
     view: "tabview",
     id: "tabViewControl",
+    type:{
+      height:"auto"
+    },
     cells: [
       {
         id: "parameters",
         header: "Parameters",
+        select:true,
         body: {
           id: "devicesParametersTab",
           select:true,
-        }
+        },
+        
       },
       {
         // id: "oscilloscope",
@@ -64,11 +71,16 @@ function tabViewControl() {
 
 const TabViewObserver = observer(({  }) => {
   useEffect(() => {
-    // console.log("Render TabViewObserver");
+    console.log("Render TabViewObserver");
     // console.log(Context.states.indexDevice);
+/*   
+    $$("tabViewControl").getTabbar().setValue("devicesParametersTab");
+    setVisibleElements(["devicesParametersTab"],cellsArr);
+    Context.resize();
+*/    
   })
   return ( 
-      <WebixComponent ui={tabViewControl()} data={[]} />
+      <WebixComponent ui={tabViewControl()} data={[]} updateModel={Context.states.indexDevice}/>
   );
 });
 
@@ -76,9 +88,8 @@ export default class ViewDevices extends React.Component {
   constructor(props) {
     super(props);
     this.title = "first title"
-    this.state = { title: "state title", dt: [] };
+    this.state = { title: "state title", dt: [], deviceId: 0 };
     this.updateDevices = props.updateDevices;
-
   };
 
   render() {

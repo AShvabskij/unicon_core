@@ -111,13 +111,6 @@ export class Model extends EventEmitter {
                 messageData = JSON.parse(message.data);
             }
 
-            
-/*
-            cbor.decodeFirst(message, { float: true, preferWeb: true }).then(o => {
-                console.log(JSON.stringify(o, null, 2))
-            });
-*/
-
             let paramId = messageData.p_id;
             if (paramId != undefined) {
                 _messageDataLength = message.data.length;

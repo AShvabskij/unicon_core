@@ -3,14 +3,11 @@ import { $$, template } from 'webix';
 import * as webix from 'webix/webix.js';
 import WebixComponent, {scroll} from './WebixComponent';
 import React from "react";
-import Chart,{ChartControls, colorsArrDefaults, colorsTitleArr } from './Chart';
+import Chart from './components/Chart';
 import { Model } from "./data_model/fr_model.mjs";
 import {Context} from './Context';
 
-let colorsArrTab = [];
-colorsArrTab = colorsArrDefaults;
 let chartsArrVisible;
-
 
 let _interval = 5;
 function drawValueRange(chart, xValues, yValues, line) {
@@ -36,7 +33,7 @@ async function startOsc(indexDevice) {
     return;
   }
 
-  let charts = ChartControls();
+  let charts = Context.chartControls;
 
   let channels = [];
   Context.paramToCharts[chart].forEach(function(item, index, array) {
@@ -179,14 +176,8 @@ const addButtonClick = async () => {
       }
       // console.log(dataForChoose);
       
-      // if (chartsArrHidden.length > 0) {
-        $$("showSelectChartWindow").show();
-        comp.define({"data":dataForChoose});
-        
-        // console.log("indexDev " + Info.states.indexDevice);
-
-        // showSelectChartWindow();
-      // }
+      $$("showSelectChartWindow").show();
+      comp.define({"data":dataForChoose});
   }
 }
 
@@ -194,7 +185,6 @@ const removeButtonClick = () => {
   // console.log("removeButtonClick");
   if (chartsArrVisible.length > 0) {
     let chartToHidden = chartsArrVisible.pop();
-    // chartsArrHidden.unshift(chartToHidden);
     
     document.documentElement.style.setProperty('--chartcount', chartsArrVisible.length);
     showElementChart(chartToHidden, "hidden");
@@ -223,7 +213,7 @@ export default class ViewGraphicTrends extends React.Component {
   return (
       <div id="ViewGraphicTrends" className="pages" >
         <WebixComponent ui={toolBar()} />
-        <Chart id="chartTrends" title="&nbsp;" addFunction={addFunction} />
+        {/*<Chart id="chartTrends" title="&nbsp;" addFunction={addFunction} />*/}
       </div>    
     )
   }
