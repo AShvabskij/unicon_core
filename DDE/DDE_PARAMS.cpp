@@ -1,7 +1,13 @@
-#include "DDE_PARAMS.h"
+
+#include "ipcmem.h"
+#include "sqlite3.h"
+
 #include <string>
 #include <cmath>
 #include <chrono>
+
+
+#include "DDE_PARAMS.h"
 
 using namespace std;
 //------------------------------------------------------------------------------
@@ -179,9 +185,10 @@ _dde_func_return_t DDE_PARAMS::direct_read(DDE_GET_PARAMS_DATA& get_params)
 			//get_params.el_descr[ii].index = 0;
 			//get_params.el_descr[ii].sub_index = ii;
 
-			IPCMEM_get_
 
-			get_params.el[ii].ivalue =  ; // rand();
+			IPCMEM_get_MODULE(&get_params);
+
+			get_params.el[ii].ivalue = 0; //TODO add ipcmem read ; // rand();
 			get_params.el[ii].timestamp = system_time;
 			get_params.el[ii].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT;
             //get_params.el[ii].fvalue = 11.11;

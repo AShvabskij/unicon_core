@@ -47,22 +47,13 @@
     <ClCompile Include="..\DDE\DDE_OSC.cpp">
       <Filter>DDE</Filter>
     </ClCompile>
-    <ClCompile Include="..\DDE\DDE_OSC_EMUL.cpp">
-      <Filter>DDE</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DDE\DDE_OSC_FILE.cpp">
-      <Filter>DDE</Filter>
-    </ClCompile>
     <ClCompile Include="..\DDE\DDE_PARAMS.cpp">
       <Filter>DDE</Filter>
     </ClCompile>
-    <ClCompile Include="..\DDE\DDE_PARAMS_EMUL.cpp">
-      <Filter>DDE</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DDE\DDE_PARAMS_FILE.cpp">
-      <Filter>DDE</Filter>
-    </ClCompile>
     <ClCompile Include="..\utils\IPCmemLib\ipcmem.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utils\clogs\func.c">
       <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
@@ -177,11 +168,14 @@
     <ClInclude Include="..\utils\IPCmemLib\ipcmem.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\utils\clogs\func.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utils\clogs\inc.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\DDE\DDE_PARAMS_TYPES._h">
-      <Filter>DDE</Filter>
-    </None>
     <None Include="..\.gitignore" />
   </ItemGroup>
 </Project>

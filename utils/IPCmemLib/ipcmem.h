@@ -19,9 +19,9 @@
 #include <errno.h>
 #include <dirent.h>
 //
-#include "DDE_PARAMS_TYPE.h"
+#include "DDE_TYPES.h"
 
-#pragma once
+//#pragma once
 
 
 #define SET_DEBUG
@@ -42,7 +42,7 @@ extern DEVICE_PARAMS *pDev[MAX_DEV_SUPPORT];
 
 //-------------------------------------------------------------------------
 
-int ipcInit();
+int IPCMEM_init();
 void ipcDeinit();
 
 #ifdef SET_DEBUG
@@ -52,9 +52,10 @@ void ipcDeinit();
 #endif
 
 int putDataIPC(uint8_t id, DEVICE_PARAMS *rec);
-int getDataIPC(uint8_t id, DEVICE_PARAMS *rec);
+//int getDataIPC(uint8_t id, DEVICE_PARAMS *rec);
 
-int IPCMEM_get_MODULE_PARAMS(DDE_GET_PARAMS_DATA* get_params);
+//int IPCMEM_get_MODULE_PARAMS(DDE_GET_PARAMS_DATA* get_params);
+int IPCMEM_get_MODULE(DDE_GET_PARAMS_DATA* get_params);
 //-------------------------------------------------------------------------
 
 #ifdef __cplusplus  // Provide C++ Compatibility

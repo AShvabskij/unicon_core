@@ -2,9 +2,9 @@
 
 #include "string.h"
 
-#include "DDE/DDE_PARAMS.h"
-#include "DDE/DDE_OSC.h"
-#include "DDE/DDE_EVLOG.h"
+#include "DDE_PARAMS.h"
+#include "DDE_OSC.h"
+#include "DDE_EVLOG.h"
 #include "DDE_UAVCAN_defs.h"
 
 
