@@ -219,6 +219,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>
       <LibraryDependencies>pthread;ipcmem_lib</LibraryDependencies>
+      <AdditionalLibraryDirectories>..\..\ipcmem_lib\bin\ARM\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>DEFINE_DDE_NIOS_NODE%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -268,6 +269,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <Link>
       <LibraryDependencies>pthread;ipcmem_lib</LibraryDependencies>
+      <AdditionalLibraryDirectories>..\..\ipcmem_lib\bin\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
