@@ -71,6 +71,13 @@ _dde_func_return_t DDE_PARAMS::init() {
 //	std::thread*thr_params = new std::thread(&DDE_PARAMS::thread_proc, this);
 	PARAMS_DATA_init("UAVCAN");
 	
+	DDE_PARAMS_CMD cmd;
+	cmd.device_id = 0x2;
+	cmd.cmd_flag = 1;
+	cmd.nRW = 1;
+
+	PARAMS_DATA_write_cmd(cmd);
+
 	DDE_SET_PARAMS_DATA set;
 	for (int ii = 0; ii < 4096; ii++) {
 		set.device_ID = 2;

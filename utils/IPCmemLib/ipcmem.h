@@ -55,10 +55,10 @@ void IPCMEM_Deinit();
 int putDataIPC(uint8_t id, DEVICE_ELEMENTS *rec);
 int getDataIPC(uint8_t id, DEVICE_ELEMENTS *rec);
 
-int IPCMEM_get_PARAMS(DDE_GET_PARAMS_DATA* get_params);
-int IPCMEM_get_ELEMENT(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el);
-int IPCMEM_set_ELEMENT(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el);
-
+int IPCMEM_get_params(DDE_GET_PARAMS_DATA* get_params);
+int IPCMEM_get_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el);
+int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el);
+int IPCMEM_read_cmd(DDE_PARAMS_CMD*cmd);
 
 //-------------------------------------------------------------------------
 

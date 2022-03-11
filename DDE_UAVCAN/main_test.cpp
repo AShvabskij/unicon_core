@@ -135,14 +135,14 @@ static void thread_proc_test_app_call() {
 //1) check IPCMEM for requiest
 		uint16_t device_ID = 11;
 		//getDataIPC(device_ID, &req); TODO
-		if (req.cmd_flag != 0) { 
+		if (req.cmd.cmd_flag != 0) { 
 
 			//TODO - add read and write element
-			get_params_data.device_ID = req.cmd.device_ID;
-			get_params_data.module_ID = req.cmd.module_ID;
-			get_params_data.param_ID = req.cmd.param_ID;
+			get_params_data.device_ID = req.cmd.device_id;
+			get_params_data.module_ID = req.cmd.module_id;
+			get_params_data.param_ID = req.cmd.param_id;
 			mDDE_UAVCAN->get_params_data(get_params_data);
-			req.cmd_flag = 0; //release flag
+			req.cmd.cmd_flag = 0; //release flag
 		}
 
 

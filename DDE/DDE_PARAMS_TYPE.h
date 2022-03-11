@@ -100,12 +100,22 @@ typedef struct
 } DDE_SET_PARAMS_DATA;
 #pragma pack(pop)
 
+#pragma pack(push,1)
+typedef struct {
+    uint8_t cmd_flag:1;     //0 - IDLE, 1 - BUSY
+    uint8_t nRW:1;          //1 to write , 0 to read
+    uint8_t device_id;
+    uint8_t module_id;
+    uint8_t param_id;
+    uint32_t ivalue;
+} DDE_PARAMS_CMD;
+#pragma pack(pop)
 
 // all parameters of the device !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #pragma pack(push,1)
 typedef struct
 {
-	uint8_t device_ID; //INDEX_MAX max = 64
+	//uint8_t device_ID; //INDEX_MAX max = 64
 	//uint8_t modules_count;
 
 	//char name[DDE_PARAMS_NAME_LENGTH];
@@ -113,9 +123,10 @@ typedef struct
 
 	//GLIO_ELEMENT_DESCR el_descr[PARAMS_ID_MAX + 1];
     uint16_t none;
-    uint8_t cmd_flag;//0 - IDLE, 1 - BUSY
-    DDE_SET_PARAMS_DATA cmd;
+
+    DDE_PARAMS_CMD cmd;
     GLIO_ELEMENT_VALUE el[ELEMENTS_ID_MAX];
+    //OSC_MEM
 } DEVICE_ELEMENTS;
 #pragma pack(pop)
 

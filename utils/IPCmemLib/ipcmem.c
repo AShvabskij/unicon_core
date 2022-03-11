@@ -146,21 +146,21 @@ void upShmBlk(int did)
     DEVICE_ELEMENTS *one = pDev[did];
     memset((uint8_t *)one, 0, sizeof(DEVICE_ELEMENTS));
 
-    one->device_ID = did;
+   // one->device_id = did;
     //rintf(one->name, "dev_name_%02d", did);
     //rintf(one->descr, "dev_description_%02d", did);
-    one->cmd_flag = 0;
+    one->cmd.cmd_flag = 0;
         //DDE_SET_PARAMS_DATA cmd;
-        one->cmd.device_ID = did;
-        one->cmd.param_ID = did + 1;
+        one->cmd.device_id = did;
+        one->cmd.param_id = did + 1;
             //GLIO_ELEMENT_VALUE el;
-            one->cmd.el.id = did + 2;
-            one->cmd.el.scale = 1;
-            one->cmd.el.ivalue = did;
-            one->cmd.el.timestamp = time(NULL);
-            one->cmd.el.format = FORMAT_UNDEFINED;
-            one->cmd.el.text_id = 0;
-            one->cmd.el.deprecated = 0;
+            one->cmd.ivalue = did;
+            //one->cmd.el.scale = 1;
+            //one->cmd.el.ivalue = did;
+            //one->cmd.el.timestamp = time(NULL);
+            //one->cmd.el.format = FORMAT_UNDEFINED;
+            //one->cmd.el.text_id = 0;
+            //one->cmd.el.deprecated = 0;
     //
     //GLIO_ELEMENT_VALUE el[PARAMS_ID_MAX + 1];
     for (int i = 0; i < PARAMS_ID_MAX; i++) {
@@ -201,7 +201,7 @@ int getDataIPC(uint8_t id, DEVICE_ELEMENTS *rec)
 
 
 //----------------------------------------------------------------------
-int IPCMEM_get_PARAMS(DDE_GET_PARAMS_DATA*get_params)
+int IPCMEM_get_params(DDE_GET_PARAMS_DATA*get_params)
 {
     if (!get_params) return -1;
 
@@ -218,7 +218,7 @@ int IPCMEM_get_PARAMS(DDE_GET_PARAMS_DATA*get_params)
     return 0;
 }
 //----------------------------------------------------------------------
-int IPCMEM_get_ELEMENT(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el)
+int IPCMEM_get_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el)
 {
     if (!el) return -1;
 
@@ -232,7 +232,7 @@ int IPCMEM_get_ELEMENT(uint8_t device_id, uint8_t module_id, uint8_t param_id, G
     return 0;
 }
 
-int IPCMEM_set_ELEMENT(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el)
+int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el)
 {
     if (!el) return -1;
 
@@ -244,4 +244,10 @@ int IPCMEM_set_ELEMENT(uint8_t device_id, uint8_t module_id, uint8_t param_id, G
     memcpy((uint8_t*)&pDev[device_id]->el[addr], (uint8_t*)el, sizeof(GLIO_ELEMENT_VALUE));
 
     return 0;
+}
+
+int IPCMEM_read_cmd(DDE_PARAMS_CMD* cmd)
+{
+    int res;
+    memcpy(&pDev[cmd->device_id]->cmd,cmd,sizeof(DDE_PARAMS_CMD));
 }

@@ -25,7 +25,7 @@ int PARAMS_DATA_direct_read(DDE_GET_PARAMS_DATA& get_params)
     if (get_params.module_ID >= MODULES_ID_MAX) return _return_FAIL;
     if (get_params.device_ID >= DEVICE_ID_MAX) return _return_FAIL;
 
-    IPCMEM_get_PARAMS(&get_params);
+    IPCMEM_get_params(&get_params);
 
         //get_params.el[0].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
 
@@ -38,7 +38,12 @@ int PARAMS_DATA_direct_write(DDE_SET_PARAMS_DATA& set_params)
     uint8_t module_id = set_params.module_ID;
     uint8_t param_id = set_params.param_ID;
 
-    IPCMEM_set_ELEMENT(device_id, module_id, param_id, &set_params.el);
+    IPCMEM_set_element(device_id, module_id, param_id, &set_params.el);
     
     return _return_OK;
+}
+
+int PARAMS_DATA_write_cmd(DDE_PARAMS_CMD& cmd)
+{
+    IPCMEM_read_cmd(&cmd);
 }

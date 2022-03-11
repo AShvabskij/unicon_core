@@ -7,7 +7,7 @@
 
 
 //#include "func.h"
-/#include "ipcmem.h"
+//#include "ipcmem.h"
 //#include "sql3lib.h"
 
 int main()
@@ -20,7 +20,7 @@ int main()
 
 
     dde.get_params_header(head);
-
+    dde.set_params_data()
 
     
     printf("hello from %s!\n", "DDE_UAVCAN_TB");
