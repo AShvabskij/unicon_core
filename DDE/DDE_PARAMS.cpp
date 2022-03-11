@@ -8,7 +8,7 @@
 
 
 #include "DDE_PARAMS.h"
-
+#include "ipcmem_lib.h"
 using namespace std;
 //------------------------------------------------------------------------------
 //
@@ -18,7 +18,7 @@ DDE_PARAMS::DDE_PARAMS()
 	//1) clear
 	memset(device, 0, sizeof(device));
 	
-	IPCMEM_init();
+
 
 	//2) fill with names devices
     static uint16_t amplitude = 10;
@@ -69,6 +69,8 @@ DDE_PARAMS::~DDE_PARAMS()
 _dde_func_return_t DDE_PARAMS::init() {
 
 //	std::thread*thr_params = new std::thread(&DDE_PARAMS::thread_proc, this);
+	PARAMS_DATA_init("UAVCAN");
+	//PARAMS_DESCR_init();
 
 	//thr_params.join();
 	return 0;

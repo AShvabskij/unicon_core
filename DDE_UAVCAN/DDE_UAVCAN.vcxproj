@@ -37,7 +37,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{9dd173ca-94ff-4066-9912-b5adb7191ec9}</ProjectGuid>
     <Keyword>Linux</Keyword>
-    <RootNamespace>DDE_CAN_LIB</RootNamespace>
+    <RootNamespace>DDE_UAVCAN</RootNamespace>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <ApplicationType>Linux</ApplicationType>
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
@@ -76,25 +76,29 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <IncludePath>C:\Debian\unicon\DDE;libcanard-2/libcanard/;C:\Debian\unicon\utils\IPCmemLib;C:\Debian\unicon\DDE_UAVCAN\RPI3B_SPI\mcp25xxfd_driver\canfdspi;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Debian\unicon\DDE;libcanard-2/libcanard/;C:\Debian\unicon\utils\SQLite3Lib;C:\Debian\unicon\utils\IPCmemLib;C:\Debian\unicon\DDE_UAVCAN\RPI3B_SPI\mcp25xxfd_driver\canfdspi;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <IncludePath>libcanard-2/libcanard/;C:\Debian\Connex4Linux\unicon\DDE_CAN_LIB\RPI3B_SPI\mcp25xxfd_driver\canfdspi;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <IncludePath>C:\Debian\unicon\DDE;libcanard-2/libcanard/;C:\Debian\unicon\utils\IPCmemLib;C:\Debian\unicon\DDE_UAVCAN\RPI3B_SPI\mcp25xxfd_driver\canfdspi;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Debian\unicon\DDE;libcanard-2/libcanard/;C:\Debian\unicon\utils\SQLite3Lib;C:\Debian\unicon\utils\IPCmemLib;C:\Debian\unicon\DDE_UAVCAN\RPI3B_SPI\mcp25xxfd_driver\canfdspi;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <IncludePath>$(RemoteProjectDir)/libcanard-2/libcanard/;$(RemoteProjectDir);C:\Debian\Connex4Linux\unicon\DDE_CAN_LIB\RPI3B_SPI\mcp25xxfd_driver\canfdspi;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Debian\unicon\DDE;libcanard-2/libcanard/;C:\Debian\unicon\utils\IPCmemLib;C:\Debian\unicon\DDE_UAVCAN\RPI3B_SPI\mcp25xxfd_driver\canfdspi;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Debian\unicon\DDE;libcanard-2/libcanard/;C:\Debian\unicon\utils\SQLite3Lib;C:\Debian\unicon\utils\IPCmemLib;C:\Debian\unicon\DDE_UAVCAN\RPI3B_SPI\mcp25xxfd_driver\canfdspi;$(IncludePath)</IncludePath>
+    <LibraryPath>
+    </LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>libcanard-2/libcanard/;C:\Debian\Connex4Linux\unicon\DDE_CAN_LIB\RPI3B_SPI\mcp25xxfd_driver\canfdspi;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <IncludePath>C:\Debian\unicon\DDE;libcanard-2/libcanard/;C:\Debian\unicon\utils\IPCmemLib;C:\Debian\unicon\DDE_UAVCAN\RPI3B_SPI\mcp25xxfd_driver\canfdspi;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Debian\unicon\DDE;libcanard-2/libcanard/;C:\Debian\unicon\utils\SQLite3Lib;C:\Debian\unicon\utils\IPCmemLib;C:\Debian\unicon\DDE_UAVCAN\RPI3B_SPI\mcp25xxfd_driver\canfdspi;$(IncludePath)</IncludePath>
+    <LibraryPath>
+    </LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <IncludePath>$(RemoteProjectDir)/libcanard-2/libcanard/;$(RemoteProjectDir);C:\Debian\Connex4Linux\unicon\DDE_CAN_LIB\RPI3B_SPI\mcp25xxfd_driver\canfdspi;$(IncludePath)</IncludePath>
@@ -171,6 +175,7 @@
     <ClInclude Include="..\utils\clogs\func.h" />
     <ClInclude Include="..\utils\clogs\inc.h" />
     <ClInclude Include="..\utils\IPCmemLib\ipcmem.h" />
+    <ClInclude Include="..\utils\IPCmemLib\ipcmem_lib.h" />
     <ClInclude Include="..\utils\SQLite3Lib\sqlite3.h" />
     <ClInclude Include="..\utils\SQLite3Lib\sqlite3ext.h" />
     <ClInclude Include="CAN_ETHERNET.h" />
@@ -213,7 +218,7 @@
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>
-      <LibraryDependencies>pthread</LibraryDependencies>
+      <LibraryDependencies>pthread;ipcmem_lib</LibraryDependencies>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>DEFINE_DDE_NIOS_NODE%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -229,7 +234,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <Link>
-      <LibraryDependencies>pthread</LibraryDependencies>
+      <LibraryDependencies>pthread;ipcmem_lib</LibraryDependencies>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -245,7 +250,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
-      <LibraryDependencies>pthread</LibraryDependencies>
+      <LibraryDependencies>pthread;ipcmem_lib</LibraryDependencies>
+      <AdditionalLibraryDirectories>..\..\ipcmem_lib\bin\x64\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -261,7 +267,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <Link>
-      <LibraryDependencies>pthread</LibraryDependencies>
+      <LibraryDependencies>pthread;ipcmem_lib</LibraryDependencies>
     </Link>
     <ClCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>

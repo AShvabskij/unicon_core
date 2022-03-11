@@ -28,6 +28,9 @@ _dde_func_return_t DDE_UAVCAN::init()
     osc = new DDE_OSC();
     evlog = new DDE_EVLOG();
 
+	params->init();
+	//osc->
+
 	//TDDE_UAVCAN_MASTER _uavcan_master = DDE_UAVCAN_MASTER_DEFAULTS;
 	uavcan_master.init();
 
