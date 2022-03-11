@@ -210,7 +210,7 @@ int IPCMEM_get_PARAMS(DDE_GET_PARAMS_DATA*get_params)
     if (get_params->device_ID >= DEVICE_ID_MAX) return -4;
 
     uint8_t dev_ID = get_params->device_ID;
-    uint8_t mod_ID = get_params->device_ID;
+    uint8_t mod_ID = get_params->module_ID;
     uint16_t addr = mod_ID * PARAMS_ID_MAX;
     //copy 64 el 
     memcpy((uint8_t*)&get_params->el[0], (uint8_t*)&pDev[dev_ID]->el[addr], PARAMS_ID_MAX*sizeof(GLIO_ELEMENT_VALUE));

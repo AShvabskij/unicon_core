@@ -85,7 +85,7 @@ _dde_func_return_t DDE_PARAMS::init() {
 		get.module_ID = ii;
 		get.param_ID = 0;
 		PARAMS_DATA_direct_read(get);
-		printf("dev=%d ", ii);
+		printf("module=%d ", ii);
 		for (int yy = 0; yy < 64; yy++)
 			printf("%d ", get.el[yy].ivalue);
 		printf("\n");
