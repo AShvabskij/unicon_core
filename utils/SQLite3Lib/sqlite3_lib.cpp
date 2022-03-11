@@ -11,12 +11,12 @@ int PARAMS_DESCR_init(char* description)
     return -1;
 }
 
-int PARAMS_GET_DESCR(char* description)
+int PARAMS_DESCR_GET(DDE_GET_PARAMS_HEADER* p)
 {
 
 }
 
-int PARAMS_SET_DESCR(char* description)
+int PARAMS_DESCR_SET(DDE_GET_PARAMS_HEADER* p)
 {
 
 }

@@ -9,7 +9,7 @@ char pathKey[MAX_DEV_SUPPORT][MAX_FNAME_LEN];
 int shmDev[MAX_DEV_SUPPORT] = {-1};
 unsigned char *blkPtr[MAX_DEV_SUPPORT] = {NULL};
 
-DEVICE_PARAMS *pDev[MAX_DEV_SUPPORT] = {NULL};
+DEVICE_ELEMENTS *pDev[MAX_DEV_SUPPORT] = {NULL};
 //
 #ifdef SET_DEBUG
     char chap[BUF_TMP] = {0};
@@ -36,13 +36,14 @@ int initBlk(int did, size_t sz)
         ret = -1;
     }
 
+
     return ret;
 }
 //----------------------------------------------------------------------
 //        Create in folder 'files' file's for get key to 
 //                make shared memory blocks
 //
-int mkKeyFiles()
+int mkKeyFiles(char* dev_name)
 {
 int schet = 0, ret = -1;
 char namef[MAX_FNAME_LEN + 32] = {0};
@@ -53,6 +54,7 @@ char named[MAX_FNAME_LEN];
     if (stat(dirPath, &sta) == -1) {
         if (mkdir(dirPath, 0777)) return ret;
     }
+    //TODO add dev_name
 
     getcwd(named, MAX_FNAME_LEN - strlen(nfPath) - 3);
     strcat(named, nfPath);
@@ -84,10 +86,10 @@ char named[MAX_FNAME_LEN];
 //-----------------------------------------------------------------------
 //         Make shared memory blocks 
 //         return : MAX_DEV_SUPPORT pointers in array pDev[]
-int IPCMEM_init()
+int IPCMEM_init(char*dev_name)
 {
 
-    if (mkKeyFiles()) {
+    if (mkKeyFiles(dev_name)) {
 #ifdef SET_DEBUG        
         sprintf(chap, "Error: Can't create key files for support #%d device.\n", MAX_DEV_SUPPORT);
         prints(chap, 1);
@@ -97,7 +99,7 @@ int IPCMEM_init()
     }
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        shmDev[i] = initBlk(i, sizeof(DEVICE_PARAMS));
+        shmDev[i] = initBlk(i, sizeof(DEVICE_ELEMENTS));
         if (shmDev[i] == -1) {
 #ifdef SET_DEBUG
             sprintf(chap, "Error: Can't get shared memory block for 'pDev[%d]'.\n", i);
@@ -106,12 +108,12 @@ int IPCMEM_init()
 #endif            
             return -1;
         } else {
-            pDev[i] = (DEVICE_PARAMS *)blkPtr[i];
+            pDev[i] = (DEVICE_ELEMENTS *)blkPtr[i];
 #ifdef SET_DEBUG            
             strcpy(stmp, pathKey[i]);
             sprintf(chap, "Create shared memory block #%d (size:%lu addr:%p file:%s)\n",
                           shmDev[i],
-                          sizeof(DEVICE_PARAMS),
+                          sizeof(DEVICE_ELEMENTS),
                           pDev[i],
                           basename(stmp));
             prints(chap, 1);
@@ -123,7 +125,7 @@ int IPCMEM_init()
     return 0;
 }
 //-----------------  Release All shared memory blocks  -----------------------
-void ipcDeinit()
+void IPCMEM_Deinit()
 {
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
         if (!shmdt(pDev[i])) {
@@ -141,8 +143,8 @@ void upShmBlk(int did)
     if ((did < 0) || (did >= MAX_DEV_SUPPORT)) return;
 
 
-    DEVICE_PARAMS *one = pDev[did];
-    memset((uint8_t *)one, 0, sizeof(DEVICE_PARAMS));
+    DEVICE_ELEMENTS *one = pDev[did];
+    memset((uint8_t *)one, 0, sizeof(DEVICE_ELEMENTS));
 
     one->device_ID = did;
     //rintf(one->name, "dev_name_%02d", did);
@@ -176,11 +178,11 @@ void upShmBlk(int did)
 //   Function put struct's value to shared memory block by device_id
 //          On success, return zero. On error, return -1
 //
-int putDataIPC(uint8_t id, DEVICE_PARAMS *rec)
+int putDataIPC(uint8_t id, DEVICE_ELEMENTS *rec)
 {
     if ((id >= MAX_DEV_SUPPORT) || !rec) return -1;
 
-    memcpy((uint8_t *)pDev[id], (uint8_t *)rec, sizeof(DEVICE_PARAMS));
+    memcpy((uint8_t *)pDev[id], (uint8_t *)rec, sizeof(DEVICE_ELEMENTS));
 
     return 0;
 }
@@ -188,25 +190,58 @@ int putDataIPC(uint8_t id, DEVICE_PARAMS *rec)
 //   Function get struct's value from shared memory block by device_id
 //       On success, return zero. On error, return -1
 //
-int IPCMEM_get_DEVICE_PARAMS(uint8_t id, DEVICE_PARAMS *rec)
+int getDataIPC(uint8_t id, DEVICE_ELEMENTS *rec)
 {
     if ((id >= MAX_DEV_SUPPORT) || !rec) return -1; 
 
-    memcpy((uint8_t *)rec, (uint8_t *)pDev[id], sizeof(DEVICE_PARAMS));    
+    memcpy((uint8_t *)rec, (uint8_t *)pDev[id], sizeof(DEVICE_ELEMENTS));    
+
+    return 0;
+}
+
+
+//----------------------------------------------------------------------
+int IPCMEM_get_PARAMS(DDE_GET_PARAMS_DATA*get_params)
+{
+    if (!get_params) return -1;
+
+    if (get_params->param_ID >= PARAMS_ID_MAX) return -2; // p->param_ID = PARAMS_ID_MAX;
+    if (get_params->module_ID >= MODULES_ID_MAX) return -3;
+    if (get_params->device_ID >= DEVICE_ID_MAX) return -4;
+
+    uint8_t dev_ID = get_params->device_ID;
+    uint8_t mod_ID = get_params->device_ID;
+    uint16_t addr = mod_ID * PARAMS_ID_MAX;
+    //copy 64 el 
+    memcpy((uint8_t*)&get_params->el[0], (uint8_t*)&pDev[dev_ID]->el[addr], PARAMS_ID_MAX*sizeof(GLIO_ELEMENT_VALUE));
 
     return 0;
 }
 //----------------------------------------------------------------------
-
-int IPCMEM_get_MODULE(DDE_GET_PARAMS_DATA* get_params)
+int IPCMEM_get_ELEMENT(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el)
 {
-    uint16_t dev_ID = get_params->device_ID;
-    uint16_t mod_ID = get_params->module_ID;
-    uint16_t par_ID = get_params->param_ID;
+    if (!el) return -1;
 
-    //TODO
-    //uint16_t addr = _2addr(mod_ID, 0); 
-    //memcpy(&get_params->el[0], &pDev[dev_ID]->el[addr], sizeof(get_params->el));
-    
+    if (param_id >= PARAMS_ID_MAX) return -2; // p->param_ID = PARAMS_ID_MAX;
+    if (module_id >= MODULES_ID_MAX) return -3;
+    if (device_id >= DEVICE_ID_MAX) return -4;
+    uint16_t addr = module_id * PARAMS_ID_MAX+ param_id;
+
+    memcpy((uint8_t*)el, (uint8_t*)&pDev[device_id]->el[addr], sizeof(GLIO_ELEMENT_VALUE));
+
+    return 0;
+}
+
+int IPCMEM_set_ELEMENT(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el)
+{
+    if (!el) return -1;
+
+    if (param_id >= PARAMS_ID_MAX) return -2; // p->param_ID = PARAMS_ID_MAX;
+    if (module_id >= MODULES_ID_MAX) return -3;
+    if (device_id >= DEVICE_ID_MAX) return -4;
+    uint16_t addr = module_id * PARAMS_ID_MAX + param_id;
+
+    memcpy((uint8_t*)&pDev[device_id]->el[addr], (uint8_t*)el, sizeof(GLIO_ELEMENT_VALUE));
+
     return 0;
 }

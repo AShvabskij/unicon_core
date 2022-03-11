@@ -16,7 +16,7 @@ using namespace std;
 DDE_PARAMS::DDE_PARAMS()
 {
 	//1) clear
-	memset(device, 0, sizeof(device));
+	//memset(device, 0, sizeof(device));
 	
 
 
@@ -70,7 +70,28 @@ _dde_func_return_t DDE_PARAMS::init() {
 
 //	std::thread*thr_params = new std::thread(&DDE_PARAMS::thread_proc, this);
 	PARAMS_DATA_init("UAVCAN");
-	//PARAMS_DESCR_init();
+	
+	DDE_SET_PARAMS_DATA set;
+	for (int ii = 0; ii < 4096; ii++) {
+		set.device_ID = 2;
+		set.module_ID = (ii >> 6) & 0x3f;
+		set.param_ID = ii & 0x3f;
+		set.el.ivalue = ii;
+		PARAMS_DATA_direct_write(set);
+	}
+	DDE_GET_PARAMS_DATA get;
+	get.device_ID = 2;
+	for (int ii = 0; ii < 64; ii++) {
+		get.module_ID = ii;
+		get.param_ID = 0;
+		PARAMS_DATA_direct_read(get);
+		printf("dev=%d ", ii);
+		for (int yy = 0; yy < 64; yy++)
+			printf("%d ", get.el[yy].ivalue);
+		printf("\n");
+	}
+
+	//PARAMS_DESCR_init("UAVCAN"); // from SQLite3_lib
 
 	//thr_params.join();
 	return 0;
@@ -81,6 +102,10 @@ _dde_func_return_t DDE_PARAMS::init() {
 //------------------------------------------------------------------------------
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER &p)
 {
+
+
+	//PARAMS_DESCR_get(p);
+
     return 0;
 }
 
@@ -101,8 +126,8 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
     }
 
 	//2) read params immediatly
-	direct_read(p);
-
+	//direct_read(p);
+	
 	return _return_OK;
 
 }
@@ -156,86 +181,36 @@ _dde_func_return_t DDE_PARAMS::direct_write(DDE_SET_PARAMS_DATA& set)
 {
 	time_t time;
 	int el_id;
-	assert(set.device_ID < PARAMS_DEVICES_MAX);
-	assert(set.param_ID < 64);
+	assert(set.device_ID < DEVICE_ID_MAX);
+	assert(set.param_ID < DEVICE_ID_MAX);
 
-	el_id = set.param_ID;// (set.module_ID << 6) | set.param_ID;
+																	//el_id = set.param_ID;// (set.module_ID << 6) | set.param_ID;
 
-	device[set.device_ID].el->ivalue = set.el.ivalue;
-	if (set.el.timestamp == 0) {
-		localtime(&time);
-		device[set.device_ID].el->timestamp = time;
-	}
-	else
-	device[set.device_ID].el[el_id].timestamp = set.el.timestamp;
+																	/*device[set.device_ID].el->ivalue = set.el.ivalue;
+																	if (set.el.timestamp == 0) {
+																		localtime(&time);
+																		device[set.device_ID].el->timestamp = time;
+																	}
+																	else
+																	device[set.device_ID].el[el_id].timestamp = set.el.timestamp;*/
+
+	PARAMS_DATA_direct_write(set);
 	
-	return -1;
+	return _return_OK;
 }
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
 _dde_func_return_t DDE_PARAMS::direct_read(DDE_GET_PARAMS_DATA& get_params)
 {
-	if (get_params.module_ID > PARAMS_ID_MAX) get_params.module_ID = PARAMS_ID_MAX;
+
+	time_t system_time = systemTime();
+
+	PARAMS_DATA_direct_read(get_params);
+
+
+
 	
-    time_t system_time = systemTime();
-
-	//1) check if devs_ID requested
-	if (get_params.device_ID == 0 && get_params.module_ID == 0)
-	{
-		for (int ii = 1; ii < 16; ii += 2) {
-			//get_params.el_descr[ii].index = 0;
-			//get_params.el_descr[ii].sub_index = ii;
-
-
-			IPCMEM_get_MODULE(&get_params);
-
-			get_params.el[ii].ivalue = 0; //TODO add ipcmem read ; // rand();
-			get_params.el[ii].timestamp = system_time;
-			get_params.el[ii].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT;
-            //get_params.el[ii].fvalue = 11.11;
-		}
-		return _return_OK;
-	}
-
-	//2) special case - index list requested
-    if (get_params.module_ID == 0 && get_params.param_ID == 0)
-	{
-		for (int ii = 1; ii < 16; ii++) {
-			//get_params.el[ii].index = ii;
-			get_params.el[ii].ivalue = 0; // rand();
-            get_params.el[ii].timestamp = system_time;
-			//get_params.el[ii].format = 2;
-			//get_params.el[ii].fvalue = 11.11;
-		}
-
-		return _return_OK;;
-	}
-
-	//3) return sub_indexes
-    if (get_params.param_ID == 0) {
-        for (int ii = 0; ii < 16; ii++) {
-            get_params.el[ii].ivalue = rand();
-            get_params.el[ii].timestamp = system_time;
-            get_params.el[ii].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
-         //   get_params.el[ii].fvalue = rand();
-        }
-    } else {
-
-        if (get_params.param_ID > PARAMS_ID_MAX) {
-            return _return_OK;
-        }
-
-        get_params.el[0].ivalue = rand();
-
-        get_params.el[0].timestamp = system_time;
-        get_params.el[0].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
-       //get_params.el[0].fvalue = rand();
-        get_params.el[0].deprecated = false;
-    }
-
-	return _return_OK;
-
 	//if (get_params.callback_func != NULL) get_params.callback_func();
 }
 
@@ -251,89 +226,5 @@ inline time_t DDE_PARAMS::systemTime()
     return timeMsc;
 }
 
-
-//------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------
-//void DDE_PARAMS::proceed_response_queue()
-//{
-//	DDE_GET_PARAMS get_params;
-//
-//	bool done = request_list.empty();
-//
-//	while (!done) {
-//		get_params = request_list.front();
-//		request_list.pop();
-//		//TODO need to be pushed in driver 
-//		proceed_req(get_params);
-//	}
-//
-//}
-
-// ------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------
-//void DDE_PARAMS::proceed_request_list()
-//{
-	//DDE_GET_PARAMS_DATA get_params;
-
-	//bool done = get_list.empty();
-	//if (done) return;
-
-	// delete all with same requests TODO - this is long operation, do just dev_ID,
-	//1) request_list.unique();  
-
-	//2) update timeout for all queued requests 
-	//std::list <DDE_GET_PARAMS_DATA> ::iterator it;
-
-	//for (it = request_list.begin(); it != request_list.end(); it++) {
-	//	int timeout = it->timeout++;
-	//	if (timeout > PARAMS_REQUEST_TIMOUT_MS) {
-	//		it->timeout_flg = 1;
-	//		request_list.remove(*it);
-	//	}
-	//}
-
-	//if (!request_list.empty()) {
-	//	get_params = request_list.front();
-	//	request_list.remove(get_params);
-	//	//TODO need to be pushed in driver 
-	//	//read_params(get_params);
-	//}
-//}
-
-
-//------------------------------------------------------------------------------
-//
-////------------------------------------------------------------------------------
-//int DDE_PARAMS::thread_proc() //TODO this may be splited to thread_process_tx & thread_process_rx to one CAN chanell
-//{
-//
-//
-//    GLIO_ELEMENT_VALUE el;
-//	/*el.code_ID = 0;
-//	el.source_ID = 0;
-//*/
-//
-////proceed reauests from queue and send to some_layer. Now is emulation only
-//// this work as balancing function. It works only certain time (some ms) 
-//	while (1)
-//	{
-//
-//		proceed_request_list();
-//
-//		//proceed_response_queue();
-//
-//		//if (msg_queue.size < queue_max_size)
-//		//	msg_queue.push(msg);
-//		//else {
-//		//	assert("msg_queue.size < queue_max_size");
-//		//	overflow++;
-//		//}
-//		std::cout << "thread_proc params" << std::endl;
-//		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-//	}
-//
-//}
 
 

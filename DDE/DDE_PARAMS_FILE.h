@@ -28,6 +28,6 @@ private:
     float generateValue(float frequency_hertz, int amplitude, float noise, time_t timeMsc);
     float generateValue(float value , float noise);
 
-    DEVICE_PARAMS device[64]; //not more than 64 devices
+    DEVICE_ELEMENTS device[64]; //not more than 64 devices
     uint32_t devices_count;
 };

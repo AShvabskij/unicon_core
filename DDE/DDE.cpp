@@ -85,7 +85,7 @@ _dde_func_return_t DDE::set_evlog_data(DDE_SET_EVLOG_DATA&)
     return 0;
 }
 
-_dde_func_return_t DDE::init(int)
+_dde_func_return_t DDE::init()
 {
     // interface_can.init();
 

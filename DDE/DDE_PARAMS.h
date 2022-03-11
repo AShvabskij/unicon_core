@@ -2,7 +2,7 @@
 
 #include "DDE_TYPES.h"
 #include "DDE_PARAMS_TYPE.h"
-#include "my_func.h"
+#include "cpp_inc.h"
 
 
 
@@ -10,8 +10,8 @@
 //#define SUB_INDEX_MAX	0x3f
 //#define ADDRESS_MAX		0xfff
 
-#define PARAMS_ID_MAX		0xfff
-#define PARAMS_DEVICES_MAX	127
+//#define PARAMS_ID_MAX		0xfff
+//#define PARAMS_DEVICES_MAX	127
 
 #define PARAMS_REQUEST_TIMOUT_MS	1000
 #define DDE_PARAMS_NAME_LENGTH      64
@@ -53,6 +53,6 @@ private:
     int thread_proc();
     inline time_t systemTime();
 
-    DEVICE_PARAMS device[DEVICE_ID_MAX]; //not more than 127 DDE_PARAMS_DEVICES_MAX devices
+    //DEVICE_PARAMS device[DEVICE_ID_MAX]; //not more than 127 DDE_PARAMS_DEVICES_MAX devices
     uint32_t devices_count;
 };

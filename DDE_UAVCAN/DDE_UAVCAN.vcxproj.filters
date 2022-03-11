@@ -156,9 +156,6 @@
     <ClInclude Include="..\DDE\DDE_TYPES.h">
       <Filter>DDE</Filter>
     </ClInclude>
-    <ClInclude Include="..\DDE\my_func.h">
-      <Filter>DDE</Filter>
-    </ClInclude>
     <ClInclude Include="..\utils\SQLite3Lib\sqlite3.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -176,6 +173,9 @@
     </ClInclude>
     <ClInclude Include="..\utils\IPCmemLib\ipcmem_lib.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DDE\cpp_inc.h">
+      <Filter>DDE</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -38,12 +38,13 @@ extern "C" {
 
 //-----------------------------------------------------------------------
 
-extern DEVICE_PARAMS *pDev[MAX_DEV_SUPPORT];
+extern DEVICE_ELEMENTS *pDev[MAX_DEV_SUPPORT];
 
 //-------------------------------------------------------------------------
 
-int IPCMEM_init();
-void ipcDeinit();
+int IPCMEM_init(char*dev_name);
+
+void IPCMEM_Deinit();
 
 #ifdef SET_DEBUG
     #define BUF_TMP 1024
@@ -51,11 +52,14 @@ void ipcDeinit();
     void upShmBlk(int did);
 #endif
 
-int putDataIPC(uint8_t id, DEVICE_PARAMS *rec);
-//int getDataIPC(uint8_t id, DEVICE_PARAMS *rec);
+int putDataIPC(uint8_t id, DEVICE_ELEMENTS *rec);
+int getDataIPC(uint8_t id, DEVICE_ELEMENTS *rec);
 
-//int IPCMEM_get_MODULE_PARAMS(DDE_GET_PARAMS_DATA* get_params);
-int IPCMEM_get_MODULE(DDE_GET_PARAMS_DATA* get_params);
+int IPCMEM_get_PARAMS(DDE_GET_PARAMS_DATA* get_params);
+int IPCMEM_get_ELEMENT(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el);
+int IPCMEM_set_ELEMENT(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el);
+
+
 //-------------------------------------------------------------------------
 
 #ifdef __cplusplus  // Provide C++ Compatibility

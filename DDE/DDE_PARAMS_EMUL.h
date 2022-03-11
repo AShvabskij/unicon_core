@@ -34,7 +34,7 @@ struct PARAMS_EMUL_SETTINGS
     bool isSinusoidal = true;
 };
 
-struct DEVICE_PARAMS_EMUL: public DEVICE_PARAMS
+struct DEVICE_PARAMS_EMUL: public DEVICE_ELEMENTS
 {
     PARAMS_EMUL_SETTINGS el_Settings[PARAMS_ID_MAX + 1];
 };

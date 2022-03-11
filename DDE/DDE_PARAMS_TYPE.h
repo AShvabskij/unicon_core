@@ -6,12 +6,15 @@
 #include <time.h> 
 #include <stdint.h>
 
-#define MAX_DEV_SUPPORT  4//32
+#define MAX_DEV_SUPPORT  4      //32
 
 
 #define PARAMS_REQUEST_TIMOUT_MS	1000
 
-#define PARAMS_ID_MAX		4096
+#define PARAMS_ID_MAX		64
+#define MODULES_ID_MAX		64
+#define ELEMENTS_ID_MAX		(PARAMS_ID_MAX*MODULES_ID_MAX)
+
 #define DEVICE_ID_MAX		127
 
 #define DDE_PARAMS_NAME_LENGTH 64
@@ -63,7 +66,7 @@ typedef struct
 #endif    
 
     float scale;
-    char unit[UNITS_SIZE]; // unit of measurement
+    char dim[UNITS_SIZE]; // unit of measurement
     uint8_t total;
     char *txtValues;//[DDE_PARAMS_TXTVALUES_MAX_COUNT]; // list of predefined text values
     int *txtIndexes;//[DDE_PARAMS_TXTVALUES_MAX_COUNT];
@@ -112,8 +115,8 @@ typedef struct
     uint16_t none;
     uint8_t cmd_flag;//0 - IDLE, 1 - BUSY
     DDE_SET_PARAMS_DATA cmd;
-    GLIO_ELEMENT_VALUE el[PARAMS_ID_MAX];
-} DEVICE_PARAMS;
+    GLIO_ELEMENT_VALUE el[ELEMENTS_ID_MAX];
+} DEVICE_ELEMENTS;
 #pragma pack(pop)
 
 
@@ -132,7 +135,8 @@ typedef struct
 typedef struct
 {
     uint16_t device_ID;
-    uint16_t elem_ID;
+    uint16_t module_ID;
+    uint16_t param_ID;
     uint16_t el_count; //count of elements for responce    
     char module_name[DDE_PARAMS_NAME_LENGTH];
 	GLIO_ELEMENT_DESCR el_descr[64]; //not more then 64 params at a time

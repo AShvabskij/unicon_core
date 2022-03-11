@@ -25,7 +25,7 @@
 #include "RPI3B_SPI/RPI3B_SPI.h"
 #include "CAN_MCP2518FD.h"
 #include "CAN_ETHERNET.h"
-#include "ipcmem.h"
+#include "ipcmem_lib.h"
 
 using namespace std;
 
@@ -56,14 +56,34 @@ int main()
 	CAN_ETHERNET* can_eth = new CAN_ETHERNET(0x10101010, 345);
 	can_eth->init();
 #endif
+	/*DDE_GET_PARAMS_HEADER header;
 
+	header.device_ID = 10;
+	header.module_ID = 5;
+	header.param_ID = 0;
+	
+	PARAMS_DESCR_get(header);
+
+	header.module_name;
+	for (int ii=0;ii<header.el_count;ii++)
+	header.el_descr[ii].dim*/
 
 
 	mDDE_UAVCAN = new DDE_UAVCAN();
 	mDDE_UAVCAN->init(); 
 
+	//DDE_GET_PARAMS_HEADER header;
+	//header.device_ID = 11;
+	//header.elem_ID = 0x105;
+
+	//mDDE_UAVCAN->get_params_header(header);
+
+
+
+
+
 																		//build params tree
-																		//DDE_GET_PARAMS_HEADER get_devices_header;
+																//DDE_GET_PARAMS_HEADER get_devices_header;
 
 																		//std::cout << "HEADER el_count =" << get_devices_header.el_count << std::endl;
 
@@ -96,10 +116,9 @@ static void thread_proc_test_app_call() {
 	DDE_GET_PARAMS_DATA get_params_data;
 	DDE_SET_PARAMS_DATA set_params_data;
 
-	DEVICE_PARAMS req;
+	DEVICE_ELEMENTS req;
 
-	IPCMEM_init();
-
+	
 	static uint32_t  value;
 	while (1) {
 											/*get_params_data.device_ID = 11;

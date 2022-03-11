@@ -18,7 +18,7 @@ public:
 
     virtual ~IDDE() {};
 
-    virtual _dde_func_return_t init(int mode) = 0;
+    virtual _dde_func_return_t init() = 0;
 
     virtual _dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p) = 0;
     virtual _dde_func_return_t get_params_data(DDE_GET_PARAMS_DATA& p) = 0;
@@ -40,7 +40,7 @@ public:
     DDE();
     virtual ~DDE();
 
-    virtual _dde_func_return_t init(int mode);
+    virtual _dde_func_return_t init();
 
     virtual _dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p);
     virtual _dde_func_return_t get_params_data(DDE_GET_PARAMS_DATA& p);

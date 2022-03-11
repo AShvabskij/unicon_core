@@ -22,7 +22,6 @@ DDE_UAVCAN::~DDE_UAVCAN()
 _dde_func_return_t DDE_UAVCAN::init()
 {
 
-	///i_CAN = p;
 	
 	params = new DDE_PARAMS();
     osc = new DDE_OSC();

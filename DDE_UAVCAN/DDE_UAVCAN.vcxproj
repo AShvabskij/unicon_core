@@ -158,6 +158,7 @@
     <ClCompile Include="RPI3B_SPI\RPI3B_SPI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\DDE\cpp_inc.h" />
     <ClInclude Include="..\DDE\csvfile.h" />
     <ClInclude Include="..\DDE\DDE.h" />
     <ClInclude Include="..\DDE\DDE_EVLOG.h" />
@@ -171,7 +172,6 @@
     <ClInclude Include="..\DDE\DDE_PARAMS_FILE.h" />
     <ClInclude Include="..\DDE\DDE_PARAMS_TYPE.h" />
     <ClInclude Include="..\DDE\DDE_TYPES.h" />
-    <ClInclude Include="..\DDE\my_func.h" />
     <ClInclude Include="..\utils\clogs\func.h" />
     <ClInclude Include="..\utils\clogs\inc.h" />
     <ClInclude Include="..\utils\IPCmemLib\ipcmem.h" />
