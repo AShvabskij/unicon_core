@@ -92,10 +92,10 @@ _dde_func_return_t DDE::set_evlog_data(DDE_SET_EVLOG_DATA&p)
 
 _dde_func_return_t DDE::init(char* device_description)
 {
-    DDE_PARAMS params = new DDE_PARAMS();
+    DDE_PARAMS* params = new DDE_PARAMS();
 
    	params->init(device_description);
-    params.
+
     //	evlog->init();
     //	osc->init(); }
 
@@ -111,9 +111,7 @@ void DDE::update()
 	DDE_SET_PARAMS_DATA set_params;
     DDE_PARAMS_CMD cmd;
 
-    params->
-
-    int res = params->update();  pop_next_get_request(get_params);// get_list.front();
+    int res = params->pop_next_get_request(get_params);// get_list.front();
 
 	if (res == _return_OK) {
         cmd.device_id = get_params.device_id;
