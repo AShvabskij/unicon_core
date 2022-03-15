@@ -2,7 +2,7 @@
 #include "DDE.h"
 
 #include <iostream>
-
+#include <unistd.h>
 
 
 
@@ -12,60 +12,55 @@
 
 int main()
 {
-
-    DDE dde("UAVCAN");
+    //DDE_PARAMS_CMD cmd;
+    int res;
     DDE_GET_PARAMS_HEADER head;
+    DDE_GET_PARAMS_DATA get_params;
+    DDE_SET_PARAMS_DATA set_params;
+
+
+    DDE*dde =  new DDE();
+
+    dde->init("UAVCAN");
     
-    //head.elem_ID = mod << 6 + par;
-
-
-    dde.get_params_header(head);
-    dde.set_params_data()
-
     
-    printf("hello from %s!\n", "DDE_UAVCAN_TB");
+    printf("hello from %s!\n", "DDE_UAVCAN_TB2");
 
-
-
-    if (ipcInit()) {
-        prints("Error: Can't init shared memory blocks.\n", 1);
-        fclose(fd_log);
-        return -1;
-    }
 
     uint16_t _addr = 0;
 
     while (1) {
 
-
-
-        DEVICE_PARAMS req;
-        uint32_t res;
-        //for (int ii = 0; ii < PARAMS_ID_MAX; ii++) 
-        //{
-        req.cmd.device_ID = 1;
-        req.cmd.param_ID = _addr;
-        req.cmd.el.ivalue = _addr;
-        
-        //check cmd_flag is IDLE        
-        res = getDataIPC(1, &req);
-        if (req.cmd_flag == 0)
-        {
-        req.cmd_flag = 1;
-        res = putDataIPC(1, &req);
-        if (res != 0) perror("putDataIPC(1, &req)");
-        }
-
-        DEVICE_PARAMS resp;
-        resp.cmd.device_ID = 1;
-        res = getDataIPC(1, &resp);
-        
-        for (int ii = 0; ii < 10; ii++)
-            std::cout<< "el["<<ii<<"] = "<< resp.el[ii].ivalue<<std::endl;
-        std::cout <<"pause" << std::endl;
         _addr++;
-        _addr &= 0xf; //only low 16 el used for testing
-        sleep(1);
+        _addr &= 0xff;
+        
+
+        set_params.device_id = 11;
+        set_params.module_id = (_addr >> 6) & 0x3f;
+        set_params.param_id = _addr & 0x3f;
+        set_params.el.ivalue = _addr;
+        res = dde->set_params_data(set_params);
+        if (res < 0) perror("dde->get_params_data(get_params)");
+
+
+        get_params.device_id = 11;
+        get_params.module_id = (_addr>>6)&0x3f;
+        get_params.param_id = _addr & 0x3f;                
+        res = dde->get_params_data(get_params);
+        if (res< 0) perror("dde->get_params_data(get_params)");
+        
+
+        
+        //for (int ii = 0; ii < 10; ii++)
+        //    std::cout<< "el["<<ii<<"] = "<< resp.el[ii].ivalue<<std::endl;
+        //std::cout <<"pause" << std::endl;
+        //_addr++;
+        //_addr &= 0xf; //only low 16 el used for testing
+
+        dde.update();
+
+        usleep(1000000);
+
 
     }
 

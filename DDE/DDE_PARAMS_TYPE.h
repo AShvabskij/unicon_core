@@ -92,10 +92,11 @@ typedef struct {
 #pragma pack(push,1)
 typedef struct
 {
-    uint16_t device_ID;
-    uint16_t param_ID;
-    uint16_t module_ID;
-    GLIO_ELEMENT_VALUE el; //just one
+    uint16_t device_id;
+    uint16_t param_id;
+    uint16_t module_id;
+    uint32_t ivalue; //just value - no need for format and scale to be copied
+    //GLIO_ELEMENT_VALUE el; //just one
     //void (*callback_func)();
 } DDE_SET_PARAMS_DATA;
 #pragma pack(pop)
@@ -165,9 +166,9 @@ typedef struct
 {
 	uint32_t header_reset;		//if flag is set update the header, clear  and draw data
 	//DDE_REQ_PARAMS_TYPE req_type;
-	uint16_t device_ID;
-    uint16_t module_ID;
-    uint16_t param_ID;
+	uint16_t device_id;
+    uint16_t module_id;
+    uint16_t param_id;
     GLIO_ELEMENT_VALUE el[64];	//not more then 64 params at a time
 	uint16_t timeout; //each request has it own timeout counter
 	uint16_t timeout_flg;//
@@ -193,7 +194,7 @@ public:
     virtual long get(DDE_GET_PARAMS_DATA& p) = 0;
     virtual long set(DDE_SET_PARAMS_DATA& p) = 0;
     
-    virtual long init() = 0;
+    virtual long init(char*device_description) = 0;
 };
     
 #endif

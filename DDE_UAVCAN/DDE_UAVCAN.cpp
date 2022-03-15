@@ -87,9 +87,9 @@ _dde_func_return_t DDE_UAVCAN::update()
 	int res = params->pop_next_get_request(get_params);// get_list.front();
 
 	if (res == _return_OK) {
-		uint16_t addr = ((get_params.param_ID&0xff) << 8) | get_params.module_ID&0xff;
+		uint16_t addr = ((get_params.param_id&0xff) << 8) | get_params.module_id&0xff;
 		//uint32_t ivalue = 100;
-		uavcan_master.get_param(get_params.device_ID, addr);
+		uavcan_master.get_param(get_params.device_id, addr);
 		req_counter++;
 		//printf("req_counter= %d\n", req_counter);
 	}
@@ -101,9 +101,9 @@ _dde_func_return_t DDE_UAVCAN::update()
 	res = params->pop_next_set_request(set_params);// get_list.front();
 
 	if (res == _return_OK) {
-		uint16_t addr = set_params.param_ID;// ((set_params.param_ID & 0xff) << 8) | set_params.module_ID & 0xff;
+		uint16_t addr = set_params.param_id;// ((set_params.param_ID & 0xff) << 8) | set_params.module_ID & 0xff;
 		//uint32_t ivalue = 100;
-		uavcan_master.set_param(set_params.device_ID, addr, set_params.el.ivalue);
+		uavcan_master.set_param(set_params.device_id, addr, set_params.el.ivalue);
 		req_counter++;
 		//printf("req_counter= %d\n", req_counter);
 	}

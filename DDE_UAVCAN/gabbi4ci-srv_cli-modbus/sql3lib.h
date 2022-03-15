@@ -9,7 +9,7 @@
 #include <string.h>
 #include <sqlite3.h>
 
-#include "DDE/dde_params_type.h"
+#include "dde_params_type.h"
 
 #pragma once
 

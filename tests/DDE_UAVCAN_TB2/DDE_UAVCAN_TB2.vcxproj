@@ -75,30 +75,27 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <IncludePath>C:\Debian\Connex4Linux\unicon\DDE;$(SolutionDir)\DDE;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Debian\unicon\utils\SQLite3Lib;C:\Debian\unicon\utils\IPCmemLib;$(SolutionDir)DDE;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <IncludePath>C:\Debian\Connex4Linux\unicon\DDE;$(SolutionDir)\DDE;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Debian\unicon\utils\SQLite3Lib;C:\Debian\unicon\utils\IPCmemLib;$(SolutionDir)DDE;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Debian\Connex4Linux\unicon\DDE;$(SolutionDir)\DDE;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Debian\unicon\utils\SQLite3Lib;C:\Debian\unicon\utils\IPCmemLib;$(SolutionDir)DDE;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <IncludePath>C:\Debian\Connex4Linux\unicon\DDE;$(SolutionDir)\DDE;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Debian\unicon\utils\SQLite3Lib;C:\Debian\unicon\utils\IPCmemLib;$(SolutionDir)DDE;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\DDE\csvfile.cpp" />
     <ClCompile Include="..\..\DDE\DDE.cpp" />
-    <ClCompile Include="..\..\DDE\DDE_EVLOG.cpp" />
-    <ClCompile Include="..\..\DDE\DDE_OSC.cpp" />
-    <ClCompile Include="..\..\DDE\DDE_OSC_EMUL.cpp" />
-    <ClCompile Include="..\..\DDE\DDE_OSC_FILE.cpp" />
     <ClCompile Include="..\..\DDE\DDE_PARAMS.cpp" />
-    <ClCompile Include="..\..\DDE\DDE_PARAMS_EMUL.cpp" />
-    <ClCompile Include="..\..\DDE\DDE_PARAMS_FILE.cpp" />
+    <ClCompile Include="..\..\utils\clogs\func.c" />
+    <ClCompile Include="..\..\utils\IPCmemLib\ipcmem.c" />
+    <ClCompile Include="..\..\utils\IPCmemLib\ipcmem_lib.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\DDE\cpp_inc.h" />
     <ClInclude Include="..\..\DDE\csvfile.h" />
     <ClInclude Include="..\..\DDE\DDE.h" />
     <ClInclude Include="..\..\DDE\DDE_EVLOG.h" />
@@ -108,14 +105,13 @@
     <ClInclude Include="..\..\DDE\DDE_OSC_FILE.h" />
     <ClInclude Include="..\..\DDE\DDE_OSC_TYPES.h" />
     <ClInclude Include="..\..\DDE\DDE_PARAMS.h" />
-    <ClInclude Include="..\..\DDE\DDE_PARAMS_EMUL.h" />
-    <ClInclude Include="..\..\DDE\DDE_PARAMS_FILE.h" />
     <ClInclude Include="..\..\DDE\DDE_PARAMS_TYPE.h" />
     <ClInclude Include="..\..\DDE\DDE_TYPES.h" />
-    <ClInclude Include="..\..\DDE\my_func.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\DDE\DDE_PARAMS_TYPES._h" />
+    <ClInclude Include="..\..\utils\clogs\func.h" />
+    <ClInclude Include="..\..\utils\clogs\inc.h" />
+    <ClInclude Include="..\..\utils\IPCmemLib\ipcmem.h" />
+    <ClInclude Include="..\..\utils\IPCmemLib\ipcmem_lib.h" />
+    <ClInclude Include="..\..\utils\SQLite3Lib\sqlite3_lib.h" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>

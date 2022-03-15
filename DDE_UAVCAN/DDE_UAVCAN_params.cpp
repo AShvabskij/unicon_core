@@ -12,12 +12,12 @@ _dde_func_return_t DDE_UAVCAN::check_params(CanardRxTransfer* rx)
 		if ((rx->metadata.port_id == UAVCAN_SUBJECT_ID_DDE_READ_SINGLE_PARAM_RESP) && (rx->payload_size == 6))
 		{
 			DDE_SET_PARAMS_DATA set;
-			set.device_ID = rx->metadata.remote_node_id;
+			set.device_id = rx->metadata.remote_node_id;
 			uint8_t module_ID = ((uint8_t*)rx->payload)[0];
-			set.param_ID = ((uint8_t*)rx->payload)[1]| (module_ID<<6);
+			set.param_id = ((uint8_t*)rx->payload)[1]| (module_ID<<6);
 		
 
-			set.el.ivalue = (uint32_t)(((uint8_t*)rx->payload)[2] << 24) | \
+			set.ivalue = (uint32_t)(((uint8_t*)rx->payload)[2] << 24) | \
 										(((uint8_t*)rx->payload)[3] << 16) | \
 										(((uint8_t*)rx->payload)[4] << 8) | \
 										(((uint8_t*)rx->payload)[5]);

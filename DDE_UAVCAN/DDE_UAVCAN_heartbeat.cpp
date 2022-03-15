@@ -60,9 +60,9 @@ _dde_func_return_t DDE_UAVCAN::update_heartbeat() {
 
 	for (int ii = 0; ii < 64; ii++) {
 		DDE_SET_PARAMS_DATA set;
-		set.device_ID = 0;
+		set.device_id = 0;
 		//set.module_ID = 1;
-		set.param_ID = DDE_DEV0_GROUP1_DEV0_63_link + ii;
+		set.param_id = DDE_DEV0_GROUP1_DEV0_63_link + ii;
 		set.el.ivalue = device[ii].link;
 		//set.el.timestamp = time; pass 0
 		params->direct_write(set);

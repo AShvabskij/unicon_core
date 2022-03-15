@@ -80,13 +80,40 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <EnableIncrementalBuild>WithNinja</EnableIncrementalBuild>
+    <IncludePath>C:\Debian\unicon\DDE_UAVCAN\gabbi4ci-srv_cli-modbus;C:\Debian\unicon\DDE;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <IncludePath>C:\Debian\unicon\DDE_UAVCAN\gabbi4ci-srv_cli-modbus;C:\Debian\unicon\DDE;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <IncludePath>C:\Debian\unicon\DDE_UAVCAN\gabbi4ci-srv_cli-modbus;C:\Debian\unicon\DDE;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <IncludePath>C:\Debian\unicon\DDE_UAVCAN\gabbi4ci-srv_cli-modbus;C:\Debian\unicon\DDE;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\DDE_UAVCAN\gabbi4ci-srv_cli-modbus\func.c" />
+    <ClCompile Include="..\..\DDE_UAVCAN\gabbi4ci-srv_cli-modbus\sql3lib.c" />
     <ClCompile Include="shell.c" />
     <ClCompile Include="sqlite3.c" />
     <ClCompile Include="sqlite3_lib.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\DDE\DDE.h" />
+    <ClInclude Include="..\..\DDE\DDE_EVLOG.h" />
+    <ClInclude Include="..\..\DDE\DDE_EVLOG_TYPES.h" />
+    <ClInclude Include="..\..\DDE\DDE_OSC.h" />
+    <ClInclude Include="..\..\DDE\DDE_OSC_EMUL.h" />
+    <ClInclude Include="..\..\DDE\DDE_OSC_FILE.h" />
+    <ClInclude Include="..\..\DDE\DDE_OSC_TYPES.h" />
+    <ClInclude Include="..\..\DDE\DDE_PARAMS.h" />
+    <ClInclude Include="..\..\DDE\DDE_PARAMS_EMUL.h" />
+    <ClInclude Include="..\..\DDE\DDE_PARAMS_FILE.h" />
+    <ClInclude Include="..\..\DDE\DDE_PARAMS_TYPE.h" />
+    <ClInclude Include="..\..\DDE\DDE_TYPES.h" />
+    <ClInclude Include="..\..\DDE_UAVCAN\gabbi4ci-srv_cli-modbus\func.h" />
+    <ClInclude Include="..\..\DDE_UAVCAN\gabbi4ci-srv_cli-modbus\inc.h" />
+    <ClInclude Include="..\..\DDE_UAVCAN\gabbi4ci-srv_cli-modbus\sql3lib.h" />
     <ClInclude Include="sqlite3.h" />
     <ClInclude Include="sqlite3ext.h" />
     <ClInclude Include="sqlite3_lib.h" />

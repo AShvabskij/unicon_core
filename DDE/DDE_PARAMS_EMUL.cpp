@@ -191,12 +191,12 @@ _dde_func_return_t DDE_PARAMS_EMUL::set(DDE_SET_PARAMS_DATA& p)
 //------------------------------------------------------------------------------
 void DDE_PARAMS_EMUL::read_params(DDE_GET_PARAMS_DATA& get_params)
 {
-	if (get_params.module_ID > PARAMS_ID_MAX) get_params.module_ID = PARAMS_ID_MAX;
+	if (get_params.module_id > PARAMS_ID_MAX) get_params.module_id = PARAMS_ID_MAX;
 	
     time_t system_time = systemTime();
 
 	//1) check if devs_ID requested
-	if (get_params.device_ID == 0 && get_params.module_ID == 0)
+	if (get_params.device_id == 0 && get_params.module_id == 0)
 	{
 		for (int ii = 1; ii < 16; ii += 2) {
 			//get_params.el_descr[ii].index = 0;
@@ -210,7 +210,7 @@ void DDE_PARAMS_EMUL::read_params(DDE_GET_PARAMS_DATA& get_params)
 	}
 
 	//2) special case - index list requested
-    if (get_params.module_ID == 0 && get_params.param_ID == 0)
+    if (get_params.module_id == 0 && get_params.param_id == 0)
 	{
 		for (int ii = 1; ii < 16; ii++) {
 			//get_params.el[ii].index = ii;
@@ -224,7 +224,7 @@ void DDE_PARAMS_EMUL::read_params(DDE_GET_PARAMS_DATA& get_params)
 	}
 
 	//3) return sub_indexes
-    if (get_params.param_ID == 0) {
+    if (get_params.param_id == 0) {
         for (int ii = 0; ii < 16; ii++) {
             get_params.el[ii].ivalue = rand();
             get_params.el[ii].timestamp = system_time;
@@ -233,7 +233,7 @@ void DDE_PARAMS_EMUL::read_params(DDE_GET_PARAMS_DATA& get_params)
         }
     } else {
 
-        if (get_params.param_ID > PARAMS_ID_MAX) {
+        if (get_params.param_id > PARAMS_ID_MAX) {
             return;
         }
 

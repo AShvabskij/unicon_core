@@ -48,8 +48,6 @@ int mkKeyFiles(char* dev_name)
 int schet = 0, ret = -1;
 char namef[MAX_FNAME_LEN + 32] = {0};
 char named[MAX_FNAME_LEN]; 
-
-
     struct stat sta = {0};
     if (stat(dirPath, &sta) == -1) {
         if (mkdir(dirPath, 0777)) return ret;
@@ -57,7 +55,8 @@ char named[MAX_FNAME_LEN];
     //TODO add dev_name
 
     getcwd(named, MAX_FNAME_LEN - strlen(nfPath) - 3);
-    strcat(named, nfPath);
+    strcat(named, "/");
+    strcat(named, dev_name);
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
         int dl = sprintf(namef, "%s%02d", named, i); 
@@ -205,12 +204,12 @@ int IPCMEM_get_params(DDE_GET_PARAMS_DATA*get_params)
 {
     if (!get_params) return -1;
 
-    if (get_params->param_ID >= PARAMS_ID_MAX) return -2; // p->param_ID = PARAMS_ID_MAX;
-    if (get_params->module_ID >= MODULES_ID_MAX) return -3;
-    if (get_params->device_ID >= DEVICE_ID_MAX) return -4;
+    if (get_params->param_id >= PARAMS_ID_MAX) return -2; // p->param_ID = PARAMS_ID_MAX;
+    if (get_params->module_id >= MODULES_ID_MAX) return -3;
+    if (get_params->device_id >= DEVICE_ID_MAX) return -4;
 
-    uint8_t dev_ID = get_params->device_ID;
-    uint8_t mod_ID = get_params->module_ID;
+    uint8_t dev_ID = get_params->device_id;
+    uint8_t mod_ID = get_params->module_id;
     uint16_t addr = mod_ID * PARAMS_ID_MAX;
     //copy 64 el 
     memcpy((uint8_t*)&get_params->el[0], (uint8_t*)&pDev[dev_ID]->el[addr], PARAMS_ID_MAX*sizeof(GLIO_ELEMENT_VALUE));
@@ -232,7 +231,7 @@ int IPCMEM_get_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, G
     return 0;
 }
 
-int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el)
+int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, uint32_t ivalue) // GLIO_ELEMENT_VALUE* el)
 {
     if (!el) return -1;
 
@@ -240,8 +239,8 @@ int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, G
     if (module_id >= MODULES_ID_MAX) return -3;
     if (device_id >= DEVICE_ID_MAX) return -4;
     uint16_t addr = module_id * PARAMS_ID_MAX + param_id;
-
-    memcpy((uint8_t*)&pDev[device_id]->el[addr], (uint8_t*)el, sizeof(GLIO_ELEMENT_VALUE));
+    pDev[device_id]->el[addr].ivalue = ivalue;
+    //memcpy((uint8_t*)&pDev[device_id]->el[addr].ivalue, (uint8_t*)el, sizeof(GLIO_ELEMENT_VALUE));
 
     return 0;
 }
@@ -249,5 +248,25 @@ int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, G
 int IPCMEM_read_cmd(DDE_PARAMS_CMD* cmd)
 {
     int res;
-    memcpy(&pDev[cmd->device_id]->cmd,cmd,sizeof(DDE_PARAMS_CMD));
+
+    if (pDev[cmd->device_id]->cmd.cmd_flag == 1) {
+        memcpy(&cmd, &pDev[cmd->device_id]->cmd, sizeof(DDE_PARAMS_CMD));
+        pDev[cmd->device_id]->cmd.cmd_flag = 0;
+        return 1;
+    }
+     
+    return 0;
+}
+
+int IPCMEM_write_cmd(DDE_PARAMS_CMD* cmd)
+{
+    int res;
+    if (pDev[cmd->device_id]->cmd.cmd_flag == 0)
+    {
+        cmd->cmd_flag = 1; //force cmd_flag to 1
+        memcpy(&pDev[cmd->device_id]->cmd, cmd, sizeof(DDE_PARAMS_CMD));
+    }
+    else
+        return -1;
+    return 0;
 }

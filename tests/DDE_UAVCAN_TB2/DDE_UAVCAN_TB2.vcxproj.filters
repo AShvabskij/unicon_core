@@ -2,37 +2,28 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="..\..\DDE\csvfile.cpp">
-      <Filter>DDE</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\DDE\DDE.cpp">
-      <Filter>DDE</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\DDE\DDE_EVLOG.cpp">
-      <Filter>DDE</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\DDE\DDE_OSC.cpp">
-      <Filter>DDE</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\DDE\DDE_OSC_EMUL.cpp">
-      <Filter>DDE</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\DDE\DDE_OSC_FILE.cpp">
       <Filter>DDE</Filter>
     </ClCompile>
     <ClCompile Include="..\..\DDE\DDE_PARAMS.cpp">
       <Filter>DDE</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\DDE\DDE_PARAMS_EMUL.cpp">
-      <Filter>DDE</Filter>
+    <ClCompile Include="..\..\utils\IPCmemLib\ipcmem.c">
+      <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\DDE\DDE_PARAMS_FILE.cpp">
-      <Filter>DDE</Filter>
+    <ClCompile Include="..\..\utils\IPCmemLib\ipcmem_lib.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\utils\clogs\func.c">
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="DDE">
       <UniqueIdentifier>{d0345ba8-0f5d-43e1-9343-a6fe9c72b78e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{bcf73d91-0743-41ff-aa95-826ac191da8b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -63,25 +54,29 @@
     <ClInclude Include="..\..\DDE\DDE_PARAMS.h">
       <Filter>DDE</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\DDE\DDE_PARAMS_EMUL.h">
-      <Filter>DDE</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\DDE\DDE_PARAMS_FILE.h">
-      <Filter>DDE</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\DDE\DDE_PARAMS_TYPE.h">
       <Filter>DDE</Filter>
     </ClInclude>
     <ClInclude Include="..\..\DDE\DDE_TYPES.h">
       <Filter>DDE</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\DDE\my_func.h">
+    <ClInclude Include="..\..\DDE\cpp_inc.h">
       <Filter>DDE</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\DDE\DDE_PARAMS_TYPES._h">
-      <Filter>DDE</Filter>
-    </None>
+    <ClInclude Include="..\..\utils\IPCmemLib\ipcmem.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\utils\IPCmemLib\ipcmem_lib.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\utils\SQLite3Lib\sqlite3_lib.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\utils\clogs\func.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\utils\clogs\inc.h">
+      <Filter>utils</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

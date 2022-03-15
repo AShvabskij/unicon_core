@@ -56,6 +56,9 @@
     <ClCompile Include="..\utils\clogs\func.c">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\utils\IPCmemLib\ipcmem_lib.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="DDE">
@@ -176,6 +179,9 @@
     </ClInclude>
     <ClInclude Include="..\DDE\cpp_inc.h">
       <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utils\SQLite3Lib\sqlite3_lib.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

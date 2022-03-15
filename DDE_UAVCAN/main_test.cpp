@@ -32,6 +32,8 @@ using namespace std;
 DDE_UAVCAN* mDDE_UAVCAN;
 static void print_modules(DDE_GET_PARAMS_HEADER& p);
 static void print_params(int device_ID, int module_ID, DDE_GET_PARAMS_HEADER& p);
+static void print_cmd_resp(int res, DDE_PARAMS_CMD& p);
+
 static void thread_proc_test_app_call();
 
 extern CAN_MCP2518FD can_mcp2518fd;
@@ -112,11 +114,12 @@ int main()
 }
 
 static void thread_proc_test_app_call() {
-
+	int res;
 	DDE_GET_PARAMS_DATA get_params_data;
 	DDE_SET_PARAMS_DATA set_params_data;
+	DDE_PARAMS_CMD cmd;
 
-	DEVICE_ELEMENTS req;
+	//DEVICE_ELEMENTS req;
 
 	
 	static uint32_t  value;
@@ -133,29 +136,46 @@ static void thread_proc_test_app_call() {
 											mDDE_UAVCAN->set_params_data(set_params_data);*/
 
 //1) check IPCMEM for requiest
-		uint16_t device_ID = 11;
-		//getDataIPC(device_ID, &req); TODO
-		if (req.cmd.cmd_flag != 0) { 
+		
+		
+		res =PARAMS_DATA_read_cmd(cmd);
 
-			//TODO - add read and write element
-			get_params_data.device_ID = req.cmd.device_id;
-			get_params_data.module_ID = req.cmd.module_id;
-			get_params_data.param_ID = req.cmd.param_id;
-			mDDE_UAVCAN->get_params_data(get_params_data);
-			req.cmd.cmd_flag = 0; //release flag
+		if (res!=0) { 
+			print_cmd_resp(res, cmd);
+
+			if (cmd.nRW==1) { //SET request
+				set_params_data.device_id = cmd.device_id;
+				set_params_data.module_id = cmd.module_id;
+				set_params_data.param_id = cmd.param_id;
+				set_params_data.el.ivalue = cmd.ivalue;
+				//mDDE_UAVCAN->set_params_data(set_params_data);
+				
+			}
+			else {			 //GET requies		
+				get_params_data.device_id = cmd.device_id;
+				get_params_data.module_id = cmd.module_id;
+				get_params_data.param_id = cmd.param_id;
+				//mDDE_UAVCAN->get_params_data(get_params_data);
+			}
 		}
 
 
-
-
-		//putDataIPC(id, DEVICE_PARAMS * rec) TODO replace
-		
-
-		usleep(1000000); //1 sec
-	}
+		usleep(10000); //0.1 sec
+	} //end while (1) 
 
 }
 
+
+void print_cmd_resp(int res,DDE_PARAMS_CMD& p)
+{
+
+	std::cout <<	"dev_id=" << p.device_id<< \
+					"mod_id="<<p.module_id<<\
+					"par_id="<<p.param_id<<\
+					"nRW="<<p.nRW<<\
+					"res="<<res<<std::endl;
+
+}
 
 
 void print_modules(DDE_GET_PARAMS_HEADER& p)

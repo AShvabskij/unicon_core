@@ -22,7 +22,7 @@ public:
 	DDE_PARAMS();
 	~DDE_PARAMS();
 
-    virtual _dde_func_return_t init();
+    virtual _dde_func_return_t init(char*device_description);
     virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p);
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p);
@@ -52,7 +52,7 @@ private:
 
     int thread_proc();
     inline time_t systemTime();
-
+    void update();
     //DEVICE_PARAMS device[DEVICE_ID_MAX]; //not more than 127 DDE_PARAMS_DEVICES_MAX devices
     uint32_t devices_count;
 };
