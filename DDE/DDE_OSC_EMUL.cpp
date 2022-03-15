@@ -22,8 +22,8 @@ int DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
 
     for (int ii =0; ii < CHANNELS_MAX; ii++)
     {
-        p.ch_descr[ii].param.param_ID = paramId++;
-        p.ch_descr[ii].scale = 0.1;
+        p.analog_channels[ii].var.id = paramId++;
+        p.analog_channels[ii].scale = 0.1;
     }
 
 	return 0;
@@ -43,7 +43,7 @@ int DDE_OSC_EMUL::get(DDE_GET_OSC_DATA& p)
         t = m_lastDataTimeNs;
         for (int jj = 0; jj < p.data_length; jj++)
         {
-            p.ch_data[ii].buff[jj] = generateValue(ii, t);
+            p.analog_data[ii].buff[jj] = generateValue(ii, t);
             t += RESOLUTION_NS;
         }
     }

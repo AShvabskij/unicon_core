@@ -1,13 +1,14 @@
-import Config from './../../.config.js';
+import EventEmitter from 'events'
+import Config from '../../.config.js';
 
 let DATA_SERVER_PORT = 1235;
+let CONNECTION_TIMEOUT_MSC = 5000;
 
 export class _RequestHelper {
 
     m_connected = false;
-    // m_socketUrl = "ws://" + "127.0.0.1" + ":" + DATA_SERVER_PORT;
     m_socketUrl = "ws://" + Config.ip + ":" + DATA_SERVER_PORT;
-    m_socket = new WebSocket(this.m_socketUrl);
+    m_events = new EventEmitter();
 
     constructor() {
     }
@@ -30,6 +31,7 @@ export class _RequestHelper {
 
         this.m_socket.onerror = (error) => {
             console.log('Connection error: ' + error.message);
+            this.m_connected = false;
         };
 
         this.m_socket.onclose = () => {
@@ -40,45 +42,72 @@ export class _RequestHelper {
 
             setTimeout(() => {
                 this.initConnection();
-            }, 5000);
+            }, CONNECTION_TIMEOUT_MSC);
+            
         };
 
-        //this.m_connected = true;        
+        this.m_socket.onmessage = (message) => {
+            var messageData = JSON.parse(message.data);
+            if (messageData.request_id === undefined) {
+                console.log(`Inappropriate message is recevied: = ${messageData}`);
+            }
+
+            this.m_events.emit(messageData.request_id, messageData);
+        }
     }
 
-    request(cmd, timeout = 1000) {
+    waitIsConnected() {
+        return new Promise(async (resolve, reject) => {
+            if (this.m_connected) {
+                resolve();
+            }
+
+            let timerId = setTimeout(async () => {
+                if (this.m_connected) {
+                    clearTimeout(timerId);
+                    resolve();
+                }
+            }, 1000);
+
+            setTimeout(async () => {
+                clearTimeout(timerId);
+                reject();
+            }, CONNECTION_TIMEOUT_MSC);
+        })
+    }
+
+    request(cmd, timeout) {
+        timeout = timeout ?? (Config.requestTimeout ?? 1000);
 
         let promise = new Promise((resolve, reject) => {
 
             if (!this.m_connected) {
                 reject({ status: 500, msg: "The web socket is not connected now." });
             }
-            let cmdStr;
-            if (this.m_connected) {
-                cmdStr = JSON.stringify(cmd);
-                this.m_socket.send(cmdStr);
-                console.log('sended cmd = ' + cmdStr);
-           
-                setTimeout(() => reject({ status: 500, msg: `Request time out for cmd = ${cmdStr}` }), timeout)
-            }
-            this.m_socket.onmessage = (message) => {
-                var messageData = JSON.parse(message.data);
-                if (messageData.request_id !== cmd.request_id) {
-                    reject({ status: 500, msg: `Inappropriate response is recevied for the cmd = ${cmdStr}` });
-                    return;
-                }
 
-                console.log("Received data: " + JSON.stringify(messageData));
-                let res = messageData.body
+            let cmdStr = JSON.stringify(cmd);
+            this.m_socket.send(cmdStr);
+            console.log('sended cmd = ' + cmdStr);
+        
+            setTimeout(() => reject({ status: 500, msg: `Request time out for cmd = ${cmdStr}` }), timeout)
+
+            this.m_events.once(cmd.request_id, (data) => {
+//              console.log("Received data: " + JSON.stringify(data));
+
+                let res = data.body
+                if (res === undefined) {
+                    reject({ status: 500, msg: `Inappropriate response is recevied for the cmd = ${cmdStr}` });
+                }
 
                 res.status = 200; // ok
                 resolve(res);
-            };
+            });
         });
 
         return promise;
     };
 }
 
-export const RequestHelper = new _RequestHelper();
+const RequestHelper = new _RequestHelper();
+export default RequestHelper;
 // module.exports = RequestHelper;

@@ -1,8 +1,9 @@
 // import {RequestHelper} from "./fr_requesthelper.mjs"
-const { RequestHelper } = require("./fr_requesthelper.mjs");
+import {default as RequestHelper} from "./fr_requesthelper.mjs";
 
 const REQ_GET_PARAMS = "GET_PARAMS"
 const REQ_GET_PARAMS_DATA = "GET_PARAMS_DATA"
+const REQ_SET_PARAMS_DATA = "SET_PARAMS_DATA"
 const REQ_GET_PARAMS_STREAM_OPEN = "GET_PARAMS_STREAM_OPEN"
 const REQ_GET_PARAMS_STREAM_CLOSE = "GET_PARAMS_STREAM_CLOSE"
 
@@ -66,6 +67,15 @@ export class ParamProvider {
         return this.request(reqCmd);
     };
 
+    async setParamValue(deviceId, paramId, value) {
+        let cmd = REQ_SET_PARAMS_DATA
+        let args = {'value' : value};
+
+        let reqCmd = this._createParamReqCmd(cmd, deviceId, null, paramId, args);
+
+        return this.request(reqCmd);
+    };
+
     _createParamReqCmd(reqName, deviceId, moduleId, paramId, args) {
         let req = {
             request_id: this._generateReqId(deviceId, paramId),
@@ -97,6 +107,13 @@ export class ParamProvider {
             res = {
                 name: "param_data",
                 type: "get"
+            };
+        }
+
+        if (reqName == REQ_SET_PARAMS_DATA) {
+            res = {
+                name: "param_data",
+                type: "set"
             };
         }
 
