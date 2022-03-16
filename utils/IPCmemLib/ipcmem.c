@@ -233,7 +233,7 @@ int IPCMEM_get_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, G
 
 int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, uint32_t ivalue) // GLIO_ELEMENT_VALUE* el)
 {
-    if (!el) return -1;
+//  if (!el) return -1;
 
     if (param_id >= PARAMS_ID_MAX) return -2; // p->param_ID = PARAMS_ID_MAX;
     if (module_id >= MODULES_ID_MAX) return -3;

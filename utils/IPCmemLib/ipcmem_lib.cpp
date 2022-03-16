@@ -38,7 +38,7 @@ int PARAMS_DATA_direct_write(DDE_SET_PARAMS_DATA& set_params)
     uint8_t module_id = set_params.module_id;
     uint8_t param_id = set_params.param_id;
 
-    IPCMEM_set_element(device_id, module_id, param_id, &set_params.ivalue);
+    IPCMEM_set_element(device_id, module_id, param_id, set_params.ivalue);
     
     return _return_OK;
 }

@@ -107,35 +107,36 @@ _dde_func_return_t DDE::init(char* device_description)
 void DDE::update()
 {
 
-	DDE_GET_PARAMS_DATA get_params;
-	DDE_SET_PARAMS_DATA set_params;
+    DDE_GET_PARAMS_DATA get_params;
+    DDE_SET_PARAMS_DATA set_params;
     DDE_PARAMS_CMD cmd;
 
     int res = params->pop_next_get_request(get_params);// get_list.front();
 
-	if (res == _return_OK) {
+    if (res == _return_OK) {
         cmd.device_id = get_params.device_id;
         cmd.module_id = get_params.module_id;
         cmd.param_id = get_params.param_id;
         cmd.nRW = 0;
-        PARAMS_DATA_write_cmd(cmd);
-	}
-	else
-	{
-		req_counter = 0;
-	}
+        //      PARAMS_DATA_write_cmd(cmd);
+    }
+    else
+    {
+        //		req_counter = 0;
+    }
 
-	res = params->pop_next_set_request(set_params);// get_list.front();
+    res = params->pop_next_set_request(set_params);// get_list.front();
 
-	if (res == _return_OK) {
+    if (res == _return_OK) {
         cmd.device_id = set_params.device_id;
         cmd.module_id = set_params.module_id;
         cmd.param_id = set_params.param_id;
         cmd.ivalue = set_params.el.ivalue;
         cmd.nRW = 1;
-        PARAMS_DATA_write_cmd(cmd);
-	}
-	else
-	{
-		req_counter = 0;
-	}
+        //    PARAMS_DATA_write_cmd(cmd);
+    }
+    else
+    {
+        //		req_counter = 0;
+    }
+}

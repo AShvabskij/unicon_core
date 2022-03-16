@@ -6,9 +6,8 @@
 #include <cmath>
 #include <chrono>
 
-
 #include "DDE_PARAMS.h"
-#include "ipcmem_lib.h"
+
 using namespace std;
 //------------------------------------------------------------------------------
 //
