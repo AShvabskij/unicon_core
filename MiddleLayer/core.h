@@ -5,8 +5,9 @@
 
 #include "socketserver.h"
 
-struct DDE_GET_PARAMS_HEADER;
-class DDE_CAN;
+#include "DDE_PARAMS_TYPE.h"
+
+class IDDE;
 
 class Core
 {
@@ -25,7 +26,7 @@ private:
     void print_modules(const DDE_GET_PARAMS_HEADER& p);
     void print_params(int device_ID, int module_ID, const DDE_GET_PARAMS_HEADER& p);
 
-    DDE_CAN* m_dde;
+    IDDE* m_dde;
 };
 
 #endif // APPLICATION_H

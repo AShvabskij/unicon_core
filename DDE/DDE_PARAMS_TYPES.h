@@ -1,20 +1,10 @@
 #pragma once
 
-#include "DDE_TYPES.h"
+#include "DDE_PARAMS_TYPE.h"
+
 #include "my_func.h"
 
-#define PARAMS_ID_MAX		    0xfff
-#define PARAMS_DEVICES_MAX      127
-
-//#define SUB_INDEX_MAX	0x3f
-//#define ADDRESS_MAX		0xfff
-
-
-#define PARAMS_REQUEST_TIMOUT_MS	1000
-
-#define DDE_PARAMS_NAME_LENGTH 64
-#define DDE_PARAMS_DESCR_LENGTH 256
-
+/*
 enum GLIO_ELEMENT_FORMAT_ENUM
 {
 	 FORMAT_UNDEFINED =0,
@@ -39,46 +29,49 @@ struct GLIO_ELEMENT_VALUE {
     uint16_t id;
 	int32_t ivalue;
 	float	fvalue;
-	//uint8_t text[8];
-	time_t timestamp;
-    GLIO_ELEMENT_FORMAT_ENUM format;  // 0 - not defined 1-int 2-float 3-BIT
-    float scale = 1;
+    time_t timestamp;
     bool deprecated = false;
 };
 
 struct GLIO_ELEMENT_DESCR
 {
 
-    uint16_t id;				//INDEX_MAX max = 64
-	//uint8_t sub_index;			//SUB_INDEX_MAX max = 64
-	//uint8_t params_count;
+    uint16_t id; //INDEX_MAX max = 64
+    //uint8_t sub_index; //SUB_INDEX_MAX max = 64
+
 	char name[DDE_PARAMS_NAME_LENGTH];
     char descr[DDE_PARAMS_DESCR_LENGTH];
-    char value_unit[6];
-    bool readable = false;
 
-	//GLIO_ELEMENT el;
-
+    GLIO_ELEMENT_FORMAT_ENUM format;  // 0 - not defined 1-int 2-float 3-bit, 4-hex, 5-text
+    float scale = 1;
+    char unit[6]; // unit of measurement
+    char* txtValues[DDE_PARAMS_TXTVALUES_MAX_COUNT]; // list of predefined text values
+    int txtIndexes[DDE_PARAMS_TXTVALUES_MAX_COUNT];
+//  std::map<int, char*> txtValues; // std::map does work unstable
+    bool writable = false; // writable|readable
 };
+*/
 
 // all parameters of the device
 struct DEVICE_PARAMS	
 {
-	//uint8_t device_ID; //INDEX_MAX max = 64 A&D excluded 25.10.2021 Discussed with ASw may be restored
+	uint8_t device_ID; //INDEX_MAX max = 64
 	//uint8_t modules_count;
 	char name[DDE_PARAMS_NAME_LENGTH];
     char descr[DDE_PARAMS_DESCR_LENGTH];
 
-	GLIO_ELEMENT_DESCR el_descr[PARAMS_ID_MAX + 1];
-    GLIO_ELEMENT_VALUE el[PARAMS_ID_MAX + 1];
+    GLIO_ELEMENT_DESCR el_descr[ELEMENTS_ID_MAX + 1];
+    GLIO_ELEMENT_VALUE el[ELEMENTS_ID_MAX + 1];
 };
 
+/*
 struct DDE_GET_PARAMS_HEADER
 {
     uint16_t device_ID = 0;
     uint16_t elem_ID = 0;
     uint16_t el_count = 0; //count of elements for responce
 	GLIO_ELEMENT_DESCR el_descr[64]; //not more then 64 params at a time
+
 	uint16_t timeout; //each request has it own timeout counter
 	uint16_t timeout_flg;//
 	//void* (*callback_func)();
@@ -96,34 +89,15 @@ struct DDE_GET_PARAMS_DATA
 	uint16_t timeout; //each request has it own timeout counter
 	uint16_t timeout_flg;//
 	//void* (*callback_func)();
-	//std::queue <DDE_EVLOG_MSG> queue; this will requier auto_ptr to be deleted, i prefer to control memory 	
+    //std::queue <DDE_EVLOG_MSG> queue; this will requier auto_ptr to be deleted, i prefer to control memory
 };
 
 struct DDE_SET_PARAMS_DATA
 {
-	uint16_t device_ID;
-	uint16_t module_ID;
-	uint16_t param_ID;
+    uint16_t device_ID;
+    uint16_t param_ID;
 
     GLIO_ELEMENT_VALUE el; //just one
 	//void (*callback_func)();
 };
-
-class IDDE_PARAMS
-{
-public:
-
-    virtual ~IDDE_PARAMS() {};
-
-    virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p) = 0;
-    virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p) = 0;
-    virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p) = 0;
-
-	virtual _dde_func_return_t direct_write(DDE_SET_PARAMS_DATA& p) = 0;
-	virtual _dde_func_return_t direct_read(DDE_GET_PARAMS_DATA& p) = 0;
-
-	virtual _dde_func_return_t pop_next_get_request(DDE_GET_PARAMS_DATA& p) = 0;
-	virtual _dde_func_return_t pop_next_set_request(DDE_SET_PARAMS_DATA& p) = 0;
-	
-    virtual _dde_func_return_t init() = 0;
-};
+*/

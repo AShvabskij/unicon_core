@@ -14,52 +14,9 @@ using namespace std;
 //------------------------------------------------------------------------------
 DDE_PARAMS::DDE_PARAMS()
 {
-	//1) clear
-	//memset(device, 0, sizeof(device));
-	
 
-
-	//2) fill with names devices
-    static uint16_t amplitude = 10;
-    static uint16_t frequency_hertz = 1;
-
-	//for (int ii = 1; ii < 33; ii=ii+11)
-	//{
-	//	devices_count++;
-	//	//device[ii].device_ID = ii; A&D exluded as duplication
-	//	sprintf(device[ii].name, "Device Power Unit Type %d", ii);
-	//	
-	//	
-	//	string s;
-
-	//	int param_count = 2;// (rand() / RAND_MAX) * 60 + 3;
-
-	//	//fill device with random params
-	//	for (int jj = 0; jj <=param_count; jj++)
-	//	{
-	//		s = "module_" + to_string(jj);
-	//		for (int subix = 0; subix < 4; subix++) {
-	//			int param_ID = (jj << 6) + subix;
-	//			device[ii].el_descr[param_ID].id = param_ID; // (jj << 6) + subix;
-
-	//			device[ii].el[param_ID].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT;
-	//			device[ii].el[param_ID].ivalue = -1;
-	//			device[ii].el[param_ID].fvalue = -1;
-	//			string s1;
-	//			s1 = s + "_param_"+ to_string(subix);
-	//			strcpy(device[ii].el_descr[param_ID].name, s1.c_str());
-	//			device[ii].el[param_ID].scale = 0;
-	//			device[ii].el[param_ID].timestamp = 0;
-	//		}
-	//	}
-	//}
-
-	//this->list_get_max = 10; // fifo_size;
 }
 
-//------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------
 DDE_PARAMS::~DDE_PARAMS()
 {
 
@@ -76,7 +33,7 @@ _dde_func_return_t DDE_PARAMS::init(char*device_description) {
 		set.device_id = 2;
 		set.module_id = (ii >> 6) & 0x3f;
 		set.param_id = ii & 0x3f;
-		set.el.ivalue = ii;
+        set.ivalue = ii;
 		PARAMS_DATA_direct_write(set);
 	}
 	DDE_GET_PARAMS_DATA get;

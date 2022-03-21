@@ -1,9 +1,6 @@
 #pragma once
 //---------------------------------------------------------------------------
 
-#include "DDE_TYPES.h"
-//#include "DDE_PARAMS_TYPE.h"
-#include "DDE_PARAMS_TYPE.h"
 #include "DDE_PARAMS.h"
 #include "DDE_OSC_TYPES.h"
 //#include "DDE_OSC.h"

@@ -57,6 +57,8 @@ else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../DDE/debug/ -lDDE
 else:unix: LIBS += -L$$PWD/../DDE/debug/ -lDDE
 
 INCLUDEPATH += $$PWD/../utils/IPCmemLib
+INCLUDEPATH += $$PWD/../DDE
+
 DEPENDPATH += $$PWD/../utils/SQLite3Lib
 
 win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../DDE/release/libDDE.a

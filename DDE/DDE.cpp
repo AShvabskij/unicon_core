@@ -102,8 +102,6 @@ _dde_func_return_t DDE::init(char* device_description)
     return 0;
 }
 
-
-
 void DDE::update()
 {
 
@@ -131,7 +129,7 @@ void DDE::update()
         cmd.device_id = set_params.device_id;
         cmd.module_id = set_params.module_id;
         cmd.param_id = set_params.param_id;
-        cmd.ivalue = set_params.el.ivalue;
+        cmd.ivalue = set_params.ivalue;
         cmd.nRW = 1;
         //    PARAMS_DATA_write_cmd(cmd);
     }

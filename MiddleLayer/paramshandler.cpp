@@ -72,7 +72,7 @@ int ParamsHandler::handleGetHeader(const QJsonObject &request)
         ret = getParamHeaders(deviceId, moduleId, &params);
     } else {
         Param p;
-        ret = getParamHeader(deviceId, paramId, &p);
+        ret = getParamHeader(deviceId, moduleId, paramId, &p);
         if (ret == 0) {
             params << p;
         }
@@ -94,10 +94,11 @@ int ParamsHandler::handleGetValue(const QJsonObject &request)
     }
 
     int deviceId = cmdBody.value("device_id").toInt();
+    int moduleId = cmdBody.value("module_id").toInt();
     int paramId  = cmdBody.value("param_id").toInt();
 
     Param p;
-    int ret = getParamHeader(deviceId, paramId, &p);
+    int ret = getParamHeader(deviceId, moduleId, paramId, &p); //todo неэффективно! убрать!
     if (ret != 0) {
         return ret;
     }
@@ -121,10 +122,11 @@ int ParamsHandler::handleSetValue(const QJsonObject &request)
     }
 
     int deviceId = cmdBody.value("device_id").toInt();
+    int moduleId = cmdBody.value("module_id").toInt();
     int paramId  = cmdBody.value("param_id").toInt();
 
     Param p;
-    int ret = getParamHeader(deviceId, paramId, &p);
+    int ret = getParamHeader(deviceId, moduleId, paramId, &p);
     if (ret != 0) {
         return ret;
     }
@@ -144,26 +146,25 @@ long ParamsHandler::setParamValue(const Param& param, const ParamValue& value)
 {
     DDE_SET_PARAMS_DATA m_data;
 
-    m_data.device_ID = param.deviceId;
-    m_data.param_ID = param.id;
-    m_data.el.id = param.id;
-    m_data.el.timestamp = value.timestamp;
-    m_data.el.ivalue = 0;
-    m_data.el.fvalue = 0;
+    m_data.device_id = param.deviceId;
+    m_data.param_id = param.id;
+    m_data.param_id = param.id;
+    m_data.ivalue = 0;
 
     switch (param.valueFormat) {
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT:
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_BIN:
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_HEX32: {
-        m_data.el.ivalue = value.value.toInt();
+        m_data.ivalue = value.value.toInt();
         break;
     }
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT: {
-        m_data.el.fvalue = value.value.toFloat();
+        float fvalue = value.value.toFloat();
+        m_data.ivalue = *(int*)&fvalue;
         break;
     }
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_TEXT: {
-        m_data.el.ivalue = value.value.toInt();
+        m_data.ivalue = value.value.toInt();
         break;
     }
     }
@@ -183,10 +184,11 @@ int ParamsHandler::handleOpenStream(const QJsonObject& request)
     }
 
     int deviceId = cmdBody.value("device_id").toInt();
+    int moduleId = cmdBody.value("module_id").toInt();
     int paramId  = cmdBody.value("param_id").toInt();
 
     Param p;
-    int ret = getParamHeader(deviceId, paramId, &p);
+    int ret = getParamHeader(deviceId, moduleId, paramId, &p);
     if (ret != 0) {
         return ret;
     }
@@ -258,13 +260,14 @@ ParamValue ParamsHandler::valueFrom(const GLIO_ELEMENT_VALUE& el, const GLIO_ELE
         res.value = el.ivalue;
     }; break;
     case FORMAT_FLOAT: {
-        res.value = el.fvalue;
+        float fvalue = *(float*)&el.ivalue;
+        res.value = fvalue;
     }; break;
     case FORMAT_TEXT: {
         res.value = el.ivalue;
     }; break;
     default: {
-        res.value = el.fvalue;
+        res.value = el.ivalue;
     }
     }
 
@@ -351,9 +354,9 @@ long ParamsHandler::getParamValue(const Param& p, ParamValue* out)
 {
     Q_ASSERT(out);
 
-    m_data->device_ID = p.deviceId;
-    m_data->module_ID = p.moduleId;
-    m_data->param_ID = p.id;
+    m_data->device_id = p.deviceId;
+    m_data->module_id = p.moduleId;
+    m_data->param_id = p.id;
 
     _dde_func_return_t res = m_dde->get_params_data(*m_data);
     if (res < 0) {
@@ -365,10 +368,11 @@ long ParamsHandler::getParamValue(const Param& p, ParamValue* out)
     return 0;
 }
 
-long ParamsHandler::getParamHeader(int deviceId, int paramId, Param *out)
+long ParamsHandler::getParamHeader(int deviceId, int moduleId, int paramId, Param *out)
 {
     m_header->device_ID = deviceId;
-    m_header->elem_ID = paramId;
+    m_header->module_ID = moduleId;
+    m_header->param_ID = paramId;
 
     _dde_func_return_t res = m_dde->get_params_header(*m_header);
     if (res < 0) {
@@ -376,20 +380,20 @@ long ParamsHandler::getParamHeader(int deviceId, int paramId, Param *out)
     }
 
     out->deviceId = deviceId;
-    out->moduleId = 0;
+    out->moduleId = moduleId;
     out->id = paramId;
 
     for (const GLIO_ELEMENT_DESCR& elem : m_header->el_descr) {
         if (elem.id == paramId)     {
             out->name = elem.name;
-            out->valueUnit = elem.unit;
+            out->valueUnit = elem.dim;
             out->writable = elem.writable;
             out->valueFormat = elem.format;
             out->valueScale = elem.scale;
 
             for (int ind = 0; ind < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++ind) {
                 if (elem.txtValues[ind] != nullptr) {
-                    out->valueTexts[elem.txtIndexes[ind]] = elem.txtValues[ind];
+                    out->valueTexts[elem.txtSubIndexes[ind]] = elem.txtValues[ind];
                 }
             }
 
@@ -405,7 +409,7 @@ long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)
     Q_ASSERT(out);
 
     m_header->device_ID = deviceId;
-    m_header->elem_ID = moduleId;
+    m_header->module_ID = moduleId;
 
     _dde_func_return_t res = m_dde->get_params_header(*m_header);
     if (res < 0) {
@@ -425,14 +429,14 @@ long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)
         p.id = elem.id;
         p.name = elem.name;
         p.desc = elem.descr;
-        p.valueUnit = elem.unit;
+        p.valueUnit = elem.dim;
         p.writable = elem.writable;
         p.valueFormat = elem.format;
         p.valueScale = elem.scale;
 
         for (int ind = 0; ind < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++ind) {
             if (elem.txtValues[ind] != nullptr) {
-                p.valueTexts[elem.txtIndexes[ind]] = elem.txtValues[ind];
+                p.valueTexts[elem.txtSubIndexes[ind]] = elem.txtValues[ind];
             }
         }
 

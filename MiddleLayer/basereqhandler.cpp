@@ -1,5 +1,4 @@
 #include "basereqhandler.h"
-#include "../DDE_CAN_LIB/DDE_EMUL.h"
 
 BaseReqHandler::BaseReqHandler(IDDE *dde)
 {

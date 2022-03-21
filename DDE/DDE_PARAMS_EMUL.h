@@ -1,10 +1,9 @@
 #pragma once
 
-#include "DDE_TYPES.h"
 #include "DDE_PARAMS_TYPE.h"
-#include "my_func.h"
+#include "DDE_PARAMS_TYPES.h"
 
-//#define PARAMS_ID_MAX		0xfff
+#include "my_func.h"
 
 #define PARAMS_REQUEST_TIMOUT_MS	1000
 #define DDE_PARAMS_NAME_LENGTH 64
@@ -34,7 +33,7 @@ struct PARAMS_EMUL_SETTINGS
     bool isSinusoidal = true;
 };
 
-struct DEVICE_PARAMS_EMUL: public DEVICE_ELEMENTS
+struct DEVICE_PARAMS_EMUL: public DEVICE_PARAMS
 {
     PARAMS_EMUL_SETTINGS el_Settings[PARAMS_ID_MAX + 1];
 };
@@ -49,7 +48,7 @@ public:
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p);
 	
-    virtual _dde_func_return_t init();
+    virtual _dde_func_return_t init(char* device_description);
 
 protected:
     uint32_t get_list_maxsize;

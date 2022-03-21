@@ -4,18 +4,6 @@
 #include "DDE_PARAMS_TYPE.h"
 #include "cpp_inc.h"
 
-
-
-
-//#define SUB_INDEX_MAX	0x3f
-//#define ADDRESS_MAX		0xfff
-
-//#define PARAMS_ID_MAX		0xfff
-//#define PARAMS_DEVICES_MAX	127
-
-#define PARAMS_REQUEST_TIMOUT_MS	1000
-#define DDE_PARAMS_NAME_LENGTH      64
-
 class DDE_PARAMS : public IDDE_PARAMS
 {
 public:

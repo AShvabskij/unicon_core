@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DDE_TYPES.h"
+#include "DDE_PARAMS_TYPE.h"
 
 int PARAMS_DATA_init(char* device_description);
 

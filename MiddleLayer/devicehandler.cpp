@@ -71,19 +71,12 @@ int DeviceHandler::requestDevices(int requestId)
     header.device_ID = 0;
     m_dde->get_params_header(header);
 
-    DDE_GET_SUBSYSTEM system;
-    m_dde->get_subsystem_header(system);
-
     for (int i = 0; i < header.el_count; i++) {
         Device d;
         d.id = header.el_descr[i].id;
         d.name = header.el_descr[i].name;
         d.desc = header.el_descr[i].descr;
-        if (i == 0 ) {
-            d.channel = channelType(system.name);
-        } else {
-            d.channel = ChannelType::MOD_BUS_FO;
-        }
+        d.channel = ChannelType::MOD_BUS_FO;
 
         devices << d;
     }
@@ -92,7 +85,8 @@ int DeviceHandler::requestDevices(int requestId)
 
         DDE_GET_PARAMS_HEADER modules;
         modules.device_ID = d.id;
-        modules.elem_ID = 0;
+        modules.param_ID = 0;
+        modules.module_ID = 0;
         m_dde->get_params_header(modules);
 
         for (int i = 0; i < modules.el_count; i++) {
@@ -124,7 +118,8 @@ int DeviceHandler::requestDeviceHeader(int deviceId, int requestId)
 
     DDE_GET_PARAMS_HEADER modules;
     modules.device_ID = deviceId;
-    modules.elem_ID = 0;
+    modules.param_ID = 0;
+    modules.module_ID = 0;
     m_dde->get_params_header(modules);
 
     for (int i = 0; i < modules.el_count; i++) {
@@ -161,7 +156,7 @@ int DeviceHandler::requestModuleHeader(int deviceId, int moduleId, int requestId
 
     DDE_GET_PARAMS_HEADER modules;
     modules.device_ID = deviceId;
-    modules.elem_ID = moduleId;
+    modules.module_ID = moduleId;
     m_dde->get_params_header(modules);
 
     for (int i = 0; i < modules.el_count; i++) {

@@ -60,7 +60,7 @@ private:
     int handleCloseStream(const QJsonObject &request);
 
     long getParamValue(const Param &p, ParamValue* out);
-    long getParamHeader(int deviceId, int paramId, Param *out);
+    long getParamHeader(int deviceId, int moduleId, int paramId, Param *out);
     long getParamHeaders(int deviceId, int moduleId, ParamList *out);
     long setParamValue(const Param& param, const ParamValue &value);
 

@@ -3,7 +3,7 @@
 
 #include "ireqhandler.h"
 #include "responsemanager.h"
-#include "../DDE_CAN_LIB/DDE/DDE.h"
+#include "DDE.h"
 
 class BaseReqHandler : public IReqHandler
 {

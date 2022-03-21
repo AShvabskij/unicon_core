@@ -2,8 +2,7 @@
 
 #include <iostream>
 
-#include "../DDE_CAN_LIB/DDE_CAN.h"
-#include "../DDE_CAN_LIB/DDE_EMUL.h"
+#include "DDE_EMUL.h"
 
 #include "requestmanager.h"
 #include "responsemanager.h"
@@ -55,7 +54,7 @@ int Core::test()
     std::cout << "DDE template started..." << std::endl;
 
 
-    m_dde = new DDE_CAN();
+    m_dde = new DDE_EMUL();
 
     m_dde->init(0); //run thread
 
@@ -92,11 +91,9 @@ int Core::test()
 
         ////try to get modules from device
         DDE_GET_PARAMS_HEADER get_modules_header;
-        get_modules_header.elem_ID = 0;
         get_modules_header.device_ID = get_devices_header.el_descr[ii].id;
         m_dde->get_params_header(get_modules_header);
         print_modules(get_modules_header);
-
     }
 
     delete m_dde;
@@ -116,7 +113,7 @@ void Core::print_modules(const DDE_GET_PARAMS_HEADER& p)
 
             DDE_GET_PARAMS_HEADER get_params_header;
             get_params_header.device_ID = p.device_ID;
-            get_params_header.elem_ID = p.el_descr[ii].id;
+            get_params_header.module_ID = p.el_descr[ii].id;
             m_dde->get_params_header(get_params_header);
             print_params(p.device_ID,ii,get_params_header);
     }

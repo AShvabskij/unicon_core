@@ -3,13 +3,12 @@
 
 //---------------------------------------------------------------------
 
+#include <DDE_TYPES.h>
 #include <time.h> 
 #include <stdint.h>
 
 #define MAX_DEV_SUPPORT  4      //32
 
-
-#define PARAMS_REQUEST_TIMOUT_MS	1000
 
 #define PARAMS_ID_MAX		64
 #define MODULES_ID_MAX		64
@@ -54,12 +53,12 @@ enum GLIO_ELEMENT_UNIT_ENUM
 typedef struct
 {
     uint16_t id; //INDEX_MAX max = 64
-    //uint8_t sub_index; //SUB_INDEX_MAX max = 64
+    uint16_t module_id;
 
 	char name[DDE_PARAMS_NAME_LENGTH];
     char descr[DDE_PARAMS_DESCR_LENGTH];
 
-#ifdef SET_CPP
+#ifdef __cplusplus
     GLIO_ELEMENT_FORMAT_ENUM format;  // 0 - not defined 1-int 2-float 3-bit, 4-hex, 5-text
 #else
     int format;
@@ -67,10 +66,8 @@ typedef struct
 
     float scale;
     char dim[UNITS_SIZE]; // unit of measurement
-    uint8_t total;
-    char *txtValues;//[DDE_PARAMS_TXTVALUES_MAX_COUNT]; // list of predefined text values
-    int *txtIndexes;//[DDE_PARAMS_TXTVALUES_MAX_COUNT];
-//  std::map<int, char*> txtValues; // std::map does work unstable
+    char* txtValues[DDE_PARAMS_TXTVALUES_MAX_COUNT]; // list of predefined text values
+    int txtSubIndexes[DDE_PARAMS_TXTVALUES_MAX_COUNT];
     bool writable;
 } GLIO_ELEMENT_DESCR;
 #pragma pack(pop)
@@ -132,17 +129,6 @@ typedef struct
 #pragma pack(pop)
 
 
-
-#pragma pack(push,1)
-typedef struct
-{
-    char name[DDE_PARAMS_NAME_LENGTH];
-    char descr[DDE_PARAMS_DESCR_LENGTH];
-} DDE_GET_SUBSYSTEM;
-#pragma pack(pop)
-
-
-
 //#pragma pack(push,1)
 typedef struct
 {
@@ -154,8 +140,6 @@ typedef struct
 	GLIO_ELEMENT_DESCR el_descr[64]; //not more then 64 params at a time
 	uint16_t timeout; //each request has it own timeout counter
 	uint16_t timeout_flg;//
-	//void* (*callback_func)();
-	//std::queue <DDE_EVLOG_MSG> queue; this will requier auto_ptr to be deleted, i prefer to control memory 	
 } DDE_GET_PARAMS_HEADER; 
 //#pragma pack(pop)
 
@@ -172,11 +156,8 @@ typedef struct
     GLIO_ELEMENT_VALUE el[64];	//not more then 64 params at a time
 	uint16_t timeout; //each request has it own timeout counter
 	uint16_t timeout_flg;//
-	//void* (*callback_func)();
-    //std::queue <DDE_EVLOG_MSG> queue; this will requier auto_ptr to be deleted, i prefer to control memory
 } DDE_GET_PARAMS_DATA;
 //#pragma pack(pop)
-
 
 
 //---------------------------------------------------------------------
@@ -190,11 +171,11 @@ public:
 
     virtual ~IDDE_PARAMS() {};
 
-    virtual long get(DDE_GET_PARAMS_HEADER& p) = 0;
-    virtual long get(DDE_GET_PARAMS_DATA& p) = 0;
-    virtual long set(DDE_SET_PARAMS_DATA& p) = 0;
+    virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p) = 0;
+    virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p) = 0;
+    virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p) = 0;
     
-    virtual long init(char*device_description) = 0;
+    virtual _dde_func_return_t init(char* device_description) = 0;
 };
     
 #endif
