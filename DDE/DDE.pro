@@ -35,11 +35,11 @@ HEADERS += \
     DDE_PARAMS_FILE.h \
     DDE_PARAMS_TYPE.h \
     DDE_TYPES.h \
-    DDE_EMUL.h \
-    csvfile.h
+    DDE_EMUL.h
 
 INCLUDEPATH += $$PWD/../utils/IPCmemLib
 INCLUDEPATH += $$PWD/../utils/SQLite3Lib
+INCLUDEPATH += $$PWD/../utils/csvfile
 
 # Default rules for deployment.
 unix {
