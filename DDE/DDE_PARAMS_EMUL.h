@@ -1,7 +1,6 @@
 #pragma once
 
 #include "DDE_PARAMS_TYPE.h"
-#include "DDE_PARAMS_TYPES.h"
 
 #include "my_func.h"
 
@@ -33,8 +32,16 @@ struct PARAMS_EMUL_SETTINGS
     bool isSinusoidal = true;
 };
 
-struct DEVICE_PARAMS_EMUL: public DEVICE_PARAMS
+struct DEVICE_PARAMS_EMUL
 {
+    uint8_t device_ID;
+
+    char name[DDE_PARAMS_NAME_LENGTH];
+    char descr[DDE_PARAMS_DESCR_LENGTH];
+
+    GLIO_ELEMENT_DESCR el_descr[ELEMENTS_ID_MAX + 1];
+    GLIO_ELEMENT_VALUE el[ELEMENTS_ID_MAX + 1];
+
     PARAMS_EMUL_SETTINGS el_Settings[PARAMS_ID_MAX + 1];
 };
 

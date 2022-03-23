@@ -68,4 +68,4 @@ else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../D
 else:unix: PRE_TARGETDEPS += $$PWD/../DDE/debug/libDDE.a
 
 SUBDIRS += \
-    ../DDE/dde_layer.pro
+    ../DDE/dde.pro

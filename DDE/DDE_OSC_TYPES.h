@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <time.h>
 
-#include "DDE_PARAMS_TYPES.h"
+#include "DDE_PARAMS_TYPE.h"
 
 #define OSC_ANALOG_CHANNELS 47
 #define OSC_DISCRETE_CHANNELS 128

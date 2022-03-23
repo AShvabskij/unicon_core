@@ -1,12 +1,23 @@
 #pragma once
 
-#include "DDE_PARAMS_TYPES.h"
+#include "DDE_PARAMS_TYPE.h"
 #include <string>
 #include <fstream>
 #include <vector>
 #include <thread>
 
 #include "csvfile.h"
+
+struct DEVICE_PARAMS
+{
+    uint8_t device_ID;
+
+    char name[DDE_PARAMS_NAME_LENGTH];
+    char descr[DDE_PARAMS_DESCR_LENGTH];
+
+    GLIO_ELEMENT_DESCR el_descr[ELEMENTS_ID_MAX + 1];
+    GLIO_ELEMENT_VALUE el[ELEMENTS_ID_MAX + 1];
+};
 
 class DDE_PARAMS_FILE : public IDDE_PARAMS
 {

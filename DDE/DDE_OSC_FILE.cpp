@@ -1,12 +1,12 @@
 #include "DDE_OSC_FILE.h"
+
 #include <cmath>
 #include <chrono>
-
-#include <string.h>
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include <iomanip>
+
+#include "my_func.h"
 
 using namespace std;
 using namespace OSC_FILE;

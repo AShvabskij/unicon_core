@@ -3,21 +3,6 @@
 
 #include "basereqhandler.h"
 
-struct ParamValue
-{
-    QVariant value;
-    qlonglong timestamp = 0;
-
-    QJsonObject toJson() const {
-        QJsonObject el;
-        el["value"] = value.toJsonValue();
-        el["time"] = timestamp;
-
-        return el;
-    }
-};
-typedef QVector<ParamValue> ParamValueList;
-
 struct Param
 {
     int id = 0;
@@ -36,6 +21,28 @@ struct Param
     }
 };
 typedef QVector<Param> ParamList;
+
+struct ParamValue
+{
+    int id = 0;
+    int deviceId = 0;
+    int moduleId = 0;
+
+    QVariant value;
+    qlonglong timestamp = 0;
+
+    qint8 format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_UNDEFINED;
+    float scale = 0.0;
+
+    QJsonObject toJsonValue() const {
+        QJsonObject el;
+        el["value"] = value.toJsonValue();
+        el["time"] = timestamp;
+
+        return el;
+    }
+};
+typedef QVector<ParamValue> ParamValueList;
 
 class ParamsHandler : public BaseReqHandler
 {
@@ -60,13 +67,14 @@ private:
     int handleCloseStream(const QJsonObject &request);
 
     long getParamValue(const Param &p, ParamValue* out);
+    long getParamValue(int deviceId, int moduleId, int paramId, ParamValue* out);
     long getParamHeader(int deviceId, int moduleId, int paramId, Param *out);
     long getParamHeaders(int deviceId, int moduleId, ParamList *out);
-    long setParamValue(const Param& param, const ParamValue &value);
+    long setParamValue(const ParamValue &value);
 
-    ParamValue valueFrom(const GLIO_ELEMENT_VALUE &el, const GLIO_ELEMENT_FORMAT_ENUM& format);
+    ParamValue valueFrom(int deviceId, int moduleId, const GLIO_ELEMENT_VALUE &el);
     QJsonObject createHeaderObj(int requestId, const ParamList &params);
-    QJsonObject createValueObj(int requestId, const Param& param, const ParamValue& value, int error = 0);
+    QJsonObject createValueObj(int requestId, const ParamValue& value, int error = 0);
     QJsonObject createStreamValueObj(const Param& param, const ParamValue& value, int error = 0);
 
     void startPooling(int intervalMsc);

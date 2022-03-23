@@ -1,12 +1,12 @@
 #include "DDE_PARAMS_FILE.h"
-#include <string>
+
 #include <cmath>
 #include <chrono>
-
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include <iomanip>
+
+#include "my_func.h"
 #include "csvfile.h"
 
 using namespace std;
@@ -83,6 +83,8 @@ _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
         el_descr.scale = 0;
 
         el_value.id = paramId;
+        el_value.format = el_descr.format;
+        el_value.scale = el_descr.scale;
         if (el_descr.format == GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT) {
             float fvalue = atof(cells[10].c_str());
             memcpy(&el_value.ivalue, &fvalue, sizeof (float));
@@ -90,6 +92,7 @@ _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
             el_value.ivalue = atoi(cells[10].c_str());
         }
         el_value.timestamp = 0;
+        el_value.text_id = (el_descr.format == GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT) ? el_value.ivalue : 0;
 
         if (cells.size() >= 12) {
             auto txtValues = split(cells[11].c_str(), ',');
@@ -200,6 +203,9 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
             auto el = m_device[p.device_id].el[paramId];
             p.el[ii].id = paramId;
             p.el[ii].ivalue = el.ivalue;
+            p.el[ii].text_id = el.text_id;
+            p.el[ii].format = el.format;
+            p.el[ii].scale = el.scale;
             p.el[ii].timestamp = systemTime();
         }
     } else {
@@ -207,6 +213,9 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
         auto el = m_device[p.device_id].el[paramId];
         p.el[0].id = paramId;
         p.el[0].ivalue = el.ivalue;
+        p.el[0].text_id = el.text_id;
+        p.el[0].format = el.format;
+        p.el[0].scale = el.scale;
         p.el[0].timestamp = systemTime();
 
         uint8_t format = m_device[p.device_id].el_descr[paramId].format;

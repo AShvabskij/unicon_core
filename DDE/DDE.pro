@@ -33,7 +33,6 @@ HEADERS += \
     DDE_PARAMS.h \
     DDE_PARAMS_EMUL.h \
     DDE_PARAMS_FILE.h \
-    DDE_PARAMS_TYPES.h \
     DDE_PARAMS_TYPE.h \
     DDE_TYPES.h \
     DDE_EMUL.h \

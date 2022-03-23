@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <thread>
 
 namespace OSC_FILE {
 struct VAR_DESCR
