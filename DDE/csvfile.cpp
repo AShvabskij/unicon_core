@@ -22,10 +22,16 @@ CsvFile::~CsvFile()
     delete m_loadThread;
 }
 
+int CsvFile::setWorkDirectory(const string &path)
+{
+    m_workDirectory = path;
+}
+
 int CsvFile::open(const string &fileName)
 {
     if (m_fileName != fileName || m_buff.empty()) {
-        ifstream file = openFile(fileName);
+        string filePath = m_workDirectory.empty() ? fileName : m_workDirectory + fileName;
+        ifstream file = openFile(filePath);
         if (!file.is_open()) {
             cout << FILE_ERROR;
             return OPEN_FILE_ERROR;
@@ -54,12 +60,9 @@ int CsvFile::open(const string &fileName)
     return 0;
 }
 
-std::ifstream CsvFile::openFile(const std::string& fileName)
+std::ifstream CsvFile::openFile(const std::string& filePath)
 {
-    std::ifstream file("/home/pi/Desktop/Release/" + fileName);
-    if (!file.is_open()) {
-        file.open(fileName);
-    }
+    std::ifstream file(filePath);
 
     int res = file.is_open() ? 0 : -1;
     if (res != 0) {

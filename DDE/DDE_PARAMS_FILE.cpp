@@ -32,6 +32,12 @@ _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
     int devices_step = 11;
 
     CsvFile* file = new CsvFile();
+    assert(file);
+
+    #ifdef __arm__
+        file->setWorkDirectory("/home/pi/Desktop/Release/");
+    #endif
+
     for (int ii = 1; ii < devices_count * devices_step; ii = ii + devices_step)	{
         string fileName = "parameters_"+to_string(ii) + ".csv";
         res = file->open(fileName);
