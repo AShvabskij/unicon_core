@@ -2,7 +2,7 @@
 
 #include "DDE_PARAMS_TYPE.h"
 
-#include "my_func.h"
+#include "cpp_inc.h"
 
 #define PARAMS_REQUEST_TIMOUT_MS	1000
 #define DDE_PARAMS_NAME_LENGTH 64

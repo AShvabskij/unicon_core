@@ -6,7 +6,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "my_func.h"
+#include "cpp_inc.h"
 
 using namespace std;
 using namespace OSC_FILE;

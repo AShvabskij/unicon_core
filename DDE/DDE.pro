@@ -22,7 +22,7 @@ SOURCES += \
     csvfile.cpp
 
 HEADERS += \
-    my_func.h \
+    cpp_inc.h \
     DDE.h \
     DDE_EVLOG.h \
     DDE_EVLOG_TYPES.h \
