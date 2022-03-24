@@ -22,6 +22,7 @@ SOURCES += \
     csvfile.cpp
 
 HEADERS += \
+    DDE_INTERFACES.h \
     cpp_inc.h \
     DDE.h \
     DDE_EVLOG.h \

@@ -45,15 +45,3 @@ struct DDE_SET_EVLOG_DATA
     uint32_t some_param_to_set3; //reserved for future use
     uint32_t some_param_to_set4; //reserved for future use
 };
-
-class IDDE_EVLOG
-{
-public:
-    ~IDDE_EVLOG() {};
-
-    virtual _dde_func_return_t init() = 0;
-    virtual _dde_func_return_t get(DDE_GET_EVLOG_HEADER&p) = 0;
-    virtual _dde_func_return_t get(DDE_GET_EVLOG_DATA&p) = 0;
-    virtual _dde_func_return_t set(DDE_SET_EVLOG_DATA&p) = 0;
-};
-

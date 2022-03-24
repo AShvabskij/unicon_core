@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <time.h>
 
-#include "DDE_PARAMS_TYPE.h"
+#include "DDE_TYPES.h"
 
 #define OSC_ANALOG_CHANNELS 47
 #define OSC_DISCRETE_CHANNELS 128
@@ -93,15 +93,5 @@ struct DDE_GET_OSC_DATA
 struct DDE_SET_OSC_DATA
 {
     uint32_t addr_start;
-};
-
-class IDDE_OSC
-{
-public:
-    ~IDDE_OSC() {};
-
-    virtual int get(DDE_GET_OSC_HEADER& p) = 0;
-    virtual int get(DDE_GET_OSC_DATA& p) = 0;
-    virtual int set(DDE_GET_OSC_HEADER& p) = 0;
 };
 

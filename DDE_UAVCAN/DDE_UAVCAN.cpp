@@ -27,7 +27,7 @@ _dde_func_return_t DDE_UAVCAN::init()
     osc = new DDE_OSC();
     evlog = new DDE_EVLOG();
 
-	params->init();
+	params->init("UAVCAN");
 	//osc->
 
 	//TDDE_UAVCAN_MASTER _uavcan_master = DDE_UAVCAN_MASTER_DEFAULTS;
@@ -103,7 +103,7 @@ _dde_func_return_t DDE_UAVCAN::update()
 	if (res == _return_OK) {
 		uint16_t addr = set_params.param_id;// ((set_params.param_ID & 0xff) << 8) | set_params.module_ID & 0xff;
 		//uint32_t ivalue = 100;
-		uavcan_master.set_param(set_params.device_id, addr, set_params.el.ivalue);
+		uavcan_master.set_param(set_params.device_id, addr, set_params.ivalue);
 		req_counter++;
 		//printf("req_counter= %d\n", req_counter);
 	}

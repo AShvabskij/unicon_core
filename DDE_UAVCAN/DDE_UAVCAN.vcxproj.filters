@@ -183,6 +183,9 @@
     <ClInclude Include="..\utils\SQLite3Lib\sqlite3_lib.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\DDE\DDE_INTERFACES.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.gitignore" />

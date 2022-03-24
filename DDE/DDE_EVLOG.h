@@ -4,6 +4,7 @@
 
 
 #include "DDE_EVLOG_TYPES.h"
+#include "DDE_INTERFACES.h"
 
 class DDE_EVLOG : public IDDE_EVLOG
 {

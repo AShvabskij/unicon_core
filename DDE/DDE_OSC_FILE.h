@@ -1,11 +1,13 @@
 #pragma once
 
-#include "DDE_TYPES.h"
-#include "DDE_OSC_TYPES.h"
 #include <string>
 #include <fstream>
 #include <vector>
 #include <thread>
+
+#include "DDE_TYPES.h"
+#include "DDE_OSC_TYPES.h"
+#include "DDE_INTERFACES.h"
 
 namespace OSC_FILE {
 struct VAR_DESCR

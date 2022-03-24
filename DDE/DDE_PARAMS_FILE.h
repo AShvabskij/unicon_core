@@ -1,12 +1,15 @@
 #pragma once
 
-#include "DDE_PARAMS_TYPE.h"
 #include <string>
 #include <fstream>
 #include <vector>
 #include <thread>
 
 #include "csvfile.h"
+
+#include "DDE_TYPES.h"
+#include "DDE_PARAMS_TYPE.h"
+#include "DDE_INTERFACES.h"
 
 struct DEVICE_PARAMS
 {

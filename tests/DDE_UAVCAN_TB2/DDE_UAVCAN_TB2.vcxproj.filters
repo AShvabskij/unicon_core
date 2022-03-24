@@ -78,5 +78,8 @@
     <ClInclude Include="..\..\utils\clogs\inc.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE_INTERFACES.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

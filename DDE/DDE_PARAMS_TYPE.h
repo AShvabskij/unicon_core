@@ -1,9 +1,7 @@
 #pragma once
 
-
 //---------------------------------------------------------------------
 
-#include <DDE_TYPES.h>
 #include <time.h> 
 #include <stdint.h>
 
@@ -109,6 +107,7 @@ typedef struct {
 } DDE_PARAMS_CMD;
 #pragma pack(pop)
 
+
 // all parameters of the device !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #pragma pack(push,1)
 typedef struct
@@ -144,7 +143,6 @@ typedef struct
 //#pragma pack(pop)
 
 
-
 //#pragma pack(push,1)
 typedef struct
 {
@@ -158,25 +156,3 @@ typedef struct
 	uint16_t timeout_flg;//
 } DDE_GET_PARAMS_DATA;
 //#pragma pack(pop)
-
-
-//---------------------------------------------------------------------
-
-
-#ifdef __cplusplus 
-
-class IDDE_PARAMS
-{
-public:
-
-    virtual ~IDDE_PARAMS() {};
-
-    virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p) = 0;
-    virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p) = 0;
-    virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p) = 0;
-    
-    virtual _dde_func_return_t init(char* device_description) = 0;
-};
-    
-#endif
-

@@ -100,6 +100,7 @@
     <ClInclude Include="..\..\DDE\DDE.h" />
     <ClInclude Include="..\..\DDE\DDE_EVLOG.h" />
     <ClInclude Include="..\..\DDE\DDE_EVLOG_TYPES.h" />
+    <ClInclude Include="..\..\DDE\DDE_INTERFACES.h" />
     <ClInclude Include="..\..\DDE\DDE_OSC.h" />
     <ClInclude Include="..\..\DDE\DDE_OSC_EMUL.h" />
     <ClInclude Include="..\..\DDE\DDE_OSC_FILE.h" />

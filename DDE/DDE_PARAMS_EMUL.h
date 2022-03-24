@@ -1,6 +1,8 @@
 #pragma once
 
+#include "DDE_TYPES.h"
 #include "DDE_PARAMS_TYPE.h"
+#include "DDE_INTERFACES.h"
 
 #include "cpp_inc.h"
 

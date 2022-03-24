@@ -147,7 +147,7 @@ static void thread_proc_test_app_call() {
 				set_params_data.device_id = cmd.device_id;
 				set_params_data.module_id = cmd.module_id;
 				set_params_data.param_id = cmd.param_id;
-				set_params_data.el.ivalue = cmd.ivalue;
+				set_params_data.ivalue = cmd.ivalue;
 				//mDDE_UAVCAN->set_params_data(set_params_data);
 				
 			}

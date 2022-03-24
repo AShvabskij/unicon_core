@@ -2,6 +2,7 @@
 
 #include "DDE_TYPES.h"
 #include "DDE_OSC_TYPES.h"
+#include "DDE_INTERFACES.h"
 
 class DDE_OSC_EMUL : public IDDE_OSC
 {

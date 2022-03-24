@@ -38,7 +38,7 @@ int main()
         set_params.device_id = 11;
         set_params.module_id = (_addr >> 6) & 0x3f;
         set_params.param_id = _addr & 0x3f;
-        set_params.el.ivalue = _addr;
+        set_params.ivalue = _addr;
         res = dde->set_params_data(set_params);
         if (res < 0) perror("dde->get_params_data(get_params)");
 

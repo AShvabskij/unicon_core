@@ -2,6 +2,8 @@
 
 #include "DDE_TYPES.h"
 #include "DDE_PARAMS_TYPE.h"
+#include "DDE_INTERFACES.h"
+
 #include "cpp_inc.h"
 
 class DDE_PARAMS : public IDDE_PARAMS
