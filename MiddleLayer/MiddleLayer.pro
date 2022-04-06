@@ -69,3 +69,6 @@ else:unix: PRE_TARGETDEPS += $$PWD/../DDE/debug/libDDE.a
 
 SUBDIRS += \
     ../DDE/dde.pro
+
+DISTFILES += \
+    ConnectPane.qml

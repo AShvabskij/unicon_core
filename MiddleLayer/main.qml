@@ -3,18 +3,24 @@ import QtQuick.Window 2.1
 import QtQuick.Controls 2.3
 
 import QtQuick.Layouts 1.1
+import QtQuick.Controls.Material 2.12
 
 import "components"
 import solcon.qmlmodels 1.0
 
-Window {
+ApplicationWindow {
     id: main
     width: 720
     height: 770
-    color: "#868482"
+    color: "gray"//"#868482"
 
     visible: true
     property bool connected: false
+
+    Component.onCompleted: {
+        x = Screen.width / 2 - width / 2
+        y = Screen.height / 2 - height / 2
+    }
 
     MainWindowVM {
         id: model
@@ -35,6 +41,35 @@ Window {
         }
     }
 
+    Action {
+        id: mainMenu
+        icon.name: "back"
+        onTriggered: {
+        }
+    }
+
+    header: ToolBar {
+        Material.foreground: "white"
+
+        RowLayout {
+            spacing: 20
+            anchors.fill: parent
+/*
+            ToolButton {
+                action: mainMenu
+            }
+*/
+            Label {
+                id: titleLabel
+                text: "UNICON SYSTEM"
+                font.pixelSize: 20
+                elide: Label.ElideRight
+                horizontalAlignment: Qt.AlignHCenter
+                verticalAlignment: Qt.AlignVCenter
+                Layout.fillWidth: true
+            }
+        }
+    }
 
     Column  {
         id: columnControls
@@ -61,227 +96,63 @@ Window {
 
         state: main.connected ? "connected" : "disconnected"
 
-        spacing: 20
+        spacing: 10
 //      anchors.fill: parent
         width: parent.width
         anchors.top: parent.top
-
-
         anchors.margins: 10
-        Row {
-            spacing: 20
-            width: parent.width
 
-            Text {
-                id: labelTitle
-                width: parent.width
-                horizontalAlignment: Text.AlignHCenter
-                font.pixelSize: 30
-                font.bold: true
-                text: "UNICON SYSTEM"
-            }
-        }
-
-        Divider {
-            label: "Server"
-        }
-
-        Row {
-            id: rowConnect
-
-            spacing: 20
-            width: parent.width
-            height: 30
-            anchors.margins: 5
-
-            Button {
-                id: btnStart
-                height: 30
-                width: 120
-                text: "Connect"
-                onClicked: {
-                    console.info("clicked! connected status = " + main.connected);
-
-                    if (!main.connected) {
-                        console.info("let's start");
-                        model.start()
-                    } else {
-                        model.close()
-                    }
-                }
-            }
-
-            TextField {
-                id: host
-                width: 120
-                height: 30
-                color: "black"
-                background: Rectangle {
-                    border.color: "red"
-                    color: "lightyellow"
-                }
-                text: qsTr("127.0.0.1:1235")
-                font.pointSize: 10
-            }
-
-            Text {
-                id: lblPort
-                height: 30
-                color: "#ffffff"
-                verticalAlignment: Text.AlignVCenter
-                lineHeightMode: Text.ProportionalHeight
-                font.pointSize: 12
-                fontSizeMode: Text.FixedSize
-                text: main.connected ? "connected!" : "closed"
-            }
-        }
+        ConnectPane{}
 
         Divider {
             label: "Devices"
         }
 
-        Row {
-            id: rowDevice
+        DevicePane {
 
-            spacing: 20
-            width: parent.width
-            anchors.margins: 5
-
-            Text {
-                height: 30
-                color: "#ffffff"
-                verticalAlignment: Text.AlignVCenter
-                text: "Device header, id:"
-                font.pointSize: 12
-            }
-
-            TextField {
-                id: deviceNum
-                width: 120
-                height: 30
-                color: "black"
-                background: Rectangle {
-                    border.color: "red"
-                    color: "lightyellow"
-                }
-                text: qsTr("0")
-                font.pointSize: 12
-            }
-
-            Button {
-                id: btnDevice
-                width: 120
-                text: "Get"
-                onClicked: {
-                    model.receiveDeviceInfo()
-                }
-            }
         }
 
         Divider {
+            id: test
             label: "Params"
         }
 
-        Row {
-            id: rowParam
-            spacing: 20
+        Column {
+            spacing: 1
             width: parent.width
-            anchors.margins: 5
 
-            Text {
-                height: 30
-                color: "white"
-                verticalAlignment: Text.AlignVCenter
-                text: "Param header, id:"
-                font.pointSize: 12
-            }
-
-            TextField {
-                id: paramIndex
-                width: 120
-                height: 30
-                color: "black"
-                background: Rectangle {
-                    border.color: "red"
-                    color: "lightyellow"
-                }
-                text: qsTr("0")
-                font.pointSize: 12
-            }
-
-            Button {
-                id: btnParamInfo
-                width: 120
-                text: "Get"
-                onClicked: {
-                    model.receiveParamInfo();
-                }
-            }
-        }
-
-        Row {
-            id : rowParamValues
-            spacing: 20
-
-            width: parent.width
-            anchors.margins: 5
-
-            Text {
-                height: 30
-                color: "white"
-                verticalAlignment: Text.AlignVCenter
-                text: "Param value, id:  "
-                font.pointSize: 12
-            }
-
-            TextField {
-                id: valueParamIndex
-                width: 120
-                height: 30
-                color: "black"
-                background: Rectangle {
-                    border.color: "red"
-                    color: "lightyellow"
-                }
-                text: qsTr("0")
-                font.pointSize: 12
-            }
-
-            Button {
-                id: btnParamValues
-                width: 120
-                text: "Get"
-                onClicked: {
-                    model.receiveParamValues()
-                }
-            }
-
-            Button {
-                id: btnParamStream
-                width: 120
-                text: "Stream"
-                onClicked: {
-                    model.streamParamValues()
-                }
-            }
-
-            Button {
-                id: btnParamOsc
-                width: 120
-                text: "Oscilloscope"
-                onClicked: {
-                    model.oscParamValues()
-                }
-            }
-
+            ParameterPane {}
+            ParameterPane {}
         }
 
         Divider {
             label: "Data Log"
         }
+
     } // column
 
 
+/*
+    Item {
+        anchors.top: buttonRow.bottom
+        ListView {
+            id: listview
+            anchors.top: columnControls.bottom
+            height: 200
+
+            width: parent.width
+            model : 2
+            boundsBehavior: Flickable.StopAtBounds
+            delegate: ParameterPane {}
+
+            contentWidth: 520
+            flickableDirection: Flickable.AutoFlickDirection
+        }
+        Scrollbar {
+            flickableItem: list
+            align: Qt.AlignTrailing
+        }
+*/
     Flickable {
         id: flickable
         anchors.top: columnControls.bottom
@@ -294,9 +165,10 @@ Window {
 
             id: dataLog
             width: parent.width
+            wrapMode: TextArea.Wrap
             color : "white"
-            font.pointSize: 12
-            font.bold: true
+            font.pointSize: 10
+            font.bold: false
 
             leftPadding: 6
             rightPadding: 6
@@ -307,13 +179,15 @@ Window {
                 border.color: "black"
                 border.width: 2
                 radius: 4
-                color: "#868482"
+                color: "black" //"#868482"
             }
-
             text: qsTr("Hello\nHello")
+            placeholderText: qsTr("Enter description")
+            selectByMouse : true
         }
         ScrollBar.vertical: ScrollBar { id: scroll}
     }
+
 }
 
 

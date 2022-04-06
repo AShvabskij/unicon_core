@@ -50,15 +50,20 @@
 
 //Import the declarative plugins
 import QtQuick 2.0
+import QtGraphicalEffects 1.1
 
 //Implementation of the Button control.
 Item {
     id: button
-    width: 100
-    height: 30
+    width: 80
+    height: 20
     property alias text: innerText.text
     signal clicked
-
+    layer.effect: DropShadow {
+           verticalOffset: 1
+           color: button.visualFocus ? "#330066ff" : "#aaaaaa"
+           spread: 0.5
+       }
     Image {
         id: backgroundImage
         anchors.fill: parent
@@ -69,8 +74,8 @@ Item {
         id: innerText
         anchors.centerIn: parent
         color: "white"
-        font.pointSize: 12
-        font.bold: true
+        font.pointSize: 10
+        font.bold: false
     }
 
     //Mouse area to react on click events
