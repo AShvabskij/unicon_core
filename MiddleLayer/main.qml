@@ -10,8 +10,8 @@ import solcon.qmlmodels 1.0
 
 ApplicationWindow {
     id: main
-    width: 720
-    height: 770
+    width: 750
+    height: 860
     color: "gray"//"#868482"
 
     visible: true
@@ -23,13 +23,15 @@ ApplicationWindow {
     }
 
     MainWindowVM {
-        id: model
-        deviceId: deviceNum.text
-        paramIndex: paramIndex.text
-        valueParamIndex: valueParamIndex.text
+        id: mainModel
+        deviceId: devicePane.deviceId
 
         onDataReceived: {
-            dataLog.text += "\n" + msg
+            dataLog.text += "Received: " + msg + "\n"
+            flickable.contentY = (flickable.contentHeight - flickable.height) > 0 ? flickable.contentHeight - flickable.height : flickable.contentY
+        }
+        onDataRequest: {
+            dataLog.text += "\nSend: " + msg + "\n"
             flickable.contentY = (flickable.contentHeight - flickable.height) > 0 ? flickable.contentHeight - flickable.height : flickable.contentY
         }
         onConnected: {
@@ -61,7 +63,7 @@ ApplicationWindow {
 */
             Label {
                 id: titleLabel
-                text: "UNICON SYSTEM"
+                text: "UNICON TEST PANEL"
                 font.pixelSize: 20
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
@@ -79,18 +81,18 @@ ApplicationWindow {
         states: [
             State {
                 name: "connected"
-                PropertyChanges { target: btnStart; text: "Close" }
-                PropertyChanges { target: rowDevice; enabled: true }
-                PropertyChanges { target: rowParam; enabled: true }
-                PropertyChanges { target: rowParamValues; enabled: true }
+                PropertyChanges { target: connectPane; connected: true }
+                PropertyChanges { target: devicePane; enabled: true }
+                PropertyChanges { target: oscPane; enabled: true }
+                PropertyChanges { target: paramsPane; enabled: true }
 
             },
             State {
                 name: "disconnected"
-                PropertyChanges { target: btnStart; text: "Connect" }
-                PropertyChanges { target: rowDevice; enabled: false }
-                PropertyChanges { target: rowParam; enabled: false }
-                PropertyChanges { target: rowParamValues; enabled: false }
+                PropertyChanges { target: connectPane; connected: false }
+                PropertyChanges { target: devicePane; enabled: false }
+                PropertyChanges { target: oscPane; enabled: false }
+                PropertyChanges { target: paramsPane; enabled: false }
             }
         ]
 
@@ -102,27 +104,53 @@ ApplicationWindow {
         anchors.top: parent.top
         anchors.margins: 10
 
-        ConnectPane{}
-
-        Divider {
-            label: "Devices"
-        }
-
-        DevicePane {
-
-        }
-
-        Divider {
-            id: test
-            label: "Params"
+        ConnectPane {
+            id: connectPane
+            model : mainModel
         }
 
         Column {
+            id: devices
             spacing: 1
             width: parent.width
 
-            ParameterPane {}
-            ParameterPane {}
+            Divider {
+                label: "Devices"
+            }
+
+            DevicePane {
+                id: devicePane
+                model : mainModel
+            }
+            OscPane {
+                id: oscPane
+                model : mainModel
+            }
+        }
+
+        Column {
+            id: paramsPane
+            spacing: 1
+            width: parent.width
+
+            Divider {
+                label: "Params"
+            }
+
+            ParameterPane {
+                id: readParam
+                model: mainModel
+                num: 1
+                info: mainModel.paramInfo1
+                value: mainModel.paramValue1
+            }
+            ParameterPane {
+                id: writeParam
+                model: mainModel
+                num: 2
+                info: mainModel.paramInfo2
+                value: mainModel.paramValue2
+            }
         }
 
         Divider {

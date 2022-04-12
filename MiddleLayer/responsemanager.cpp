@@ -9,11 +9,26 @@ ResponseManager::ResponseManager()
 
 int ResponseManager::send(QJsonObject response)
 {
+    if (response.empty()) return 0;
+
     QJsonDocument doc(response);
-    QString strJson(doc.toJson(QJsonDocument::Compact));
+    QByteArray dataToSend = doc.toJson(QJsonDocument::Compact);
+    bool needBinary = dataToSend.size() >= 10000;
+
+    QString strDataToSend;
+    if (needBinary) {
+        QCborValue v = QCborValue::fromJsonValue(response);
+        dataToSend = v.toCbor(QCborValue::UseFloat);
+    } else {
+        strDataToSend = dataToSend;
+    }
 
     for (QWebSocket *client : m_clients) {
-        client->sendTextMessage(strJson);
+        if (needBinary) {
+            client->sendBinaryMessage(dataToSend);
+        } else {
+            client->sendTextMessage(strDataToSend);
+        }
         client->flush();
     }
 

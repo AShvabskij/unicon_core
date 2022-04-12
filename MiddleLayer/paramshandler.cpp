@@ -131,7 +131,7 @@ int ParamsHandler::handleSetValue(const QJsonObject &request)
     val.deviceId = deviceId;
     val.moduleId = moduleId;
     val.format = p.valueFormat;
-    val.value = cmdBody.value("value");
+    val.value = cmdBody.value("value").toVariant();
     val.timestamp = QDateTime::currentMSecsSinceEpoch();
 
     int res = setParamValue(val);
@@ -193,7 +193,8 @@ int ParamsHandler::handleOpenStream(const QJsonObject& request)
         return ret;
     }
 
-    sendEmptyResponse(p, requestId);
+
+    sendActualParamValue(p, requestId);
 
     m_capturedParams << p;
 
@@ -221,7 +222,7 @@ int ParamsHandler::handleCloseStream(const QJsonObject &request)
         if (p.id == paramId && p.deviceId == deviceId) {
             m_capturedParams.removeAll(p);
 
-            QMetaObject::invokeMethod(this, "sendEmptyResponse", Qt::AutoConnection,
+            QMetaObject::invokeMethod(this, "sendActualParamValue", Qt::AutoConnection,
                                       Q_ARG(const Param&, p),
                                       Q_ARG(int, requestId),
                                       Q_ARG(int, 0));
@@ -237,14 +238,10 @@ int ParamsHandler::handleCloseStream(const QJsonObject &request)
     return 0;
 }
 
-void ParamsHandler::sendEmptyResponse(const Param &param, int requestId, int error)
+void ParamsHandler::sendActualParamValue(const Param &param, int requestId, int error)
 {
     ParamValue val;
-    val.id = param.id;
-    val.deviceId = param.deviceId;
-    val.moduleId = param.moduleId;
-    val.value = QVariant();
-    val.timestamp = 0;
+    getParamValue(param.deviceId, param.moduleId, param.id, &val);
 
     QJsonObject response = createValueObj(requestId, val, error);
     send(response);
@@ -501,6 +498,7 @@ QJsonObject ParamsHandler::createValueObj(int requestId, const ParamValue& value
 {
     QJsonObject body;
     body["device_id"] = value.deviceId;
+    body["module_id"] = value.moduleId;
     body["param_id"] = value.id;
     body["value"] = value.toJsonValue();
     body["format"] = value.format;

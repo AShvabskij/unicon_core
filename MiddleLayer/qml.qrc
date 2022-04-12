@@ -9,5 +9,6 @@
         <file>ParameterPane.qml</file>
         <file>DevicePane.qml</file>
         <file>ConnectPane.qml</file>
+        <file>OscPane.qml</file>
     </qresource>
 </RCC>

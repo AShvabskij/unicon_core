@@ -3,21 +3,16 @@ import QtQuick.Window 2.1
 import QtQuick.Controls 2.5
 
 import QtQuick.Layouts 1.4
-import QtQuick.Controls.Styles 1.4
-import QtQuick.Extras 1.4
 
 import "components"
 
 GroupBox {
     property var model: null
-    property alias info: paramInfo.text
-    property alias value: edtValue.text
-    property bool writable: false
-    property bool streaming: false
+    property alias oscId: txtOscId.text
+    property alias chNum: txtChannelNum.text
     property bool oscStreaming: false
-    property int num: 0
 
-    id: pane
+    id: root
     padding: 12
     width: parent.width
     background: Rectangle {
@@ -31,61 +26,7 @@ GroupBox {
         spacing: 5
 
         RowLayout {
-            id: rowParam
-            spacing: 20
-            width: parent.width
-            anchors.margins: 15
-
-            Row {
-                spacing: 5
-//              width: parent.width
-
-                Text {
-                    height: 25
-                    width: 40
-                    color: "white"
-                    verticalAlignment: Text.AlignVCenter
-                    text: "Param:"
-                    font.pointSize: 10
-                }
-
-                TextField {
-                    id: paramIndex
-                    width: 120
-                    height: 25
-                    color: "black"
-                    background: Rectangle {
-                        border.color: "red"
-                        color: "lightgray"
-                    }
-                    text: qsTr("0")
-                    font.pointSize: 10
-                }
-            }
-
-            Button {
-                id: btnParamGet
-                width: 80
-                height: 28
-                text: "Get"
-                onClicked: {
-                    model.requestParamInfo(num, paramIndex.text);
-                    model.requestParamValues(paramIndex.text);
-                }
-            }
-
-            Text {
-                id: paramInfo
-                height: 25
-                color: "white"
-                verticalAlignment: Text.AlignVCenter
-                text: "The param info"
-                font.pointSize: 10
-            }
-
-        }
-
-        RowLayout {
+            id: osc
             spacing: 20
             width: parent.width
             anchors.margins: 5
@@ -97,13 +38,13 @@ GroupBox {
                     width: 40
                     color: "white"
                     verticalAlignment: Text.AlignVCenter
-                    text: "Value:"
+                    text: "Osc:"
                     font.pointSize: 10
                 }
 
                 TextField {
-                    id: edtValue
-                    width: 120
+                    id: txtOscId
+                    width: 80
                     height: 25
                     color: "black"
                     background: Rectangle {
@@ -116,58 +57,95 @@ GroupBox {
             }
 
             Button {
-                id: btnParamEdit
+                id: btnOscGet
                 width: 80
                 height: 28
-                text: "Set"
+                text: "Get"
                 onClicked: {
-                    model.changeParamValue(num, paramIndex.text, edtValue.text);
-                }
-            }
-
-            Button {
-                id: btnTrend
-                width: 120
-                height: 28
-                text: streaming ? "Trend off" : "Trend on"
-                onClicked: {
-                    if (streaming) {
-                        model.stopStreamParamValues(paramIndex.text)
-                        streaming = false
-                    } else {
-                        model.startStreamParamValues(num, paramIndex.text)
-                        streaming = true
+                    if (!oscStreaming) {
+                        model.requestOscInfo(root.oscId)
                     }
                 }
             }
 
-            /*
-            SpinBox {
-                id: edt_spinbox
-                height: 28
-                width: 60
-                value: 1
-                font.pointSize:10
-                up.indicator.implicitHeight: 10
-                down.indicator.implicitHeight: 10
-                inputMethodHints : Qt.ImhFormattedNumbersOnly
-                visible: false
+            Text {
+                id: txtOscInfo
+                height: 25
+                color: "white"
+                verticalAlignment: Text.AlignVCenter
+                text: model.oscDescr
+                font.pointSize: 10
+            }
+        }
+
+        RowLayout {
+            id: channel
+            spacing: 20
+            width: parent.width
+            anchors.margins: 5
+
+            Row {
+                spacing: 5
+                Text {
+                    height: 25
+                    width: 40
+                    color: "white"
+                    verticalAlignment: Text.AlignVCenter
+                    text: "Channel:"
+                    font.pointSize: 10
+                }
+
+                TextField {
+                    id: txtChannelNum
+                    width: 80
+                    height: 25
+                    color: "black"
+                    background: Rectangle {
+                        border.color: "red"
+                        color: "lightgray"
+                    }
+                    text: qsTr("0")
+                    font.pointSize: 10
+                }
             }
 
             Button {
-                id: edt_btnOnOff
+                id: btnChannelGet
                 width: 80
                 height: 28
-                text: "On"
+                text: "Get"
                 onClicked: {
-                    text=  "Off"
-                }
-                visible: false
-            }
-*/
+                    if (oscStreaming) return;
 
+                    model.requestChannelInfo(root.oscId, root.chNum)
+                }
+            }
+
+            Button {
+                id: btnChannelStart
+                width: 80
+                height: 28
+                text: oscStreaming ? "Stop" : "Start"
+                onClicked: {
+                    if (oscStreaming) {
+                        model.stopOscParamValues(root.oscId)
+                        oscStreaming = false
+                    } else {
+                        model.startOscParamValues(root.oscId, root.chNum)
+                        oscStreaming = true
+                    }
+                }
+            }
+
+            Text {
+                id: txtChannelInfo
+                height: 25
+                color: "white"
+                verticalAlignment: Text.AlignVCenter
+                text: model.oscChannelValue
+                font.pointSize: 10
+            }
         }
 
     }
 }
-

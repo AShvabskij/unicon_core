@@ -35,7 +35,7 @@ struct OscChannelDescr
     float min = 0.0;
     float max = 0.0;
 
-    bool isDescrete = false;
+    bool isDiscrete = false;
     qint8 firstBit = 0;
     qint8 lastBit = 0;
 
@@ -75,6 +75,24 @@ struct OscHeader
         return this->id == o.id && this->deviceId == o.deviceId;
     }
 
+    OscChannelDescr channel(quint8 chNum)
+    {
+        for (quint8 chInd : analogChannels.keys()) {
+            const OscChannelDescr& ch = analogChannels.value(chInd);
+            if (ch.channelNum == chNum) {
+                return ch;
+            }
+        }
+        for (quint8 chInd : discreteChannels.keys()) {
+            const OscChannelDescr& ch = discreteChannels.value(chInd);
+            if (ch.channelNum == chNum) {
+                return ch;
+            }
+        }
+
+        return OscChannelDescr();
+    }
+
     QJsonObject toJson() const {
         QJsonObject res;
 
@@ -89,13 +107,15 @@ struct OscHeader
         for (quint8 chInd : analogChannels.keys()) {
             const OscChannelDescr& ch = analogChannels.value(chInd);
             QJsonObject obj;
+            obj["ind"] = chInd;
             obj["num"] = ch.channelNum;
-            obj["var_id"] = ch.varId;
             obj["name"] = ch.varName;
+            obj["var_id"] = ch.varId;
             obj["scale"] = ch.scale;
             obj["min"] = ch.min;
             obj["max"] = ch.max;
             obj["color"] = ch.color.name(QColor::NameFormat::HexRgb);
+            obj["isDiscrete"] = false;
 
             channelsObj << obj;
         }
@@ -108,9 +128,10 @@ struct OscHeader
             QJsonObject obj;
             obj["ind"] = chInd;
             obj["num"] = ch.channelNum;
-            obj["var_id"] = ch.varId;
             obj["name"] = ch.varName;
+            obj["var_id"] = ch.varId;
             obj["color"] = ch.color.name(QColor::NameFormat::HexRgb);
+            obj["isDiscrete"] = true;
 
             discretesObj << obj;
         }
@@ -138,6 +159,7 @@ private slots:
 
 private:
     int handleGetHeader(const QJsonObject &request);
+    int handleGetChannel(const QJsonObject &request);
     int handleOpenStream(const QJsonObject &request);
     int handleCloseStream(const QJsonObject &request);
 
@@ -145,6 +167,7 @@ private:
     long getHeader(int deviceId, int oscId, OscHeader *out);
 
     QJsonObject createHeaderObj(int requestId, const OscHeader& header);
+    QJsonObject createChannelObj(int requestId, int chNum, const OscChannelDescr& ch);
     QJsonObject createStreamDataObj(const OscData& data, int error = 0);
     QString oscDataToString(const QJsonObject &obj);
     OscChannelDescr createAnalogChannel(const OSC_ANALOG_CHANNEL& channel);

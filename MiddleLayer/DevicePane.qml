@@ -7,7 +7,10 @@ import QtQuick.Layouts 1.4
 import "components"
 
 GroupBox {
-    id: pane
+    property var model: null
+    property alias deviceId : index.text
+
+    id: root
     padding: 12
     width: parent.width
     background: Rectangle {
@@ -59,16 +62,20 @@ GroupBox {
                 height: 28
                 text: "Get"
                 onClicked: {
-                    //          model.receiveParamInfo();
+                    model.requestDeviceInfo();
                 }
             }
 
             Text {
                 id: deviceName
                 height: 25
+                width: 100
+                elide:  Text.ElideNone
+                wrapMode: Text.Wrap
+                maximumLineCount: 2
                 color: "white"
                 verticalAlignment: Text.AlignVCenter
-                text: "The device name ............"
+                text: model.deviceDescr === "" ? "The device info ..." : model.deviceDescr
                 font.pointSize: 10
             }
         }
@@ -118,11 +125,12 @@ GroupBox {
                 height: 25
                 color: "white"
                 verticalAlignment: Text.AlignVCenter
-                text: "The module name "
+                text: "The module info ... "
                 font.pointSize: 10
             }
 
         }
+
     }
 }
 

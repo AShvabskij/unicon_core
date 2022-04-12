@@ -2,6 +2,7 @@
 #include <QTimer>
 
 const QString CMD_OSC_HEADER = "osc_header";
+const QString CMD_OSC_CHANNEL = "osc_channel";
 const QString CMD_TYPE_OPEN_STREAM = "open_stream";
 const QString CMD_TYPE_CLOSE_STREAM = "close_stream";
 const QString CMD_TYPE = "get";
@@ -29,6 +30,9 @@ int OscHandler::handle(const QJsonObject &request)
 
     if (cmdName == CMD_OSC_HEADER && cmdType == CMD_TYPE) {
         return handleGetHeader(request);
+
+    } else if (cmdName == CMD_OSC_CHANNEL && cmdType == CMD_TYPE) {
+        return handleGetChannel(request);
 
     } else if (cmdName == CMD_OSC_DATA) {
         if (cmdType == CMD_TYPE_OPEN_STREAM) {
@@ -81,6 +85,29 @@ int OscHandler::handleGetHeader(const QJsonObject &request)
     long ret = getHeader(deviceId, oscId, &header);
 
     QJsonObject response = createHeaderObj(requestId, header);
+    send(response);
+
+    return ret;
+}
+
+int OscHandler::handleGetChannel(const QJsonObject &request)
+{
+    int requestId = request.value("request_id").toInt();
+    QJsonObject cmdBody = request.value("body").toObject();
+
+    if (requestId <= 0 || cmdBody.isEmpty()) {
+        return -1;
+    }
+
+    int deviceId = cmdBody.value("device_id").toInt();
+    int oscId = cmdBody.value("osc_id").toInt();
+    int chNum = cmdBody.value("channel_num").toInt();
+
+    OscHeader header;
+    long ret = getHeader(deviceId, oscId, &header);
+
+    OscChannelDescr chDescr = header.channel(chNum);
+    QJsonObject response = createChannelObj(requestId, chNum, chDescr);
     send(response);
 
     return ret;
@@ -338,7 +365,7 @@ OscChannelDescr OscHandler::createDiscreteChannel(const OSC_DISCRETE_CHANNEL& ch
     ret.channelNum = channel.chNum;
     ret.varId = channel.var.id;
     ret.varName = channel.var.name;
-    ret.isDescrete = true;
+    ret.isDiscrete = true;
     ret.firstBit = channel.firstBit;
     ret.lastBit = channel.lastBit;
     ret.color = QColor(channel.var.color.Red, channel.var.color.Green, channel.var.color.Blue);
@@ -351,6 +378,25 @@ QJsonObject OscHandler::createHeaderObj(int requestId, const OscHeader& header)
     QJsonObject res;
     res["request_id"] = requestId;
     res["body"] = header.toJson();
+
+    return res;
+}
+
+QJsonObject OscHandler::createChannelObj(int requestId, int chNum, const OscChannelDescr& ch)
+{
+    QJsonObject res;
+    res["request_id"] = requestId;
+    QJsonObject obj;
+    obj["num"] = ch.channelNum;
+    obj["name"] = ch.varName;
+    obj["var_id"] = ch.varId;
+    obj["scale"] = ch.scale;
+    obj["min"] = ch.min;
+    obj["max"] = ch.max;
+    obj["color"] = ch.color.name(QColor::NameFormat::HexRgb);
+    obj["isDiscrete"] = ch.isDiscrete;
+
+    res["body"] = obj;
 
     return res;
 }
