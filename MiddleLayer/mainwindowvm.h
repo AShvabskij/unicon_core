@@ -19,7 +19,7 @@ public:
 
     explicit MainWindowVM(QObject *parent = nullptr);
 
-    Q_PROPERTY(QString deviceId MEMBER m_deviceId NOTIFY deviceIdChanged)
+    Q_PROPERTY(int deviceId MEMBER m_deviceId NOTIFY deviceIdChanged)
     Q_PROPERTY(QString deviceDescr MEMBER m_deviceDescr NOTIFY deviceDescrChanged)
     Q_PROPERTY(QString oscDescr MEMBER m_oscDescr NOTIFY oscDescrChanged)
     Q_PROPERTY(QString oscChannelValue MEMBER m_oscChannelValue NOTIFY oscChannelValueChanged)
@@ -92,7 +92,7 @@ private:
     void doProccessStreamDataReceived(QJsonObject data);
     void sendRequest(QJsonObject req, bool checkPerformance = false);
 
-    QString m_deviceId;
+    int m_deviceId;
     QString m_deviceDescr;
     QString m_oscDescr;
     QString m_oscChannelValue;

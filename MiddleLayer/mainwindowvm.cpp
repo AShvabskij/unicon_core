@@ -42,7 +42,7 @@ void MainWindowVM::requestParamInfo(int num, QString arg)
     req["cmd"] = createCmd("GET_PARAM_HEADER");
 
     m_params[num] = parse(arg);
-    req["body"] = createParamCmdBody("GET_PARAM_HEADER", m_deviceId.toInt(), m_params[num]);
+    req["body"] = createParamCmdBody("GET_PARAM_HEADER", m_deviceId, m_params[num]);
 
     QJsonDocument doc(req);
 //  QByteArray bytes = doc.toJson();
@@ -57,7 +57,7 @@ void MainWindowVM::requestDeviceInfo()
     QJsonObject req;
     req["request_id"] = DEVICE_REQUEST_ID;
     req["cmd"] = createCmd("GET_DEVICE_HEADER");
-    req["body"] = createDeviceCmdBody("GET_DEVICE_HEADER", m_deviceId.toInt());
+    req["body"] = createDeviceCmdBody("GET_DEVICE_HEADER", m_deviceId);
 
     sendRequest(req);
 }
@@ -93,7 +93,7 @@ void MainWindowVM::requestParamValues(QString arg)
     req["cmd"] = createCmd("GET_PARAM_DATA");
 
     ElemId elem = parse(arg);
-    req["body"] = createParamCmdBody("GET_PARAM_DATA", m_deviceId.toInt(), elem);
+    req["body"] = createParamCmdBody("GET_PARAM_DATA", m_deviceId, elem);
 
     sendRequest(req);
 }
@@ -105,7 +105,7 @@ void MainWindowVM::changeParamValue(int num, QString paramArg, QVariant paramVal
     req["cmd"] = createCmd("SET_PARAM_DATA");
 
     ElemId elem = parse(paramArg);
-    req["body"] = createParamCmdBody("SET_PARAM_DATA", m_deviceId.toInt(), elem, paramValue);
+    req["body"] = createParamCmdBody("SET_PARAM_DATA", m_deviceId, elem, paramValue);
 
     sendRequest(req);
 }
@@ -118,7 +118,7 @@ void MainWindowVM::startStreamParamValues(int num, QString arg)
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_REQUEST_ID;
     req["cmd"] = createCmd("STREAM_PARAM_DATA");
-    req["body"] = createParamCmdBody("STREAM_PARAM_DATA", m_deviceId.toInt(), elem);
+    req["body"] = createParamCmdBody("STREAM_PARAM_DATA", m_deviceId, elem);
 
     sendRequest(req, true);
 }
@@ -130,7 +130,7 @@ void MainWindowVM::stopStreamParamValues(QString paramArg)
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_REQUEST_ID;
     req["cmd"] = createCmd("STREAM_STOP_PARAM_DATA");
-    req["body"] = createParamCmdBody("STREAM_PARAM_DATA", m_deviceId.toInt(), elem);
+    req["body"] = createParamCmdBody("STREAM_PARAM_DATA", m_deviceId, elem);
 
     sendRequest(req);
 }

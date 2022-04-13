@@ -42,17 +42,8 @@ GroupBox {
                     font.pointSize: 10
                 }
 
-                TextField {
+                CellEdit {
                     id: index
-                    width: 80
-                    height: 25
-                    color: "black"
-                    background: Rectangle {
-                        border.color: "red"
-                        color: "lightgray"
-                    }
-                    text: qsTr("0")
-                    font.pointSize: 10
                 }
             }
 
@@ -69,11 +60,10 @@ GroupBox {
             Text {
                 id: deviceName
                 height: 25
-                width: 100
                 elide:  Text.ElideNone
                 wrapMode: Text.Wrap
                 maximumLineCount: 2
-                color: "white"
+                color: "yellow"
                 verticalAlignment: Text.AlignVCenter
                 text: model.deviceDescr === "" ? "The device info ..." : model.deviceDescr
                 font.pointSize: 10
@@ -96,17 +86,8 @@ GroupBox {
                     font.pointSize: 10
                 }
 
-                TextField {
+                CellEdit {
                     id: edtValue
-                    width: 80
-                    height: 25
-                    color: "black"
-                    background: Rectangle {
-                        border.color: "red"
-                        color: "lightgray"
-                    }
-                    text: qsTr("0")
-                    font.pointSize: 10
                 }
             }
 
@@ -123,7 +104,7 @@ GroupBox {
             Text {
                 id: txtModuleName
                 height: 25
-                color: "white"
+                color: "yellow"
                 verticalAlignment: Text.AlignVCenter
                 text: "The module info ... "
                 font.pointSize: 10

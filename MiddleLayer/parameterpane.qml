@@ -9,6 +9,7 @@ import QtQuick.Extras 1.4
 import "components"
 
 GroupBox {
+    id: root
     property var model: null
     property alias info: paramInfo.text
     property alias value: edtValue.text
@@ -16,8 +17,8 @@ GroupBox {
     property bool streaming: false
     property bool oscStreaming: false
     property int num: 0
+    property string paramId: moduleIndex.text + "." + paramIndex.text
 
-    id: pane
     padding: 12
     width: parent.width
     background: Rectangle {
@@ -49,17 +50,15 @@ GroupBox {
                     font.pointSize: 10
                 }
 
-                TextField {
+                CellEdit {
+                    id: moduleIndex
+                    width: 60
+                    placeholderText: qsTr("Mod id")
+                }
+                CellEdit {
                     id: paramIndex
-                    width: 120
-                    height: 25
-                    color: "black"
-                    background: Rectangle {
-                        border.color: "red"
-                        color: "lightgray"
-                    }
-                    text: qsTr("0")
-                    font.pointSize: 10
+                    width: 60
+                    placeholderText: qsTr("Par id")
                 }
             }
 
@@ -69,15 +68,15 @@ GroupBox {
                 height: 28
                 text: "Get"
                 onClicked: {
-                    model.requestParamInfo(num, paramIndex.text);
-                    model.requestParamValues(paramIndex.text);
+                    model.requestParamInfo(num, root.paramId);
+                    model.requestParamValues(root.paramId);
                 }
             }
 
             Text {
                 id: paramInfo
                 height: 25
-                color: "white"
+                color: "yellow"
                 verticalAlignment: Text.AlignVCenter
                 text: "The param info"
                 font.pointSize: 10
@@ -101,18 +100,12 @@ GroupBox {
                     font.pointSize: 10
                 }
 
-                TextField {
+                CellEdit {
                     id: edtValue
-                    width: 120
-                    height: 25
-                    color: "black"
-                    background: Rectangle {
-                        border.color: "red"
-                        color: "lightgray"
-                    }
-                    text: qsTr("0")
-                    font.pointSize: 10
+                    width: 125
+                    readOnly: true
                 }
+
             }
 
             Button {
@@ -121,7 +114,7 @@ GroupBox {
                 height: 28
                 text: "Set"
                 onClicked: {
-                    model.changeParamValue(num, paramIndex.text, edtValue.text);
+                    model.changeParamValue(num, root.paramId, edtValue.text);
                 }
             }
 
@@ -132,10 +125,10 @@ GroupBox {
                 text: streaming ? "Trend off" : "Trend on"
                 onClicked: {
                     if (streaming) {
-                        model.stopStreamParamValues(paramIndex.text)
+                        model.stopStreamParamValues(root.paramId)
                         streaming = false
                     } else {
-                        model.startStreamParamValues(num, paramIndex.text)
+                        model.startStreamParamValues(num, root.paramId)
                         streaming = true
                     }
                 }

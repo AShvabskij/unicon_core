@@ -43,23 +43,17 @@ Item {
             }
         }
 
-        TextField {
+        CellEdit {
             id: host
             width: 120
             height: 30
-            color: "black"
-            background: Rectangle {
-                border.color: "red"
-                color: "lightgray"
-            }
             text: qsTr("127.0.0.1:1235")
-            font.pointSize: 10
         }
 
         Text {
             id: lblPort
             height: 30
-            color: "#ffffff"
+            color: "yellow"
             verticalAlignment: Text.AlignVCenter
             lineHeightMode: Text.ProportionalHeight
             font.pointSize: 12

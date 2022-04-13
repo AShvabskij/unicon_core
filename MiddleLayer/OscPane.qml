@@ -42,17 +42,8 @@ GroupBox {
                     font.pointSize: 10
                 }
 
-                TextField {
+                CellEdit {
                     id: txtOscId
-                    width: 80
-                    height: 25
-                    color: "black"
-                    background: Rectangle {
-                        border.color: "red"
-                        color: "lightgray"
-                    }
-                    text: qsTr("0")
-                    font.pointSize: 10
                 }
             }
 
@@ -71,7 +62,7 @@ GroupBox {
             Text {
                 id: txtOscInfo
                 height: 25
-                color: "white"
+                color: "yellow"
                 verticalAlignment: Text.AlignVCenter
                 text: model.oscDescr
                 font.pointSize: 10
@@ -95,17 +86,10 @@ GroupBox {
                     font.pointSize: 10
                 }
 
-                TextField {
+                CellEdit {
                     id: txtChannelNum
                     width: 80
                     height: 25
-                    color: "black"
-                    background: Rectangle {
-                        border.color: "red"
-                        color: "lightgray"
-                    }
-                    text: qsTr("0")
-                    font.pointSize: 10
                 }
             }
 
@@ -140,7 +124,7 @@ GroupBox {
             Text {
                 id: txtChannelInfo
                 height: 25
-                color: "white"
+                color: "yellow"
                 verticalAlignment: Text.AlignVCenter
                 text: model.oscChannelValue
                 font.pointSize: 10
