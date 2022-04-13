@@ -76,7 +76,7 @@ GroupBox {
             Text {
                 id: paramInfo
                 height: 25
-                color: "yellow"
+                color: "gold"
                 verticalAlignment: Text.AlignVCenter
                 text: "The param info"
                 font.pointSize: 10

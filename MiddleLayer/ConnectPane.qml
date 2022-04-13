@@ -53,7 +53,7 @@ Item {
         Text {
             id: lblPort
             height: 30
-            color: "yellow"
+            color: "gold"
             verticalAlignment: Text.AlignVCenter
             lineHeightMode: Text.ProportionalHeight
             font.pointSize: 12

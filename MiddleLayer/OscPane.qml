@@ -62,7 +62,7 @@ GroupBox {
             Text {
                 id: txtOscInfo
                 height: 25
-                color: "yellow"
+                color: "gold"
                 verticalAlignment: Text.AlignVCenter
                 text: model.oscDescr
                 font.pointSize: 10
@@ -124,7 +124,7 @@ GroupBox {
             Text {
                 id: txtChannelInfo
                 height: 25
-                color: "yellow"
+                color: "gold"
                 verticalAlignment: Text.AlignVCenter
                 text: model.oscChannelValue
                 font.pointSize: 10
