@@ -35,20 +35,19 @@ void MainWindowVM::close()
     m_streamWebSocket.close();
 }
 
-void MainWindowVM::requestParamInfo(int num, QString arg)
+void MainWindowVM::requestParamInfo(QString arg)
 {
     QJsonObject req;
     req["request_id"] = PARAM_REQUEST_ID;
     req["cmd"] = createCmd("GET_PARAM_HEADER");
 
-    m_params[num] = parse(arg);
-    req["body"] = createParamCmdBody("GET_PARAM_HEADER", m_deviceId, m_params[num]);
+    CompositeId paramId = parse(arg);
+    req["body"] = createParamCmdBody("GET_PARAM_HEADER", m_deviceId, paramId);
 
     QJsonDocument doc(req);
 //  QByteArray bytes = doc.toJson();
     QString strJson(doc.toJson(QJsonDocument::Compact));
 
-    m_currParamNum = num;
     m_webSocket.sendTextMessage(strJson);
 }
 
@@ -83,7 +82,7 @@ void MainWindowVM::requestChannelInfo(int oscId, int chNum)
     req["cmd"] = createCmd("GET_OSC_CHANNEL");
     req["body"] = createOscCmdBody("GET_OSC_CHANNEL", deviceId, oscId, chNum);
 
-    sendRequest(req, true);
+    sendRequest(req);
 }
 
 void MainWindowVM::requestParamValues(QString arg)
@@ -92,28 +91,27 @@ void MainWindowVM::requestParamValues(QString arg)
     req["request_id"] = PARAM_VALUE_REQUEST_ID;
     req["cmd"] = createCmd("GET_PARAM_DATA");
 
-    ElemId elem = parse(arg);
+    CompositeId elem = parse(arg);
     req["body"] = createParamCmdBody("GET_PARAM_DATA", m_deviceId, elem);
 
     sendRequest(req);
 }
 
-void MainWindowVM::changeParamValue(int num, QString paramArg, QVariant paramValue)
+void MainWindowVM::changeParamValue(QString paramArg, QVariant paramValue)
 {
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_SET_ID;
     req["cmd"] = createCmd("SET_PARAM_DATA");
 
-    ElemId elem = parse(paramArg);
+    CompositeId elem = parse(paramArg);
     req["body"] = createParamCmdBody("SET_PARAM_DATA", m_deviceId, elem, paramValue);
 
     sendRequest(req);
 }
 
-void MainWindowVM::startStreamParamValues(int num, QString arg)
+void MainWindowVM::startStreamParamValues(QString arg)
 {
-    m_currParamNum = num;
-    ElemId elem = parse(arg);
+    CompositeId elem = parse(arg);
 
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_REQUEST_ID;
@@ -125,7 +123,7 @@ void MainWindowVM::startStreamParamValues(int num, QString arg)
 
 void MainWindowVM::stopStreamParamValues(QString paramArg)
 {
-    ElemId elem = parse(paramArg);
+    CompositeId elem = parse(paramArg);
 
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_REQUEST_ID;
@@ -152,7 +150,7 @@ void MainWindowVM::stopOscParamValues(QString oscId)
     req["cmd"] = createCmd("OSC_STOP_PARAM_DATA");
     req["body"] = createOscCmdBody("OSC_PARAM_DATA", oscId.toInt(), oscId.toInt());
 
-    sendRequest(req, true);
+    sendRequest(req);
 }
 
 void MainWindowVM::setDeviceDescr(QString arg)
@@ -211,21 +209,21 @@ QJsonObject MainWindowVM::createCmd(QString name)
     return res;
 }
 
-QJsonObject MainWindowVM::createParamCmdBody(QString name, int deviceId, ElemId paramId, QVariant value)
+QJsonObject MainWindowVM::createParamCmdBody(QString name, int deviceId, CompositeId elemId, QVariant value)
 {
     QJsonObject res;
     if (name == "GET_PARAM_HEADER" ) {
         res["device_id"] = deviceId;
-        res["module_id"] = paramId.moduleIndex;
-        res["param_id"] = paramId.paramIndex;
+        res["module_id"] = elemId.moduleId;
+        res["param_id"] = elemId.paramId;
     } else if (name == "GET_PARAM_DATA" || name == "STREAM_PARAM_DATA") {
         res["device_id"] = deviceId;
-        res["module_id"] = paramId.moduleIndex;
-        res["param_id"] = paramId.paramIndex;
+        res["module_id"] = elemId.moduleId;
+        res["param_id"] = elemId.paramId;
     } else if (name == "SET_PARAM_DATA") {
         res["device_id"] = deviceId;
-        res["module_id"] = paramId.moduleIndex;
-        res["param_id"] = paramId.paramIndex;
+        res["module_id"] = elemId.moduleId;
+        res["param_id"] = elemId.paramId;
         res["value"] = QJsonValue::fromVariant(value);
     }
 
@@ -268,61 +266,95 @@ QJsonObject MainWindowVM::createOscCmdBody(QString cmd, int deviceId, int oscId,
     return res;
 }
 
-MainWindowVM::ElemId MainWindowVM::parse(QString arg) const
+MainWindowVM::CompositeId MainWindowVM::parse(QString arg) const
 {
-    if (arg.isEmpty()) return ElemId();
+    if (arg.isEmpty()) return CompositeId();
 
     QStringList args = arg.split(".");
 
-    if (args.count()!=2) return ElemId();
+    if (args.count()!=2) return CompositeId();
 
-    ElemId res;
-    res.moduleIndex = args.value(0).toInt();
-    res.paramIndex = args.value(1).toInt();
+    CompositeId res;
+    res.moduleId = args.value(0).toInt();
+    res.paramId = args.value(1).toInt();
 
     return res;
 }
 
-void MainWindowVM::setParamInfo(QString arg)
-{
-    if (m_currParamNum == 1) {
-        m_paramInfo1 = arg;
-        emit paramInfo1Changed(m_paramInfo1);
-    } else {
-        m_paramInfo2 = arg;
-        emit paramInfo2Changed(m_paramInfo2);
-    }
-}
-
-void MainWindowVM::setParamValue(QVariant val, double time)
-{
-    QString svalue = val.canConvert(QMetaType::Float) ? QString::number(val.toFloat(), 'f', 2) : val.toString();
-    QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
-    svalue = svalue.leftJustified(8) + " " + dt.time().toString("mm:ss.zzz"); // toString(Qt::ISODateWithMs);
-
-    if (m_currParamNum == 1) {
-        m_paramValue1 = svalue;
-        emit paramValue1Changed(svalue);
-    } else {
-        m_paramValue2 = svalue;
-        emit paramValue2Changed(svalue);
-    }
-}
-
-QString MainWindowVM::paramObjToString(const QJsonObject &obj)
+void MainWindowVM::setParamInfo(const QJsonObject& obj)
 {
     int deviceId = obj.value("device_id").toInt();
     int moduleId = obj.value("module_id").toInt();
     int paramId = obj.value("param_id").toInt();
 
     QString name = obj.value("name").toString();
-    QString res = QString("Param: id = %1, name = %2, device id = %3, module id = %4")
+    QString info = QString("Param: id = %1, name = %2, device id = %3, module id = %4")
             .arg(paramId)
             .arg(name)
             .arg(deviceId)
             .arg(moduleId);
 
-    return res;
+    CompositeId param1 = parse(m_paramComposId1);
+    CompositeId param2 = parse(m_paramComposId2);
+
+    if (param1.paramId == paramId && param1.moduleId == moduleId) {
+        m_paramInfo1 = info;
+        emit paramInfo1Changed(m_paramInfo1);
+    } else if (param2.paramId == paramId && param2.moduleId == moduleId) {
+        m_paramInfo2 = info;
+        emit paramInfo2Changed(m_paramInfo2);
+    }
+}
+
+void MainWindowVM::setParamValue(const QJsonObject& obj)
+{
+    int devId = obj.value("device_id").toInt();
+    int paramId = obj.value("param_id").toInt();
+    int moduleId = obj.value("module_id").toInt();
+    QVariant value = obj.value("value").toObject().value("value");
+    double time = obj.value("value").toObject().value("time").toDouble();
+    QString svalue = value.canConvert(QMetaType::Float) ? QString::number(value.toFloat(), 'f', 2) : value.toString();
+
+    QString res = QString("Param: id = %1, device id = %2, value = %3")
+            .arg(paramId)
+            .arg(devId)
+            .arg(svalue);
+
+    QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
+    svalue = svalue.leftJustified(8) + " " + dt.time().toString("mm:ss.zzz"); // toString(Qt::ISODateWithMs);
+
+    emitParamValue(moduleId, paramId, svalue);
+}
+
+void MainWindowVM::setStreamParamValue(const QJsonObject& obj)
+{
+    int paramId = obj.value("p_id").toInt();
+    int moduleId = obj.value("m_id").toInt();
+    QVariant value = obj.value("value").toObject().value("value");
+    double time = obj.value("value").toObject().value("time").toDouble();
+    QString svalue = value.canConvert(QMetaType::Float) ? QString::number(value.toFloat(), 'f', 2) : value.toString();
+
+    QString res = QString("value = %1")
+            .arg(svalue);
+
+    QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
+    svalue = svalue.leftJustified(8) + " " + dt.time().toString("mm:ss.zzz"); // toString(Qt::ISODateWithMs);
+
+    emitParamValue(moduleId, paramId, svalue);
+}
+
+void MainWindowVM::emitParamValue(int moduleId, int paramId, QString sVal)
+{
+    CompositeId param1 = parse(m_paramComposId1);
+    CompositeId param2 = parse(m_paramComposId2);
+
+    if (param1.paramId == paramId && param1.moduleId == moduleId) {
+        m_paramValue1 = sVal;
+        emit paramValue1Changed(sVal);
+    } else if (param2.paramId == paramId && param2.moduleId == moduleId) {
+        m_paramValue2 = sVal;
+        emit paramValue2Changed(sVal);
+    }
 }
 
 QString MainWindowVM::deviceObjToString(const QJsonObject &obj)
@@ -367,54 +399,6 @@ QString MainWindowVM::oscChannelObjToString(const QJsonObject &obj)
             .arg(varId)
             .arg(analogable)
             .arg(scale);
-
-    return res;
-}
-
-QString MainWindowVM::paramValueObjToString(const QJsonObject &obj)
-{
-    int devId = obj.value("device_id").toInt();
-    int paramId = obj.value("param_id").toInt();
-    QJsonValue value = obj.value("value");
-    double dval = value.toObject().value("value").toDouble();
-
-    QString res = QString("Param: id = %1, device id = %2, value = %3")
-            .arg(paramId)
-            .arg(devId)
-            .arg(dval);
-
-    return res;
-}
-
-QString MainWindowVM::streamParamValueObjToString(const QJsonObject &obj)
-{
-    int devId = obj.value("d_id").toInt();
-    int paramId = obj.value("p_id").toInt();
-    QJsonValue value = obj.value("value");
-    double dval = value.toObject().value("value").toDouble();
-
-    QString res("");
-    if (dval != -1) {
-        res = QString("Param: id = %1, device id = %2, value = %3")
-            .arg(paramId)
-            .arg(devId)
-            .arg(dval);
-
-        int valueTime = value.toObject().value("time").toVariant().toLongLong();
-        int currMSec = QDateTime::currentMSecsSinceEpoch();
-        int valueActuality = currMSec - valueTime;
-        if (valueActuality > 10) {
-            res += QString(", actuality = %1ms").arg(valueActuality);
-        }
-
-        m_valCounter++;
-    } else {
-        res = QString("Received %1 items per %2ms")
-                .arg(m_valCounter)
-                .arg(m_perfomanceTimer.elapsed());
-
-        m_valCounter = 0;
-    }
 
     return res;
 }
@@ -496,8 +480,7 @@ void MainWindowVM::doProccessDataReceived(QJsonObject data)
     if (reqId == PARAM_REQUEST_ID) {
         QJsonArray body = data.value("body").toArray();
         bodyObj = body.first().toObject();
-        output = paramObjToString(bodyObj);
-        setParamInfo(output);
+        setParamInfo(bodyObj);
 
     } else if (reqId == DEVICE_REQUEST_ID) {
         QJsonArray body = data.value("body").toArray();
@@ -515,13 +498,7 @@ void MainWindowVM::doProccessDataReceived(QJsonObject data)
         emit oscChannelValueChanged(m_oscChannelValue);
     } else if (reqId == PARAM_VALUE_REQUEST_ID || reqId == PARAM_VALUE_SET_ID) {
         bodyObj = data.value("body").toObject();
-        output = paramValueObjToString(bodyObj);
-
-        QJsonObject valueObj = bodyObj.value("value").toObject();
-        QVariant value = valueObj.value("value").toVariant();
-        double time = valueObj.value("time").toDouble();
-
-        setParamValue(value, time);
+        setParamValue(bodyObj);
     }
 
     QJsonDocument doc(bodyObj);
@@ -550,12 +527,7 @@ void MainWindowVM::doProccessStreamDataReceived(QJsonObject data)
         output = m_oscChannelValue;
         emit oscChannelValueChanged(m_oscChannelValue);
     } else {
-        output = streamParamValueObjToString(data);
-        QJsonObject valueObj = data.value("value").toObject();
-        double value = valueObj.value("value").toDouble();
-        double time = valueObj.value("time").toDouble();
-
-        setParamValue(value, time);
+        setStreamParamValue(data);
     }
 
     QTextStream(stdout) << output << "\n" ;
@@ -567,7 +539,7 @@ void MainWindowVM::sendRequest(QJsonObject req, bool checkPerformance)
     QString strReq(doc.toJson(QJsonDocument::Compact));
 
     if (checkPerformance) {
-        m_perfomanceTimer.start();
+        m_perfomanceTimer.restart();
     }
 
     emit dataRequest(strReq);

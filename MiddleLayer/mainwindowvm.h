@@ -11,10 +11,10 @@ class MainWindowVM : public QObject
     Q_OBJECT
 
 public:
-    struct ElemId {
-        ElemId() {}
-        int moduleIndex = 0;
-        int paramIndex = 0;
+    struct CompositeId {
+        CompositeId() {}
+        int moduleId = 0;
+        int paramId = 0;
     };
 
     explicit MainWindowVM(QObject *parent = nullptr);
@@ -24,6 +24,9 @@ public:
     Q_PROPERTY(QString oscDescr MEMBER m_oscDescr NOTIFY oscDescrChanged)
     Q_PROPERTY(QString oscChannelValue MEMBER m_oscChannelValue NOTIFY oscChannelValueChanged)
     Q_PROPERTY(QString moduleDescr MEMBER m_moduleDescr NOTIFY moduleDescrChanged)
+
+    Q_PROPERTY(QString paramId1 MEMBER m_paramComposId1)
+    Q_PROPERTY(QString paramId2 MEMBER m_paramComposId2)
     Q_PROPERTY(QString paramInfo1 MEMBER m_paramInfo1 NOTIFY paramInfo1Changed)
     Q_PROPERTY(QString paramInfo2 MEMBER m_paramInfo2 NOTIFY paramInfo2Changed)
     Q_PROPERTY(QString paramValue1 MEMBER m_paramValue1 NOTIFY paramValue1Changed)
@@ -34,27 +37,25 @@ public:
     Q_INVOKABLE void requestDeviceInfo();
     Q_INVOKABLE void requestOscInfo(int oscId);
     Q_INVOKABLE void requestChannelInfo(int oscId, int chNum);
-    Q_INVOKABLE void requestParamInfo(int num, QString arg);
+    Q_INVOKABLE void requestParamInfo(QString arg);
     Q_INVOKABLE void requestParamValues(QString arg);
-    Q_INVOKABLE void startStreamParamValues(int num, QString arg);
+    Q_INVOKABLE void startStreamParamValues(QString arg);
     Q_INVOKABLE void stopStreamParamValues(QString arg);
     Q_INVOKABLE void startOscParamValues(int oscId, int chNum);
     Q_INVOKABLE void stopOscParamValues(QString oscId);
-    Q_INVOKABLE void changeParamValue(int num, QString paramArg, QVariant paramValue);
+    Q_INVOKABLE void changeParamValue(QString paramArg, QVariant paramValue);
 
     void setDeviceDescr(QString arg);
     void setOscDescr(QString arg);
     void setModuleDescr(QString arg);
-    void setParamInfo(QString arg);
-    void setParamValue(QVariant val, double time);
+    void setParamInfo(const QJsonObject &obj);
+    void setParamValue(const QJsonObject& obj);
+    void setStreamParamValue(const QJsonObject& obj);
 
 public slots:
-    QString paramObjToString(const QJsonObject &obj);
     QString deviceObjToString(const QJsonObject &obj);
     QString oscObjToString(const QJsonObject &obj);
     QString oscChannelObjToString(const QJsonObject &obj);
-    QString paramValueObjToString(const QJsonObject &obj);
-    QString streamParamValueObjToString(const QJsonObject &obj);
     QString oscDataObjToString(const QJsonObject &obj);
 
 signals:
@@ -82,15 +83,16 @@ private slots:
     void onStreamTextMessageReceived(QString message);
     void onStreamBinaryMessageReceived(QByteArray message);
     QJsonObject createCmd(QString name);
-    QJsonObject createParamCmdBody(QString name, int deviceId, ElemId param = ElemId(), QVariant value = QVariant());
+    QJsonObject createParamCmdBody(QString name, int deviceId, CompositeId elemId = CompositeId(), QVariant value = QVariant());
     QJsonObject createDeviceCmdBody(QString cmd, int deviceId);
     QJsonObject createOscCmdBody(QString cmd, int deviceId, int oscId, int chNum = -1);
 
 private:
-    ElemId parse(QString arg) const;
+    CompositeId parse(QString arg) const;
     void doProccessDataReceived(QJsonObject data);
     void doProccessStreamDataReceived(QJsonObject data);
     void sendRequest(QJsonObject req, bool checkPerformance = false);
+    void emitParamValue(int moduleId, int paramId, QString sVal);
 
     int m_deviceId;
     QString m_deviceDescr;
@@ -98,6 +100,8 @@ private:
     QString m_oscChannelValue;
     QString m_moduleDescr;
 
+    QString m_paramComposId1;
+    QString m_paramComposId2;
     QString m_paramInfo1;
     QString m_paramInfo2;
     QString m_paramValue1;
@@ -108,9 +112,6 @@ private:
 
     QElapsedTimer m_perfomanceTimer;
     int m_valCounter = 0;
-
-    QMap<int/*num*/, ElemId> m_params;
-    int m_currParamNum = 0;
 };
 
 // QML_DECLARE_TYPE(MainWindowVM);

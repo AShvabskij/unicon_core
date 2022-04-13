@@ -25,6 +25,8 @@ ApplicationWindow {
     MainWindowVM {
         id: mainModel
         deviceId: devicePane.deviceId
+        paramId1: readParam.paramId
+        paramId2: writeParam.paramId
 
         onDataReceived: {
             dataLog.text += "Received: " + msg + "\n"

@@ -68,7 +68,7 @@ GroupBox {
                 height: 28
                 text: "Get"
                 onClicked: {
-                    model.requestParamInfo(num, root.paramId);
+                    model.requestParamInfo(root.paramId);
                     model.requestParamValues(root.paramId);
                 }
             }
@@ -114,7 +114,7 @@ GroupBox {
                 height: 28
                 text: "Set"
                 onClicked: {
-                    model.changeParamValue(num, root.paramId, edtValue.text);
+                    model.changeParamValue(root.paramId, edtValue.text);
                 }
             }
 
@@ -128,7 +128,7 @@ GroupBox {
                         model.stopStreamParamValues(root.paramId)
                         streaming = false
                     } else {
-                        model.startStreamParamValues(num, root.paramId)
+                        model.startStreamParamValues(root.paramId)
                         streaming = true
                     }
                 }
