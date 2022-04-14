@@ -37,7 +37,7 @@ public:
     Q_INVOKABLE void start();
     Q_INVOKABLE void close();
     Q_INVOKABLE void requestSystemInfo();
-    Q_INVOKABLE void requestDeviceInfo();
+    Q_INVOKABLE void requestDeviceInfo(int moduleId = 0);
     Q_INVOKABLE void requestOscInfo(int oscId);
     Q_INVOKABLE void requestChannelInfo(int oscId, int chNum);
     Q_INVOKABLE void requestParamInfo(QString arg);
@@ -50,16 +50,13 @@ public:
 
     void setDeviceDescr(const QJsonObject &obj);
     void setSystemInfo(QJsonArray objects);
-    void setOscDescr(QString arg);
-    void setModuleDescr(QString arg);
+    void setOscDescr(const QJsonObject &obj);
+    void setModuleDescr(const QJsonObject &obj);
     void setParamInfo(const QJsonObject &obj);
     void setParamValue(const QJsonObject& obj);
     void setStreamParamValue(const QJsonObject& obj);
-
-public slots:
-    QString oscObjToString(const QJsonObject &obj);
-    QString oscChannelObjToString(const QJsonObject &obj);
-    QString oscDataObjToString(const QJsonObject &obj);
+    void setOscChannelInfo(const QJsonObject &obj);
+    void setOscChannelValue(const QJsonObject &obj);
 
 signals:
     void paramInfo1Changed(QString arg);
@@ -89,7 +86,7 @@ private slots:
     void onStreamBinaryMessageReceived(QByteArray message);
     QJsonObject createCmd(QString name);
     QJsonObject createParamCmdBody(QString name, int deviceId, CompositeId elemId = CompositeId(), QVariant value = QVariant());
-    QJsonObject createDeviceCmdBody(QString cmd, int deviceId);
+    QJsonObject createDeviceCmdBody(QString cmd, int deviceId, int moduleId = 0);
     QJsonObject createOscCmdBody(QString cmd, int deviceId, int oscId, int chNum = -1);
 
 private:

@@ -58,7 +58,7 @@ void MainWindowVM::requestSystemInfo()
     sendRequest(req);
 }
 
-void MainWindowVM::requestDeviceInfo()
+void MainWindowVM::requestDeviceInfo(int moduleId)
 {
     if (m_deviceId == 0) {
         requestSystemInfo();
@@ -68,7 +68,7 @@ void MainWindowVM::requestDeviceInfo()
     QJsonObject req;
     req["request_id"] = DEVICE_REQUEST_ID;
     req["cmd"] = createCmd("GET_DEVICE_HEADER");
-    req["body"] = createDeviceCmdBody("GET_DEVICE_HEADER", m_deviceId);
+    req["body"] = createDeviceCmdBody("GET_DEVICE_HEADER", m_deviceId, moduleId);
 
     sendRequest(req);
 }
@@ -187,10 +187,14 @@ void MainWindowVM::setDeviceDescr(const QJsonObject &obj)
     int deviceId = obj.value("id").toInt();
     QString name = obj.value("name").toString();
     int modulesCount = obj.value("modules").toArray().count();
-    QString output = QString("Device: id = %1, name = %2, modules count = %3")
+    QString channel = obj.value("channel").toString();
+    QString descr = obj.value("desc").toString();
+
+    QString output = QString("Device: id = %1, name = %2, modules = %3, channel = %4")
             .arg(deviceId)
             .arg(name)
-            .arg(modulesCount);
+            .arg(modulesCount)
+            .arg(channel);
 
     m_deviceDescr = output;
     emit deviceDescrChanged();
@@ -199,16 +203,37 @@ void MainWindowVM::setDeviceDescr(const QJsonObject &obj)
     emit deviceIdChanged();
 }
 
-void MainWindowVM::setOscDescr(QString arg)
+void MainWindowVM::setOscDescr(const QJsonObject &obj)
 {
-    m_oscDescr = arg;
-    emit oscDescrChanged(arg);
+    int deviceId = obj.value("device_id").toInt();
+    QString name = obj.value("name").toString();
+    int analogCount = obj.value("channels").toArray().count();
+    int descreteCount = obj.value("discretes").toArray().count();
+
+    QString output = QString("Osc: device id = %1, name = %2, analog = %3  discrete = %4 channels")
+            .arg(deviceId)
+            .arg(name)
+            .arg(analogCount)
+            .arg(descreteCount);
+
+    m_oscDescr = output;
+    emit oscDescrChanged(output);
 }
 
-void MainWindowVM::setModuleDescr(QString arg)
+void MainWindowVM::setModuleDescr(const QJsonObject &obj)
 {
-    m_moduleDescr = arg;
-    emit moduleDescrChanged(arg);
+    int moduleId = obj.value("id").toInt();
+    QString name = obj.value("name").toString();
+    QString descr = obj.value("desc").toString();
+    int paramsCount = obj.value("params").toArray().count();
+    QString output = QString("Module: id = %1, name = %2, params = %3")
+            .arg(moduleId)
+            .arg(name)
+            .arg(paramsCount);
+
+
+    m_moduleDescr = output;
+    emit moduleDescrChanged(output);
 }
 
 QJsonObject MainWindowVM::createCmd(QString name)
@@ -270,11 +295,12 @@ QJsonObject MainWindowVM::createParamCmdBody(QString name, int deviceId, Composi
     return res;
 }
 
-QJsonObject MainWindowVM::createDeviceCmdBody(QString cmd, int deviceId)
+QJsonObject MainWindowVM::createDeviceCmdBody(QString cmd, int deviceId, int moduleId)
 {
     QJsonObject res;
     if (cmd == "GET_DEVICE_HEADER") {
         res["device_id"] = deviceId;
+        res["module_id"] = moduleId;
     }
 
     return res;
@@ -422,22 +448,7 @@ void MainWindowVM::emitParamValue(int moduleId, int paramId, QString sVal, QStri
     }
 }
 
-QString MainWindowVM::oscObjToString(const QJsonObject &obj)
-{
-    int deviceId = obj.value("device_id").toInt();
-    QString name = obj.value("name").toString();
-    int analogCount = obj.value("channels").toArray().count();
-    int descreteCount = obj.value("discretes").toArray().count();
-    QString res = QString("Osc: device id = %1, name = %2, analog = %3  discrete = %4 channels")
-            .arg(deviceId)
-            .arg(name)
-            .arg(analogCount)
-            .arg(descreteCount);
-
-    return res;
-}
-
-QString MainWindowVM::oscChannelObjToString(const QJsonObject &obj)
+void MainWindowVM::setOscChannelInfo(const QJsonObject &obj)
 {
     int chNum = obj.value("num").toInt();
     QString name = obj.value("name").toString();
@@ -445,17 +456,18 @@ QString MainWindowVM::oscChannelObjToString(const QJsonObject &obj)
     double scale = obj.value("scale").toDouble();
     QString analogable = obj.value("isDiscrete").toBool() ? "discrete" : "analog";
 
-    QString res = QString("Channel: num = %1, name = %2, var id = %3, %4, scale = %5")
+    QString output = QString("Channel: num = %1, name = %2, var id = %3, %4, scale = %5")
             .arg(chNum)
             .arg(name)
             .arg(varId)
             .arg(analogable)
             .arg(scale);
 
-    return res;
+    m_oscChannelValue = output;
+    emit oscChannelValueChanged(m_oscChannelValue);
 }
 
-QString MainWindowVM::oscDataObjToString(const QJsonObject &obj)
+void MainWindowVM::setOscChannelValue(const QJsonObject &obj)
 {
     QJsonArray values = obj.value("values").toArray();
     QStringList dvalList;
@@ -469,10 +481,10 @@ QString MainWindowVM::oscDataObjToString(const QJsonObject &obj)
 //        dvalList << QString("%1").arg(dval);
     }
 
-    QString res("");
-    res = dvalList.join(" ");
+    QString output = dvalList.join(" ");
 
-    return res;
+    m_oscChannelValue = output;
+    emit oscChannelValueChanged(m_oscChannelValue);
 }
 
 void MainWindowVM::onConnected()
@@ -542,21 +554,24 @@ void MainWindowVM::doProccessDataReceived(QJsonObject data)
         doc = QJsonDocument(body);
         setSystemInfo(body);
     } else if (reqId == DEVICE_REQUEST_ID) {
-        QJsonArray body = data.value("body").toArray();
-        QJsonObject bodyObj = body.first().toObject();
-        doc = QJsonDocument(bodyObj);
-        setDeviceDescr(bodyObj);
+        QJsonValue body = data.value("body");
+        if (body.isArray()) {
+            QJsonObject bodyObj = body.toArray().first().toObject();
+            doc = QJsonDocument(bodyObj);
+            setDeviceDescr(bodyObj);
+        } else {
+            QJsonObject bodyObj = body.toObject();
+            doc = QJsonDocument(bodyObj);
+            setModuleDescr(bodyObj);
+        }
     } else if (reqId == OSC_REQUEST_ID) {
         QJsonObject bodyObj = data.value("body").toObject();
         doc = QJsonDocument(bodyObj);
-        output = oscObjToString(bodyObj);
-        setOscDescr(output);
+        setOscDescr(bodyObj);
     } else if (reqId == OSC_CHANNEL_REQUEST_ID) {
         QJsonObject bodyObj = data.value("body").toObject();
         doc = QJsonDocument(bodyObj);
-        output = oscChannelObjToString(bodyObj);
-        m_oscChannelValue = output;
-        emit oscChannelValueChanged(m_oscChannelValue);
+        setOscChannelInfo(bodyObj);
     } else if (reqId == PARAM_VALUE_REQUEST_ID || reqId == PARAM_VALUE_SET_ID) {
         QJsonObject bodyObj = data.value("body").toObject();
         doc = QJsonDocument(bodyObj);
@@ -586,9 +601,7 @@ void MainWindowVM::doProccessStreamDataReceived(QJsonObject data)
 {
     QString output("");
     if (data.contains("values")) {
-        m_oscChannelValue = oscDataObjToString(data);
-        output = m_oscChannelValue;
-        emit oscChannelValueChanged(m_oscChannelValue);
+        setOscChannelValue(data);
     } else {
         setStreamParamValue(data);
     }

@@ -59,7 +59,7 @@ GroupBox {
             }
 
             Text {
-                id: deviceName
+                id: txtDeviceInfo
                 height: 25
                 elide:  Text.ElideNone
                 wrapMode: Text.Wrap
@@ -88,7 +88,7 @@ GroupBox {
                 }
 
                 CellEdit {
-                    id: edtValue
+                    id: edtModuleId
                 }
             }
 
@@ -98,16 +98,16 @@ GroupBox {
                 height: 28
                 text: "Get"
                 onClicked: {
-                    edtValue.focus = true
+                    model.requestDeviceInfo(edtModuleId.text);
                 }
             }
 
             Text {
-                id: txtModuleName
+                id: txtModuleInfo
                 height: 25
                 color: "gold"
                 verticalAlignment: Text.AlignVCenter
-                text: "The module info ... "
+                text: model.moduleDescr
                 font.pointSize: 10
             }
 
