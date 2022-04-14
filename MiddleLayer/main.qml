@@ -141,17 +141,19 @@ ApplicationWindow {
 
             ParameterPane {
                 id: readParam
+                writable: false
                 model: mainModel
-                num: 1
                 info: mainModel.paramInfo1
                 value: mainModel.paramValue1
+                valueInfo: mainModel.paramValueInfo1
             }
             ParameterPane {
                 id: writeParam
+                writable: true
                 model: mainModel
-                num: 2
                 info: mainModel.paramInfo2
                 value: mainModel.paramValue2
+                valueInfo: mainModel.paramValueInfo2
             }
         }
 

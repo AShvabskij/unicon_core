@@ -31,9 +31,12 @@ public:
     Q_PROPERTY(QString paramInfo2 MEMBER m_paramInfo2 NOTIFY paramInfo2Changed)
     Q_PROPERTY(QString paramValue1 MEMBER m_paramValue1 NOTIFY paramValue1Changed)
     Q_PROPERTY(QString paramValue2 MEMBER m_paramValue2 NOTIFY paramValue2Changed)
+    Q_PROPERTY(QString paramValueInfo1 MEMBER m_paramValueInfo1 NOTIFY valueInfo1Changed)
+    Q_PROPERTY(QString paramValueInfo2 MEMBER m_paramValueInfo2 NOTIFY valueInfo2Changed)
 
     Q_INVOKABLE void start();
     Q_INVOKABLE void close();
+    Q_INVOKABLE void requestSystemInfo();
     Q_INVOKABLE void requestDeviceInfo();
     Q_INVOKABLE void requestOscInfo(int oscId);
     Q_INVOKABLE void requestChannelInfo(int oscId, int chNum);
@@ -45,7 +48,8 @@ public:
     Q_INVOKABLE void stopOscParamValues(QString oscId);
     Q_INVOKABLE void changeParamValue(QString paramArg, QVariant paramValue);
 
-    void setDeviceDescr(QString arg);
+    void setDeviceDescr(const QJsonObject &obj);
+    void setSystemInfo(QJsonArray objects);
     void setOscDescr(QString arg);
     void setModuleDescr(QString arg);
     void setParamInfo(const QJsonObject &obj);
@@ -53,7 +57,6 @@ public:
     void setStreamParamValue(const QJsonObject& obj);
 
 public slots:
-    QString deviceObjToString(const QJsonObject &obj);
     QString oscObjToString(const QJsonObject &obj);
     QString oscChannelObjToString(const QJsonObject &obj);
     QString oscDataObjToString(const QJsonObject &obj);
@@ -61,10 +64,12 @@ public slots:
 signals:
     void paramInfo1Changed(QString arg);
     void paramInfo2Changed(QString arg);
+    void valueInfo1Changed(QString arg);
+    void valueInfo2Changed(QString arg);
     void paramValue1Changed(QString arg);
     void paramValue2Changed(QString arg);
-    void deviceIdChanged(QString deviceId);
-    void deviceDescrChanged(QString descr);
+    void deviceIdChanged();
+    void deviceDescrChanged();
     void oscDescrChanged(QString descr);
     void oscChannelValueChanged(QString descr);
     void moduleDescrChanged(QString descr);
@@ -92,9 +97,9 @@ private:
     void doProccessDataReceived(QJsonObject data);
     void doProccessStreamDataReceived(QJsonObject data);
     void sendRequest(QJsonObject req, bool checkPerformance = false);
-    void emitParamValue(int moduleId, int paramId, QString sVal);
+    void emitParamValue(int moduleId, int paramId, QString sVal, QString info);
 
-    int m_deviceId;
+    int m_deviceId = 0;
     QString m_deviceDescr;
     QString m_oscDescr;
     QString m_oscChannelValue;
@@ -106,6 +111,8 @@ private:
     QString m_paramInfo2;
     QString m_paramValue1;
     QString m_paramValue2;
+    QString m_paramValueInfo1;
+    QString m_paramValueInfo2;
 
     QWebSocket m_webSocket;
     QWebSocket m_streamWebSocket;

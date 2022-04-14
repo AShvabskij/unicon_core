@@ -1,6 +1,7 @@
 #include "mainwindowvm.h"
 
-const int DEVICE_REQUEST_ID = 1;
+const int SYSTEM_REQUEST_ID = 1;
+const int DEVICE_REQUEST_ID = 2;
 const int OSC_REQUEST_ID = 10;
 const int OSC_CHANNEL_REQUEST_ID = 11;
 const int OSC_DATA_REQUEST_ID = 12;
@@ -44,15 +45,26 @@ void MainWindowVM::requestParamInfo(QString arg)
     CompositeId paramId = parse(arg);
     req["body"] = createParamCmdBody("GET_PARAM_HEADER", m_deviceId, paramId);
 
-    QJsonDocument doc(req);
-//  QByteArray bytes = doc.toJson();
-    QString strJson(doc.toJson(QJsonDocument::Compact));
+    sendRequest(req);
+}
 
-    m_webSocket.sendTextMessage(strJson);
+void MainWindowVM::requestSystemInfo()
+{
+    QJsonObject req;
+    req["request_id"] = SYSTEM_REQUEST_ID;
+    req["cmd"] = createCmd("GET_DEVICE_HEADER");
+    req["body"] = createDeviceCmdBody("GET_DEVICE_HEADER", 0);
+
+    sendRequest(req);
 }
 
 void MainWindowVM::requestDeviceInfo()
 {
+    if (m_deviceId == 0) {
+        requestSystemInfo();
+        return;
+    }
+
     QJsonObject req;
     req["request_id"] = DEVICE_REQUEST_ID;
     req["cmd"] = createCmd("GET_DEVICE_HEADER");
@@ -153,10 +165,38 @@ void MainWindowVM::stopOscParamValues(QString oscId)
     sendRequest(req);
 }
 
-void MainWindowVM::setDeviceDescr(QString arg)
+void MainWindowVM::setSystemInfo(QJsonArray objects)
 {
-    m_deviceDescr = arg;
-    emit deviceDescrChanged(arg);
+/*
+    QString res = QString("devices count = %1")
+            .arg(objects.count());
+
+
+    m_systemInfo = res;
+    emit systemInfoChanged();
+*/
+
+    if (m_deviceId == 0) {
+        QJsonObject deviceInfo = objects.first().toObject();
+        setDeviceDescr(deviceInfo);
+    }
+}
+
+void MainWindowVM::setDeviceDescr(const QJsonObject &obj)
+{
+    int deviceId = obj.value("id").toInt();
+    QString name = obj.value("name").toString();
+    int modulesCount = obj.value("modules").toArray().count();
+    QString output = QString("Device: id = %1, name = %2, modules count = %3")
+            .arg(deviceId)
+            .arg(name)
+            .arg(modulesCount);
+
+    m_deviceDescr = output;
+    emit deviceDescrChanged();
+
+    m_deviceId = deviceId;
+    emit deviceIdChanged();
 }
 
 void MainWindowVM::setOscDescr(QString arg)
@@ -283,16 +323,30 @@ MainWindowVM::CompositeId MainWindowVM::parse(QString arg) const
 
 void MainWindowVM::setParamInfo(const QJsonObject& obj)
 {
-    int deviceId = obj.value("device_id").toInt();
+    if (obj.isEmpty()) return;
+
     int moduleId = obj.value("module_id").toInt();
     int paramId = obj.value("param_id").toInt();
-
+    QString dim = obj.value("value_unit").toString();
     QString name = obj.value("name").toString();
-    QString info = QString("Param: id = %1, name = %2, device id = %3, module id = %4")
+    QString desc = obj.value("desc").toString();
+    QString rw = obj.value("rw").toString();
+
+    QString s_name = (name.contains("(") && name.contains(")")) ? name
+                                                                : name + "(" + dim + ")";
+    QString s_rw = (rw == "R") ? "readable"
+                             : (rw == "W") ? "writable" : rw;
+
+    QString info("");
+    info = QString("[%1.%2]: name = %3, %4 ")
+            .arg(moduleId)
             .arg(paramId)
-            .arg(name)
-            .arg(deviceId)
-            .arg(moduleId);
+            .arg(s_name)
+            .arg(s_rw);
+
+    if (!desc.isEmpty()) {
+        info = info + ", desc = " + desc;
+    }
 
     CompositeId param1 = parse(m_paramComposId1);
     CompositeId param2 = parse(m_paramComposId2);
@@ -308,22 +362,29 @@ void MainWindowVM::setParamInfo(const QJsonObject& obj)
 
 void MainWindowVM::setParamValue(const QJsonObject& obj)
 {
-    int devId = obj.value("device_id").toInt();
+    if (obj.isEmpty()) return;
+
     int paramId = obj.value("param_id").toInt();
     int moduleId = obj.value("module_id").toInt();
-    QVariant value = obj.value("value").toObject().value("value");
-    double time = obj.value("value").toObject().value("time").toDouble();
-    QString svalue = value.canConvert(QMetaType::Float) ? QString::number(value.toFloat(), 'f', 2) : value.toString();
+    QJsonObject valObj = obj.value("value").toObject();
+    qint8 format = obj.value("format").toInt();
+    double scale = obj.value("scale").toDouble();
 
-    QString res = QString("Param: id = %1, device id = %2, value = %3")
-            .arg(paramId)
-            .arg(devId)
-            .arg(svalue);
 
+    QJsonValue value = valObj.value("value");
+
+    QString s_value = value.toVariant().toString();
+    s_value = (format == 3) ? QString::number(value.toDouble(), 'f', 2) : s_value;
+
+    double time = valObj.value("time").toDouble();
     QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
-    svalue = svalue.leftJustified(8) + " " + dt.time().toString("mm:ss.zzz"); // toString(Qt::ISODateWithMs);
 
-    emitParamValue(moduleId, paramId, svalue);
+    QString info = QString("value = %1, scale = %2, time = %3")
+            .arg(s_value)
+            .arg(scale)
+            .arg(dt.time().toString("HH:mm:ss.zzz"));
+
+    emitParamValue(moduleId, paramId, s_value, info);
 }
 
 void MainWindowVM::setStreamParamValue(const QJsonObject& obj)
@@ -333,17 +394,17 @@ void MainWindowVM::setStreamParamValue(const QJsonObject& obj)
     QVariant value = obj.value("value").toObject().value("value");
     double time = obj.value("value").toObject().value("time").toDouble();
     QString svalue = value.canConvert(QMetaType::Float) ? QString::number(value.toFloat(), 'f', 2) : value.toString();
-
-    QString res = QString("value = %1")
-            .arg(svalue);
-
     QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
-    svalue = svalue.leftJustified(8) + " " + dt.time().toString("mm:ss.zzz"); // toString(Qt::ISODateWithMs);
 
-    emitParamValue(moduleId, paramId, svalue);
+    QString info = QString("value = %1 %3")
+            .arg(svalue)
+            .arg(dt.time().toString("mm:ss.zzz"));
+
+
+    emitParamValue(moduleId, paramId, svalue, info);
 }
 
-void MainWindowVM::emitParamValue(int moduleId, int paramId, QString sVal)
+void MainWindowVM::emitParamValue(int moduleId, int paramId, QString sVal, QString info)
 {
     CompositeId param1 = parse(m_paramComposId1);
     CompositeId param2 = parse(m_paramComposId2);
@@ -351,23 +412,14 @@ void MainWindowVM::emitParamValue(int moduleId, int paramId, QString sVal)
     if (param1.paramId == paramId && param1.moduleId == moduleId) {
         m_paramValue1 = sVal;
         emit paramValue1Changed(sVal);
+        m_paramValueInfo1 = info;
+        emit valueInfo1Changed(info);
     } else if (param2.paramId == paramId && param2.moduleId == moduleId) {
         m_paramValue2 = sVal;
         emit paramValue2Changed(sVal);
+        m_paramValueInfo2 = info;
+        emit valueInfo2Changed(info);
     }
-}
-
-QString MainWindowVM::deviceObjToString(const QJsonObject &obj)
-{
-    int deviceId = obj.value("id").toInt();
-    QString name = obj.value("name").toString();
-    int modulesCount = obj.value("modules").toArray().count();
-    QString res = QString("Device: id = %1, name = %2, modules count = %3")
-            .arg(deviceId)
-            .arg(name)
-            .arg(modulesCount);
-
-    return res;
 }
 
 QString MainWindowVM::oscObjToString(const QJsonObject &obj)
@@ -441,6 +493,8 @@ void MainWindowVM::onConnected()
 
     connect(&m_streamWebSocket, &QWebSocket::binaryMessageReceived,
             this, &MainWindowVM::onStreamBinaryMessageReceived);
+
+    requestSystemInfo();
 }
 
 void MainWindowVM::onDisconnected()
@@ -476,32 +530,41 @@ void MainWindowVM::doProccessDataReceived(QJsonObject data)
 
     QString output;
 
-    QJsonObject bodyObj;
+    QJsonDocument doc;
     if (reqId == PARAM_REQUEST_ID) {
         QJsonArray body = data.value("body").toArray();
-        bodyObj = body.first().toObject();
+        QJsonObject bodyObj = body.first().toObject();
+        doc = QJsonDocument(bodyObj);
         setParamInfo(bodyObj);
 
+    } else if (reqId == SYSTEM_REQUEST_ID) {
+        QJsonArray body = data.value("body").toArray();
+        doc = QJsonDocument(body);
+        setSystemInfo(body);
     } else if (reqId == DEVICE_REQUEST_ID) {
         QJsonArray body = data.value("body").toArray();
-        bodyObj = body.first().toObject();
-        output = deviceObjToString(bodyObj);
-        setDeviceDescr(output);
+        QJsonObject bodyObj = body.first().toObject();
+        doc = QJsonDocument(bodyObj);
+        setDeviceDescr(bodyObj);
     } else if (reqId == OSC_REQUEST_ID) {
-        bodyObj = data.value("body").toObject();
+        QJsonObject bodyObj = data.value("body").toObject();
+        doc = QJsonDocument(bodyObj);
         output = oscObjToString(bodyObj);
         setOscDescr(output);
     } else if (reqId == OSC_CHANNEL_REQUEST_ID) {
-        bodyObj = data.value("body").toObject();
+        QJsonObject bodyObj = data.value("body").toObject();
+        doc = QJsonDocument(bodyObj);
         output = oscChannelObjToString(bodyObj);
         m_oscChannelValue = output;
         emit oscChannelValueChanged(m_oscChannelValue);
     } else if (reqId == PARAM_VALUE_REQUEST_ID || reqId == PARAM_VALUE_SET_ID) {
-        bodyObj = data.value("body").toObject();
+        QJsonObject bodyObj = data.value("body").toObject();
+        doc = QJsonDocument(bodyObj);
         setParamValue(bodyObj);
     }
 
-    QJsonDocument doc(bodyObj);
+    if (doc.isEmpty()) return;
+
     QString strObj(doc.toJson(QJsonDocument::Indented));
     emit dataReceived(strObj);
 }

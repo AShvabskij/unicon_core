@@ -396,7 +396,7 @@ long ParamsHandler::getParamHeader(int deviceId, int moduleId, int paramId, Para
     out->id = paramId;
 
     for (const GLIO_ELEMENT_DESCR& elem : m_header->el_descr) {
-        if (elem.id == paramId)     {
+        if (elem.id == paramId) {
             out->name = elem.name;
             out->valueUnit = elem.dim;
             out->writable = elem.writable;
@@ -413,7 +413,7 @@ long ParamsHandler::getParamHeader(int deviceId, int moduleId, int paramId, Para
         }
     }
 
-    return -1;
+    return 0;
 }
 
 long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)

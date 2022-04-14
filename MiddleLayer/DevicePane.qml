@@ -44,6 +44,7 @@ GroupBox {
 
                 CellEdit {
                     id: index
+                    text: model.deviceId
                 }
             }
 

@@ -13,10 +13,10 @@ GroupBox {
     property var model: null
     property alias info: paramInfo.text
     property alias value: edtValue.text
+    property alias valueInfo: valueInfo.text
     property bool writable: false
     property bool streaming: false
     property bool oscStreaming: false
-    property int num: 0
     property string paramId: moduleIndex.text + "." + paramIndex.text
 
     padding: 12
@@ -103,17 +103,19 @@ GroupBox {
                 CellEdit {
                     id: edtValue
                     width: 125
-                    readOnly: true
+//                  readOnly: !writable
                 }
 
             }
 
             Button {
-                id: btnParamEdit
+                id: btnParamValueEdit
                 width: 80
                 height: 28
                 text: "Set"
+//              visible: writable
                 onClicked: {
+                    edtValue.focus = true
                     model.changeParamValue(root.paramId, edtValue.text);
                 }
             }
@@ -122,6 +124,7 @@ GroupBox {
                 id: btnTrend
                 width: 120
                 height: 28
+                visible: !writable
                 text: streaming ? "Trend off" : "Trend on"
                 onClicked: {
                     if (streaming) {
@@ -133,6 +136,16 @@ GroupBox {
                     }
                 }
             }
+
+            Text {
+                id: valueInfo
+                height: 25
+                color: "gold"
+                verticalAlignment: Text.AlignVCenter
+                text: ""
+                font.pointSize: 10
+            }
+
 
             /*
             SpinBox {

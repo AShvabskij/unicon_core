@@ -51,7 +51,7 @@ Item {
         }
 
         Text {
-            id: lblPort
+            id: connectInfo
             height: 30
             color: "gold"
             verticalAlignment: Text.AlignVCenter
