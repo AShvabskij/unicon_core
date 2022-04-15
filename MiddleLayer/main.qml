@@ -4,6 +4,7 @@ import QtQuick.Controls 2.3
 
 import QtQuick.Layouts 1.1
 import QtQuick.Controls.Material 2.12
+import QtQuick.Dialogs 1.1
 
 import "components"
 import solcon.qmlmodels 1.0
@@ -21,6 +22,8 @@ ApplicationWindow {
         x = Screen.width / 2 - width / 2
         y = Screen.height / 2 - height / 2
     }
+
+    title: "unicon"
 
     MainWindowVM {
         id: mainModel
@@ -185,10 +188,63 @@ ApplicationWindow {
             align: Qt.AlignTrailing
         }
 */
+
+    ToolBar {
+        id : tbRow
+        anchors.top: columnControls.bottom
+        height: 30
+        background: Rectangle {
+            border.color: "gray"
+            border.width: 1
+            color: "black" //"#868482"
+        }
+
+        width: parent.width
+
+        Row {
+            anchors.leftMargin: 10
+            anchors.fill: parent
+            width: parent.width
+            spacing: 1
+
+            Button {
+                id: btnLogClear
+                anchors.verticalCenter: parent.verticalCenter
+                width: 60
+                height: parent.height - 10
+                text: "clear"
+                onClicked: {
+                    dataLog.clear()
+                }
+            }
+
+            Button {
+                id: btnLogSave
+                anchors.verticalCenter: parent.verticalCenter
+                width: 60
+                height: parent.height - 10
+                text: "save"
+            }
+
+            Button {
+                id: btnLogDisable
+                anchors.verticalCenter: parent.verticalCenter
+                width: 60
+                height: parent.height - 10
+                text: "select all"
+            }
+
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+        }
+    }
+
     Flickable {
         id: flickable
-        anchors.top: columnControls.bottom
-        anchors.topMargin: 10
+        anchors.top: tbRow.bottom
         height: parent.height - columnControls.height - 30
         width: parent.width
         flickableDirection: Flickable.VerticalFlick
@@ -211,15 +267,14 @@ ApplicationWindow {
                 border.color: "black"
                 border.width: 2
                 radius: 4
-                color: "black" //"#868482"
+                color: "black"
             }
-            text: qsTr("Hello\nHello")
-            placeholderText: qsTr("Enter description")
+            placeholderText: qsTr("Log send/receive data here...")
             selectByMouse : true
+            persistentSelection: true
         }
         ScrollBar.vertical: ScrollBar { id: scroll}
     }
-
 }
 
 
