@@ -1,5 +1,6 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    MiddleLayer \
-    DDE
+    DDE \
+    unicon_testpanel \
+    unicon_core

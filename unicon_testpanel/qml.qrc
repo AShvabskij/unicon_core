@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>components/images/button_background_disabled.png</file>
+        <file>components/images/button_background_normal.png</file>
+        <file>components/images/button_background_pressed.png</file>
+        <file>components/Button.qml</file>
+        <file>components/CellEdit.qml</file>
+        <file>components/Divider.qml</file>
+        <file>ConnectPane.qml</file>
+        <file>DevicePane.qml</file>
+        <file>OscPane.qml</file>
+        <file>ParameterPane.qml</file>
+    </qresource>
+</RCC>
