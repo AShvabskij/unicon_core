@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<RCC>
+    <qresource prefix="/">
+        <file alias="components/images/button_background_disabled.png">components/images/button_background_disabled.png</file>
+        <file alias="components/images/button_background_normal.png">components/images/button_background_normal.png</file>
+        <file alias="components/images/button_background_pressed.png">components/images/button_background_pressed.png</file>
+    </qresource>
+</RCC>

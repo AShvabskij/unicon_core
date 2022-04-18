@@ -1,0 +1,25 @@
+#ifndef BASEREQHANDLER_H
+#define BASEREQHANDLER_H
+
+#include "ireqhandler.h"
+#include "responsemanager.h"
+#include "DDE.h"
+
+class BaseReqHandler : public IReqHandler
+{
+    Q_OBJECT
+public:
+    BaseReqHandler(IDDE* dde);
+    ~BaseReqHandler() {};
+
+    virtual int handle(const QJsonObject& request);
+    virtual void setNext(IReqHandler* next);
+    void setResponseManager(ResponseManager* response);
+
+protected:
+    IReqHandler* m_next = nullptr;
+    ResponseManager* m_response = nullptr;
+    IDDE* m_dde = nullptr;
+};
+
+#endif // BASEREQHANDLER_H
