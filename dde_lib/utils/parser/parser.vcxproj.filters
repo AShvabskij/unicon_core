@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="DDE">
+      <UniqueIdentifier>{7c7c86b7-970e-4973-a250-e1545ea34673}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="db.lib">
+      <UniqueIdentifier>{57dff665-0783-47c5-a360-fa11461fc454}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="csv_parser.h" />
+    <ClInclude Include="..\..\cpp_inc.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\csvfile.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_EVLOG.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_EVLOG_TYPES.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_OSC.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_OSC_EMUL.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_OSC_FILE.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_OSC_TYPES.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_PARAMS.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_PARAMS_EMUL.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_PARAMS_FILE.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_PARAMS_TYPE.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_TYPES.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sql3_db\db_sqlib.h">
+      <Filter>db.lib</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="csv_parser.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\sql3_db\bin\x64\Debug\db_lib.a">
+      <Filter>db.lib</Filter>
+    </Library>
+  </ItemGroup>
+</Project>
