@@ -16,12 +16,10 @@ const std::string FILE_PARSE_ERROR = "Error while parsing the file!\n";
 const int CSV_NUMBER_OF_CELLS = 10;
 
 DDE_PARAMS_FILE::DDE_PARAMS_FILE()
-{
-}
+{}
 
 DDE_PARAMS_FILE::~DDE_PARAMS_FILE()
-{
-}
+{}
 
 _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
 {
@@ -34,9 +32,9 @@ _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
     CsvFile* file = new CsvFile();
     assert(file);
 
-    #ifdef __arm__
-        file->setWorkDirectory("/home/pi/Desktop/Release/");
-    #endif
+#ifdef __arm__
+    file->setWorkDirectory("/home/pi/Desktop/Release/");
+#endif
 
     for (int ii = 1; ii < devices_count * devices_step; ii = ii + devices_step)	{
         string fileName = "parameters_"+to_string(ii) + ".csv";
@@ -45,7 +43,7 @@ _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
             return res;
         }
 
-        m_device[ii].device_ID = ii;
+        m_device[ii].device_id = ii;
         if (ii == 1) {
             strcpy(m_device[ii].name, "HRVS-DN-PowerStart");
             strcpy(m_device[ii].descr, "Medium Voltage Digital Soft Starter 60-1,200A, 2,300-15,000V");
@@ -65,60 +63,59 @@ _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
                 return isValidRow;
             });
 
-        if (cells.empty()) continue;
+            if (cells.empty()) continue;
 
-        uint16_t moduleId = atoi(cells[3].c_str()) >> 6 << 6;
-        uint16_t paramId = atoi(cells[3].c_str());
+            uint16_t moduleId = atoi(cells[3].c_str()) >> 6 << 6;
+            uint16_t paramId = atoi(cells[3].c_str());
 
-        if (moduleId ==0 && paramId == 0) {
-            continue;
-        }
+            if (moduleId ==0 && paramId == 0) {
+                continue;
+            }
 
 
-        strcpy(m_device[ii].el_descr[moduleId].name, cells[0].c_str());
+            strcpy(m_device[ii].el_descr[moduleId].name, cells[0].c_str());
 
-        GLIO_ELEMENT_DESCR& el_descr = m_device[ii].el_descr[paramId];
-        GLIO_ELEMENT_VALUE& el_value = m_device[ii].el[paramId];
+            GLIO_ELEMENT_DESCR& el_descr = m_device[ii].el_descr[paramId];
+            GLIO_ELEMENT_VALUE& el_value = m_device[ii].el[paramId];
 
-        strcpy(el_descr.name, cells[1].c_str());
-        strcpy(el_descr.descr, cells[2].c_str());
-        strcpy(el_descr.dim, cells[8].c_str());
-        el_descr.id = paramId;
-        el_descr.writable = (cells[5] == "W") ? true : false;
-        el_descr.format = static_cast<GLIO_ELEMENT_FORMAT_ENUM>(atoi(cells[4].c_str()));
-        el_descr.scale = 0;
+            strcpy(el_descr.name, cells[1].c_str());
+            strcpy(el_descr.descr, cells[2].c_str());
+            strcpy(el_descr.unit, cells[8].c_str());
+            el_descr.id = paramId;
+            el_descr.writable = (cells[5] == "W") ? true : false;
+            el_descr.format = static_cast<GLIO_ELEMENT_FORMAT_ENUM>(atoi(cells[4].c_str()));
+            el_descr.scale = 0;
 
-        el_value.id = paramId;
-        el_value.format = el_descr.format;
-        el_value.scale = el_descr.scale;
-        if (el_descr.format == GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT) {
-            float fvalue = atof(cells[10].c_str());
-            memcpy(&el_value.ivalue, &fvalue, sizeof (float));
-        } else {
-            el_value.ivalue = atoi(cells[10].c_str());
-        }
-        el_value.timestamp = 0;
-        el_value.text_id = (el_descr.format == GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT) ? el_value.ivalue : 0;
+            el_value.format = el_descr.format;
+            el_value.scale = el_descr.scale;
+            if (el_descr.format == GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT) {
+                float fvalue = atof(cells[10].c_str());
+                memcpy(&el_value.ivalue, &fvalue, sizeof (float));
+            } else {
+                el_value.ivalue = atoi(cells[10].c_str());
+            }
+            el_value.timestamp = 0;
+            el_value.text_id = (el_descr.format == GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT) ? el_value.ivalue : 0;
 
-        if (cells.size() >= 12) {
-            auto txtValues = split(cells[11].c_str(), ',');
+            if (cells.size() >= 12) {
+                auto txtValues = split(cells[11].c_str(), ',');
 
-            for (unsigned long i = 0; i < txtValues.size(); ++i) {
-                if (i >= DDE_PARAMS_TXTVALUES_MAX_COUNT) {
-                    break;
+                for (unsigned long i = 0; i < txtValues.size(); ++i) {
+                    if (i >= DDE_PARAMS_TXTVALUES_MAX_COUNT) {
+                        break;
+                    }
+                    char* c = new char[DDE_PARAMS_TXTVALUE_LENGTH +1];
+                    strncpy(c, txtValues.at(i).c_str(), DDE_PARAMS_TXTVALUE_LENGTH);
+                    el_descr.txtValues[i] = c;
+                    el_descr.txtSubIndexes[i] = i + 1;
                 }
-                char* c = new char[DDE_PARAMS_TXTVALUE_LENGTH +1];
-                strncpy(c, txtValues.at(i).c_str(), DDE_PARAMS_TXTVALUE_LENGTH);
-                el_descr.txtValues[i] = c;
-                el_descr.txtSubIndexes[i] = i + 1;
             }
         }
     }
-}
 
-delete file;
+    delete file;
 
-return res;
+    return res;
 }
 
 _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
@@ -132,19 +129,19 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
 //        return -1;
 //    }
 
-    if (p.device_ID > DEVICE_ID_MAX || p.param_ID > ELEMENTS_ID_MAX || p.module_ID > ELEMENTS_ID_MAX) {
+    if (p.device_id > DEVICE_ID_MAX || p.param_id > ELEMENTS_ID_MAX || p.module_id > ELEMENTS_ID_MAX) {
         memset(&p, 0, sizeof(DDE_GET_PARAMS_HEADER));
         return -1;
     }
 
     //check level 1 request for device names
-    if (p.device_ID == 0) {
+    if (p.device_id == 0) {
         p.el_count = 0;// params.devices_count;
         for (int ii = 0; ii < 64; ii++) {
             if (m_device[ii].name[0] != 0) {
                 memcpy(&p.el_descr[p.el_count].name, &m_device[ii].name, DDE_PARAMS_NAME_LENGTH);
                 memcpy(&p.el_descr[p.el_count].descr, &m_device[ii].descr, DDE_PARAMS_DESCR_LENGTH);
-                p.el_descr[p.el_count].id = m_device[ii].device_ID;
+                p.el_descr[p.el_count].id = m_device[ii].device_id;
                 p.el_count++;
             }
         }
@@ -153,14 +150,14 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
     }
 
     //check level 2 (requiest for  modules names)
-    if (p.module_ID == 0) {
+    if (p.module_id == 0) {
         p.el_count = 0;
         for (int ii = 0; ii < 64; ii++) {
             int module_id = (ii << 6);
-            if (m_device[p.device_ID].el_descr[module_id].name[0] != 0) {
-                memcpy(&p.el_descr[p.el_count], &m_device[p.device_ID].el_descr[module_id], sizeof(GLIO_ELEMENT_DESCR));
+            if (m_device[p.device_id].el_descr[module_id].name[0] != 0) {
+                memcpy(&p.el_descr[p.el_count], &m_device[p.device_id].el_descr[module_id], sizeof(GLIO_ELEMENT_DESCR));
                 p.el_descr[p.el_count].id = module_id;
-                p.el_descr[p.el_count].module_id = module_id;
+                p.el_descr[p.el_count].mod = module_id;
                 p.el_count++;
             }
         }
@@ -169,20 +166,20 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
     }
 
     // level 3 request for params names
-    if ( p.param_ID == 0) {
+    if ( p.param_id == 0) {
         p.el_count = 0;
-        for (int ii = p.module_ID; ii < p.module_ID + 64; ii++) {
-            if (m_device[p.device_ID].el_descr[ii].name[0] != 0) {
-                memcpy(&p.el_descr[p.el_count], &m_device[p.device_ID].el_descr[ii], sizeof(GLIO_ELEMENT_DESCR));
+        for (int ii = p.module_id; ii < p.module_id + 64; ii++) {
+            if (m_device[p.device_id].el_descr[ii].name[0] != 0) {
+                memcpy(&p.el_descr[p.el_count], &m_device[p.device_id].el_descr[ii], sizeof(GLIO_ELEMENT_DESCR));
                 p.el_descr[p.el_count].id = ii;
-                p.el_descr[p.el_count].module_id = p.module_ID;
+                p.el_descr[p.el_count].mod = p.module_id;
                 p.el_count++;
             }
         }
     }
     else { //level 4 (request for individual param name - not used
         p.el_count = 1;
-        memcpy(&p.el_descr[0], &m_device[p.device_ID].el_descr[p.param_ID], sizeof(GLIO_ELEMENT_DESCR));
+        memcpy(&p.el_descr[0], &m_device[p.device_id].el_descr[p.param_id], sizeof(GLIO_ELEMENT_DESCR));
     }
 
     return 0;
@@ -207,7 +204,7 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
         for (int ii = 0; ii < 16; ii++) {
             int paramId = p.module_id + ii;
             auto el = m_device[p.device_id].el[paramId];
-            p.el[ii].id = paramId;
+//          p.el[ii].id = paramId;
             p.el[ii].ivalue = el.ivalue;
             p.el[ii].text_id = el.text_id;
             p.el[ii].format = el.format;
@@ -217,7 +214,7 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
     } else {
         int paramId = p.param_id;
         auto el = m_device[p.device_id].el[paramId];
-        p.el[0].id = paramId;
+//      p.el[0].id = paramId;
         p.el[0].ivalue = el.ivalue;
         p.el[0].text_id = el.text_id;
         p.el[0].format = el.format;
@@ -225,7 +222,7 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
         p.el[0].timestamp = systemTime();
 
         uint8_t format = m_device[p.device_id].el_descr[paramId].format;
-        string unit = m_device[p.device_id].el_descr[paramId].dim;
+        string unit = m_device[p.device_id].el_descr[paramId].unit;
         if (format == 3) {
             float fvalue = 0.0;
 

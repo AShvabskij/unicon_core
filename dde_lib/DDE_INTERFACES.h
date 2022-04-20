@@ -1,7 +1,7 @@
 #ifndef DDE_INTERFACES_H
 #define DDE_INTERFACES_H
 
-#include <DDE_TYPES.h>
+#include "DDE_TYPES.h"
 #include "DDE_OSC_TYPES.h"
 #include "DDE_EVLOG_TYPES.h"
 

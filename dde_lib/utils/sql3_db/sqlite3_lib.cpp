@@ -1,0 +1,399 @@
+#include "sqlite3_lib.h"
+
+const char *name_dbfile = "dev_desc.db3";
+const char *all_tbl[] = { "_desc_", "_txt_", "" };
+const char *eoline = "\n";
+
+bool dbOpen = false;
+sqlite3 *dbc;
+char *err = 0;
+
+int el_s_counter = 0;
+int num_glio = 0;
+int offset = 0;
+
+bool is_empty(const char* device_name, const char* device_description)
+{
+	if ((device_name && !device_name[0]) || (device_description && !device_description[0]))
+	{
+		return true;
+	}
+	return false;
+}
+//****************************************************************************************************
+void print_msg_sql(const char *st, uint8_t with)
+{
+    fprintf(stdout, "%s", st);
+    fflush(stdout);
+}
+//****************************************************************************************************
+void prnDesc(void *r, int dev_id, int el_id)
+{
+	if (!r)
+		return;
+
+	char buf[MAX_BUF_SIZE];
+
+	sprintf(buf, "\tdev_id:%d\n\tel_id:%d\n\tmod_id:%d\n\tname:'%s'\n\tdesc:'%s'\n\tformat:%d\n\tscale:%.3f\n\tunits:'%s'\n\tr/w:%d\n\ttxt_id:%d%s",
+					dev_id, el_id, ((GLIO_ELEMENT_DESCR*)r)->id, ((GLIO_ELEMENT_DESCR*)r)->name, ((GLIO_ELEMENT_DESCR*)r)->descr, ((GLIO_ELEMENT_DESCR*)r)->format, ((GLIO_ELEMENT_DESCR*)r)->scale, ((GLIO_ELEMENT_DESCR*)r)->unit, ((GLIO_ELEMENT_DESCR*)r)->writable, ((GLIO_ELEMENT_DESCR*)r)->txtSubIndexes[0], eoline);
+
+	print_msg_sql(buf, 0);
+}
+//****************************************************************************************************
+void prnTxt(void *r)
+{
+	if (!r)
+		return;
+
+	char buf[MAX_BUF_SIZE];
+
+	sprintf(buf, "\ttxt_id:%d sub_id:%d txt_val:'%s'%s", ((GLIO_ELEMENT_DESCR*)r)->id, ((GLIO_ELEMENT_DESCR*)r)->txtSubIndexes[0], ((GLIO_ELEMENT_DESCR*)r)->txtValues[0], eoline);
+
+	print_msg_sql(buf, 0);
+}
+//****************************************************************************************************
+//   CallBack функция возвращает в переменной itogo количество записей в таблице
+//
+int Total_rec(void/*int*/ *itogo, int argc, char **argv, char **column)
+{
+    if (!argc)
+		return -1;
+
+    int res = atoi(argv[0]);
+    *(int *)itogo = res;
+
+    return 0;
+}
+//****************************************************************************************************
+//   Функция выполяет открытие базы данных и при необходтмости создает таблицу со структурой
+//            согласно параметра 'type' для устройства с индексом 'dev_type_id'
+//
+int init_tbl(const char* device_name, const char* device_description, uint8_t/*TABLE_TYPE_ENUM*/ type)
+{
+	int ret = -1, rc;
+	int itogo = 0;
+	char line[MAX_TMP_BUF << 1] = {0};
+	char stz[MAX_TMP_BUF] = {0};
+	char tbl_name[64];
+
+	if (type < type_desc || type > type_usual)
+		return -1;
+
+	if (!dbOpen) { //  Если база не открыта - выполняем операцию открытия
+    	rc = sqlite3_open(name_dbfile, &dbc);
+    	if (rc != SQLITE_OK) {
+    		dbOpen = false;
+			sprintf(line, "[%s]: Open DB '%s' error %d\n", __func__, name_dbfile, rc);
+			print_msg_sql(line, 1);
+			return ret;
+    	}
+    	dbOpen = true;
+	}
+    sprintf(tbl_name, "%s%s%s", device_name, all_tbl[type], device_description);
+	sprintf(line, "SELECT COUNT(*) FROM %s;" , tbl_name);
+    rc = sqlite3_exec(dbc, line, &Total_rec, &itogo, &err);// делаем запрос на количемтво записей в таблице
+    if (rc != SQLITE_OK ) {//SELECT ERROR
+	    sprintf(stz, "[%s]: Select from fable '%s' error #%d (%s)\n", __func__, tbl_name, rc, err);
+	    if (err) sqlite3_free(err);
+	} else {
+		sprintf(stz, "[%s]: Table '%s' contains %d records\n", __func__, tbl_name, itogo);
+		ret = 1;
+	}
+	print_msg_sql(stz, 1);
+
+	if (rc == SQLITE_ERROR) {// =1 table not present, create table now
+		if (type == type_txt)
+		{
+			sprintf(line, "CREATE TABLE IF NOT EXISTS `%s` (number_s INTEGER primary key autoincrement,\
+				txt_id_s INTEGER, sub_id_s INTEGER, txt_val_s TEXT);", tbl_name);
+		}
+		else
+		{
+			sprintf(line, "CREATE TABLE IF NOT EXISTS `%s` (number_s INTEGER primary key autoincrement,\
+			mod_id_s INTEGER, param_id_s INTEGER, reg_s INTEGER, name_s TEXT, descr_s TEXT, format_s INTEGER, scale_s REAL, units_s TEXT, writable_s NUMERIC, txt_id_s INTEGER);", tbl_name);
+		}
+
+	    rc = sqlite3_exec(dbc, line, NULL, 0, &err);//делаем запрос на создание таблицы (согласно параметра 'type') в базе данных
+	    if (rc != SQLITE_OK ) {
+			sprintf(stz,"[%s]: Create table '%s' error #%d (%s)\n", __func__, tbl_name, rc, err);
+			if (err) sqlite3_free(err);
+	    } else {
+			sprintf(stz,"[%s]: Create table '%s' OK\n", __func__, tbl_name);
+			ret = 0;
+	    }
+	    print_msg_sql(stz, 1);
+	}
+	return ret;
+}
+//****************************************************************************************************
+//     Функция добавляет запись в таблицу для устройства согласно параметров 'tbl_name', 'type'
+// 
+int add_rec(const char* device_name, const char* device_description, void *buf, uint8_t/*TABLE_TYPE_ENUM*/ type)
+{
+	int ret = 0, rc;	
+	char tmp[MAX_TMP_BUF << 1];
+	char tbl_name[64];
+
+	if (!buf || type < type_desc || type > type_usual)
+		return -1;
+	
+	if (type != type_txt)
+	{
+		sprintf(tbl_name, "%s%s%s", device_name, all_tbl[type], device_description);
+		DDE_SET_PARAMS_HEADER* rd = ((DDE_SET_PARAMS_HEADER*)buf);
+
+		sprintf(tmp, "INSERT INTO `%s` (param_id_s, mod_id_s, name_s, descr_s, format_s, scale_s, units_s, writable_s, txt_id_s) \
+			VALUES (%d,%d,\"%s\",\"%s\",%d,%f,\"%s\",%d,%d);", tbl_name,
+			rd->param_id, rd->module_id, rd->name, rd->descr, rd->format, rd->scale, rd->unit, rd->writable, rd->id);
+
+		rc = sqlite3_exec(dbc, tmp, NULL, 0, &err);
+
+		if (rc != SQLITE_OK) {
+			sprintf(tmp, "[%s]: Insert record into fable '%s' error #%d (%s)\n", __func__, tbl_name, rc, err);
+			if (err) sqlite3_free(err);
+			print_msg_sql(tmp, 1);
+			ret = -1;
+			return ret;
+		}
+		return ret;
+	}
+	else
+	{
+		sprintf(tbl_name, "%s%s%s", device_name, all_tbl[type_txt], device_description);
+		DDE_SET_PARAMS_HEADER* rt = (DDE_SET_PARAMS_HEADER*)buf;
+
+		sprintf(tmp, "INSERT INTO `%s` (txt_id_s, sub_id_s, txt_val_s) VALUES (%d,%d,\"%s\");",
+			tbl_name, rt->id, rt->txtSubIndexes, rt->txtValues);
+
+		rc = sqlite3_exec(dbc, tmp, NULL, 0, &err);
+
+		if (rc != SQLITE_OK) {
+			ret = -1;
+			return ret;
+		}
+		return ret;
+	}
+	return -1;
+}
+//****************************************************************************************************
+int glio_counter = 0;
+int one_desc_recs(void *uk, int columns, char **aDat, char **aName)
+{
+	int ret = -1;
+
+    if (!columns)
+		return ret;
+
+	DDE_GET_PARAMS_HEADER* struc = ((DDE_GET_PARAMS_HEADER*)uk);
+
+    ret																= atoi(aDat[0]);
+	struc->param_id													= atoi(aDat[1]);
+	struc->module_id												= atoi(aDat[2]);
+	
+	memcpy(struc->el_descr[glio_counter].name,							   aDat[4], DDE_PARAMS_NAME_LENGTH - 1);
+	memcpy(struc->el_descr[glio_counter].descr,							   aDat[5], DDE_PARAMS_DESCR_LENGTH - 1);
+	struc->el_descr[glio_counter].format =  (GLIO_ELEMENT_FORMAT_ENUM)atoi(aDat[6]);
+	struc->el_descr[glio_counter].scale								= atof(aDat[7]);
+	memcpy(struc->el_descr[glio_counter].unit,							   aDat[8], UNITS_SIZE);
+	struc->el_descr[glio_counter].writable							= atoi(aDat[9]);
+	struc->el_descr[glio_counter].id								= atoi(aDat[10]);
+
+	glio_counter++;
+    return 0;
+}
+//****************************************************************************************************
+int txt_counter = 0;
+int one_txt_recs(void *uk, int columns, char **aDat, char **aName)
+{
+	int ret = -1;
+
+    if (!columns)
+		return ret;
+
+	DDE_GET_PARAMS_HEADER* struc = ((DDE_GET_PARAMS_HEADER*)uk);
+
+	if (txt_counter == 0)
+	{
+		struc->el_descr[num_glio].txtValues[0] = (char*)malloc(sizeof(char[32]));
+
+		struc->el_descr[num_glio].id					= atoi(aDat[1]);
+		struc->el_descr[num_glio].txtSubIndexes[0]		= atoi(aDat[2]);
+		strcpy(struc->el_descr[num_glio].txtValues[0],		   aDat[3]);
+
+	}
+	else
+	{
+		struc->el_descr[num_glio + offset + txt_counter].txtValues[0] = (char*)malloc(sizeof(char[32]));
+
+		struc->el_descr[num_glio + offset + txt_counter].id						= atoi(aDat[1]);
+		struc->el_descr[num_glio + offset + txt_counter].txtSubIndexes[0]		= atoi(aDat[2]);
+		strcpy(struc->el_descr[num_glio + offset + txt_counter].txtValues[0],		   aDat[3]);
+
+		strncpy(struc->el_descr[num_glio + offset + txt_counter].name, struc->el_descr[num_glio].name, DDE_PARAMS_NAME_LENGTH - 1);
+		strncpy(struc->el_descr[num_glio + offset + txt_counter].descr, struc->el_descr[num_glio].descr, DDE_PARAMS_NAME_LENGTH - 1);
+		struc->el_descr[num_glio + offset + txt_counter].format = struc->el_descr[num_glio].format;
+		struc->el_descr[num_glio + offset + txt_counter].scale = struc->el_descr[num_glio].scale;
+		memcpy(&struc->el_descr[num_glio + offset + txt_counter].unit, &struc->el_descr[num_glio].unit, UNITS_SIZE);
+		struc->el_descr[num_glio + offset + txt_counter].writable = struc->el_descr[num_glio].writable;
+	}
+	
+	txt_counter++;
+    return 0;
+}
+//****************************************************************************************************
+//      Функция возвращает данные из базы данных согласно входным параметрам
+//      dev_type_id : индекс устройства
+//      el_id  : индекс элемента или модуля (группы)
+//      total  : количество возвращаемых структур GLIO_ELEMENT_DESCR 
+//      buf    : по этому адресу будет размещены выходные данные (структуры GLIO_ELEMENT_DESCR) 
+int get_rec(const char* device_name, const char* device_description, int param_ID, int module_ID, void *buf, uint8_t/*TABLE_TYPE_ENUM*/ type)
+{
+	int ret = -1, rc;
+	char desc_name[64];
+	char txt_name[64];
+	char tmp[MAX_TMP_BUF << 1];
+	char stz[MAX_TMP_BUF << 1];
+
+	if (type < type_desc || type > type_usual)
+		return -1;
+
+	((DDE_GET_PARAMS_HEADER*)buf)->device_id = atoi(device_description);
+	//((DDE_GET_PARAMS_HEADER*)buf)->timeout = 0;
+	//((DDE_GET_PARAMS_HEADER*)buf)->timeout_flg = 0;
+
+		//For an arbitrary table name without a device name and device description,
+		//Created table with desc_structure, does not create table with txt_structure
+		if (type == type_usual)
+		{
+			sprintf(desc_name, "%s%s%s", device_name, all_tbl[type], device_description);
+			sprintf(tmp, "SELECT * FROM `%s` WHERE param_id_s=%d AND mod_id_s=%d;", desc_name, param_ID, module_ID);
+
+			rc = sqlite3_exec(dbc, tmp, &one_desc_recs, buf, &err);
+			if (rc != SQLITE_OK) {
+				sprintf(stz, "Select error [%d]: '%s'%s", rc, err, eoline);
+				if (err) sqlite3_free(err);
+				print_msg_sql(stz, 1);
+
+				glio_counter = 0;
+
+				return ret;
+			}
+			else {
+				sprintf(stz, "    Get from table '%s' by dev_id=%d, module_ID=%d:%s", desc_name, param_ID, module_ID, eoline);
+				print_msg_sql(stz, 0);
+				prnDesc(&buf, param_ID, module_ID);
+
+				((DDE_GET_PARAMS_HEADER*)buf)->el_count = glio_counter;
+				glio_counter = 0;
+				return 0;
+			}
+		}
+	
+	sprintf(desc_name, "%s%s%s", device_name, all_tbl[type_desc], device_description);
+	sprintf(txt_name, "%s%s%s", device_name, all_tbl[type_txt], device_description);
+	sprintf(tmp, "SELECT * FROM `%s` WHERE param_id_s=%d AND mod_id_s=%d;", desc_name, param_ID, module_ID);
+
+	rc = sqlite3_exec(dbc, tmp, &one_desc_recs, buf, &err);
+	if (rc != SQLITE_OK ) {
+		sprintf(stz, "Select error [%d]: '%s'%s", rc, err, eoline);
+		if (err) sqlite3_free(err);
+		print_msg_sql(stz, 1);
+
+		glio_counter = 0;
+
+		return ret;
+	} else {
+		sprintf(stz, "    Get from table '%s' by dev_id=%d, module_ID=%d:%s", desc_name, param_ID, module_ID, eoline);
+		print_msg_sql(stz, 0);
+		prnDesc(buf, param_ID, module_ID);
+
+		offset = glio_counter - 1;
+		for (num_glio = 0; num_glio < glio_counter; num_glio++)
+		{
+			ret = 0;
+
+			int txt_id = ((DDE_GET_PARAMS_HEADER*)buf)->el_descr[num_glio].id;
+			sprintf(tmp, "SELECT * FROM `%s` WHERE txt_id_s=%d;", txt_name, txt_id);
+
+			rc = sqlite3_exec(dbc, tmp, &one_txt_recs, buf, &err);
+			if (rc != SQLITE_OK) {
+				sprintf(stz, "Select error [%d]: '%s'%s", rc, err, eoline);
+				if (err) sqlite3_free(err);
+				print_msg_sql(stz, 1);
+				return ret;
+			}
+			else 
+			{
+				sprintf(stz, "    Get from table '%s' where txt_id=%d:%s", txt_name, txt_id, eoline);
+				print_msg_sql(stz, 0);
+
+				offset = offset + txt_counter - 2;
+				if (txt_counter != 0)
+				{el_s_counter += txt_counter;}
+				else 
+				{ el_s_counter++; offset+=1; }
+
+				int i = -1;
+				while (++i < DDE_PARAMS_TXTVALUES_MAX_COUNT) {
+					GLIO_ELEMENT_DESCR* rt = &((DDE_GET_PARAMS_HEADER*)buf)->el_descr[i];
+					if (i< txt_counter)
+						prnTxt(rt);
+					else break;
+				}
+			}
+			txt_counter = 0;
+		}
+		((DDE_GET_PARAMS_HEADER*)buf)->el_count = el_s_counter;
+
+		sprintf(stz, "Get from table '%s' #%d records%s", txt_name, el_s_counter, eoline);
+		print_msg_sql(stz, 1);
+		glio_counter = 0; el_s_counter = 0; offset = 0; num_glio = 0;
+	}
+	return ret;
+}
+//****************************************************************************************************
+void dbClose()
+{
+	if (dbOpen) sqlite3_close(dbc);
+}
+//****************************************************************************************************
+//int non_repeat_el_s(DDE_SET_PARAMS_HEADER* rt, int* array_indexes[64], uint8_t/*TABLE_TYPE_ENUM*/ type)
+//{
+//	if (type == type_desc)
+//	{
+//		bool marker = true;
+//		int size = 0, j = 0;
+//		for (int i = 0; i < rt->el_count; i++, j++)
+//		{
+//			for (int k = j + 1; k < rt->el_count; k++)
+//				if (i != k && strcmp(rt->el_descr[i].name, rt->el_descr[k].name) == 0 && strcmp(rt->el_descr[i].descr, rt->el_descr[k].descr) == 0 && rt->el_descr[i].format == rt->el_descr[k].format && rt->el_descr[i].scale == rt->el_descr[k].scale && strcmp(rt->el_descr[i].unit, rt->el_descr[k].unit) == 0 && rt->el_descr[i].writable == rt->el_descr[k].writable && rt->el_descr[i].id == rt->el_descr[k].id)
+//					marker = false;
+//
+//			if (marker == true || i == rt->el_count - 1)
+//			{
+//				array_indexes[size] = i; size++;
+//			}
+//			marker = true;
+//		}
+//		return size;
+//	}
+//	if (type == type_txt)
+//	{
+//		bool marker = true;
+//		int size = 0, j = 0;
+//		for (int i = 0; i < rt->el_count; i++, j++)
+//		{
+//			for (int k = j + 1; k < rt->el_count; k++)
+//				if (i != k && rt->el_descr[i].txtSubIndexes[0] == rt->el_descr[k].txtSubIndexes[0] && rt->el_descr[i].id == rt->el_descr[k].id && rt->el_descr[i].txtValues[0] == rt->el_descr[k].txtValues[0])
+//					marker = false;
+//
+//			if (marker == true || i == rt->el_count - 1)
+//			{
+//				array_indexes[size] = i; size++;
+//			}
+//			marker = true;
+//		}
+//		return size;
+//	}
+//	return -1;
+//}

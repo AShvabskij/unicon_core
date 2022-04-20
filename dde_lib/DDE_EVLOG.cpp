@@ -1,5 +1,5 @@
 #include "DDE_EVLOG.h"
-#include "cpp_inc.h"
+//#include "my_func.h"
 
 DDE_EVLOG::DDE_EVLOG()
 {

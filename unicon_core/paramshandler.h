@@ -24,7 +24,7 @@ typedef QVector<Param> ParamList;
 
 struct ParamValue
 {
-    int id = 0;
+    int paramId = 0;
     int deviceId = 0;
     int moduleId = 0;
 
@@ -72,7 +72,7 @@ private:
     long getParamHeaders(int deviceId, int moduleId, ParamList *out);
     long setParamValue(const ParamValue &value);
 
-    ParamValue valueFrom(int deviceId, int moduleId, const GLIO_ELEMENT_VALUE &el);
+    ParamValue valueFrom(int deviceId, int moduleId, int paramId, const GLIO_ELEMENT_VALUE &el);
     QJsonObject createHeaderObj(int requestId, const ParamList &params);
     QJsonObject createValueObj(int requestId, const ParamValue& value, int error = 0);
     QJsonObject createStreamValueObj(const Param& param, const ParamValue& value, int error = 0);

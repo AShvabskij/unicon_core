@@ -46,7 +46,7 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 				strcpy(device[ii].el_descr[param_ID].name, s1.c_str());
                 s1 = s + " param "+ to_string(subix);
                 strcpy(device[ii].el_descr[param_ID].descr, s1.c_str());
-                strcpy(device[ii].el_descr[param_ID].dim, (subix != 0) ? valueUnitToString(GLIO_ELEMENT_UNIT_ENUM::UNIT_AMPERE).c_str()
+                strcpy(device[ii].el_descr[param_ID].unit, (subix != 0) ? valueUnitToString(GLIO_ELEMENT_UNIT_ENUM::UNIT_AMPERE).c_str()
                                                                               : valueUnitToString(GLIO_ELEMENT_UNIT_ENUM::UNIT_UNDEFINED).c_str());
                 device[ii].el[param_ID].ivalue = -1;
                 device[ii].el[param_ID].timestamp = 0;
@@ -85,13 +85,13 @@ _dde_func_return_t DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
 
 
     //check valid input
-    if (p.device_ID > DEVICE_ID_MAX || p.param_ID > PARAMS_ID_MAX ) {
+    if (p.device_id > DEVICE_ID_MAX || p.param_id > PARAMS_ID_MAX ) {
         memset(&p, 0, sizeof(DDE_GET_PARAMS_HEADER));
         return -1;
     }
 
     //check level 1 request for device names
-    if (p.device_ID == 0) {
+    if (p.device_id == 0) {
 
         p.el_count = 0;// params.devices_count;
         for (int ii = 0; ii < 64; ii++) {
@@ -107,32 +107,32 @@ _dde_func_return_t DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
     else
     {
         //check level 2 (requiest for  modules names)
-        if (p.module_ID == 0)
+        if (p.module_id == 0)
         {
 
             p.el_count = 0; // params.device[p.device_ID].modules_count;
             for (int ii = 0; ii < 64; ii++) {
                 int module_id = (ii<<6);
-                if (device[p.device_ID].el_descr[module_id].name[0] != 0) {
-                    memcpy(&p.el_descr[p.el_count], &device[p.device_ID].el_descr[module_id], sizeof(GLIO_ELEMENT_DESCR));
+                if (device[p.device_id].el_descr[module_id].name[0] != 0) {
+                    memcpy(&p.el_descr[p.el_count], &device[p.device_id].el_descr[module_id], sizeof(GLIO_ELEMENT_DESCR));
                     p.el_descr[p.el_count].id = (ii << 6);
-                    p.el_descr[p.el_count].module_id = (ii << 6);
+                    p.el_descr[p.el_count].mod = (ii << 6);
                     p.el_count++;
                 }
             }
 
         }
         else {
-            if (p.param_ID == 0)  //level 3 request for params names
+            if (p.param_id == 0)  //level 3 request for params names
             {
 
                 p.el_count = 0;// params.device[p.device_ID].el_descr[p.param_ID].params_count;
-                for (int ii = p.param_ID; ii < p.param_ID + 64; ii++) {
-                    if (device[p.device_ID].el_descr[ii].name[0] != 0)
+                for (int ii = p.param_id; ii < p.param_id + 64; ii++) {
+                    if (device[p.device_id].el_descr[ii].name[0] != 0)
                     {
-                        memcpy(&p.el_descr[p.el_count], &device[p.device_ID].el_descr[ii], sizeof(GLIO_ELEMENT_DESCR));
+                        memcpy(&p.el_descr[p.el_count], &device[p.device_id].el_descr[ii], sizeof(GLIO_ELEMENT_DESCR));
                         p.el_descr[p.el_count].id = ii;
-                        p.el_descr[p.el_count].module_id = (ii << 6);
+                        p.el_descr[p.el_count].mod = (ii << 6);
                         p.el_count++;
                     }
                 }
@@ -140,7 +140,7 @@ _dde_func_return_t DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
             else //level 4 (request for individual param name - not used
             {
                 p.el_count = 1;
-                memcpy(&p.el_descr[0], &device[p.device_ID].el_descr[p.param_ID], sizeof(GLIO_ELEMENT_DESCR));
+                memcpy(&p.el_descr[0], &device[p.device_id].el_descr[p.param_id], sizeof(GLIO_ELEMENT_DESCR));
             }
         }
     }
@@ -175,10 +175,6 @@ _dde_func_return_t DDE_PARAMS_EMUL::set(DDE_SET_PARAMS_DATA& )
 {
 	return 0;
 }
-
-
-
-
 
 //------------------------------------------------------------------------------
 //
@@ -311,7 +307,7 @@ float DDE_PARAMS_EMUL::generateValue(uint16_t device_ID, uint16_t param_ID, time
 //------------------------------------------------------------------------------
 void DDE_PARAMS_EMUL::proceed_request_list()
 {
-	DDE_GET_PARAMS_DATA get_params;
+//	DDE_GET_PARAMS_DATA get_params;
 
 	bool done = request_list.empty();
 	if (done) return;
@@ -345,9 +341,9 @@ void DDE_PARAMS_EMUL::proceed_request_list()
 int DDE_PARAMS_EMUL::thread_proc() //TODO this may be splited to thread_process_tx & thread_process_rx to one CAN chanell
 {
 
-
+/*
     GLIO_ELEMENT_VALUE el;
-	/*el.code_ID = 0;
+    el.code_ID = 0;
 	el.source_ID = 0;
 */
 

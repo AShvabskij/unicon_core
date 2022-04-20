@@ -80,7 +80,7 @@ int Core::test()
 
     //build params tree
     DDE_GET_PARAMS_HEADER get_devices_header;
-    get_devices_header.device_ID = 0;
+    get_devices_header.device_id = 0;
     m_dde->get_params_header(get_devices_header);
 
     std::cout << "HEADER el_count =" << get_devices_header.el_count << std::endl;
@@ -91,7 +91,7 @@ int Core::test()
 
         ////try to get modules from device
         DDE_GET_PARAMS_HEADER get_modules_header;
-        get_modules_header.device_ID = get_devices_header.el_descr[ii].id;
+        get_modules_header.device_id = get_devices_header.el_descr[ii].id;
         m_dde->get_params_header(get_modules_header);
         print_modules(get_modules_header);
     }
@@ -112,10 +112,10 @@ void Core::print_modules(const DDE_GET_PARAMS_HEADER& p)
 
 
             DDE_GET_PARAMS_HEADER get_params_header;
-            get_params_header.device_ID = p.device_ID;
-            get_params_header.module_ID = p.el_descr[ii].id;
+            get_params_header.device_id = p.device_id;
+            get_params_header.module_id = p.el_descr[ii].id;
             m_dde->get_params_header(get_params_header);
-            print_params(p.device_ID,ii,get_params_header);
+            print_params(p.device_id,ii,get_params_header);
     }
     std::cout << std::endl;
 }

@@ -1,11 +1,14 @@
 #pragma once
 //---------------------------------------------------------------------------
 
+#include "DDE_TYPES.h"
+//#include "DDE_PARAMS_TYPE.h"
+#include "DDE_PARAMS_TYPE.h"
 #include "DDE_PARAMS.h"
 #include "DDE_OSC_TYPES.h"
-//#include "DDE_OSC.h"
+#include "DDE_OSC.h"
 #include "DDE_EVLOG_TYPES.h"
-//#include "DDE_EVLOG.h"
+#include "DDE_EVLOG.h"
 
 //---------------------------------------------------------------------------
 
@@ -36,10 +39,12 @@ public:
 
     DDE();
     virtual ~DDE();
+    void update();
 
     virtual _dde_func_return_t init(char* device_description);
 
     virtual _dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p);
+    virtual _dde_func_return_t set_params_header(DDE_SET_PARAMS_HEADER& p);
     virtual _dde_func_return_t get_params_data(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t set_params_data(DDE_SET_PARAMS_DATA& p);
 
@@ -57,7 +62,6 @@ protected: // Protected members are accessible in the class that defines them an
     IDDE_OSC *mvcp;
     IDDE_EVLOG *evlog;
 private:
-    void update();
 };
 
 // ---------------- DISCUSSION LIST

@@ -68,7 +68,7 @@ int DeviceHandler::requestDevices(int requestId)
     DeviceList devices;
 
     DDE_GET_PARAMS_HEADER header;
-    header.device_ID = 0;
+    header.device_id = 0;
     m_dde->get_params_header(header);
 
     for (int i = 0; i < header.el_count; i++) {
@@ -84,9 +84,9 @@ int DeviceHandler::requestDevices(int requestId)
     for (Device& d : devices) {
 
         DDE_GET_PARAMS_HEADER modules;
-        modules.device_ID = d.id;
-        modules.param_ID = 0;
-        modules.module_ID = 0;
+        modules.device_id = d.id;
+        modules.param_id = 0;
+        modules.module_id = 0;
         m_dde->get_params_header(modules);
 
         for (int i = 0; i < modules.el_count; i++) {
@@ -106,7 +106,7 @@ int DeviceHandler::requestDeviceHeader(int deviceId, int requestId)
     device.id = deviceId;
 
     DDE_GET_PARAMS_HEADER header;
-    header.device_ID = 0;
+    header.device_id = 0;
     m_dde->get_params_header(header);
 
     for (int i = 0; i < header.el_count; i++) {
@@ -117,9 +117,9 @@ int DeviceHandler::requestDeviceHeader(int deviceId, int requestId)
     }
 
     DDE_GET_PARAMS_HEADER modules;
-    modules.device_ID = deviceId;
-    modules.param_ID = 0;
-    modules.module_ID = 0;
+    modules.device_id = deviceId;
+    modules.param_id = 0;
+    modules.module_id = 0;
     m_dde->get_params_header(modules);
 
     for (int i = 0; i < modules.el_count; i++) {
@@ -144,7 +144,7 @@ int DeviceHandler::requestModuleHeader(int deviceId, int moduleId, int requestId
     module.deviceId = deviceId;
 
     DDE_GET_PARAMS_HEADER header;
-    header.device_ID = deviceId;
+    header.device_id = deviceId;
     m_dde->get_params_header(header);
 
     for (int i = 0; i < header.el_count; i++) {
@@ -155,8 +155,8 @@ int DeviceHandler::requestModuleHeader(int deviceId, int moduleId, int requestId
     }
 
     DDE_GET_PARAMS_HEADER modules;
-    modules.device_ID = deviceId;
-    modules.module_ID = moduleId;
+    modules.device_id = deviceId;
+    modules.module_id = moduleId;
     m_dde->get_params_header(modules);
 
     for (int i = 0; i < modules.el_count; i++) {

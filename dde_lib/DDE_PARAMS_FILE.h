@@ -11,7 +11,15 @@
 #include "DDE_PARAMS_TYPE.h"
 #include "DDE_INTERFACES.h"
 
-struct DEVICE_PARAMS
+struct DEVICE_PARAMS : public DEVICE_ELEMENTS // Todo: temporaly decision for the compatability, change to ELEM_DESCRIPTIONS
+{
+    char name[DDE_PARAMS_NAME_LENGTH];
+    char descr[DDE_PARAMS_DESCR_LENGTH];
+
+    GLIO_ELEMENT_DESCR el_descr[ELEMENTS_ID_MAX + 1];
+};
+
+struct ELEM_DESCRIPTIONS
 {
     uint8_t device_ID;
 
@@ -19,7 +27,6 @@ struct DEVICE_PARAMS
     char descr[DDE_PARAMS_DESCR_LENGTH];
 
     GLIO_ELEMENT_DESCR el_descr[ELEMENTS_ID_MAX + 1];
-    GLIO_ELEMENT_VALUE el[ELEMENTS_ID_MAX + 1];
 };
 
 class DDE_PARAMS_FILE : public IDDE_PARAMS

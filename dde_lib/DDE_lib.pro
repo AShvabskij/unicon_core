@@ -38,12 +38,20 @@ HEADERS += \
     DDE_TYPES.h \
     DDE_EMUL.h
 
-INCLUDEPATH += $$PWD/../utils/IPCmemLib
-INCLUDEPATH += $$PWD/../utils/SQLite3Lib
-INCLUDEPATH += $$PWD/../utils/csvfile
+INCLUDEPATH += $$PWD/utils/IPCmemLib
+INCLUDEPATH += $$PWD/utils/sql3_db
+INCLUDEPATH += $$PWD/utils/csvfile
+
+DEPENDPATH += $$PWD/utils/IPCmemLib
+DEPENDPATH += $$PWD/utils/sql3_db
 
 # Default rules for deployment.
 unix {
     target.path = $$[QT_INSTALL_PLUGINS]/generic
 }
 !isEmpty(target.path): INSTALLS += target
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/utils/IPCmemLib/bin/x64/release/ -lipcmem_lib
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/utils/IPCmemLib/bin/x64/debug/ -lipcmem_lib
+
+

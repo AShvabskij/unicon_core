@@ -38,20 +38,20 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../DDE/release/ -lDDE
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../DDE/debug/ -lDDE
-else:unix: LIBS += -L$$PWD/../DDE/debug/ -lDDE
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../dde_lib/release/ -lDDE_lib
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../dde_lib/debug/ -lDDE_lib
+else:unix: LIBS += -L$$PWD/../dde_lib/debug/ -lDDE_lib
 
-INCLUDEPATH += $$PWD/../utils/IPCmemLib
-INCLUDEPATH += $$PWD/../DDE
+# INCLUDEPATH += $$PWD/../utils/IPCmemLib
+INCLUDEPATH += $$PWD/../dde_lib
 
-DEPENDPATH += $$PWD/../utils/SQLite3Lib
+# DEPENDPATH += $$PWD/../utils/SQLite3Lib
 
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../DDE/release/libDDE.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../DDE/debug/libDDE.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../DDE/release/DDE.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../DDE/debug/DDE.lib
-else:unix: PRE_TARGETDEPS += $$PWD/../DDE/debug/libDDE.a
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../dde_lib/release/libDDE_lib.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../dde_lib/debug/libDDE_lib.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../dde_lib/release/DDE_lib.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../dde_lib/debug/DDE_lib.lib
+else:unix: PRE_TARGETDEPS += $$PWD/../dde_lib/debug/libDDE_lib.a
 
 SUBDIRS += \
-    ../DDE/dde.pro
+    ../dde_lib/DDE_lib.pro

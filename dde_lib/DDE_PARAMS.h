@@ -3,8 +3,19 @@
 #include "DDE_TYPES.h"
 #include "DDE_PARAMS_TYPE.h"
 #include "DDE_INTERFACES.h"
-
 #include "cpp_inc.h"
+
+
+
+
+//#define SUB_INDEX_MAX	0x3f
+//#define ADDRESS_MAX		0xfff
+
+//#define PARAMS_ID_MAX		0xfff
+//#define PARAMS_DEVICES_MAX	127
+
+#define PARAMS_REQUEST_TIMOUT_MS	1000
+#define DDE_PARAMS_NAME_LENGTH      64
 
 class DDE_PARAMS : public IDDE_PARAMS
 {
@@ -14,6 +25,8 @@ public:
 
     virtual _dde_func_return_t init(char*device_description);
     virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p);
+    virtual _dde_func_return_t set(DDE_SET_PARAMS_HEADER& p);
+
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p);
 
@@ -24,6 +37,9 @@ public:
 
     virtual _dde_func_return_t pop_next_get_request(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t pop_next_set_request(DDE_SET_PARAMS_DATA& p);
+
+    void update();
+
 
 protected:
 
@@ -40,9 +56,8 @@ private:
     std::list <DDE_GET_PARAMS_DATA> list_get;
     std::list <DDE_SET_PARAMS_DATA> list_set;
 
-    int thread_proc();
+    //int thread_proc();
     inline time_t systemTime();
-    void update();
     //DEVICE_PARAMS device[DEVICE_ID_MAX]; //not more than 127 DDE_PARAMS_DEVICES_MAX devices
     uint32_t devices_count;
 };
