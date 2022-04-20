@@ -11,17 +11,9 @@
 #include "DDE_PARAMS_TYPE.h"
 #include "DDE_INTERFACES.h"
 
-struct DEVICE_PARAMS : public DEVICE_ELEMENTS // Todo: temporaly decision for the compatability, change to ELEM_DESCRIPTIONS
+struct DEVICE_ELEMENTS_DESCR
 {
-    char name[DDE_PARAMS_NAME_LENGTH];
-    char descr[DDE_PARAMS_DESCR_LENGTH];
-
-    GLIO_ELEMENT_DESCR el_descr[ELEMENTS_ID_MAX + 1];
-};
-
-struct ELEM_DESCRIPTIONS
-{
-    uint8_t device_ID;
+    uint8_t device_id;
 
     char name[DDE_PARAMS_NAME_LENGTH];
     char descr[DDE_PARAMS_DESCR_LENGTH];
@@ -47,6 +39,7 @@ private:
     float generateValue(float value , float noise);
     StringList split(std::string inputStr, char delim);
 
-    DEVICE_PARAMS m_device[64]; //not more than 64 devices
+    DEVICE_ELEMENTS m_devData[64]; //not more than 64 devices
+    DEVICE_ELEMENTS_DESCR m_devDescr[64];
     uint32_t devices_count;
 };

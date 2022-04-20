@@ -34,17 +34,15 @@ struct PARAMS_EMUL_SETTINGS
     bool isSinusoidal = true;
 };
 
-struct DEVICE_PARAMS_EMUL
+struct DEVICE_ELEMENTS_DESCR
 {
-    uint8_t device_ID;
+    uint8_t device_id;
 
     char name[DDE_PARAMS_NAME_LENGTH];
     char descr[DDE_PARAMS_DESCR_LENGTH];
 
     GLIO_ELEMENT_DESCR el_descr[ELEMENTS_ID_MAX + 1];
-    GLIO_ELEMENT_VALUE el[ELEMENTS_ID_MAX + 1];
-
-    PARAMS_EMUL_SETTINGS el_Settings[PARAMS_ID_MAX + 1];
+    PARAMS_EMUL_SETTINGS el_Settings[ELEMENTS_ID_MAX + 1];
 };
 
 class DDE_PARAMS_EMUL : public IDDE_PARAMS
@@ -69,7 +67,8 @@ protected:
 private:
     std::string valueUnitToString(GLIO_ELEMENT_UNIT_ENUM unit);
 
-    DEVICE_PARAMS_EMUL device[64]; //not more than 64 devices
+    DEVICE_ELEMENTS m_devData[64]; //not more than 64 devices
+    DEVICE_ELEMENTS_DESCR m_devDescr[64];
     uint32_t devices_count;
 
     std::thread* thr_params;

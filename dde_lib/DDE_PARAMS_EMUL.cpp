@@ -10,7 +10,8 @@ using namespace std;
 DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 {
 	//1) clear
-	memset(device, 0, sizeof(device));
+    memset(m_devData, 0, sizeof(m_devData));
+    memset(m_devDescr, 0, sizeof(m_devDescr));
 
 	//2) fill with names devices
 
@@ -26,8 +27,9 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
     dev_settings[56] = {25, 1, 0.0000001};
 
     for (int ii = 1; ii < devices_count * devices_step; ii = ii + devices_step)	{
-		device[ii].device_ID = ii;
-        sprintf(device[ii].descr, "Device Power Unit Type %d", ii);
+        m_devData[ii].device_id = ii;
+        m_devDescr[ii].device_id = ii;
+        sprintf(m_devDescr[ii].descr, "Device Power Unit Type %d", ii);
 		
 		string s;
         int module_count = 2;// (rand() / RAND_MAX) * 60 + 3;
@@ -36,25 +38,25 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
         for (int jj = 0; jj <= module_count; jj++) {
 			for (int subix = 0; subix < 4; subix++) {
 				int param_ID = (jj << 6) + subix;
-				device[ii].el_descr[param_ID].id = param_ID; // (jj << 6) + subix;
-                device[ii].el_descr[param_ID].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
-                device[ii].el_descr[param_ID].scale = 0;
+                m_devDescr[ii].el_descr[param_ID].id = param_ID; // (jj << 6) + subix;
+                m_devDescr[ii].el_descr[param_ID].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
+                m_devDescr[ii].el_descr[param_ID].scale = 0;
 
                 s = "module " + to_string(jj);
                 string s1;
                 s1 = (subix != 0) ? "param_"+ to_string(subix) : s;
-				strcpy(device[ii].el_descr[param_ID].name, s1.c_str());
+                strcpy(m_devDescr[ii].el_descr[param_ID].name, s1.c_str());
                 s1 = s + " param "+ to_string(subix);
-                strcpy(device[ii].el_descr[param_ID].descr, s1.c_str());
-                strcpy(device[ii].el_descr[param_ID].unit, (subix != 0) ? valueUnitToString(GLIO_ELEMENT_UNIT_ENUM::UNIT_AMPERE).c_str()
+                strcpy(m_devDescr[ii].el_descr[param_ID].descr, s1.c_str());
+                strcpy(m_devDescr[ii].el_descr[param_ID].unit, (subix != 0) ? valueUnitToString(GLIO_ELEMENT_UNIT_ENUM::UNIT_AMPERE).c_str()
                                                                               : valueUnitToString(GLIO_ELEMENT_UNIT_ENUM::UNIT_UNDEFINED).c_str());
-                device[ii].el[param_ID].ivalue = -1;
-                device[ii].el[param_ID].timestamp = 0;
+                m_devData[ii].el[param_ID].ivalue = -1;
+                m_devData[ii].el[param_ID].timestamp = 0;
 
-                device[ii].el_Settings[param_ID].amplitude = dev_settings[ii].amplitude + subix;
-                device[ii].el_Settings[param_ID].frequency_hertz = dev_settings[ii].frequency_hertz;
-                device[ii].el_Settings[param_ID].noise = dev_settings[ii].noise;
-                device[ii].el_Settings[param_ID].isSinusoidal = true;
+                m_devDescr[ii].el_Settings[param_ID].amplitude = dev_settings[ii].amplitude + subix;
+                m_devDescr[ii].el_Settings[param_ID].frequency_hertz = dev_settings[ii].frequency_hertz;
+                m_devDescr[ii].el_Settings[param_ID].noise = dev_settings[ii].noise;
+                m_devDescr[ii].el_Settings[param_ID].isSinusoidal = true;
 			}
 		}
 	}
@@ -95,9 +97,9 @@ _dde_func_return_t DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
 
         p.el_count = 0;// params.devices_count;
         for (int ii = 0; ii < 64; ii++) {
-            if (device[ii].name[0] != 0) {
-                memcpy(&p.el_descr[p.el_count].name, &device[ii].name, DDE_PARAMS_NAME_LENGTH);
-                memcpy(&p.el_descr[p.el_count].descr, &device[ii].descr, DDE_PARAMS_DESCR_LENGTH);
+            if (m_devDescr[ii].name[0] != 0) {
+                memcpy(&p.el_descr[p.el_count].name, &m_devDescr[ii].name, DDE_PARAMS_NAME_LENGTH);
+                memcpy(&p.el_descr[p.el_count].descr, &m_devDescr[ii].descr, DDE_PARAMS_DESCR_LENGTH);
                 p.el_descr[p.el_count].id = ii;
                 p.el_count++;
             }
@@ -113,8 +115,8 @@ _dde_func_return_t DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
             p.el_count = 0; // params.device[p.device_ID].modules_count;
             for (int ii = 0; ii < 64; ii++) {
                 int module_id = (ii<<6);
-                if (device[p.device_id].el_descr[module_id].name[0] != 0) {
-                    memcpy(&p.el_descr[p.el_count], &device[p.device_id].el_descr[module_id], sizeof(GLIO_ELEMENT_DESCR));
+                if (m_devDescr[p.device_id].el_descr[module_id].name[0] != 0) {
+                    memcpy(&p.el_descr[p.el_count], &m_devDescr[p.device_id].el_descr[module_id], sizeof(GLIO_ELEMENT_DESCR));
                     p.el_descr[p.el_count].id = (ii << 6);
                     p.el_descr[p.el_count].mod = (ii << 6);
                     p.el_count++;
@@ -128,9 +130,9 @@ _dde_func_return_t DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
 
                 p.el_count = 0;// params.device[p.device_ID].el_descr[p.param_ID].params_count;
                 for (int ii = p.param_id; ii < p.param_id + 64; ii++) {
-                    if (device[p.device_id].el_descr[ii].name[0] != 0)
+                    if (m_devDescr[p.device_id].el_descr[ii].name[0] != 0)
                     {
-                        memcpy(&p.el_descr[p.el_count], &device[p.device_id].el_descr[ii], sizeof(GLIO_ELEMENT_DESCR));
+                        memcpy(&p.el_descr[p.el_count], &m_devDescr[p.device_id].el_descr[ii], sizeof(GLIO_ELEMENT_DESCR));
                         p.el_descr[p.el_count].id = ii;
                         p.el_descr[p.el_count].mod = (ii << 6);
                         p.el_count++;
@@ -140,7 +142,7 @@ _dde_func_return_t DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_HEADER &p)
             else //level 4 (request for individual param name - not used
             {
                 p.el_count = 1;
-                memcpy(&p.el_descr[0], &device[p.device_id].el_descr[p.param_id], sizeof(GLIO_ELEMENT_DESCR));
+                memcpy(&p.el_descr[0], &m_devDescr[p.device_id].el_descr[p.param_id], sizeof(GLIO_ELEMENT_DESCR));
             }
         }
     }
@@ -267,9 +269,9 @@ inline time_t DDE_PARAMS_EMUL::systemTime()
 
 float DDE_PARAMS_EMUL::generateValue(uint16_t device_ID, uint16_t param_ID, time_t timeMsc)
 {
-    const float f = device[device_ID].el_Settings[param_ID].frequency_hertz; // set freq heer (Гц)
-    const float a = device[device_ID].el_Settings[param_ID].amplitude; // set amplitude heer
-    float noise = device[device_ID].el_Settings[param_ID].noise;
+    const float f = m_devDescr[device_ID].el_Settings[param_ID].frequency_hertz; // set freq heer (Гц)
+    const float a = m_devDescr[device_ID].el_Settings[param_ID].amplitude; // set amplitude heer
+    float noise = m_devDescr[device_ID].el_Settings[param_ID].noise;
 
     const float pi = 3.14159274;
     float w = (2 * pi * f);
