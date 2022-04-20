@@ -9,6 +9,7 @@ import "components"
 Item {
     property bool connected: false
     property var model: null
+    property alias host: host.text
 
     width: parent.width
     height: 30
@@ -47,7 +48,7 @@ Item {
             id: host
             width: 120
             height: 30
-            text: qsTr("127.0.0.1:1235")
+            text: "localhost"
         }
 
         Text {

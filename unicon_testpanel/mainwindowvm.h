@@ -19,6 +19,8 @@ public:
 
     explicit MainWindowVM(QObject *parent = nullptr);
 
+    Q_PROPERTY(QString host MEMBER m_host NOTIFY hostChanged)
+
     Q_PROPERTY(int deviceId MEMBER m_deviceId NOTIFY deviceIdChanged)
     Q_PROPERTY(QString deviceDescr MEMBER m_deviceDescr NOTIFY deviceDescrChanged)
     Q_PROPERTY(QString oscDescr MEMBER m_oscDescr NOTIFY oscDescrChanged)
@@ -65,6 +67,7 @@ signals:
     void valueInfo2Changed(QString arg);
     void paramValue1Changed(QString arg);
     void paramValue2Changed(QString arg);
+    void hostChanged();
     void deviceIdChanged();
     void deviceDescrChanged();
     void oscDescrChanged(QString descr);
@@ -95,6 +98,8 @@ private:
     void doProccessStreamDataReceived(QJsonObject data);
     void sendRequest(QJsonObject req, bool checkPerformance = false);
     void emitParamValue(int moduleId, int paramId, QString sVal, QString info);
+
+    QString m_host = "";
 
     int m_deviceId = 0;
     QString m_deviceDescr;

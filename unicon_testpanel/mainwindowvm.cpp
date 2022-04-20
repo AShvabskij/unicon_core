@@ -17,9 +17,9 @@ MainWindowVM::MainWindowVM(QObject* parent) : QObject(parent)
 
 void MainWindowVM::start()
 {
-    QString host = "127.0.0.1";
     QUrl url;
-    url.setHost("127.0.0.1");
+
+    url.setHost(m_host);
     url.setScheme("ws");
     url.setPort(1235);
 
