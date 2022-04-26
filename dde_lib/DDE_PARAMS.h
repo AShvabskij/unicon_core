@@ -56,8 +56,13 @@ private:
     std::list <DDE_GET_PARAMS_DATA> list_get;
     std::list <DDE_SET_PARAMS_DATA> list_set;
 
+    short err_write_cmd_counter = 0;
+    short err_read_cmd_counter = 0;
+
     //int thread_proc();
     inline time_t systemTime();
+    std::string create_name(const uint8_t device_id);
+
     //DEVICE_PARAMS device[DEVICE_ID_MAX]; //not more than 127 DDE_PARAMS_DEVICES_MAX devices
     uint32_t devices_count;
 };

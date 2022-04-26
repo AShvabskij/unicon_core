@@ -1,6 +1,7 @@
 #include "sqlite3_lib.h"
 #include "db_sqlib.h"
 #include <string>
+using namespace std;
 
 int PARAMS_DESCR_get(const char* device_name, const char* device_description, uint16_t param_ID, uint16_t module_ID, GLIO_ELEMENT_DESCR* p)
 {
@@ -17,73 +18,69 @@ int PARAMS_DESCR_get(const char* device_name, const char* device_description, ui
 }
 
 ParamDescr::ParamDescr()
-{
-    dev_name = (const char*)malloc(sizeof(char));
-    dev_name = NULL;
-    dev_description = (const char*)malloc(sizeof(char));
-    dev_description = NULL;
-}
+{}
 ParamDescr::~ParamDescr()
-{
-    free((void*)dev_name);
-    free((void*)dev_description);
-    dev_name = nullptr;
-    dev_description = nullptr;
-}
+{}
 
-int ParamDescr::init(const char* device_name, uint16_t device_descr, db_type type)
+int ParamDescr::init(string device_name, uint16_t device_description, db_type type)
 {
-    const char* device_description = std::to_string(device_descr).c_str();
-    if (is_empty(device_name, device_description))
+    string device_desc = to_string(device_description);
+    if (device_name.empty() || device_desc.empty())
+    {
+        _inited = false;
         return -1;
-
-    free((void*)dev_name);
-    free((void*)dev_description);
-
-    dev_name = (const char*)malloc(strlen(device_name) + 1);
-    dev_description = (const char*)malloc(strlen(device_description) + 1);
+    }
     
-    strcpy((char*)dev_name, device_name);
-    strcpy((char*)dev_description, device_description);
+    _dev_name = device_name;
+    _dev_description = device_desc;
 
-    return init_tbl(dev_name, dev_description, (uint8_t)type);
+    int res = init_tbl(_dev_name.c_str(), _dev_description.c_str(), (uint8_t)type);
+
+    _inited = (res >= 0);
+
+    return res;
 }
-int ParamDescr::init(const char* device_name, const char* device_description, db_type type)
+int ParamDescr::init(string device_name, string device_description, db_type type)
 {   
-    if (is_empty(device_name, device_description))
+    if (device_name.empty() || device_description.empty())
+    {
+        _inited = false;
         return -1;
-
-    free((void*)dev_name);
-    dev_name = (const char*)malloc(strlen(device_name) + 1);
-    strcpy((char*)dev_name, device_name);
-
-    const char* dev_d = device_description;
-
-    free((void*)dev_description);
-    if (*dev_d++ != 'N' || *dev_d++ != 'O' || *dev_d++ != 'N' || *dev_d != 'E')
-    {
-        dev_description = (const char*)malloc(strlen(device_description) + 1);
-        strcpy((char*)dev_description, device_description);
     }
+
+    _dev_name = device_name;
+
+    if (device_description != "NONE")
+        _dev_description = device_description;
     else
-    {
-        dev_description = (const char*)malloc(sizeof(char));
-        strcpy((char*)dev_description, "");
-    }
+        _dev_description = "";
 
-    return init_tbl(dev_name, dev_description, (uint8_t)type);
+    int res = init_tbl(_dev_name.c_str(), _dev_description.c_str(), (uint8_t)type);
+    _inited = (res >= 0);
+
+    return res;
 }
 
 int ParamDescr::get(DDE_GET_PARAMS_HEADER* p, db_type type)
 {
-    return get_rec(dev_name, dev_description, p->param_id, p->module_id, p, (uint8_t)type);
+    if (!_inited) return -1;
+
+    return get_rec(_dev_name.c_str(), _dev_description.c_str(), p->param_id, p->module_id, p, (uint8_t)type);
 }
 
 int ParamDescr::set(DDE_SET_PARAMS_HEADER* p, db_type type)
 {
-    return add_rec(dev_name, dev_description, p, (uint8_t)type);
+    if (!_inited) return -1;
+
+    return add_rec(_dev_name.c_str(), _dev_description.c_str(), p, (uint8_t)type);
 }
 
+int ParamDescr::drop(db_type type)
+{
+    if (!_inited)
+        return -1;
+    return tbl_delete(_dev_name.c_str(), _dev_description.c_str(), (uint8_t)type);
+}
 void ParamDescr::close()
 {
     dbClose();

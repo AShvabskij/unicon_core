@@ -11,15 +11,6 @@ char *err = 0;
 int el_s_counter = 0;
 int num_glio = 0;
 int offset = 0;
-
-bool is_empty(const char* device_name, const char* device_description)
-{
-	if ((device_name && !device_name[0]) || (device_description && !device_description[0]))
-	{
-		return true;
-	}
-	return false;
-}
 //****************************************************************************************************
 void print_msg_sql(const char *st, uint8_t with)
 {
@@ -181,10 +172,12 @@ int one_desc_recs(void *uk, int columns, char **aDat, char **aName)
 {
 	int ret = -1;
 
-    if (!columns)
+    if (columns < 11)
 		return ret;
 
 	DDE_GET_PARAMS_HEADER* struc = ((DDE_GET_PARAMS_HEADER*)uk);
+	struc->timeout = 0;
+	struc->timeout_flg = 0;
 
     ret																= atoi(aDat[0]);
 	struc->param_id													= atoi(aDat[1]);
@@ -246,7 +239,7 @@ int one_txt_recs(void *uk, int columns, char **aDat, char **aName)
 //      el_id  : индекс элемента или модуля (группы)
 //      total  : количество возвращаемых структур GLIO_ELEMENT_DESCR 
 //      buf    : по этому адресу будет размещены выходные данные (структуры GLIO_ELEMENT_DESCR) 
-int get_rec(const char* device_name, const char* device_description, int param_ID, int module_ID, void *buf, uint8_t/*TABLE_TYPE_ENUM*/ type)
+int get_rec(const char* device_name, const char* device_description, int param_ID, int module_ID, DDE_GET_PARAMS_HEADER *buf, uint8_t/*TABLE_TYPE_ENUM*/ type)
 {
 	int ret = -1, rc;
 	char desc_name[64];
@@ -257,7 +250,7 @@ int get_rec(const char* device_name, const char* device_description, int param_I
 	if (type < type_desc || type > type_usual)
 		return -1;
 
-	((DDE_GET_PARAMS_HEADER*)buf)->device_id = atoi(device_description);
+    buf->device_id = atoi(device_description);
 	//((DDE_GET_PARAMS_HEADER*)buf)->timeout = 0;
 	//((DDE_GET_PARAMS_HEADER*)buf)->timeout_flg = 0;
 
@@ -283,7 +276,7 @@ int get_rec(const char* device_name, const char* device_description, int param_I
 				print_msg_sql(stz, 0);
 				prnDesc(&buf, param_ID, module_ID);
 
-				((DDE_GET_PARAMS_HEADER*)buf)->el_count = glio_counter;
+                buf->el_count = glio_counter;
 				glio_counter = 0;
 				return 0;
 			}
@@ -350,6 +343,30 @@ int get_rec(const char* device_name, const char* device_description, int param_I
 		glio_counter = 0; el_s_counter = 0; offset = 0; num_glio = 0;
 	}
 	return ret;
+}
+//****************************************************************************************************
+int tbl_delete(const char* device_name, const char* device_description, uint8_t type)
+{
+	int res, rc;
+	char line[MAX_TMP_BUF] = { 0 };
+	char tbl_name[64];
+
+	sprintf(tbl_name, "%s%s%s", device_name, all_tbl[type], device_description);
+	sprintf(line, "DROP TABLE %s;", tbl_name);
+
+	rc = sqlite3_exec(dbc, line, &Total_rec, &res, &err);
+	if (rc != SQLITE_OK) 
+	{
+		sprintf(line, "Delete table '%s' error #%d (%s)\n", tbl_name, rc, err);
+		if (err) sqlite3_free(err);
+		res = -1;
+	}
+	else 
+	{
+		sprintf(line, "Table '%s' is deleted\n", tbl_name);
+		res = 0;
+	}
+	return res;
 }
 //****************************************************************************************************
 void dbClose()

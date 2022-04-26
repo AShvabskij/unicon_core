@@ -3,6 +3,10 @@ QT += core network websockets
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
+LIBS += -lpthread
+LIBS += -lrt
+LIBS += -ldl
+LIBS += -lsqlite3
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -42,10 +46,8 @@ win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../dde_lib/release/ -lDDE_
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../dde_lib/debug/ -lDDE_lib
 else:unix: LIBS += -L$$PWD/../dde_lib/ -lDDE_lib
 
-INCLUDEPATH += $$PWD/../utils/IPCmemLib
 INCLUDEPATH += $$PWD/../dde_lib
-
-DEPENDPATH += $$PWD/../utils/SQLite3Lib
+DEPENDPATH += $$PWD/../dde_lib
 
 win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/../dde_lib/release/libDDE_lib.a
 else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/../dde_lib/debug/libDDE_lib.a
@@ -55,3 +57,17 @@ else:unix: PRE_TARGETDEPS += $$PWD/../dde_lib/libDDE_lib.a
 
 SUBDIRS += \
     ../dde_lib/DDE_lib.pro
+
+unix:!macx: LIBS += -L$$OUT_PWD/../dde_lib/utils/IPCmemLib/ -lipcmem_lib
+unix:!macx: PRE_TARGETDEPS += $$OUT_PWD/../dde_lib/utils/IPCmemLib/libipcmem_lib.a
+
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../dde_lib/utils/sql3_db/release/ -lsql3_db
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../dde_lib/utils/sql3_db/debug/ -lsql3_db
+else:unix:!macx: LIBS += -L$$OUT_PWD/../dde_lib/utils/sql3_db/ -lsql3_db
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../dde_lib/utils/sql3_db/release/libsql3_db.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../dde_lib/utils/sql3_db/debug/libsql3_db.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../dde_lib/utils/sql3_db/release/sql3_db.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../dde_lib/utils/sql3_db/debug/sql3_db.lib
+else:unix:!macx: PRE_TARGETDEPS += $$OUT_PWD/../dde_lib/utils/sql3_db/libsql3_db.a

@@ -38,20 +38,39 @@ HEADERS += \
     DDE_TYPES.h \
     DDE_EMUL.h
 
-INCLUDEPATH += $$PWD/utils/IPCmemLib
-INCLUDEPATH += $$PWD/utils/sql3_db
 INCLUDEPATH += $$PWD/utils/csvfile
 
+
+INCLUDEPATH += $$PWD/utils/IPCmemLib
 DEPENDPATH += $$PWD/utils/IPCmemLib
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/utils/IPCmemLib/bin/x64/release/ -lipcmem_lib
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/utils/IPCmemLib/bin/x64/debug/ -lipcmem_lib
+unix:!macx: LIBS += -L$$OUT_PWD/utils/IPCmemLib/ -lipcmem_lib
+
+unix:!macx: PRE_TARGETDEPS += $$OUT_PWD/utils/IPCmemLib/libipcmem_lib.a
+
+# unix:!macx: LIBS += -L$$OUT_PWD/./ -lDDE_lib
+
+# unix:!macx: PRE_TARGETDEPS += $$OUT_PWD/./libDDE_lib.a
+
+
+
+INCLUDEPATH += $$PWD/utils/sql3_db
 DEPENDPATH += $$PWD/utils/sql3_db
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/utils/sql3_db/release/ -lsql3_db
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/utils/sql3_db/debug/ -lsql3_db
+else:unix:!macx: LIBS += -L$$OUT_PWD/utils/sql3_db/ -lsql3_db
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/utils/sql3_db/release/libsql3_db.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/utils/sql3_db/debug/libsql3_db.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/utils/sql3_db/release/sql3_db.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/utils/sql3_db/debug/sql3_db.lib
+else:unix:!macx: PRE_TARGETDEPS += $$OUT_PWD/utils/sql3_db/libsql3_db.a
 
 # Default rules for deployment.
 unix {
     target.path = $$[QT_INSTALL_PLUGINS]/generic
 }
 !isEmpty(target.path): INSTALLS += target
-
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/utils/IPCmemLib/bin/x64/release/ -lipcmem_lib
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/utils/IPCmemLib/bin/x64/debug/ -lipcmem_lib
-
-

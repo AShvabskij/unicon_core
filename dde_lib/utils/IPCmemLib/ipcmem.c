@@ -221,7 +221,8 @@ int IPCMEM_get_params(DDE_GET_PARAMS_DATA* get_params)
 
     uint8_t dev_ID = get_params->device_id;
     uint8_t mod_ID = get_params->module_id;
-    uint16_t addr = mod_ID * PARAMS_ID_MAX;
+    uint8_t par_ID = get_params->param_id;
+    uint16_t addr = mod_ID * PARAMS_ID_MAX + par_ID; //for now 1 el
     //copy 64 el 
     memcpy((uint8_t*)&get_params->el[0], (uint8_t*)&pDev[dev_ID]->el[addr], PARAMS_ID_MAX * sizeof(GLIO_ELEMENT_VALUE));
 
@@ -275,7 +276,10 @@ int IPCMEM_write_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd)
 {
     int res;
 
-    if (device_id >= MAX_DEV_SUPPORT) return -4;
+    if (device_id >= MAX_DEV_SUPPORT) {
+        perror("if (device_id >= MAX_DEV_SUPPORT)");
+        return -4;
+    }
 
     if (pDev[device_id]->cmd.cmd_flag == 0)
     {

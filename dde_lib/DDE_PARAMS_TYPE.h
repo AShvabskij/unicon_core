@@ -6,7 +6,7 @@
 #include <time.h> 
 #include <stdint.h>
 
-#define MAX_DEV_SUPPORT  4      //32
+#define MAX_DEV_SUPPORT  (32+1)
 
 
 #define PARAMS_REQUEST_TIMOUT_MS	1000
@@ -15,20 +15,31 @@
 #define MODULES_ID_MAX		64
 #define ELEMENTS_ID_MAX		(PARAMS_ID_MAX*MODULES_ID_MAX)
 
-#define DEVICE_ID_MAX		127
+#define DEVICE_ID_MAX		(32+1)
 
-#define DDE_MODULE0_PARAM0_DESCRIPTION          0
-#define     DDE_MODULE0_PARAM1_DEVICE_NAME      1
-#define     DDE_MODULE0_PARAM2_HW_REV           2
-#define     DDE_MODULE0_PARAM3_SW_REV           3
-#define     DDE_MODULE0_PARAM4_SPARE            4
-#define     DDE_MODULE0_PARAM5_STATE            5
-#define     DDE_MODULE0_PARAM5_9_RESERVED       9
+#define DDE_DEV0_MODULE0_DESCRIPTION                 0
+#define     DDE_DEV0_MODULE0_PARAM0_DESCRIPTION      0
+#define     DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME      1
+#define     DDE_DEV0_MODULE0_PARAM2_HW_REV           2
+#define     DDE_DEV0_MODULE0_PARAM3_SW_REV           3
+#define     DDE_DEV0_MODULE0_PARAM4_SPARE_REV        4
+#define     DDE_DEV0_MODULE0_PARAM5_STATE            5
+#define     DDE_DEV0_MODULE0_PARAM5_9_RESERVED       9
 
-#define     DDE_MODULE0_PARAM10_LINK                 10
-#define     DDE_MODULE0_PARAM11_RX_ERR_COUNTER       11
-#define     DDE_MODULE0_PARAM12_TX_ERR_COUNTER       12
-#define     DDE_MODULE0_PARAM13_LINK                 13
+#define     DDE_DEV0_MODULE0_PARAM10_LINK                 10
+#define     DDE_DEV0_MODULE0_PARAM11_RX_ERR_COUNTER       11
+#define     DDE_DEV0_MODULE0_PARAM12_TX_ERR_COUNTER       12
+#define     DDE_DEV0_MODULE0_PARAM13_LINK                 13
+
+#define	DDE_DEV0_MODULE1_DEVS_LINK                   1
+#define	    DDE_DEV0_MODULE1_PARAM0_devs_link	     0
+#define		DDE_DEV0_MODULE1_PARAM1_dev1_link		 1
+#define		DDE_DEV0_MODULE2_PARAM63_dev63_link		 63
+
+#define DDE_DEV0_MODULE2_DEVS_DESCR_UPDATE                2
+#define	    DDE_DEV0_MODULE2_PARAM0_devs_descr_update	  0
+#define		DDE_DEV0_MODULE2_PARAM1_dev1_descr_update	  1
+#define		DDE_DEV0_MODULE2_PARAM63_dev63_descr_update	  63
 
 
 

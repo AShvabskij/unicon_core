@@ -69,6 +69,7 @@ int DeviceHandler::requestDevices(int requestId)
 
     DDE_GET_PARAMS_HEADER header;
     header.device_id = 0;
+    header.module_id = 0;
     m_dde->get_params_header(header);
 
     for (int i = 0; i < header.el_count; i++) {
@@ -106,24 +107,18 @@ int DeviceHandler::requestDeviceHeader(int deviceId, int requestId)
     device.id = deviceId;
 
     DDE_GET_PARAMS_HEADER header;
-    header.device_id = 0;
+    header.device_id = static_cast<uint16_t>(deviceId);
     m_dde->get_params_header(header);
 
-    for (int i = 0; i < header.el_count; i++) {
-        if (header.el_descr[i].id == deviceId) {
-            device.name = header.el_descr[i].name;
-            device.desc = header.el_descr[i].descr;
-        }
-    }
+    device.name = header.el_descr[0].name;
+    device.desc = header.el_descr[0].descr;
 
-    DDE_GET_PARAMS_HEADER modules;
-    modules.device_id = deviceId;
-    modules.param_id = 0;
-    modules.module_id = 0;
-    m_dde->get_params_header(modules);
+    for (int i = 0; i <= MODULES_ID_MAX; ++i) {
+        header.module_id = static_cast<uint16_t>(i);
+        m_dde->get_params_header(header);
+        if (header.el_count == 0) continue;
 
-    for (int i = 0; i < modules.el_count; i++) {
-        device.modules.append(modules.el_descr[i].id);
+        device.modules.append(header.module_id);
     }
 
     QJsonObject response = createResponse(requestId, {device});

@@ -2,7 +2,6 @@
 #include "DDE_PARAMS.h"
 
 #include "ipcmem_lib.h"
-
 #include "db_sqlib.h"
 
 
@@ -76,13 +75,27 @@ _dde_func_return_t DDE_PARAMS::init(char* device_description)
 	//	std::thread*thr_params = new std::thread(&DDE_PARAMS::thread_proc, this);
 	PARAMS_DATA_init(device_description);
 
-
 	DDE_SET_PARAMS_DATA set;
-	for (int ii = 0; ii < 4096; ii++) {
-		set.device_id = 2;
-		set.module_id = (ii >> 6) & 0x3f;
-		set.param_id = ii & 0x3f;
-		set.ivalue = ii;
+	for (int ii = 1; ii <= 4; ii++) {
+        set.device_id = 2;
+		set.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
+		set.param_id = ii;
+		switch (ii)
+		{
+			case 1:
+				set.ivalue = 0x4E564544;
+				break;
+			case 2:
+				set.ivalue = 0x33373030;
+				break;
+			case 3:
+				set.ivalue = 0x32363030;
+				break;
+			case 4:
+				set.ivalue = 0x37303130;
+				break;
+		}
+		
 		PARAMS_DATA_direct_write(set);
 	}
 	DDE_GET_PARAMS_DATA get;
@@ -98,7 +111,6 @@ _dde_func_return_t DDE_PARAMS::init(char* device_description)
 	}
 
 	//PARAMS_DESCR_init("UAVCAN"); // from SQLite3_lib
-
 	//thr_params.join();
 	return 0;
 }
@@ -106,23 +118,44 @@ _dde_func_return_t DDE_PARAMS::init(char* device_description)
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-std::string ascii_4chars_decode(uint32_t ivalue)//0x6D766370
-{
+std::string DDE_PARAMS::create_name(const uint8_t device_id)//0x6D766370
+{	
 	std::string res;
-	char char_buf[5];
-	uint32_t arr[5];
+	char buf[5];
 
-	arr[0] = (ivalue & 0xFF000000) >> 24;
-	arr[1] = (ivalue & 0x00FF0000) >> 16;
-	arr[2] = (ivalue & 0x0000FF00) >> 8;
-	arr[3] =  ivalue & 0x000000FF;
-	arr[4] = 0;
+	DDE_GET_PARAMS_DATA dat;
+	dat.device_id = device_id; 
+	dat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
 
-	for (int i = 0; i < 5; i++)
-		char_buf[i] = (char)arr[i];
+	for (int j = 0; j < 4; j++)
+	{
+		dat.param_id = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME + j;
+		PARAMS_DATA_direct_read(dat);//читаем 1 из 4 параметров descr дл€ данного device из ipc 
 
-	res = char_buf;
+		memcpy(&buf, &dat.el->ivalue, 4);
+		buf[4] = 0;
+		res += buf;					 //формуриуем полное descr дл€ данного devic'а
+	}
 	return res;
+
+	//std::string ascii_4chars_decode(uint32_t ivalue)
+	//{
+	//	std::string res;
+	//	char char_buf[5];
+	//	uint32_t arr[5];
+
+	//	arr[4] = 0;
+	//	arr[3] = (ivalue & 0xFF000000) >> 24;
+	//	arr[2] = (ivalue & 0x00FF0000) >> 16;
+	//	arr[1] = (ivalue & 0x0000FF00) >> 8;
+	//	arr[0] = ivalue & 0x000000FF;
+
+	//	for (int i = 0; i < 5; i++)
+	//		char_buf[i] = (char)arr[i];
+
+	//	res = char_buf;
+	//	return res;
+	//}
 }
 
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER &p)
@@ -134,27 +167,14 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER &p)
 	assert(p.module_id < MODULES_ID_MAX);
 	assert(p.param_id < PARAMS_ID_MAX);
 	
-	DDE_GET_PARAMS_DATA dat;
-	dat.device_id = p.device_id; dat.module_id = 0;
 
-	dat.param_id = DDE_MODULE0_PARAM1_DEVICE_NAME; direct_read(dat);
-	string name = ascii_4chars_decode(dat.el->ivalue);
-
-	dat.param_id = DDE_MODULE0_PARAM2_HW_REV; direct_read(dat);
-	string hw_rev = ascii_4chars_decode(dat.el->ivalue);
-
-	dat.param_id = DDE_MODULE0_PARAM3_SW_REV; direct_read(dat);
-	string sw_rev = ascii_4chars_decode(dat.el->ivalue);
-
-	dat.param_id = DDE_MODULE0_PARAM4_SPARE; direct_read(dat);
-	string spare = ascii_4chars_decode(dat.el->ivalue);
-
-	string table_name = name + hw_rev + sw_rev + spare;
+	string table_name = create_name(p.device_id);
 
 	ParamDescr* hdr = new ParamDescr();
 	res = hdr->init(table_name.c_str(), "NONE", db_type::usual);
 	res = hdr->get(&p, db_type::usual);
 
+	delete hdr;
 	return res;
 }
 
@@ -167,27 +187,14 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
 	assert(p.module_id < MODULES_ID_MAX);
 	assert(p.param_id < PARAMS_ID_MAX);
 
-	DDE_GET_PARAMS_DATA dat;
-	dat.device_id = p.device_id; dat.module_id = 0;
-
-	dat.param_id = DDE_MODULE0_PARAM1_DEVICE_NAME; direct_read(dat);
-	string name = ascii_4chars_decode(dat.el->ivalue);
-
-	dat.param_id = DDE_MODULE0_PARAM2_HW_REV; direct_read(dat);
-	string hw_rev = ascii_4chars_decode(dat.el->ivalue);
-
-	dat.param_id = DDE_MODULE0_PARAM3_SW_REV; direct_read(dat);
-	string sw_rev = ascii_4chars_decode(dat.el->ivalue);
-
-	dat.param_id = DDE_MODULE0_PARAM4_SPARE; direct_read(dat);
-	string spare = ascii_4chars_decode(dat.el->ivalue);
-
-	string table_name = name + hw_rev + sw_rev + spare;
+	
+	string table_name = create_name(p.device_id);
 
 	ParamDescr* hdr = new ParamDescr();
-	res = hdr->init(table_name.c_str(), "NONE", db_type::usual);
+	hdr->init(table_name.c_str(), "NONE", db_type::usual);
 	res = hdr->set(&p, db_type::usual);
 
+	delete hdr;
 	return res;
 }
 
@@ -354,11 +361,17 @@ void DDE_PARAMS::update()
 				cmd.param_id = get_params.param_id;
 				cmd.nRW = 0;
 				res = 0; attempts = 0;
-				while (res != 1) {
+				while ((res != 1)&&(!timeout)){				//TODO если утройство не снимает флаг, то	
+												//это проблема. ј что делать € не знаю
 					res = PARAMS_DATA_write_cmd(device_id, cmd);
 					if (res != 1) {
 						attempts++;
-						if (attempts > 10) timeout = true;
+						if (attempts > 10)
+						{
+							err_write_cmd_counter++;
+							//TODO - add dev_err через direct write to device_id
+							timeout = true;
+						}
 						usleep(100);
 					}
 				}
@@ -369,6 +382,8 @@ void DDE_PARAMS::update()
 				get_empty = true;
 			}
 
+
+			timeout = false;
 			res = pop_next_set_request(set_params);// get_list.front();
 
 			if (res == _return_OK) {
@@ -378,7 +393,7 @@ void DDE_PARAMS::update()
 				cmd.ivalue = set_params.ivalue;
 				cmd.nRW = 1;
 				res = 0; attempts = 0;
-				while (res != 1) {
+				while ((res != 1) && (!timeout)) { //TODO same as above
 					res = PARAMS_DATA_write_cmd(device_id, cmd);
 					if (res != 1) {
 						attempts++;
