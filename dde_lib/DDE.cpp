@@ -108,4 +108,7 @@ _dde_func_return_t DDE::init(char* device_description)
 void DDE::update()
 {
       params->update();  
+      //osc->update();
+      //evlog->update();
+      //trend->update();
 }

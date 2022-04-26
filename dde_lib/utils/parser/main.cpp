@@ -3,7 +3,7 @@
 
 #include "csv_parser.h"
 
-const char* string_stream = "DCDC010203040506,27.03.2022;\
+const char* string_stream = "DEVN007300620107,27.03.2022;\
 0100,M1_ADC;\
 0101,W1_mode,2,1,Wt;\
 0102,W3_Udc1_gain,3,1,V;\

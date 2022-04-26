@@ -27,7 +27,7 @@ private slots:
 
 private:
 
-    QThread workerThread;
+//  QThread workerThread;
     QQueue<QJsonObject> m_requests;
     QList<IReqHandler *> m_handlerList;
 };

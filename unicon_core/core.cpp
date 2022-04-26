@@ -10,6 +10,9 @@
 #include "devicehandler.h"
 #include "oschandler.h"
 
+#include <QtWebSockets>
+#include <QtCore>
+
 Core::Core()
 {
 }
@@ -21,8 +24,8 @@ Core::~Core()
 
 void Core::start()
 {
-    IDDE* dde = new DDE_EMUL();
-    dde->init(0); //run thread
+    IDDE* dde = new DDE();
+    dde->init("UAVCAN"); //run thread
 
     ParamsHandler* params = new ParamsHandler(dde);
     DeviceHandler* device = new DeviceHandler(dde);

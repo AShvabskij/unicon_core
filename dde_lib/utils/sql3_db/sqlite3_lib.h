@@ -23,13 +23,13 @@ extern "C" {
 		type_usual
 	};
 
-	bool is_empty(const char* device_name, const char* device_description);
 	void print_msg_sql(const char* st, uint8_t with);
 
 	int init_tbl(const char* device_name, const char* device_description, uint8_t/*TABLE_TYPE_ENUM*/ type);
 	int add_rec(const char* device_name, const char* device_description, void* buf, uint8_t/*TABLE_TYPE_ENUM*/ type);
-	int get_rec(const char* device_name, const char* device_description, int param_ID, int module_ID, void* buf, uint8_t/*TABLE_TYPE_ENUM*/ type);
-	
+    int get_rec(const char* device_name, const char* device_description, int param_ID, int module_ID, DDE_GET_PARAMS_HEADER *buf, uint8_t/*TABLE_TYPE_ENUM*/ type);
+	int tbl_delete(const char* device_name, const char* device_description, uint8_t type);
+
 	void dbClose();
 // **************************************************************************
 #ifdef __cplusplus

@@ -5,4 +5,5 @@ SUBDIRS += \
     dde_lib/utils/IPCmemLib/ipcmem_lib.pro \
     dde_lib/utils/sql3_db \
 #   unicon_testpanel \
-    unicon_core
+    unicon_core \
+    dde_lib/utils/parser

@@ -124,7 +124,6 @@ Row read_row(std::stringstream* stream)
 
 std::vector<Row> read_data(std::stringstream* stream)
 {
-	int r = 0;
 	std::vector<Row> rows;
 	do
 	{
