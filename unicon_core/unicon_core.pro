@@ -4,9 +4,9 @@ QT += core network websockets
 CONFIG += c++11 console
 CONFIG -= app_bundle
 LIBS += -lpthread
-LIBS += -lrt
-LIBS += -ldl
-LIBS += -lsqlite3
+unix: LIBS += -lrt
+unix: LIBS += -ldl
+unix: LIBS += -lsqlite3
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
