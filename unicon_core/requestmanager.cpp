@@ -3,18 +3,15 @@
 #include <cstdio>
 
 RequestManager::RequestManager()
-{
-
-}
+{}
 
 int RequestManager::processRequest(const QJsonObject& request)
 {
-/*
-    if (!workerThread.isRunning()) {
-        Q_ASSERT(false);
-        return -1;
-    }
-*/
+//    if (!workerThread.isRunning()) {
+//        Q_ASSERT(false);
+//        return -1;
+//    }
+
     QMetaObject::invokeMethod(this, "doProcessRequest",
                               Qt::QueuedConnection,
                               Q_ARG(QJsonObject, request));
@@ -40,22 +37,18 @@ int RequestManager::registerHandler(IReqHandler *handler)
 
 void RequestManager::start()
 {
-/*
-    if (!workerThread.isRunning()) {
-        workerThread.start();
-    }
+//    if (!workerThread.isRunning()) {
+//        workerThread.start();
+//    }
 
-    this->moveToThread(&workerThread);
-*/
+//    this->moveToThread(&workerThread);
 }
 
 void RequestManager::stop()
 {
-/*
-    if (workerThread.isRunning()) {
-        workerThread.exit(0);
-    }
-*/
+//    if (workerThread.isRunning()) {
+//        workerThread.exit(0);
+//    }
 }
 
 void RequestManager::doProcessRequest(const QJsonObject &request)
