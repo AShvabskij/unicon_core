@@ -122,66 +122,33 @@ _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
 
 _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
 {
-    //this func provices description for device, modules and params
-
-    //check valid input
-
-//    if (p.device_ID > DEVICE_ID_MAX || p.param_ID > PARAMS_ID_MAX || p.module_ID > MODULES_ID_MAX) {
-//        memset(&p, 0, sizeof(DDE_GET_PARAMS_HEADER));
-//        return -1;
-//    }
-
     if (p.device_id > DEVICE_ID_MAX || p.param_id > ELEMENTS_ID_MAX || p.module_id > ELEMENTS_ID_MAX) {
         memset(&p, 0, sizeof(DDE_GET_PARAMS_HEADER));
         return -1;
     }
 
-    //check level 1 request for device names
+    // request for master device params
     if (p.device_id == 0) {
-        p.el_count = 0;// params.devices_count;
-        for (int ii = 0; ii < 64; ii++) {
-            if (m_devDescr[ii].name[0] != 0) {
-                memcpy(&p.el_descr[p.el_count].name, &m_devDescr[ii].name, DDE_PARAMS_NAME_LENGTH);
-                memcpy(&p.el_descr[p.el_count].descr, &m_devDescr[ii].descr, DDE_PARAMS_DESCR_LENGTH);
-                p.el_descr[p.el_count].id = m_devDescr[ii].device_id;
-                p.el_count++;
-            }
-        }
-
         return 0;
     }
 
-    //check level 2 (requiest for  modules names)
-    if (p.module_id == 0) {
+    // request for module params
+    if (p.param_id == 0) {
         p.el_count = 0;
         for (int ii = 0; ii < 64; ii++) {
-            int module_id = (ii << 6);
-            if (m_devDescr[p.device_id].el_descr[module_id].name[0] != 0) {
-                memcpy(&p.el_descr[p.el_count], &m_devDescr[p.device_id].el_descr[module_id], sizeof(GLIO_ELEMENT_DESCR));
-                p.el_descr[p.el_count].id = module_id;
-                p.el_descr[p.el_count].mod = module_id;
+            uint16_t elemId = p.module_id + ii;
+            if (m_devDescr[p.device_id].el_descr[elemId].name[0] != 0)
+            {
+                memcpy(&p.el_descr[ii], &m_devDescr[p.device_id].el_descr[elemId], sizeof(GLIO_ELEMENT_DESCR));
+                p.el_descr[ii].id = elemId;
+                p.el_descr[ii].mod = p.module_id;
                 p.el_count++;
             }
         }
-
-        return 0;
-    }
-
-    // level 3 request for params names
-    if ( p.param_id == 0) {
-        p.el_count = 0;
-        for (int ii = p.module_id; ii < p.module_id + 64; ii++) {
-            if (m_devDescr[p.device_id].el_descr[ii].name[0] != 0) {
-                memcpy(&p.el_descr[p.el_count], &m_devDescr[p.device_id].el_descr[ii], sizeof(GLIO_ELEMENT_DESCR));
-                p.el_descr[p.el_count].id = ii;
-                p.el_descr[p.el_count].mod = p.module_id;
-                p.el_count++;
-            }
-        }
-    }
-    else { //level 4 (request for individual param name - not used
+    } else { // request for individual param descr
         p.el_count = 1;
-        memcpy(&p.el_descr[0], &m_devDescr[p.device_id].el_descr[p.param_id], sizeof(GLIO_ELEMENT_DESCR));
+        uint16_t elemId = p.param_id; //(p.module_id * 64) + p.param_id;
+        memcpy(&p.el_descr[0], &m_devDescr[p.device_id].el_descr[elemId], sizeof(GLIO_ELEMENT_DESCR));
     }
 
     return 0;
@@ -223,12 +190,13 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
         p.el[0].scale = el.scale;
         p.el[0].timestamp = systemTime();
 
-        const GLIO_ELEMENT_DESCR& param = m_devDescr[p.device_id].el_descr[paramId];
-        uint8_t format = param.format;
-        string unit = param.unit;
+        uint8_t format = el.format;
 
         if (format == 3) {
             float fvalue = 0.0;
+
+            const GLIO_ELEMENT_DESCR& param = m_devDescr[p.device_id].el_descr[paramId];
+            string unit = param.unit;
 
             if (unit == "A") {
                 fvalue = generateValue(0.1, 10, 0, systemTime());
