@@ -164,12 +164,12 @@ typedef struct
     uint16_t device_id;
     uint16_t module_id;
     uint16_t param_id;
-    uint16_t el_count; //count of elements for responce    
+    uint16_t el_count; //count of elements for responce
     char module_name[DDE_PARAMS_NAME_LENGTH];
 	GLIO_ELEMENT_DESCR el_descr[64]; //not more then 64 params at a time
-	uint16_t timeout; //each request has it own timeout counter
-	uint16_t timeout_flg;//
-} DDE_GET_PARAMS_HEADER; 
+    uint16_t timeout; //each request has it own timeout counter
+    uint16_t timeout_flg;//
+} DDE_GET_PARAMS_HEADER;
 //#pragma pack(pop)
 
 
@@ -177,14 +177,14 @@ typedef struct
 //#pragma pack(push,1)
 typedef struct
 {
-	uint32_t header_reset;		//if flag is set update the header, clear  and draw data
+    uint32_t header_reset;		//if flag is set update the header, clear  and draw data
 	//DDE_REQ_PARAMS_TYPE req_type;
-	uint16_t device_id;
+    uint16_t device_id;
     uint16_t module_id;
     uint16_t param_id;
     GLIO_ELEMENT_VALUE el[64];	//not more then 64 params at a time
-	uint16_t timeout; //each request has it own timeout counter
-	uint16_t timeout_flg;//
+    uint16_t timeout; //each request has it own timeout counter
+    uint16_t timeout_flg;//
 	//void* (*callback_func)();
     //std::queue <DDE_EVLOG_MSG> queue; this will requier auto_ptr to be deleted, i prefer to control memory
 } DDE_GET_PARAMS_DATA;

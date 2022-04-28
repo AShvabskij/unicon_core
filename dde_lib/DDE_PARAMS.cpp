@@ -121,7 +121,6 @@ _dde_func_return_t DDE_PARAMS::init(char* device_description)
 std::string DDE_PARAMS::create_name(const uint8_t device_id)//0x6D766370
 {	
 	std::string res;
-	char buf[5];
 
 	DDE_GET_PARAMS_DATA dat;
 	dat.device_id = device_id; 
@@ -132,9 +131,8 @@ std::string DDE_PARAMS::create_name(const uint8_t device_id)//0x6D766370
 		dat.param_id = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME + j;
 		PARAMS_DATA_direct_read(dat);//читаем 1 из 4 параметров descr для данного device из ipc 
 
-		memcpy(&buf, &dat.el->ivalue, 4);
-		buf[4] = 0;
-		res += buf;					 //формуриуем полное descr для данного devic'а
+        std::string name = (const char*)&dat.el->ivalue;
+        res += name;					 //формуриуем полное descr для данного devic'а
 	}
 	return res;
 
@@ -160,22 +158,21 @@ std::string DDE_PARAMS::create_name(const uint8_t device_id)//0x6D766370
 
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER &p)
 {
-	int res;
-	//we need to look in db for correct table according device_name and device_revision
 	
 	assert(p.device_id < DEVICE_ID_MAX);
 	assert(p.module_id < MODULES_ID_MAX);
 	assert(p.param_id < PARAMS_ID_MAX);
 	
-
 	string table_name = create_name(p.device_id);
 
-	ParamDescr* hdr = new ParamDescr();
-	res = hdr->init(table_name.c_str(), "NONE", db_type::usual);
-	res = hdr->get(&p, db_type::usual);
+    ParamDescr hdr;
+    int res = hdr.init(table_name.c_str(), "NONE", db_type::usual); // we need to look in db for correct table according device_name and device_revision
+    if (res) {
+        res = hdr.get(&p, db_type::usual);
+    }
 
-	delete hdr;
-	return res;
+    _dde_func_return_t ret = res >= 0 ? _return_OK : _return_FAIL;
+    return ret;
 }
 
 //------------------------------------------------------------------------------

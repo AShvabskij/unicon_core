@@ -84,17 +84,20 @@ int DeviceHandler::requestDeviceLinks(QList<int>& links)
     DDE_GET_PARAMS_DATA dat;
     dat.device_id = DDE_DEV0_MODULE0_DESCRIPTION;
     dat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
+    dat.param_id = 0;
 
-    int res = m_dde->get_params_data(dat);
-    if (!res) return res;
+    long res = m_dde->get_params_data(dat);
+    if (!res) return 0;
 
     for (int i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE2_PARAM63_dev63_link; ++i) {
-        if (dat.el[i].ivalue == 1) {
-            links << i;
-        }
+        links << i;
+        if (i == 3) break;
+//        if (dat.el[i].ivalue == 1) {
+//            links << i;
+//        }
     }
 
-    return res;
+    return 1;
 }
 
 void DeviceHandler::handleReqDevices(int requestId)
@@ -109,9 +112,8 @@ void DeviceHandler::handleReqDevices(int requestId)
         Device d(i);
 
         int res = requestDevice(d);
-        if (!res) return;
 
-        if (d.name.isEmpty() || d.modules.count() == 0) continue;
+        if (!res || d.isEmpty()) continue;
 
         devices << d;
     }
@@ -125,8 +127,7 @@ void DeviceHandler::handleReqDevices(int requestId)
 void DeviceHandler::handleReqDeviceHeader(int deviceId, int requestId)
 {
     Device device(deviceId);
-    int res = requestDevice(device);
-    if (!res) return;
+    requestDevice(device);
 
     QJsonObject response = createResponse(requestId, {device});
     send(response);
@@ -139,17 +140,20 @@ int DeviceHandler::requestDevice(Device& device)
     if (!device.isValid()) return 0;
 
     device.name = getDeviceName(device.id);
+    if (device.name.isEmpty()) return 0;
+
     device.desc = ""; // todo: получать из другого сервиса
     device.channel = ChannelType::CAN_UAV;
 
-    DDE_GET_PARAMS_HEADER header;
-    for (int i = 0; i <= MODULES_ID_MAX; ++i) {
-        header.module_id = i;
-        int res = m_dde->get_params_header(header);
+    for (int i = 0; i < MODULES_ID_MAX; ++i) {
+        DDE_GET_PARAMS_HEADER header;
+        header.device_id = static_cast<uint16_t>(device.id);
+        header.module_id = static_cast<uint16_t>(i);
+        header.param_id = 0;
 
-        if (!res) return res;
+        long res = m_dde->get_params_header(header);
 
-        if (header.el_count == 0) continue;
+        if (!res || header.el_count == 0) continue;
 
         device.modules.append(header.module_id);
     }
@@ -164,15 +168,16 @@ QString DeviceHandler::getDeviceName(int deviceId)
     DDE_GET_PARAMS_DATA dat;
     dat.device_id = static_cast<uint16_t>(deviceId);
     dat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
+    dat.param_id = 0;
 
-    int res = m_dde->get_params_data(dat);
+    long res = m_dde->get_params_data(dat);
 
     if (!res) return "";
 
     for (int i = 0; i < 4; i++) {
-        dat.param_id = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME + i;
+        int param_id = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME + i;
 
-        QString name = (const char*)&dat.el[i].ivalue;
+        QString name = (const char*)&dat.el[param_id].ivalue;
         retName = retName + name;
     }
 
@@ -187,14 +192,20 @@ void DeviceHandler::handleReqModuleHeader(int deviceId, int moduleId, int reques
     module.id = moduleId;
     module.deviceId = deviceId;
 
-    DDE_GET_PARAMS_HEADER moduleHeader;
-    moduleHeader.device_id = deviceId;
-    moduleHeader.module_id = moduleId;
-    m_dde->get_params_header(moduleHeader);
+    DDE_GET_PARAMS_HEADER header;
+    header.device_id = static_cast<uint16_t>(deviceId);
+    header.module_id = static_cast<uint16_t>(moduleId);
+    header.param_id = 0;
 
-    for (int i = 0; i < moduleHeader.el_count; i++) {
-        if (moduleHeader.el_descr[i].mod == moduleId) {
-            module.params << moduleHeader.el_descr[i].id;
+    long res = m_dde->get_params_header(header);
+    if (res && header.el_count > 0) {
+
+        module.name = header.el_descr->name;
+        module.desc = header.el_descr->descr;
+        for (int i = 1; i < header.el_count; i++) {
+            if (header.el_descr[i].mod == moduleId) {
+                module.params << header.el_descr[i].id;
+            }
         }
     }
 

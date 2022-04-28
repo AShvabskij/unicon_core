@@ -27,6 +27,9 @@ struct Device
     bool isValid() {
         return id >= 0;
     }
+    bool isEmpty() {
+        return name.isEmpty() || modules.count() == 0;
+    }
 };
 typedef QVector<Device> DeviceList;
 
