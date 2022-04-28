@@ -226,10 +226,11 @@ void MainWindowVM::setModuleDescr(const QJsonObject &obj)
     QString name = obj.value("name").toString();
     QString descr = obj.value("desc").toString();
     int paramsCount = obj.value("params").toArray().count();
-    QString output = QString("Module: id = %1, name = %2, params = %3")
+    QString output = QString("Module: id = %1, name = %2, params = %3, descr = %4")
             .arg(moduleId)
             .arg(name)
-            .arg(paramsCount);
+            .arg(paramsCount)
+            .arg(descr);
 
 
     m_moduleDescr = output;
