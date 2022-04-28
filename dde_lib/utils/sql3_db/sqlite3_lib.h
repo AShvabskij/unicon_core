@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include <sqlite3.h>
+#include <signal.h>
+#include <ucontext.h>
 #include "DDE_TYPES.h"
 //
 #ifdef __cplusplus
@@ -16,21 +18,21 @@ extern "C" {
 #define MAX_BUF_SIZE 1024
 #define MAX_TMP_BUF 256
 //---------------------------------------------------------------------------
-	enum
-	{
-		type_desc = 0,
-		type_txt,
-		type_usual
-	};
+    enum
+    {
+        type_desc = 0,
+        type_txt,
+        type_usual
+    };
 
-	void print_msg_sql(const char* st, uint8_t with);
+    void print_msg_sql(const char* st, uint8_t with);
 
-	int init_tbl(const char* device_name, const char* device_description, uint8_t/*TABLE_TYPE_ENUM*/ type);
-	int add_rec(const char* device_name, const char* device_description, void* buf, uint8_t/*TABLE_TYPE_ENUM*/ type);
-    int get_rec(const char* device_name, const char* device_description, int param_ID, int module_ID, DDE_GET_PARAMS_HEADER *buf, uint8_t/*TABLE_TYPE_ENUM*/ type);
-	int tbl_delete(const char* device_name, const char* device_description, uint8_t type);
+    int init_tbl(const char* device_name, const char* device_description, uint8_t/*TABLE_TYPE_ENUM*/ type);
+    int add_rec(const char* device_name, const char* device_description, DDE_SET_PARAMS_HEADER* buf, uint8_t/*TABLE_TYPE_ENUM*/ type);
+    int get_rec(const char* device_name, const char* device_description, int param_ID, int module_ID, DDE_GET_PARAMS_HEADER* buf, uint8_t/*TABLE_TYPE_ENUM*/ type);
+    int tbl_delete(const char* device_name, const char* device_description, uint8_t type);
 
-	void dbClose();
+    void dbClose();
 // **************************************************************************
 #ifdef __cplusplus
 }
