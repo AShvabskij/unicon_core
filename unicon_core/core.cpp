@@ -24,7 +24,7 @@ Core::~Core()
 
 void Core::start()
 {
-    IDDE* dde = new DDE();
+    IDDE* dde = new DDE_EMUL();
     dde->init("UAVCAN"); //run thread
 
     ParamsHandler* params = new ParamsHandler(dde);
@@ -57,7 +57,11 @@ int Core::test()
     std::cout << "DDE template started..." << std::endl;
 
 
+#ifdef __WIN32__
+    m_dde = new DDE_EMUL();
+#else
     m_dde = new DDE();
+#endif
 
     m_dde->init(0); //run thread
 

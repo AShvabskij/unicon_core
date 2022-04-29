@@ -11,13 +11,16 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
 #include <dirent.h>
+
+#ifdef __linux__
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <sys/mman.h>
+#endif
 //
 
 #include "DDE_TYPES.h"
