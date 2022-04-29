@@ -53,17 +53,16 @@ public:
     DeviceHandler(IDDE* dde);
     virtual int handle(const QJsonObject &request);
 
+private:
     void handleGetHeader(const QJsonObject &request);
     void handleSystemStatus(const QJsonObject& request);
-
     void handleDeviceLinks(const QJsonObject &request);
     void handleReqDevices(int requestId);
     void handleReqDeviceHeader(int deviceId, int requestId);
     void handleReqModuleHeader(int deviceId, int moduleId, int requestId);
 
-private:
-    int requestDeviceLinks(QList<int>& links);
-    int requestDevice(Device& device);
+    long requestDeviceLinks(QList<int>& links);
+    long requestDevice(Device& device);
     QString getDeviceName(int deviceId);
 
     ChannelType channelType(QString chName);
