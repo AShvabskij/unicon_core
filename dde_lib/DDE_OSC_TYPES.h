@@ -85,6 +85,7 @@ struct DDE_GET_OSC_DATA
     uint16_t data_length;   // The length of a data in OSC_CH_DATA
     uint16_t overflow;  // flag if  buffer is overflowed (for debugging only)
     bool next_ready;    // flag if next data frame is ready
+    bool eof;    // flag if it is the last frame
 
     OSC_ANALOG_DATA analog_data[OSC_ANALOG_CHANNELS + 1];
     OSC_DISCRETE_DATA discret_data[OSC_DISCRETE_CHANNELS +1];
