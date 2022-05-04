@@ -198,8 +198,7 @@ void DeviceHandler::handleReqModuleHeader(int deviceId, int moduleId, int reques
 
     _dde_func_return_t res = m_dde->get_params_header(header);
 
-    if (res <= _return_FAIL && header.el_count > 0) {
-
+    if (res == _return_OK && header.el_count > 0) {
         module.name = header.el_descr->name;
         module.desc = header.el_descr->descr;
         for (int i = 1; i < header.el_count; i++) {
