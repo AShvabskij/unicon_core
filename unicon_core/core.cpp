@@ -24,7 +24,7 @@ Core::~Core()
 
 void Core::start()
 {
-    IDDE* dde = new DDE_EMUL();
+    IDDE* dde = new DDE();
     dde->init("UAVCAN"); //run thread
 
     ParamsHandler* params = new ParamsHandler(dde);

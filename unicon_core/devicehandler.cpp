@@ -69,8 +69,8 @@ void DeviceHandler::handleSystemStatus(const QJsonObject& request)
 void DeviceHandler::handleDeviceLinks(const QJsonObject& request)
 {
     QList<int> links;
-    int res = requestDeviceLinks(links);
-    if (!res) return;
+    long res = requestDeviceLinks(links);
+    if (res <= 0) return;
 
     int requestId = request.value("request_id").toInt();
     QJsonObject response = createResponse(requestId, links);
@@ -79,15 +79,15 @@ void DeviceHandler::handleDeviceLinks(const QJsonObject& request)
     return;
 }
 
-int DeviceHandler::requestDeviceLinks(QList<int>& links)
+long DeviceHandler::requestDeviceLinks(QList<int>& links)
 {
     DDE_GET_PARAMS_DATA dat;
     dat.device_id = DDE_DEV0_MODULE0_DESCRIPTION;
     dat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
     dat.param_id = 0;
 
-    long res = m_dde->get_params_data(dat);
-    if (!res) return 0;
+    _dde_func_return_t res = m_dde->get_params_data(dat);
+    if (res <= _return_FAIL) return res;
 
     for (int i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE2_PARAM63_dev63_link; ++i) {
         links << i;
@@ -103,17 +103,17 @@ int DeviceHandler::requestDeviceLinks(QList<int>& links)
 void DeviceHandler::handleReqDevices(int requestId)
 {
     QList<int> links;
-    int res = requestDeviceLinks(links);
-    if (!res) return;
+    long res = requestDeviceLinks(links);
+    if (res <= 0) return;
 
     DeviceList devices;
 
     for (int i : links) {
         Device d(i);
 
-        int res = requestDevice(d);
+        long res = requestDevice(d);
 
-        if (!res || d.isEmpty()) continue;
+        if (res <= 0 || d.isEmpty()) continue;
 
         devices << d;
     }
@@ -135,9 +135,9 @@ void DeviceHandler::handleReqDeviceHeader(int deviceId, int requestId)
     return;
 }
 
-int DeviceHandler::requestDevice(Device& device)
+long DeviceHandler::requestDevice(Device& device)
 {
-    if (!device.isValid()) return 0;
+    if (!device.isValid()) return _return_FAIL;
 
     device.name = getDeviceName(device.id);
     if (device.name.isEmpty()) return 0;
@@ -151,14 +151,14 @@ int DeviceHandler::requestDevice(Device& device)
         header.module_id = static_cast<uint16_t>(i);
         header.param_id = 0;
 
-        long res = m_dde->get_params_header(header);
+        _dde_func_return_t res = m_dde->get_params_header(header);
 
-        if (!res || header.el_count == 0) continue;
+        if (res <= _return_FAIL || header.el_count == 0) continue;
 
         device.modules.append(header.module_id);
     }
 
-    return 1;
+    return _return_OK;
 }
 
 QString DeviceHandler::getDeviceName(int deviceId)
@@ -170,9 +170,8 @@ QString DeviceHandler::getDeviceName(int deviceId)
     dat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
     dat.param_id = 0;
 
-    long res = m_dde->get_params_data(dat);
-
-    if (!res) return "";
+    _dde_func_return_t res = m_dde->get_params_data(dat);
+    if (res <= _return_FAIL) return "";
 
     for (int i = 0; i < 4; i++) {
         int param_id = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME + i;
@@ -197,9 +196,9 @@ void DeviceHandler::handleReqModuleHeader(int deviceId, int moduleId, int reques
     header.module_id = static_cast<uint16_t>(moduleId);
     header.param_id = 0;
 
-    long res = m_dde->get_params_header(header);
-    if (res && header.el_count > 0) {
+    _dde_func_return_t res = m_dde->get_params_header(header);
 
+    if (res == _return_OK && header.el_count > 0) {
         module.name = header.el_descr->name;
         module.desc = header.el_descr->descr;
         for (int i = 1; i < header.el_count; i++) {

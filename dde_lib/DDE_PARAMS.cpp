@@ -98,6 +98,32 @@ _dde_func_return_t DDE_PARAMS::init(char* device_description)
 		
 		PARAMS_DATA_direct_write(set);
 	}
+
+    DDE_SET_PARAMS_DATA setVal;
+    for (int ii = 1; ii <= 7; ii++) {
+        setVal.device_id = 2;
+        setVal.module_id = 1;
+        setVal.param_id = ii;
+        switch (ii)
+        {
+            case 1:
+                setVal.ivalue = 1;
+                break;
+            case 2:
+                setVal.ivalue = 0x2;
+                break;
+            case 3:
+                setVal.ivalue = 0x3;
+                break;
+            case 4:
+                setVal.ivalue = 0x37303130;
+                break;
+        default: setVal.ivalue = ii;
+        }
+
+        PARAMS_DATA_direct_write(setVal);
+    }
+
 	DDE_GET_PARAMS_DATA get;
 	get.device_id = 2;
 	for (int ii = 0; ii < 64; ii++) {
@@ -206,7 +232,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 	//TODO - add check that requiest is not already in the queue. If it is do not push it. 
 
 	//0) set timeout counter to 0	
-	p.timeout = 0;
+    p.timeout = 0;
 
 	//1) Add request to queue
     if (list_get.size() < list_get_max) {
@@ -216,10 +242,10 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 		return -1;
     }
 
-	//2) read params immediatly
-	direct_read(p);
-	
-	return _return_OK;
+    //2) read params immediatly
+    direct_read(p);
+
+    return _return_OK;
 
 }
 

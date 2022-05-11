@@ -1,7 +1,8 @@
 TEMPLATE = subdirs
 
 unix {
-    SUBDIRS += \ dde_lib/utils/IPCmemLib/ipcmem_lib.pro
+    SUBDIRS += \
+        dde_lib/utils/IPCmemLib/ipcmem_lib.pro
 }
 
 SUBDIRS += \
@@ -11,4 +12,5 @@ SUBDIRS += \
     unicon_core
 
 
-# unix: SUBDIRS += \ dde_lib/utils/parser
+# unix: SUBDIRS += \
+#    dde_lib/utils/parser

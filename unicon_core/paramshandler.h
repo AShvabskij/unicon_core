@@ -10,9 +10,9 @@ struct Param
     int moduleId = 0;
     QString name = "";
     QString desc = "";
-    QString valueUnit = 0;
+    QString valueUnit = "";
     QMap<int, QString> valueTexts;
-    qint8 valueFormat = 0;
+    int valueFormat = 0;
     float valueScale = 0.0;
     bool writable = false;
 
@@ -31,7 +31,7 @@ struct ParamValue
     QVariant value;
     qlonglong timestamp = 0;
 
-    qint8 format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_UNDEFINED;
+    int format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_UNDEFINED;
     float scale = 0.0;
 
     QJsonObject toJsonValue() const {
@@ -41,6 +41,16 @@ struct ParamValue
 
         return el;
     }
+
+    ParamValue() = default;
+    ParamValue(const Param& p) {
+        moduleId = p.moduleId;
+        deviceId = p.deviceId;
+        paramId = p.id;
+        format = p.valueFormat;
+        scale = p.valueScale;
+    }
+
 };
 typedef QVector<ParamValue> ParamValueList;
 
@@ -60,11 +70,11 @@ private slots:
     void onStreamTimerAlarm();
 
 private:
-    int handleGetHeader(const QJsonObject &request);
-    int handleGetValue(const QJsonObject &request);
-    int handleSetValue(const QJsonObject &request);
-    int handleOpenStream(const QJsonObject &request);
-    int handleCloseStream(const QJsonObject &request);
+    void handleGetHeader(const QJsonObject &request);
+    void handleGetValue(const QJsonObject &request);
+    void handleSetValue(const QJsonObject &request);
+    void handleOpenStream(const QJsonObject &request);
+    void handleCloseStream(const QJsonObject &request);
 
     long getParamValue(const Param &p, ParamValue* out);
     long getParamValue(int deviceId, int moduleId, int paramId, ParamValue* out);
@@ -75,14 +85,14 @@ private:
     ParamValue valueFrom(int deviceId, int moduleId, int paramId, const GLIO_ELEMENT_VALUE &el);
     QJsonObject createHeaderObj(int requestId, const ParamList &params);
     QJsonObject createValueObj(int requestId, const ParamValue& value, int error = 0);
-    QJsonObject createStreamValueObj(const Param& param, const ParamValue& value, int error = 0);
+    QJsonObject createStreamValueObj(const ParamValue& value, int error = 0);
 
     void startPooling(int intervalMsc);
     void stopPooling();
-    long streamParamsValue();
+    void streamParamsValue();
     void stopStreamsParamValue();
     void stopStreamParamValue(const Param &param);
-    Q_SLOT void sendActualParamValue (const Param &param, int requestId, int error = 0);
+    Q_SLOT void sendActualParamValue(const Param &param, int requestId, int error = 0);
 
     ParamList m_capturedParams;
 
