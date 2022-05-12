@@ -55,7 +55,7 @@ public:
     void setOscDescr(const QJsonObject &obj);
     void setModuleDescr(const QJsonObject &obj);
     void setParamInfo(const QJsonObject &obj);
-    void setParamValue(const QJsonObject& obj);
+    void setParamValue(const QJsonObject& obj, int errorCode = 0);
     void setStreamParamValue(const QJsonObject& obj);
     void setOscChannelInfo(const QJsonObject &obj);
     void setOscChannelValue(const QJsonObject &obj);

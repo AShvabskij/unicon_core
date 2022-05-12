@@ -387,7 +387,7 @@ void MainWindowVM::setParamInfo(const QJsonObject& obj)
     }
 }
 
-void MainWindowVM::setParamValue(const QJsonObject& obj)
+void MainWindowVM::setParamValue(const QJsonObject& obj, int errorCode)
 {
     if (obj.isEmpty()) return;
 
@@ -397,7 +397,6 @@ void MainWindowVM::setParamValue(const QJsonObject& obj)
     qint8 format = obj.value("format").toInt();
     double scale = obj.value("scale").toDouble();
 
-
     QJsonValue value = valObj.value("value");
 
     QString s_value = value.toVariant().toString();
@@ -406,10 +405,11 @@ void MainWindowVM::setParamValue(const QJsonObject& obj)
     double time = valObj.value("time").toDouble();
     QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
 
-    QString info = QString("value = %1, scale = %2, time = %3")
+    QString info = QString("value = %1, scale = %2, time = %3 %4")
             .arg(s_value)
             .arg(scale)
-            .arg(dt.time().toString("HH:mm:ss.zzz"));
+            .arg(dt.time().toString("HH:mm:ss.zzz"))
+            .arg(errorCode != 0 ? QString(", error = %1").arg(errorCode) : "");
 
     emitParamValue(moduleId, paramId, s_value, info);
 }
@@ -422,11 +422,12 @@ void MainWindowVM::setStreamParamValue(const QJsonObject& obj)
     double time = obj.value("value").toObject().value("time").toDouble();
     QString svalue = value.canConvert(QMetaType::Float) ? QString::number(value.toFloat(), 'f', 2) : value.toString();
     QDateTime dt = QDateTime::fromMSecsSinceEpoch(time);
+    int errorCode = obj.value("error").toInt();
 
-    QString info = QString("value = %1 %3")
+    QString info = QString("value = %1 %2 %3")
             .arg(svalue)
-            .arg(dt.time().toString("mm:ss.zzz"));
-
+            .arg(dt.time().toString("mm:ss.zzz"))
+            .arg(errorCode != 0 ? QString(", error = %1").arg(errorCode) : "");
 
     emitParamValue(moduleId, paramId, svalue, info);
 }
@@ -575,8 +576,10 @@ void MainWindowVM::doProccessDataReceived(QJsonObject data)
         setOscChannelInfo(bodyObj);
     } else if (reqId == PARAM_VALUE_REQUEST_ID || reqId == PARAM_VALUE_SET_ID) {
         QJsonObject bodyObj = data.value("body").toObject();
+        int error = data.value("error").toInt();
+
         doc = QJsonDocument(bodyObj);
-        setParamValue(bodyObj);
+        setParamValue(bodyObj, error);
     }
 
     if (doc.isEmpty()) return;
