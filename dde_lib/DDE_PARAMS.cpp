@@ -99,6 +99,28 @@ _dde_func_return_t DDE_PARAMS::init(char* device_description)
 		PARAMS_DATA_direct_write(set);
 	}
 
+    setTestLinks();
+    setTestData();
+
+	DDE_GET_PARAMS_DATA get;
+	get.device_id = 2;
+	for (int ii = 0; ii < 64; ii++) {
+		get.module_id = ii;
+		get.param_id = 0;
+        PARAMS_DATA_direct_read(get);
+		printf("module=%d ", ii);
+		for (int yy = 0; yy < 64; yy++)
+			printf("%d ", get.el[yy].ivalue);
+		printf("\n");
+	}
+
+	//PARAMS_DESCR_init("UAVCAN"); // from SQLite3_lib
+	//thr_params.join();
+	return 0;
+}
+
+void DDE_PARAMS::setTestData()
+{
     DDE_SET_PARAMS_DATA setVal;
     for (int ii = 1; ii <= 7; ii++) {
         setVal.device_id = 2;
@@ -123,22 +145,34 @@ _dde_func_return_t DDE_PARAMS::init(char* device_description)
 
         PARAMS_DATA_direct_write(setVal);
     }
+}
 
-	DDE_GET_PARAMS_DATA get;
-	get.device_id = 2;
-	for (int ii = 0; ii < 64; ii++) {
-		get.module_id = ii;
-		get.param_id = 0;
-		PARAMS_DATA_direct_read(get);
-		printf("module=%d ", ii);
-		for (int yy = 0; yy < 64; yy++)
-			printf("%d ", get.el[yy].ivalue);
-		printf("\n");
-	}
+void DDE_PARAMS::setTestLinks()
+{
+    DDE_SET_PARAMS_DATA setVal;
+    for (int ii = DDE_DEV0_MODULE1_PARAM1_dev1_link; ii <= DDE_DEV0_MODULE2_PARAM63_dev63_link; ii++) {
+        setVal.device_id = 0;
+        setVal.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
+        setVal.param_id = ii;
+        switch (ii)
+        {
+            case 1:
+                setVal.ivalue = 1;
+                break;
+            case 2:
+                setVal.ivalue = 1;
+                break;
+            case 3:
+                setVal.ivalue = 1;
+                break;
+            case 4:
+                setVal.ivalue = 0;
+                break;
+        default: setVal.ivalue = 0;
+        }
 
-	//PARAMS_DESCR_init("UAVCAN"); // from SQLite3_lib
-	//thr_params.join();
-	return 0;
+        PARAMS_DATA_direct_write(setVal);
+    }
 }
 
 //------------------------------------------------------------------------------

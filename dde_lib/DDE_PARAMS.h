@@ -30,7 +30,6 @@ public:
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p);
 
-
 	//virtual int set(DDE_SET_PARAMS p, void* callback_func);
     virtual _dde_func_return_t direct_write(DDE_SET_PARAMS_DATA& p);
     virtual _dde_func_return_t direct_read(DDE_GET_PARAMS_DATA& get_params);
@@ -62,6 +61,8 @@ private:
     //int thread_proc();
     inline time_t systemTime();
     std::string create_name(const uint8_t device_id);
+    void setTestData();
+    void setTestLinks();
 
     //DEVICE_PARAMS device[DEVICE_ID_MAX]; //not more than 127 DDE_PARAMS_DEVICES_MAX devices
     uint32_t devices_count;

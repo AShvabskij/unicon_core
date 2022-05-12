@@ -90,11 +90,9 @@ long DeviceHandler::requestDeviceLinks(QList<int>& links)
     if (res <= _return_FAIL) return res;
 
     for (int i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE2_PARAM63_dev63_link; ++i) {
-        links << i;
-        if (i == 3) break;
-//        if (dat.el[i].ivalue == 1) {
-//            links << i;
-//        }
+        if (dat.el[i].ivalue == 1) {
+            links << i;
+        }
     }
 
     return 1;
