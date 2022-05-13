@@ -246,30 +246,25 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
     }
 
     if (p.param_id == 0) {
-        for (int ii = 0; ii < 16; ii++) {
+        for (int ii = 0; ii < 64; ii++) {
             int paramId = ii;
             int elemId = (p.module_id << 6) + paramId;
-            auto el = m_devData[p.device_id].el[elemId];
-//          p.el[ii].id = paramId;
-            p.el[ii].ivalue = el.ivalue;
-            p.el[ii].text_id = el.text_id;
-            p.el[ii].format = el.format;
-            p.el[ii].scale = el.scale;
+            const auto& el_from = m_devData[p.device_id].el[elemId];
+            auto& el_to = p.el[ii];
+
+            memcpy(&el_to, &el_from, sizeof(GLIO_ELEMENT_VALUE));
             p.el[ii].timestamp = systemTime();
         }
     } else {
         int paramId = p.param_id;
         int elemId = (p.module_id << 6) + paramId;
-        const auto& el = m_devData[p.device_id].el[elemId];
-//      p.el[0].id = paramId;
-        p.el[0].ivalue = el.ivalue;
-        p.el[0].text_id = el.text_id;
-        p.el[0].format = el.format;
-        p.el[0].scale = el.scale;
+        const auto& el_from = m_devData[p.device_id].el[elemId];
+        auto& el_to = p.el[0];
+
+        memcpy(&el_to, &el_from, sizeof(GLIO_ELEMENT_VALUE));
         p.el[0].timestamp = systemTime();
 
-        uint8_t format = el.format;
-
+        uint8_t format = el_from.format;
         if (format == 3) {
             float fvalue = 0.0;
 

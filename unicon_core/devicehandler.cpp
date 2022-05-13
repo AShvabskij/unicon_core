@@ -161,7 +161,7 @@ long DeviceHandler::requestDevice(Device& device)
 
 QString DeviceHandler::getDeviceName(int deviceId)
 {
-    QString retName;
+    QString retName = "";
 
     DDE_GET_PARAMS_DATA dat;
     dat.device_id = static_cast<uint16_t>(deviceId);
@@ -175,10 +175,10 @@ QString DeviceHandler::getDeviceName(int deviceId)
         int param_id = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME + i;
 
         auto& val = dat.el[param_id].ivalue;
-        const char* charArray = (const char*)&val;
+        auto charArray = (const char*)&val;
 
-        QString name = val != 0 ? QString::fromLocal8Bit(charArray, 4) : "";
-        retName = retName + name;
+        QString name = (val != 0) ? QString::fromLocal8Bit(charArray, 4) : "";
+        retName.append(name);
     }
 
     return retName.trimmed();
