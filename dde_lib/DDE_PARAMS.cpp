@@ -98,84 +98,84 @@ _dde_func_return_t DDE_PARAMS::init(char* device_description)
 
 void DDE_PARAMS::setTestDevice()
 {
-    DDE_SET_PARAMS_DATA set;
+    DDE_SET_PARAMS_DATA setDat;
     for (int ii = 1; ii <= 4; ii++) {
-        set.device_id = 2;
-        set.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
-        set.param_id = ii;
+        setDat.device_id = 2;
+        setDat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
+        setDat.param_id = ii;
         switch (ii)
         {
             case DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME:
-                set.ivalue = 0x4E564544;
+                setDat.ivalue = 0x4E564544;
                 break;
             case DDE_DEV0_MODULE0_PARAM2_HW_REV:
-                set.ivalue = 0x33373030;
+                setDat.ivalue = 0x33373030;
                 break;
             case DDE_DEV0_MODULE0_PARAM3_SW_REV:
-                set.ivalue = 0x32363030;
+                setDat.ivalue = 0x32363030;
                 break;
             case DDE_DEV0_MODULE0_PARAM4_SPARE_REV:
-                set.ivalue = 0x37303130;
+                setDat.ivalue = 0x37303130;
                 break;
         }
 
-        PARAMS_DATA_direct_write(set);
+        PARAMS_DATA_direct_write(setDat);
     }
 }
 
 void DDE_PARAMS::setTestData()
 {
-    DDE_SET_PARAMS_DATA setVal;
+    DDE_SET_PARAMS_DATA setDat;
     for (int ii = 1; ii <= 7; ii++) {
-        setVal.device_id = 2;
-        setVal.module_id = 1;
-        setVal.param_id = ii;
+        setDat.device_id = 2;
+        setDat.module_id = 1;
+        setDat.param_id = ii;
         switch (ii)
         {
             case 1:
-                setVal.ivalue = 1;
+                setDat.ivalue = 1;
                 break;
             case 2:
-                setVal.ivalue = 0x2;
+                setDat.ivalue = 0x2;
                 break;
             case 3:
-                setVal.ivalue = 0x3;
+                setDat.ivalue = 0x3;
                 break;
             case 4:
-                setVal.ivalue = 0x37303130;
+                setDat.ivalue = 0x37303130;
                 break;
-        default: setVal.ivalue = ii;
+        default: setDat.ivalue = ii;
         }
 
-        PARAMS_DATA_direct_write(setVal);
+        PARAMS_DATA_direct_write(setDat);
     }
 }
 
 void DDE_PARAMS::setTestLinks()
 {
-    DDE_SET_PARAMS_DATA setVal;
+    DDE_SET_PARAMS_DATA setDat;
     for (int ii = DDE_DEV0_MODULE1_PARAM1_dev1_link; ii <= DDE_DEV0_MODULE2_PARAM63_dev63_link; ii++) {
-        setVal.device_id = 0;
-        setVal.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
-        setVal.param_id = ii;
+        setDat.device_id = 0;
+        setDat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
+        setDat.param_id = ii;
         switch (ii)
         {
             case 1:
-                setVal.ivalue = 1;
+                setDat.ivalue = 1;
                 break;
             case 2:
-                setVal.ivalue = 1;
+                setDat.ivalue = 1;
                 break;
             case 3:
-                setVal.ivalue = 1;
+                setDat.ivalue = 1;
                 break;
             case 4:
-                setVal.ivalue = 0;
+                setDat.ivalue = 0;
                 break;
-        default: setVal.ivalue = 0;
+        default: setDat.ivalue = 0;
         }
 
-        PARAMS_DATA_direct_write(setVal);
+        PARAMS_DATA_direct_write(setDat);
     }
 }
 
