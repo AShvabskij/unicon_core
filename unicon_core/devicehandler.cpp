@@ -138,7 +138,7 @@ long DeviceHandler::requestDevice(Device& device)
     if (!device.isValid()) return _return_FAIL;
 
     device.name = getDeviceName(device.id);
-    if (device.name.isEmpty()) return 0;
+    if (device.name.isEmpty()) return _return_OK;
 
     device.desc = ""; // todo: получать из другого сервиса
     device.channel = ChannelType::CAN_UAV;
@@ -174,11 +174,14 @@ QString DeviceHandler::getDeviceName(int deviceId)
     for (int i = 0; i < 4; i++) {
         int param_id = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME + i;
 
-        QString name = (const char*)&dat.el[param_id].ivalue;
+        auto& val = dat.el[param_id].ivalue;
+        const char* charArray = (const char*)&val;
+
+        QString name = val != 0 ? QString::fromLocal8Bit(charArray, 4) : "";
         retName = retName + name;
     }
 
-    return retName;
+    return retName.trimmed();
 }
 
 void DeviceHandler::handleReqModuleHeader(int deviceId, int moduleId, int requestId)

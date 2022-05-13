@@ -39,6 +39,10 @@ private:
     float generateValue(float value , float noise);
     StringList split(std::string inputStr, char delim);
 
+    void setTestDevice();
+    _dde_func_return_t setTestData();
+    void setTestLinks();
+
     DEVICE_ELEMENTS m_devData[64]; //not more than 64 devices
     DEVICE_ELEMENTS_DESCR m_devDescr[64];
     uint32_t devices_count;

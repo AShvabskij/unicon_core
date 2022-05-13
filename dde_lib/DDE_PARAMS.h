@@ -61,6 +61,8 @@ private:
     //int thread_proc();
     inline time_t systemTime();
     std::string create_name(const uint8_t device_id);
+
+    void setTestDevice();
     void setTestData();
     void setTestLinks();
 

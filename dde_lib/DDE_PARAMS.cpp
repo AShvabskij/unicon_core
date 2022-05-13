@@ -75,30 +75,7 @@ _dde_func_return_t DDE_PARAMS::init(char* device_description)
 	//	std::thread*thr_params = new std::thread(&DDE_PARAMS::thread_proc, this);
 	PARAMS_DATA_init(device_description);
 
-	DDE_SET_PARAMS_DATA set;
-	for (int ii = 1; ii <= 4; ii++) {
-        set.device_id = 2;
-		set.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
-		set.param_id = ii;
-		switch (ii)
-		{
-			case 1:
-				set.ivalue = 0x4E564544;
-				break;
-			case 2:
-				set.ivalue = 0x33373030;
-				break;
-			case 3:
-				set.ivalue = 0x32363030;
-				break;
-			case 4:
-				set.ivalue = 0x37303130;
-				break;
-		}
-		
-		PARAMS_DATA_direct_write(set);
-	}
-
+    setTestDevice();
     setTestLinks();
     setTestData();
 
@@ -117,6 +94,33 @@ _dde_func_return_t DDE_PARAMS::init(char* device_description)
 	//PARAMS_DESCR_init("UAVCAN"); // from SQLite3_lib
 	//thr_params.join();
 	return 0;
+}
+
+void DDE_PARAMS::setTestDevice()
+{
+    DDE_SET_PARAMS_DATA set;
+    for (int ii = 1; ii <= 4; ii++) {
+        set.device_id = 2;
+        set.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
+        set.param_id = ii;
+        switch (ii)
+        {
+            case DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME:
+                set.ivalue = 0x4E564544;
+                break;
+            case DDE_DEV0_MODULE0_PARAM2_HW_REV:
+                set.ivalue = 0x33373030;
+                break;
+            case DDE_DEV0_MODULE0_PARAM3_SW_REV:
+                set.ivalue = 0x32363030;
+                break;
+            case DDE_DEV0_MODULE0_PARAM4_SPARE_REV:
+                set.ivalue = 0x37303130;
+                break;
+        }
+
+        PARAMS_DATA_direct_write(set);
+    }
 }
 
 void DDE_PARAMS::setTestData()

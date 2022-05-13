@@ -187,7 +187,7 @@ void MainWindowVM::setDeviceDescr(const QJsonObject &obj)
     int deviceId = obj.value("id").toInt();
     QString name = obj.value("name").toString();
     int modulesCount = obj.value("modules").toArray().count();
-    QString channel = obj.value("channel").toString();
+    QString channel = obj.value("channel").toVariant().toString();
     QString descr = obj.value("desc").toString();
 
     QString output = QString("Device: id = %1, name = %2, modules = %3, channel = %4")

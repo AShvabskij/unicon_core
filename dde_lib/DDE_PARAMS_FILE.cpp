@@ -23,11 +23,53 @@ DDE_PARAMS_FILE::~DDE_PARAMS_FILE()
 
 _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
 {
+
+    setTestDevice();
+    setTestLinks();
+
+    _dde_func_return_t res = setTestData();
+    return res;
+}
+
+void DDE_PARAMS_FILE::setTestDevice()
+{
+    int devices_count = 4;
+    int devices_step = 1;
+
+    for (int i = 1; i <= devices_count * devices_step; i = i + devices_step) {
+        for (int ii = 1; ii <= 4; ii++) {
+            DDE_SET_PARAMS_DATA setDat;
+            setDat.device_id = i;
+            setDat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
+            setDat.param_id = (DDE_DEV0_MODULE0_DESCRIPTION << 6) + ii;
+
+            switch (ii) {
+            case DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME:
+                setDat.ivalue = 0x4E564544;
+                break;
+            case DDE_DEV0_MODULE0_PARAM2_HW_REV:
+                setDat.ivalue = 0x33373030;
+                break;
+            case DDE_DEV0_MODULE0_PARAM3_SW_REV:
+                setDat.ivalue = 0x32363030;
+                break;
+            case DDE_DEV0_MODULE0_PARAM4_SPARE_REV:
+                setDat.ivalue = 0x37303130 + i;
+                break;
+            }
+
+            set(setDat);
+        }
+    }
+}
+
+_dde_func_return_t DDE_PARAMS_FILE::setTestData()
+{
     std::setlocale(LC_NUMERIC, "POSIX");
 
     int res = 0;
     int devices_count = 4;
-    int devices_step = 11;
+    int devices_step = 1;
 
     CsvFile* file = new CsvFile();
     assert(file);
@@ -36,11 +78,11 @@ _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
     file->setWorkDirectory("/home/pi/Desktop/Release/");
 #endif
 
-    for (int ii = 1; ii < devices_count * devices_step; ii = ii + devices_step)	{
+    for (int ii = 1; ii <= devices_count * devices_step; ii = ii + devices_step)	{
         string fileName = "parameters_"+to_string(ii) + ".csv";
         res = file->open(fileName);
         if (res != 0) {
-            return res;
+            return _return_FAIL;
         }
 
         m_devData[ii].device_id = ii;
@@ -56,34 +98,40 @@ _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
 
         StringList rowCells;
         while (!file->eof()) {
-            StringList cells = file->readNextRow([](StringList rowCells) {
+            auto isValidRow = [](StringList rowCells) {
                 bool isValidRow = !rowCells.empty();
                 isValidRow = isValidRow && rowCells.size() >= CSV_NUMBER_OF_CELLS;
                 isValidRow = isValidRow && isdigit(*rowCells[3].c_str());
                 isValidRow = isValidRow && isdigit(*rowCells[4].c_str());
 
                 return isValidRow;
-            });
+            };
+
+            StringList cells = file->readNextRow(isValidRow);
 
             if (cells.empty()) continue;
 
-            uint16_t moduleId = atoi(cells[3].c_str()) >> 6 << 6;
-            uint16_t paramId = atoi(cells[3].c_str());
+            uint16_t elemId = atoi(cells[3].c_str());
+            uint16_t moduleNum = elemId >> 6;
+            uint16_t moduleId = elemId >> 6 << 6;
 
-            if (moduleId ==0 && paramId == 0) {
+            uint16_t paramNum = elemId - moduleId;
+
+            if (moduleNum == 0 && paramNum == 0) {
                 continue;
             }
 
-
             strcpy(m_devDescr[ii].el_descr[moduleId].name, cells[0].c_str());
 
-            GLIO_ELEMENT_DESCR& el_descr = m_devDescr[ii].el_descr[paramId];
-            GLIO_ELEMENT_VALUE& el_value = m_devData[ii].el[paramId];
+            GLIO_ELEMENT_DESCR& el_descr = m_devDescr[ii].el_descr[elemId];
+            GLIO_ELEMENT_VALUE& el_value = m_devData[ii].el[elemId];
 
             strcpy(el_descr.name, cells[1].c_str());
             strcpy(el_descr.descr, cells[2].c_str());
             strcpy(el_descr.unit, cells[8].c_str());
-            el_descr.id = paramId;
+
+            el_descr.id = paramNum;
+            el_descr.mod = moduleNum;
             el_descr.writable = (cells[5] == "W") ? true : false;
             el_descr.format = static_cast<GLIO_ELEMENT_FORMAT_ENUM>(atoi(cells[4].c_str()));
             el_descr.scale = 0;
@@ -117,48 +165,76 @@ _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
 
     delete file;
 
-    return res;
+    return _return_OK;
+}
+
+void DDE_PARAMS_FILE::setTestLinks()
+{
+    DDE_SET_PARAMS_DATA setDat;
+    for (int ii = DDE_DEV0_MODULE1_PARAM1_dev1_link; ii <= DDE_DEV0_MODULE2_PARAM63_dev63_link; ii++) {
+        setDat.device_id = 0;
+        setDat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
+        setDat.param_id = ii;
+        switch (ii)
+        {
+            case 1:
+                setDat.ivalue = 1;
+                break;
+            case 2:
+                setDat.ivalue = 1;
+                break;
+            case 3:
+                setDat.ivalue = 1;
+                break;
+            case 4:
+                setDat.ivalue = 1;
+                break;
+        default: setDat.ivalue = 0;
+        }
+
+        set(setDat);
+    }
 }
 
 _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
 {
     if (p.device_id > DEVICE_ID_MAX || p.param_id > ELEMENTS_ID_MAX || p.module_id > ELEMENTS_ID_MAX) {
         memset(&p, 0, sizeof(DDE_GET_PARAMS_HEADER));
-        return -1;
+        return _return_FAIL;
     }
 
     // request for master device params
     if (p.device_id == 0) {
-        return 0;
+        return _return_OK;
     }
 
     // request for module params
     if (p.param_id == 0) {
         p.el_count = 0;
         for (int ii = 0; ii < 64; ii++) {
-            uint16_t elemId = p.module_id + ii;
+            uint16_t elemId = (p.module_id << 6) + ii;
             if (m_devDescr[p.device_id].el_descr[elemId].name[0] != 0)
             {
                 memcpy(&p.el_descr[ii], &m_devDescr[p.device_id].el_descr[elemId], sizeof(GLIO_ELEMENT_DESCR));
-                p.el_descr[ii].id = elemId;
+                p.el_descr[ii].id = ii;
                 p.el_descr[ii].mod = p.module_id;
                 p.el_count++;
             }
         }
     } else { // request for individual param descr
         p.el_count = 1;
-        uint16_t elemId = p.param_id; //(p.module_id * 64) + p.param_id;
+        uint16_t elemId = (p.module_id << 6) + p.param_id;
         memcpy(&p.el_descr[0], &m_devDescr[p.device_id].el_descr[elemId], sizeof(GLIO_ELEMENT_DESCR));
     }
 
-    return 0;
+    return _return_OK;
 }
 
 _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
 {
 
     if (p.module_id == 0 && p.device_id == 0) {
-        return -1;
+        return _return_FAIL;
     }
 
 //    if (p.module_id > PARAMS_ID_MAX || p.param_id > PARAMS_ID_MAX) {
@@ -166,13 +242,14 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
 //    }
 
     if (p.module_id > ELEMENTS_ID_MAX || p.param_id > ELEMENTS_ID_MAX) {
-        return -1;
+        return _return_FAIL;
     }
 
     if (p.param_id == 0) {
         for (int ii = 0; ii < 16; ii++) {
-            int paramId = p.module_id + ii;
-            auto el = m_devData[p.device_id].el[paramId];
+            int paramId = ii;
+            int elemId = (p.module_id << 6) + paramId;
+            auto el = m_devData[p.device_id].el[elemId];
 //          p.el[ii].id = paramId;
             p.el[ii].ivalue = el.ivalue;
             p.el[ii].text_id = el.text_id;
@@ -182,7 +259,8 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
         }
     } else {
         int paramId = p.param_id;
-        const auto& el = m_devData[p.device_id].el[paramId];
+        int elemId = (p.module_id << 6) + paramId;
+        const auto& el = m_devData[p.device_id].el[elemId];
 //      p.el[0].id = paramId;
         p.el[0].ivalue = el.ivalue;
         p.el[0].text_id = el.text_id;
@@ -195,7 +273,7 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
         if (format == 3) {
             float fvalue = 0.0;
 
-            const GLIO_ELEMENT_DESCR& param = m_devDescr[p.device_id].el_descr[paramId];
+            const GLIO_ELEMENT_DESCR& param = m_devDescr[p.device_id].el_descr[elemId];
             string unit = param.unit;
 
             if (unit == "A") {
@@ -203,7 +281,7 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
             } else if (unit == "V") {
                 fvalue = generateValue(0.1, 4000, 0, systemTime());
             } else if (unit == "") {
-                auto& el = m_devData[p.device_id].el[paramId];
+                auto& el = m_devData[p.device_id].el[elemId];
                 float currValue = *(float*)&el.ivalue;
 
                 fvalue = generateValue(currValue, 0.01);
@@ -215,7 +293,7 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
         }
     }
 
-    return 0;
+    return _return_OK;
 }
 
 inline time_t DDE_PARAMS_FILE::systemTime()
@@ -230,17 +308,18 @@ inline time_t DDE_PARAMS_FILE::systemTime()
 _dde_func_return_t DDE_PARAMS_FILE::set(DDE_SET_PARAMS_DATA& p)
 {
     //check valid input
-    if (p.device_id <= 0 || p.param_id <= 0) {
-        return -1;
+    if (p.device_id < 0 || p.param_id < 0) {
+        return _return_FAIL;
     }
 
     if (p.device_id > DEVICE_ID_MAX || p.param_id > ELEMENTS_ID_MAX/*PARAMS_ID_MAX*/ ) {
-        return -1;
+        return _return_FAIL;
     }
 
-    m_devData[p.device_id].el[p.param_id].ivalue = p.ivalue;
+    int elemId = (p.module_id << 6) + p.param_id;
+    m_devData[p.device_id].el[elemId].ivalue = p.ivalue;
 
-    return 0;
+    return _return_OK;
 }
 
 float DDE_PARAMS_FILE::generateValue(float frequency_hertz, int amplitude, float noise, time_t timeMsc)

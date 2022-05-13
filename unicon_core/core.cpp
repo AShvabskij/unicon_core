@@ -24,7 +24,12 @@ Core::~Core()
 
 void Core::start()
 {
-    IDDE* dde = new DDE();
+#ifdef __WIN32__
+    IDDE* dde = new DDE_EMUL();
+#else
+    IDDE* m_dde = new DDE();
+#endif
+
     dde->init("UAVCAN"); //run thread
 
     ParamsHandler* params = new ParamsHandler(dde);
