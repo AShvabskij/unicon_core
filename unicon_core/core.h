@@ -6,6 +6,7 @@
 #include "DDE_PARAMS_TYPE.h"
 
 class IDDE;
+class IDDE_Dispatcher;
 
 class Core
 {
@@ -19,12 +20,7 @@ private:
     SocketServer* m_cmdServer;
     SocketServer* m_streamServer;
 
-// test methods
-    int test();
-    void print_modules(const DDE_GET_PARAMS_HEADER& p);
-    void print_params(int device_ID, int module_ID, const DDE_GET_PARAMS_HEADER& p);
-
-    IDDE* m_dde;
+    IDDE_Dispatcher* m_ddeDisp;
 };
 
 #endif // APPLICATION_H

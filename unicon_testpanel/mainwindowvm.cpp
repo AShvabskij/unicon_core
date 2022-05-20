@@ -40,6 +40,7 @@ void MainWindowVM::requestParamInfo(QString arg)
 {
     QJsonObject req;
     req["request_id"] = PARAM_REQUEST_ID;
+    req["sys_type"] = m_currSysType;
     req["cmd"] = createCmd("GET_PARAM_HEADER");
 
     CompositeId paramId = parse(arg);
@@ -67,6 +68,7 @@ void MainWindowVM::requestDeviceInfo(int moduleId)
 
     QJsonObject req;
     req["request_id"] = DEVICE_REQUEST_ID;
+    req["sys_type"] = m_currSysType;
     req["cmd"] = createCmd("GET_DEVICE_HEADER");
     req["body"] = createDeviceCmdBody("GET_DEVICE_HEADER", m_deviceId, moduleId);
 
@@ -79,6 +81,7 @@ void MainWindowVM::requestOscInfo(int oscId)
 
     QJsonObject req;
     req["request_id"] = OSC_REQUEST_ID;
+    req["sys_type"] = m_currSysType;
     req["cmd"] = createCmd("GET_OSC_HEADER");
     req["body"] = createOscCmdBody("GET_OSC_HEADER", deviceId, oscId);
 
@@ -91,6 +94,7 @@ void MainWindowVM::requestChannelInfo(int oscId, int chNum)
 
     QJsonObject req;
     req["request_id"] = OSC_CHANNEL_REQUEST_ID;
+    req["sys_type"] = m_currSysType;
     req["cmd"] = createCmd("GET_OSC_CHANNEL");
     req["body"] = createOscCmdBody("GET_OSC_CHANNEL", deviceId, oscId, chNum);
 
@@ -101,6 +105,7 @@ void MainWindowVM::requestParamValues(QString arg)
 {
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_REQUEST_ID;
+    req["sys_type"] = m_currSysType;
     req["cmd"] = createCmd("GET_PARAM_DATA");
 
     CompositeId elem = parse(arg);
@@ -113,6 +118,7 @@ void MainWindowVM::changeParamValue(QString paramArg, QVariant paramValue)
 {
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_SET_ID;
+    req["sys_type"] = m_currSysType;
     req["cmd"] = createCmd("SET_PARAM_DATA");
 
     CompositeId elem = parse(paramArg);
@@ -127,6 +133,7 @@ void MainWindowVM::startStreamParamValues(QString arg)
 
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_REQUEST_ID;
+    req["sys_type"] = m_currSysType;
     req["cmd"] = createCmd("STREAM_PARAM_DATA");
     req["body"] = createParamCmdBody("STREAM_PARAM_DATA", m_deviceId, elem);
 
@@ -139,6 +146,7 @@ void MainWindowVM::stopStreamParamValues(QString paramArg)
 
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_REQUEST_ID;
+    req["sys_type"] = m_currSysType;
     req["cmd"] = createCmd("STREAM_STOP_PARAM_DATA");
     req["body"] = createParamCmdBody("STREAM_PARAM_DATA", m_deviceId, elem);
 
@@ -149,6 +157,7 @@ void MainWindowVM::startOscParamValues(int oscId, int chNum)
 {
     QJsonObject req;
     req["request_id"] = OSC_DATA_REQUEST_ID;
+    req["sys_type"] = m_currSysType;
     req["cmd"] = createCmd("OSC_PARAM_DATA");
     req["body"] = createOscCmdBody("OSC_PARAM_DATA", oscId, oscId, chNum);
 
@@ -159,6 +168,7 @@ void MainWindowVM::stopOscParamValues(QString oscId)
 {
     QJsonObject req;
     req["request_id"] = OSC_DATA_REQUEST_ID;
+    req["sys_type"] = m_currSysType;
     req["cmd"] = createCmd("OSC_STOP_PARAM_DATA");
     req["body"] = createOscCmdBody("OSC_PARAM_DATA", oscId.toInt(), oscId.toInt());
 
@@ -187,19 +197,20 @@ void MainWindowVM::setDeviceDescr(const QJsonObject &obj)
     int deviceId = obj.value("id").toInt();
     QString name = obj.value("name").toString();
     int modulesCount = obj.value("modules").toArray().count();
-    QString channel = obj.value("channel").toVariant().toString();
+    int sysType = obj.value("channel").toInt();
     QString descr = obj.value("desc").toString();
 
-    QString output = QString("Device: id = %1, name = %2, modules = %3, channel = %4")
+    QString output = QString("Device: id = %1, name = %2, modules = %3, system type = %4")
             .arg(deviceId)
             .arg(name)
             .arg(modulesCount)
-            .arg(channel);
+            .arg(sysTypeToString((SysType)sysType));
 
     m_deviceDescr = output;
     emit deviceDescrChanged();
 
     m_deviceId = deviceId;
+    m_currSysType = (SysType)sysType;
     emit deviceIdChanged();
 }
 
@@ -448,6 +459,19 @@ void MainWindowVM::emitParamValue(int moduleId, int paramId, QString sVal, QStri
         m_paramValueInfo2 = info;
         emit valueInfo2Changed(info);
     }
+}
+
+QString MainWindowVM::sysTypeToString(SysType sysType)
+{
+    switch (sysType) {
+    case Undefined: return "Undefined";
+    case CAN_OPEN: return "CAN_OPEN";
+    case MOD_BUS: return "MOD_BUS";
+    case UAV_CAN: return "UAV_CAN";
+    case MOD_BUS_FO: return "MOD_BUS_FO";
+    }
+
+    return "";
 }
 
 void MainWindowVM::setOscChannelInfo(const QJsonObject &obj)

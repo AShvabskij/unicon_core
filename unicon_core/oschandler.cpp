@@ -12,7 +12,7 @@ const int STREAM_OBJECT_LIMIT = 10000;
 
 const int STOP_STREAM_CODE = 2; //*100;
 
-OscHandler::OscHandler(IDDE* dde): BaseReqHandler(dde)
+OscHandler::OscHandler(IDDE_Dispatcher* dde): BaseReqHandler(dde)
 {
     m_oscRawDataBuff = new DDE_GET_OSC_DATA();
     m_oscDataBuff = new OscData();
@@ -72,6 +72,7 @@ void OscHandler::onStreamTimerAlarm()
 int OscHandler::handleGetHeader(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
+    SysType sysType = (SysType)request.value("sys_type").toInt();
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -82,7 +83,8 @@ int OscHandler::handleGetHeader(const QJsonObject &request)
     int oscId = cmdBody.value("osc_id").toInt();
     
     OscHeader header;
-    long ret = getHeader(deviceId, oscId, &header);
+    DevID devId = {sysType, deviceId};
+    long ret = getHeader(devId, oscId, &header);
 
     QJsonObject response = createHeaderObj(requestId, header);
     send(response);
@@ -93,6 +95,7 @@ int OscHandler::handleGetHeader(const QJsonObject &request)
 int OscHandler::handleGetChannel(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
+    SysType sysType = (SysType)request.value("sys_type").toInt();
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -104,7 +107,8 @@ int OscHandler::handleGetChannel(const QJsonObject &request)
     int chNum = cmdBody.value("channel_num").toInt();
 
     OscHeader header;
-    long ret = getHeader(deviceId, oscId, &header);
+    DevID devId = {sysType, deviceId};
+    long ret = getHeader(devId, oscId, &header);
 
     OscChannelDescr chDescr = header.channel(chNum);
     QJsonObject response = createChannelObj(requestId, chDescr);
@@ -116,6 +120,7 @@ int OscHandler::handleGetChannel(const QJsonObject &request)
 int OscHandler::handleOpenStream(const QJsonObject& request)
 {
     int requestId = request.value("request_id").toInt();
+    SysType sysType = (SysType)request.value("sys_type").toInt();
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -127,7 +132,8 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
     QJsonArray channels = cmdBody.value("channels").toArray();
 
     OscHeader header;
-    long ret = getHeader(deviceId, oscId, &header);
+    DevID devId = {sysType, deviceId};
+    long ret = getHeader(devId, oscId, &header);
     if (ret < 0) {
         return ret;
     }
@@ -149,6 +155,8 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
 int OscHandler::handleCloseStream(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
+    SysType sysType = (SysType)request.value("sys_type").toInt();
+
     QJsonObject cmdBody = request.value("body").toObject();
     int deviceId = cmdBody.value("device_id").toInt();
 
@@ -156,7 +164,7 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
         return -1;
     }
 
-    if (m_capturedOsc.deviceId == deviceId /*&& m_capturedOsc.id == oscId*/) {
+    if (m_capturedOsc.deviceID.id == deviceId && m_capturedOsc.deviceID.type == sysType) {
         stopPooling();
     }
 
@@ -169,15 +177,13 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
     Q_ASSERT(m_oscRawDataBuff);
 
     out->oscId = osc.id;
-    out->deviceId = osc.deviceId;
+    out->deviceID = osc.deviceID;
 
-    m_oscRawDataBuff->device_ID = osc.deviceId;
+    m_oscRawDataBuff->device_ID = osc.deviceID.id;
 
-    _dde_func_return_t res = m_dde->get_osc_data(*m_oscRawDataBuff);
+    _dde_func_return_t res = (*m_dde)(osc.deviceID.type)->get_osc_data(*m_oscRawDataBuff);
 
-    if (res < 0) {
-        return res;
-    }
+    if (res < 0) return res;
 
     for (int chInd : osc.analogChannels.keys()) {
 
@@ -268,7 +274,7 @@ void OscHandler::stopPooling()
 
 int OscHandler::streamData()
 {
-    if (m_capturedOsc.id == 0) {
+    if (!m_capturedOsc.deviceID.isValid()) {
         return -1;
     }
 
@@ -287,7 +293,7 @@ void OscHandler::stopStreamData(const OscHeader &osc)
 
     OscData val;
     val.oscId = osc.id;
-    val.deviceId = osc.deviceId;
+    val.deviceID = osc.deviceID;
 
     QJsonObject response = createStreamDataObj(val, STOP_STREAM_CODE);
     emit stream(response);
@@ -295,18 +301,18 @@ void OscHandler::stopStreamData(const OscHeader &osc)
     return;
 }
 
-long OscHandler::getHeader(int deviceId, int oscId, OscHeader *out)
+long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
 {
     DDE_GET_OSC_HEADER header;
-    header.device_id = deviceId;
+    header.device_id = deviceID.id;
 
-    _dde_func_return_t res = m_dde->get_osc_header(header);
+    _dde_func_return_t res = (*m_dde)(deviceID.type)->get_osc_header(header);
     if (res < 0) {
         return res;
     }
 
-    out->deviceId = deviceId;
-    out->id = deviceId;
+    out->deviceID = deviceID;
+    out->id = header.device_id;
     out->name = "osc";
     out->desc = "osc desc";
     out->analogChannels.clear();
@@ -423,7 +429,7 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
         channelValues << QJsonArray::fromVariantList(chVal.values);
     }
 
-    res["d_id"] = data.deviceId;
+    res["d_id"] = data.deviceID.id;
     res["values"] = channelValues;
     res["channels"] = channels;
     res["time"] = data.timestamp;

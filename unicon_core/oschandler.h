@@ -21,7 +21,7 @@ struct OscChannelValues
 struct OscData
 {
     uint16_t oscId;
-    uint16_t deviceId;
+    DevID deviceID;
     OscChannelValues analogValues[OSC_CHANNELS_MAX + 1];
     OscChannelValues discreteValues[OSC_DISCRETES_MAX + 1];
     qlonglong timestamp = 0;
@@ -66,7 +66,7 @@ QString colorToString(const RGB& c);
 struct OscHeader
 {
     int id = 0;
-    int deviceId = 0;
+    DevID deviceID = {SysType::Undefined, 0};
     QString name = "";
     QString desc = "";
 
@@ -75,7 +75,7 @@ struct OscHeader
     OscSettings settings;
 
     bool operator == (const OscHeader& o) const {
-        return this->id == o.id && this->deviceId == o.deviceId;
+        return this->id == o.id && this->deviceID == o.deviceID;
     }
 
     OscChannelDescr channel(quint8 chNum)
@@ -99,7 +99,7 @@ struct OscHeader
     QJsonObject toJson() const {
         QJsonObject res;
 
-        res["device_id"] = deviceId;
+        res["device_id"] = deviceID.id;
         res["id"] = id;
         res["desc"] = desc;
         res["name"] = name;
@@ -151,7 +151,7 @@ class OscHandler : public BaseReqHandler
 {
     Q_OBJECT
 public:
-    OscHandler(IDDE* dde);
+    OscHandler(IDDE_Dispatcher* );
     virtual int handle(const QJsonObject& request);
 
 signals:
@@ -167,7 +167,7 @@ private:
     int handleCloseStream(const QJsonObject &request);
 
     long getData(const OscHeader &osc, OscData* out);
-    long getHeader(int deviceId, int oscId, OscHeader *out);
+    long getHeader(const DevID& deviceID, int oscId, OscHeader *out);
 
     QJsonObject createHeaderObj(int requestId, const OscHeader& header);
     QJsonObject createChannelObj(int requestId, const OscChannelDescr& ch);

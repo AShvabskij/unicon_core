@@ -6,6 +6,15 @@
 #include <QtWebSockets>
 #include <qstring.h>
 
+enum SysType
+{
+    Undefined = 0,
+    UAV_CAN,
+    CAN_OPEN,
+    MOD_BUS,
+    MOD_BUS_FO
+};
+
 class MainWindowVM : public QObject
 {
     Q_OBJECT
@@ -98,10 +107,13 @@ private:
     void doProccessStreamDataReceived(QJsonObject data);
     void sendRequest(QJsonObject req, bool checkPerformance = false);
     void emitParamValue(int moduleId, int paramId, QString sVal, QString info);
+    QString sysTypeToString(SysType sysType);
 
     QString m_host = "";
 
     int m_deviceId = 0;
+    SysType m_currSysType = SysType::Undefined;
+
     QString m_deviceDescr;
     QString m_oscDescr;
     QString m_oscChannelValue;

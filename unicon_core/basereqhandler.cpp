@@ -1,6 +1,6 @@
 #include "basereqhandler.h"
 
-BaseReqHandler::BaseReqHandler(IDDE *dde)
+BaseReqHandler::BaseReqHandler(IDDE_Dispatcher *dde)
 {
     m_dde = dde;
 }

@@ -4,12 +4,13 @@
 #include "ireqhandler.h"
 #include "responsemanager.h"
 #include "DDE.h"
+#include "dde_dispatcher.h"
 
 class BaseReqHandler : public IReqHandler
 {
     Q_OBJECT
 public:
-    BaseReqHandler(IDDE* dde);
+    BaseReqHandler(IDDE_Dispatcher* ddeDispatcher);
     ~BaseReqHandler() {};
 
     virtual int handle(const QJsonObject& request);
@@ -19,7 +20,7 @@ public:
 protected:
     IReqHandler* m_next = nullptr;
     ResponseManager* m_response = nullptr;
-    IDDE* m_dde = nullptr;
+    IDDE_Dispatcher* m_dde = nullptr;
 };
 
 #endif // BASEREQHANDLER_H

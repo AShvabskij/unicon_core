@@ -3,29 +3,23 @@
 
 #include "basereqhandler.h"
 
-enum ChannelType
-{
-    Undefined = 0,
-    CAN_UAV,
-    CAN_OPEN,
-    MOD_BUS,
-    MOD_BUS_FO
-};
-
 struct Device
 {
-    int id = 0;
+    DevID ID = {SysType::Undefined, 0};
     QString name;
     QString desc;
-    ChannelType channel = Undefined;
+    SysType sysType  = Undefined;
     QVector<int> modules;
 
-    Device()= default;
-    Device(int id) {
-        this->id = id;
+    Device() = default;
+
+    Device(DevID ID) {
+        this->ID = ID;
+        sysType = ID.type;
     }
+
     bool isValid() {
-        return id >= 0;
+        return ID.isValid();
     }
     bool isEmpty() {
         return name.isEmpty() || modules.count() == 0;
@@ -44,13 +38,14 @@ struct Module
 
 struct SystemStatus
 {
+    QMap<SysType, bool> statusList;
     bool isChanged = false;
 };
 
 class DeviceHandler : public BaseReqHandler
 {
 public:
-    DeviceHandler(IDDE* dde);
+    DeviceHandler(IDDE_Dispatcher*);
     virtual int handle(const QJsonObject &request);
 
 private:
@@ -58,14 +53,14 @@ private:
     void handleSystemStatus(const QJsonObject& request);
     void handleDeviceLinks(const QJsonObject &request);
     void handleReqDevices(int requestId);
-    void handleReqDeviceHeader(int deviceId, int requestId);
-    void handleReqModuleHeader(int deviceId, int moduleId, int requestId);
+    void handleReqDeviceHeader(SysType sysType, int deviceId, int requestId);
+    void handleReqModuleHeader(SysType sysType, int deviceId, int moduleId, int requestId);
 
-    long requestDeviceLinks(QList<int>& links);
+    long requestDeviceLinks(SysType sysType, QList<int>& links);
     long requestDevice(Device& device);
-    QString getDeviceName(int deviceId);
+    QString getDeviceName(const DevID &deviceId);
 
-    ChannelType channelType(QString chName);
+    SysType sysType(QString sType);
 
     QJsonObject createResponse(int requestId, const DeviceList& devices);
     QJsonObject createResponse(int requestId, const Module& module);

@@ -27,14 +27,19 @@ void Core::start()
 #ifdef __WIN32__
     IDDE* dde = new DDE_EMUL();
 #else
-    IDDE* m_dde = new DDE();
+    IDDE* dde = new DDE();
 #endif
 
-    dde->init("UAVCAN"); //run thread
+    dde->init("UAVCAN"); // TODO: replace arg to const char*
 
-    ParamsHandler* params = new ParamsHandler(dde);
-    DeviceHandler* device = new DeviceHandler(dde);
-    OscHandler* osc = new OscHandler(dde);
+    m_ddeDisp = new DDE_Dispatcher();
+    m_ddeDisp->setDefaultDDE(dde);
+    m_ddeDisp->registerDDE(SysType::UAV_CAN, dde);
+//  m_ddeDisp->registerDDE(SysType::Undefined, dde);
+
+    ParamsHandler* params = new ParamsHandler(m_ddeDisp);
+    DeviceHandler* device = new DeviceHandler(m_ddeDisp);
+    OscHandler* osc = new OscHandler(m_ddeDisp);
 
 
     RequestManager::instance()->registerHandler(device);
@@ -55,91 +60,4 @@ void Core::start()
     m_streamServer->setRequestManager(RequestManager::instance());
     m_streamServer->setResponseManager(StreamManager::instance());
     m_streamServer->start();
-}
-
-int Core::test()
-{
-    std::cout << "DDE template started..." << std::endl;
-
-
-#ifdef __WIN32__
-    m_dde = new DDE_EMUL();
-#else
-    m_dde = new DDE();
-#endif
-
-    m_dde->init(0); //run thread
-
-    //DDE_GET_PARAMS_HEADER s;
-    //DDE_GET_EVLOG_HEADER evlog_header;
-    //DDE_GET_EVLOG_DATA evlog_data;
-
-    //for (int ii = 0; ii < 16; ii++) {
-    //	evlog_header.device_ID = ii;
-    //	m_dde->get_evlog_header(evlog_header);
-    //	printf("device_ID=%d,  param = %d \n", evlog_header.device_ID, evlog_header.evlog_param1);
-    //	if (evlog_header.device_ID > 0)
-    //	{
-    //		evlog_data.device_ID = evlog_header.device_ID;
-    //		m_dde->get_evlog_data(evlog_data);
-    //		printf("	msg_num=%d\n", evlog_data.msg_num);
-    //		for (int ii = 0; ii < evlog_data.msg_num; ii++)
-    //			printf("		msg_source=%d, msg_code=%d\n", evlog_data.msg[ii].source_ID, evlog_data.msg[ii].code_ID);
-    //	}
-    //
-    //}
-
-
-    //build params tree
-    DDE_GET_PARAMS_HEADER get_devices_header;
-    get_devices_header.device_id = 0;
-    m_dde->get_params_header(get_devices_header);
-
-    std::cout << "HEADER el_count =" << get_devices_header.el_count << std::endl;
-
-    for (int ii = 0; ii < get_devices_header.el_count; ii++) {
-        std::string s(get_devices_header.el_descr[ii].name);
-        std::cout << "	device name - " << s << " addr ="<< get_devices_header.el_descr[ii].id<<std::endl;
-
-        ////try to get modules from device
-        DDE_GET_PARAMS_HEADER get_modules_header;
-        get_modules_header.device_id = get_devices_header.el_descr[ii].id;
-        m_dde->get_params_header(get_modules_header);
-        print_modules(get_modules_header);
-    }
-
-    delete m_dde;
-
-    return 0;
-}
-
-void Core::print_modules(const DDE_GET_PARAMS_HEADER& p)
-{
-        std::cout << "		modules_count =" << p.el_count << std::endl;
-
-    for (int ii = 0; ii < p.el_count; ii++)
-    {
-        std::string s(p.el_descr[ii].name);
-        std::cout << ii<<":                 module[" << p.el_descr[ii].id << "]  name = " << s << std::endl;
-
-
-            DDE_GET_PARAMS_HEADER get_params_header;
-            get_params_header.device_id = p.device_id;
-            get_params_header.module_id = p.el_descr[ii].id;
-            m_dde->get_params_header(get_params_header);
-            print_params(p.device_id,ii,get_params_header);
-    }
-    std::cout << std::endl;
-}
-
-void Core::print_params(int device_ID, int module_ID, const DDE_GET_PARAMS_HEADER& p)
-{
-    std::cout << "HEADER params count =" << p.el_count << "for device id = " << device_ID << ", module id = " << module_ID << std::endl;
-
-    for (int ii = 0; ii < p.el_count; ii++)
-    {
-        std::string s(p.el_descr[ii].name);
-        std::cout << ii << ":							param[" << p.el_descr[ii].id << "]  name = " << s << std::endl;
-    }
-    std::cout << std::endl;
 }
