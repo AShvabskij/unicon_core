@@ -10,9 +10,9 @@ public:
     DDE_OSC_EMUL() = default;
     ~DDE_OSC_EMUL() = default;
 
-    virtual int get(DDE_GET_OSC_HEADER& p);
-    virtual int get(DDE_GET_OSC_DATA& p);
-    virtual int set(DDE_GET_OSC_HEADER& p);
+    virtual _dde_func_return_t get(DDE_GET_OSC_HEADER& p);
+    virtual _dde_func_return_t get(DDE_GET_OSC_DATA& p);
+    virtual _dde_func_return_t set(DDE_GET_OSC_HEADER& p);
 
 private:
     time_t systemTime();

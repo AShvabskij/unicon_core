@@ -18,11 +18,24 @@ const std::string OSC_FILE_ERROR = "Osc data file is not found!\n";
 const std::string OSC_FILE_PARSE_ERROR = "Error while parsing th osc file!\n";
 const int SET_SIZE = 16;
 
-DDE_OSC_FILE::DDE_OSC_FILE()
+DDE_OscFileData::DDE_OscFileData()
 {
 }
 
-std::ifstream DDE_OSC_FILE::openOscFile(int fileNumber)
+int DDE_OscFileData::open(uint16_t deviceId)
+{
+    loadHeader(deviceId);
+
+    if (!m_loadThread) {
+        m_loadThread = new std::thread(&DDE_OscFileData::thread_load, this);
+    }
+}
+
+int DDE_OscFileData::close(uint16_t deviceId)
+{
+}
+
+std::ifstream DDE_OscFileData::openOscFile(int fileNumber)
 {
 
     string fileName = "osc_data_" + to_string(fileNumber)+ ".csv";
@@ -39,7 +52,7 @@ std::ifstream DDE_OSC_FILE::openOscFile(int fileNumber)
     return file;
 }
 
-int DDE_OSC_FILE::loadOscFile(uint16_t deviceId, string *outBuff)
+int DDE_OscFileData::loadOscFile(uint16_t deviceId, string *outBuff)
 {
     assert(outBuff);
 
@@ -66,15 +79,15 @@ int DDE_OSC_FILE::loadOscFile(uint16_t deviceId, string *outBuff)
     return 0;
 }
 
-int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
+int DDE_OscFileData::loadHeader(uint16_t device_id)
 {
     int res = 0;
-    if (!m_header || m_header->device_id != p.device_id) {
+    if (!m_header || m_header->device_id != device_id) {
         delete m_header;
         m_header = new FILE_HEADER();
-        m_header->device_id = p.device_id;
+        m_header->device_id = device_id;
 
-        ifstream fileStream = openOscFile(m_header->device_id);
+        ifstream fileStream = openOscFile(device_id);
         res = parseHeader(fileStream, *m_header);
         fileStream.close();
 
@@ -82,10 +95,16 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
         m_oscFileStream = nullptr;
         m_oscFileBuff.clear();
     }
+}
 
-    if (res < 0) {
-        return res;
+int DDE_OscFileData::getHeader(DDE_GET_OSC_HEADER& p)
+{
+    int res = 0;
+    if (!m_header || m_header->device_id != p.device_id) {
+        res = loadHeader(p.device_id);
     }
+
+    if (res != _return_OK) return res;
 
     p.settings = m_header->settings;
 
@@ -105,14 +124,18 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
     if (m_loadThread && m_loadThread->joinable()) {
         m_loadThread->join();
         delete m_loadThread;
+        m_loadThread = nullptr;
     }
-
-    m_loadThread = new std::thread(&DDE_OSC_FILE::thread_load, this);
 
     return res;
 }
 
-OSC_VAR DDE_OSC_FILE::createOscVar(const VAR_DESCR& descr, uint16_t deviceId)
+int DDE_OscFileData::setHeader(const DDE_GET_OSC_HEADER &p)
+{
+    return 1;
+}
+
+OSC_VAR DDE_OscFileData::createOscVar(const VAR_DESCR& descr, uint16_t deviceId)
 {
     OSC_VAR ret;
     ret.id = descr.var_id;
@@ -125,7 +148,7 @@ OSC_VAR DDE_OSC_FILE::createOscVar(const VAR_DESCR& descr, uint16_t deviceId)
     return ret;
 }
 
-int DDE_OSC_FILE::thread_load()
+int DDE_OscFileData::thread_load()
 {
     int res = 0;
     if (!m_oscFileStream) {
@@ -139,7 +162,7 @@ int DDE_OSC_FILE::thread_load()
     return res;
 }
 
-int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
+int DDE_OscFileData::getNextData(DDE_GET_OSC_DATA& p)
 {
     if (!m_oscFileStream) {
         return DATA_YELD_ERROR;
@@ -196,7 +219,7 @@ int DDE_OSC_FILE::get(DDE_GET_OSC_DATA& p)
     return res;
 }
 
-std::string DDE_OSC_FILE::readLine(std::istream &stream)
+std::string DDE_OscFileData::readLine(std::istream &stream)
 {
     if (stream.eof()) {
         return "";
@@ -213,7 +236,7 @@ std::string DDE_OSC_FILE::readLine(std::istream &stream)
     return line;
 }
 
-float DDE_OSC_FILE::normalizeValue(uint16_t rawValue, float gain, float offset)
+float DDE_OscFileData::normalizeValue(uint16_t rawValue, float gain, float offset)
 {
     uint16_t zeroLevel = 0x7FFF;
     float normValue = rawValue - zeroLevel;
@@ -221,7 +244,7 @@ float DDE_OSC_FILE::normalizeValue(uint16_t rawValue, float gain, float offset)
     return normValue;
 }
 
-std::vector<std::uint16_t> DDE_OSC_FILE::parseValues(std::string line)
+std::vector<std::uint16_t> DDE_OscFileData::parseValues(std::string line)
 {
     auto elems = split(line, ',');
     if (elems.empty()) {
@@ -240,7 +263,7 @@ std::vector<std::uint16_t> DDE_OSC_FILE::parseValues(std::string line)
     return ret;
 }
 
-int DDE_OSC_FILE::parseHeader(const std::ifstream& fileStream, FILE_HEADER& header)
+int DDE_OscFileData::parseHeader(const std::ifstream& fileStream, FILE_HEADER& header)
 {
     stringstream stream;
     stream << fileStream.rdbuf();
@@ -301,7 +324,7 @@ int DDE_OSC_FILE::parseHeader(const std::ifstream& fileStream, FILE_HEADER& head
     return res;
 }
 
-VAR_DESCR DDE_OSC_FILE::createVarDescr(std::vector<std::string> elems, uint16_t varId, bool isDiscrete)
+VAR_DESCR DDE_OscFileData::createVarDescr(std::vector<std::string> elems, uint16_t varId, bool isDiscrete)
 {
     int setNum = atoi(elems[1].substr(1).c_str());
     int setChNum = atoi(elems[2].c_str());
@@ -333,7 +356,7 @@ VAR_DESCR DDE_OSC_FILE::createVarDescr(std::vector<std::string> elems, uint16_t 
     return chDescr;
 }
 
-std::vector<std::string> DDE_OSC_FILE::split(string inputStr, char delim)
+std::vector<std::string> DDE_OscFileData::split(string inputStr, char delim)
 {
     std::vector<std::string> res;
     std::string item;

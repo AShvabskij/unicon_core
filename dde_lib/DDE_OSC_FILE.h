@@ -34,21 +34,44 @@ struct FILE_HEADER
     uint16_t device_id;
     VAR_DESCR analog_ch[OSC_ANALOG_CHANNELS + 1];
     VAR_DESCR discrete_ch[OSC_DISCRETE_CHANNELS + 1];
+    bool headerUpdate;
     OSC_SETTING settings;
 };
 }
 
-class DDE_OSC_FILE : public IDDE_OSC
+class IOscDataWorker
 {
 public:
-    DDE_OSC_FILE();
-    ~DDE_OSC_FILE() = default;
 
-    virtual int get(DDE_GET_OSC_HEADER& p);
-    virtual int get(DDE_GET_OSC_DATA& p);
-    virtual int set(DDE_GET_OSC_HEADER& ){return 0;}
+    virtual int open(uint16_t deviceId) = 0;
+    virtual int close(uint16_t deviceId) = 0;
+
+    virtual int requestRead() = 0;
+    virtual int update() = 0;
+    
+    virtual int getHeader(DDE_GET_OSC_HEADER& p) = 0;
+    virtual int setHeader(const DDE_GET_OSC_HEADER& p) = 0;
+    virtual int getNextData(DDE_GET_OSC_DATA& p) = 0;
+
+    ~IOscDataWorker() = default;
+};
+
+class DDE_OscFileData : public IOscDataWorker
+{
+public:
+    DDE_OscFileData();
+
+    virtual int open(uint16_t deviceId);
+    virtual int close(uint16_t deviceId);
+
+    virtual int requestRead() { return 1;};
+    virtual int update() {return 1;};
+    virtual int getHeader(DDE_GET_OSC_HEADER& p);
+    virtual int setHeader(const DDE_GET_OSC_HEADER& p);
+    virtual int getNextData(DDE_GET_OSC_DATA& p);
 
 private:
+    int loadHeader(uint16_t device_id);
     int loadOscFile(uint16_t deviceId, std::string* outBuff);
     std::ifstream openOscFile(int fileNumber);
     std::stringstream* createFileStream();
@@ -64,5 +87,7 @@ private:
     OSC_FILE::FILE_HEADER* m_header = nullptr;
     std::stringstream* m_oscFileStream = nullptr;
     std::string m_oscFileBuff = "";
+    
     std::thread* m_loadThread = nullptr;
+    
 };

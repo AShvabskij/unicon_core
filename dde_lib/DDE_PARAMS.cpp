@@ -184,40 +184,29 @@ void DDE_PARAMS::setTestLinks()
 //------------------------------------------------------------------------------
 std::string DDE_PARAMS::create_name(const uint8_t device_id)//0x6D766370
 {	
-	std::string res;
+    std::string res;
+    std::string sub_name;
 
-	DDE_GET_PARAMS_DATA dat;
-	dat.device_id = device_id; 
-	dat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
+    DDE_GET_PARAMS_DATA dat;
+    dat.device_id = device_id;
+    dat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
 
-	for (int j = 0; j < 4; j++)
-	{
-		dat.param_id = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME + j;
-		PARAMS_DATA_direct_read(dat);//читаем 1 из 4 параметров descr для данного device из ipc 
+    for (int i = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME; i < DDE_DEV0_MODULE0_PARAM4_SPARE_REV; i++)
+    {
+        dat.param_id = i;
+        PARAMS_DATA_direct_read(dat); // read one of name part for the given device from ipc
 
-        std::string name = (const char*)&dat.el->ivalue;
-        res += name;					 //формуриуем полное descr для данного devic'а
-	}
-	return res;
+        sub_name = "";
+        if (dat.el->ivalue != 0) {
+            auto charArr = (const char*)&dat.el->ivalue;
+            int charArrSize = sizeof(dat.el->ivalue);
+            sub_name = string(charArr, charArrSize);
+        }
+        res += sub_name; // forming full device name as combination of all parts
 
-	//std::string ascii_4chars_decode(uint32_t ivalue)
-	//{
-	//	std::string res;
-	//	char char_buf[5];
-	//	uint32_t arr[5];
+    }
 
-	//	arr[4] = 0;
-	//	arr[3] = (ivalue & 0xFF000000) >> 24;
-	//	arr[2] = (ivalue & 0x00FF0000) >> 16;
-	//	arr[1] = (ivalue & 0x0000FF00) >> 8;
-	//	arr[0] = ivalue & 0x000000FF;
-
-	//	for (int i = 0; i < 5; i++)
-	//		char_buf[i] = (char)arr[i];
-
-	//	res = char_buf;
-	//	return res;
-	//}
+    return res;
 }
 
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER &p)

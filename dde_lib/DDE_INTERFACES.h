@@ -34,9 +34,13 @@ class IDDE_OSC
 public:
     ~IDDE_OSC() {};
 
-    virtual int get(DDE_GET_OSC_HEADER& p) = 0;
-    virtual int get(DDE_GET_OSC_DATA& p) = 0;
-    virtual int set(DDE_GET_OSC_HEADER& p) = 0;
+    virtual _dde_func_return_t init(char* system_type) = 0;
+    virtual _dde_func_return_t open(uint16_t deviceId);
+    virtual _dde_func_return_t close(uint16_t deviceId);
+
+    virtual _dde_func_return_t get(DDE_GET_OSC_HEADER& p) = 0;
+    virtual _dde_func_return_t get(DDE_GET_OSC_DATA& p) = 0;
+    virtual _dde_func_return_t set(DDE_GET_OSC_HEADER& p) = 0;
 };
 
 #endif // DDE_INTERFACES_H

@@ -19,7 +19,7 @@ struct OSC_VAR
     uint16_t device_id;
     uint16_t id;
     char name[DDE_PARAMS_NAME_LENGTH];
-    char measure_unit[6];
+    char dim[6];
     float min = 0.0;
     float max = 0.0;
     RGB color;
@@ -75,6 +75,8 @@ struct DDE_GET_OSC_HEADER
     uint16_t page_size;		//
     uint16_t page_number;	// bytes
     uint32_t ready;			//
+    uint16_t headerUpdate; // 1 - osc config is changed, need to reload
+
 };
 
 struct DDE_GET_OSC_DATA

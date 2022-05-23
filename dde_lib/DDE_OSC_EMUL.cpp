@@ -8,7 +8,7 @@ const int BUFFER_MAX = 500;
 const int DATA_YELD_INTERVAL_MSC = 50;
 const int RESOLUTION_NS = (DATA_YELD_INTERVAL_MSC * 1000) / BUFFER_MAX;
 
-int DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
+_dde_func_return_t DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
 {
     p.settings.reason = 0;
     p.settings.time_resolution_ns = RESOLUTION_NS;
@@ -29,7 +29,7 @@ int DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
 	return 0;
 }
 
-int DDE_OSC_EMUL::get(DDE_GET_OSC_DATA& p)
+_dde_func_return_t DDE_OSC_EMUL::get(DDE_GET_OSC_DATA& p)
 {
     p.data_length = BUFFER_MAX;
     p.overflow = 0;
@@ -90,7 +90,7 @@ float DDE_OSC_EMUL::generateValue(int chNum, time_t timeMcs)
     return res;
 }
 
-int DDE_OSC_EMUL::set(DDE_GET_OSC_HEADER& /*p*/)
+_dde_func_return_t DDE_OSC_EMUL::set(DDE_GET_OSC_HEADER& /*p*/)
 {
 	return 0;
 }
