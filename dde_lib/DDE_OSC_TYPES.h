@@ -75,13 +75,11 @@ struct DDE_GET_OSC_HEADER
     uint16_t page_size;		//
     uint16_t page_number;	// bytes
     uint32_t ready;			//
-    uint16_t headerUpdate; // 1 - osc config is changed, need to reload
-
 };
 
 struct DDE_GET_OSC_DATA
 {
-    uint16_t device_ID;
+    uint16_t device_id;
 
     uint32_t header_updated;    //if flag is set update the header, clear screen and draw data
     uint16_t data_length;   // The length of a data in OSC_CH_DATA

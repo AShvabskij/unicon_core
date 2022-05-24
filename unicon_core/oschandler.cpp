@@ -179,11 +179,11 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
     out->oscId = osc.id;
     out->deviceID = osc.deviceID;
 
-    m_oscRawDataBuff->device_ID = osc.deviceID.id;
+    m_oscRawDataBuff->device_id = osc.deviceID.id;
 
     _dde_func_return_t res = (*m_dde)(osc.deviceID.type)->get_osc_data(*m_oscRawDataBuff);
 
-    if (res < 0) return res;
+    if (res != _return_OK) return res;
 
     for (int chInd : osc.analogChannels.keys()) {
 
@@ -231,6 +231,8 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
 
     qlonglong trigTimeNs = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
     out->timestamp = trigTimeNs  + ++m_dataCounter * m_oscRawDataBuff->data_length * osc.settings.timeResolutionNs;
+
+    if (m_oscRawDataBuff->eof) return STOP_STREAM_CODE;
 
     return res;
 }

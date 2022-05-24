@@ -1,6 +1,9 @@
 //---------------------------------------------------------------------------
 
 #include "DDE.h"
+#include "DDE_OSC.h"
+#include "DDE_OSC_FILE.h"
+#include "DDE_PARAMS_FILE.h"
 
 #include "stdint.h"
 #include "stdlib.h"
@@ -36,19 +39,19 @@ DDE::~DDE()
 
 _dde_func_return_t DDE::set_params_header(DDE_SET_PARAMS_HEADER& p)
 {
-    uint32_t res = params->set(p);
+    uint32_t res = _params->set(p);
     return res;
 }
 _dde_func_return_t DDE::get_params_header(DDE_GET_PARAMS_HEADER&p)
 {
-    uint32_t res = params->get(p);
+    uint32_t res = _params->get(p);
     return res;
 }
 
 _dde_func_return_t DDE::get_params_data(DDE_GET_PARAMS_DATA&p)
 {
     int res;
-    res = params->get(p);
+    res = _params->get(p);
     return res;
 
 }
@@ -56,7 +59,7 @@ _dde_func_return_t DDE::get_params_data(DDE_GET_PARAMS_DATA&p)
 _dde_func_return_t DDE::set_params_data(DDE_SET_PARAMS_DATA&p)
 {
     int res;
-    res= params->set(p);
+    res= _params->set(p);
     return res;
 }
 
@@ -91,23 +94,32 @@ _dde_func_return_t DDE::set_evlog_data(DDE_SET_EVLOG_DATA&p)
     return 0;
 }
 
-_dde_func_return_t DDE::init(char* device_description)
+_dde_func_return_t DDE::init(char* system_type)
 {
-    params = new DDE_PARAMS();
+/*
+    if (strcmp(system_type, "FILE") == 0) {
+        _params = new DDE_PARAMS_FILE();
+    } else {
+        _params = new DDE_PARAMS();
+    }
+*/
+    _params = new DDE_PARAMS();
+    _params->init(system_type);
 
-   	params->init(device_description);
-    //params.
-    //	evlog->init();
-    //	osc->init(); }
+    if (strcmp(system_type, "FILE") == 0) {
+        _osc = new DDE_OSC_FILE();
+    } else if (strcmp(system_type, "MVCP") == 0) {
+//      _osc = new OscMVCPWorker();
+    } else {
+        _osc = new DDE_OSC();
+    }
 
     return 0;
 }
 
-
-
 void DDE::update()
 {
-      params->update();  
+      _params->update();
       //osc->update();
       //evlog->update();
       //trend->update();

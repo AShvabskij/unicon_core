@@ -41,7 +41,7 @@ public:
     virtual ~DDE();
     void update();
 
-    virtual _dde_func_return_t init(char* device_description);
+    virtual _dde_func_return_t init(char* system_type);
 
     virtual _dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p);
     virtual _dde_func_return_t set_params_header(DDE_SET_PARAMS_HEADER& p);
@@ -57,9 +57,9 @@ public:
     virtual _dde_func_return_t set_evlog_data(DDE_SET_EVLOG_DATA& p);
 
 protected: // Protected members are accessible in the class that defines them and in classes that inherit from that class.
-    DDE_PARAMS *params;
-    IDDE_OSC *osc;
-    IDDE_EVLOG *evlog;
+    DDE_PARAMS *_params;
+    IDDE_OSC *_osc;
+    IDDE_EVLOG *_evlog;
 private:
 };
 

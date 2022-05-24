@@ -30,7 +30,7 @@ void Core::start()
     IDDE* dde = new DDE();
 #endif
 
-    dde->init("UAVCAN"); // TODO: replace arg to const char*
+    dde->init("UAV_CAN"); // TODO: replace arg to const char*
 
     m_ddeDisp = new DDE_Dispatcher();
     m_ddeDisp->setDefaultDDE(dde);

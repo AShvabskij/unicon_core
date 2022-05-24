@@ -8,10 +8,10 @@
 _dde_func_return_t DDE_EMUL::init(char* system_type)
 {
     m_params = new DDE_PARAMS_FILE();
-    m_osc = new DDE_OSC();
-    m_osc->init("FILE");
-
     m_params->init(system_type);
+
+    m_osc = new DDE_OSC_FILE();
+    m_osc->init("FILE");
 
 	return 0;
 }

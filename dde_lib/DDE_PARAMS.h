@@ -23,7 +23,7 @@ public:
 	DDE_PARAMS();
 	~DDE_PARAMS();
 
-    virtual _dde_func_return_t init(char*device_description);
+    virtual _dde_func_return_t init(char* system_type);
     virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p);
     virtual _dde_func_return_t set(DDE_SET_PARAMS_HEADER& p);
 
