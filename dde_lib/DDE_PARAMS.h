@@ -30,17 +30,14 @@ public:
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p);
 
-	//virtual int set(DDE_SET_PARAMS p, void* callback_func);
+    virtual void update();
+
+protected:
     virtual _dde_func_return_t direct_write(DDE_SET_PARAMS_DATA& p);
     virtual _dde_func_return_t direct_read(DDE_GET_PARAMS_DATA& get_params);
 
     virtual _dde_func_return_t pop_next_get_request(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t pop_next_set_request(DDE_SET_PARAMS_DATA& p);
-
-    void update();
-
-
-protected:
 
     uint32_t list_get_max = 10;
     uint32_t list_set_max = 10;

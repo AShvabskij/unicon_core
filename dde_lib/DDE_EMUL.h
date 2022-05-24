@@ -10,8 +10,7 @@ public:
     DDE_EMUL() = default;
     ~DDE_EMUL() = default;
 
-    _dde_func_return_t init(char* device_description);
-
+    _dde_func_return_t init(char* sys_type);
 
 	_dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p);
 	_dde_func_return_t get_params_data(DDE_GET_PARAMS_DATA& p);

@@ -6,6 +6,7 @@
 enum SysType
 {
     Undefined = 0,
+    FILE_IO,
     UAV_CAN,
     CAN_OPEN,
     MOD_BUS,

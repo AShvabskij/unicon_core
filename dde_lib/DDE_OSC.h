@@ -4,8 +4,6 @@
 #include "DDE_OSC_TYPES.h"
 #include "DDE_INTERFACES.h"
 
-class IOscDataWorker;
-
 class DDE_OSC : public IDDE_OSC
 {
 public:

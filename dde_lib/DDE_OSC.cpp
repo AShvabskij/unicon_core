@@ -4,8 +4,6 @@
 #include <string>
 #include <string.h>
 
-#include "DDE_OSC_FILE.h"
-
 DDE_OSC::DDE_OSC()
 {}
 

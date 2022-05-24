@@ -16,6 +16,8 @@ public:
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p) = 0;
 
     virtual _dde_func_return_t init(char* device_description) = 0;
+    virtual void update() = 0;
+
 };
 
 class IDDE_EVLOG

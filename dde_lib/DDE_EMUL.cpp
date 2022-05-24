@@ -5,13 +5,13 @@
 #include "DDE_OSC_FILE.h"
 #include "DDE_PARAMS_FILE.h"
 
-_dde_func_return_t DDE_EMUL::init(char* system_type)
+_dde_func_return_t DDE_EMUL::init(char* sys_type)
 {
     m_params = new DDE_PARAMS_FILE();
-    m_params->init(system_type);
+    m_params->init(sys_type);
 
     m_osc = new DDE_OSC_FILE();
-    m_osc->init("FILE");
+    m_osc->init(sys_type);
 
 	return 0;
 }

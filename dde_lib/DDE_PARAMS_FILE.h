@@ -31,7 +31,9 @@ public:
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p);
 	
-    virtual _dde_func_return_t init(char* device_description);
+    virtual _dde_func_return_t init(char* sys_type);
+
+    virtual void update() {};
 
 private:
     inline time_t systemTime();

@@ -5,7 +5,7 @@
 
 #include "DDE_TYPES.h"
 
-#define OSC_ANALOG_CHANNELS 47
+#define OSC_ANALOG_CHANNELS 20
 #define OSC_DISCRETE_CHANNELS 128
 
 struct RGB {

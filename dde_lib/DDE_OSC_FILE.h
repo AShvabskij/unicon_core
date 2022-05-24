@@ -11,7 +11,6 @@
 
 #include "oscfiledataworker.h"
 
-
 class DDE_OSC_FILE : public IDDE_OSC
 {
 public:

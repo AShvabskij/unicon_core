@@ -96,13 +96,13 @@ _dde_func_return_t DDE::set_evlog_data(DDE_SET_EVLOG_DATA&p)
 
 _dde_func_return_t DDE::init(char* system_type)
 {
-/*
+
     if (strcmp(system_type, "FILE") == 0) {
         _params = new DDE_PARAMS_FILE();
     } else {
         _params = new DDE_PARAMS();
     }
-*/
+
     _params = new DDE_PARAMS();
     _params->init(system_type);
 

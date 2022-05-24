@@ -57,7 +57,7 @@ public:
     virtual _dde_func_return_t set_evlog_data(DDE_SET_EVLOG_DATA& p);
 
 protected: // Protected members are accessible in the class that defines them and in classes that inherit from that class.
-    DDE_PARAMS *_params;
+    IDDE_PARAMS *_params;
     IDDE_OSC *_osc;
     IDDE_EVLOG *_evlog;
 private:

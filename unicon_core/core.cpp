@@ -24,17 +24,19 @@ Core::~Core()
 
 void Core::start()
 {
+    m_ddeDisp = new DDE_Dispatcher();
+
 #ifdef __WIN32__
     IDDE* dde = new DDE_EMUL();
+    dde->init("FILE"); // TODO: replace arg to const char*
+    m_ddeDisp->registerDDE(SysType::FILE_IO, dde);
 #else
     IDDE* dde = new DDE();
+    dde->init("UAV_CAN"); // TODO: replace arg to const char*
+    m_ddeDisp->registerDDE(SysType::UAV_CAN, dde);
 #endif
 
-    dde->init("UAV_CAN"); // TODO: replace arg to const char*
-
-    m_ddeDisp = new DDE_Dispatcher();
     m_ddeDisp->setDefaultDDE(dde);
-    m_ddeDisp->registerDDE(SysType::UAV_CAN, dde);
 //  m_ddeDisp->registerDDE(SysType::Undefined, dde);
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp);
