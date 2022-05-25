@@ -168,7 +168,7 @@ int OscFileDataWorker::getNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc)
 
         const auto& values = parseValues(line);
 
-        for (int chInd = 1; chInd <= MAX_OSC_CHANNELS; chInd++) {
+        for (int chInd = 1; chInd <= OSC_MAX_CHANNELS; chInd++) {
             uint16_t elemInd = m_header->analog_vars[chInd].colIndex;
             uint8_t chNum = m_header->analog_vars[chInd].chNum;
 
@@ -183,11 +183,13 @@ int OscFileDataWorker::getNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc)
             p.analog_data[chNum].buff[buffInd] = normalizeValue(rawValue, m_header->analog_vars[chInd].gain, m_header->analog_vars[chInd].offset);
         }
 
-        for (int chInd = 1; chInd <= MAX_OSC_DISCRETE_VARS; chInd++) {
+        for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
             uint16_t elemInd = m_header->discrete_vars[chInd].colIndex;
             uint8_t chNum = m_header->discrete_vars[chInd].chNum;
 
             if (elemInd == 0) continue;
+
+            if (chNum > OSC_MAX_CHANNELS) continue;
 
             if (elemInd >= values.size() ) {
                 cout << OSC_FILE_PARSE_ERROR;

@@ -465,6 +465,7 @@ QString MainWindowVM::sysTypeToString(SysType sysType)
 {
     switch (sysType) {
     case Undefined: return "Undefined";
+    case FILE_IO: return "FILE_IO";
     case CAN_OPEN: return "CAN_OPEN";
     case MOD_BUS: return "MOD_BUS";
     case UAV_CAN: return "UAV_CAN";
@@ -476,7 +477,7 @@ QString MainWindowVM::sysTypeToString(SysType sysType)
 
 void MainWindowVM::setOscChannelInfo(const QJsonObject &obj)
 {
-    int chNum = obj.value("num").toInt();
+    int chNum = obj.value("ch_num").toInt();
     QString name = obj.value("name").toString();
     int varId = obj.value("var_id").toInt();
     double scale = obj.value("scale").toDouble();

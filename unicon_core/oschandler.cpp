@@ -319,7 +319,7 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     out->desc = "osc desc";
     out->analogChannels.clear();
 
-    for (int chInd = 1; chInd <= MAX_OSC_CHANNELS; chInd++) {
+    for (int chInd = 1; chInd <= OSC_MAX_ANALOG_VARS; chInd++) {
         const OSC_ANALOG_CHANNEL& channel = header.analog_channels[chInd];
         if (channel.var.id <= 0) {
             continue;
@@ -328,7 +328,7 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
         out->analogChannels[chInd] = createChannelDescr(channel);
     }
 
-    for (int chInd = 1; chInd <= MAX_OSC_DISCRETE_VARS; chInd++) {
+    for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
         const OSC_DISCRETE_CHANNEL& channel = header.discrete_channels[chInd];
         if (channel.chNum <=0 || channel.var.id <= 0) {
             continue;
@@ -399,9 +399,9 @@ QJsonObject OscHandler::createChannelObj(int requestId, const OscChannelDescr& c
     QJsonObject res;
     res["request_id"] = requestId;
     QJsonObject obj;
-    obj["num"] = ch.channelNum;
-    obj["name"] = ch.varName;
+    obj["ch_num"] = ch.channelNum;
     obj["var_id"] = ch.varId;
+    obj["name"] = ch.varName;
     obj["scale"] = ch.scale;
     obj["min"] = ch.min;
     obj["max"] = ch.max;

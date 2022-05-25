@@ -110,10 +110,9 @@ struct OscHeader
         for (quint8 chInd : analogChannels.keys()) {
             const OscChannelDescr& ch = analogChannels.value(chInd);
             QJsonObject obj;
-            obj["ind"] = chInd;
-            obj["num"] = ch.channelNum;
-            obj["name"] = ch.varName;
+            obj["ch_num"] = ch.channelNum;
             obj["var_id"] = ch.varId;
+            obj["name"] = ch.varName;
             obj["scale"] = ch.scale;
             obj["min"] = ch.min;
             obj["max"] = ch.max;
@@ -129,10 +128,9 @@ struct OscHeader
         for (quint8 chInd : discreteChannels.keys()) {
             const OscChannelDescr& ch = discreteChannels.value(chInd);
             QJsonObject obj;
-            obj["ind"] = chInd;
-            obj["num"] = ch.channelNum;
-            obj["name"] = ch.varName;
+            obj["ch_num"] = ch.channelNum;
             obj["var_id"] = ch.varId;
+            obj["name"] = ch.varName;
             obj["color"] = colorToString(ch.color);
             obj["isDiscrete"] = true;
 

@@ -50,16 +50,24 @@ _dde_func_return_t DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
 
     p.settings = header.settings;
 
-    for (int chInd = 1; chInd <= MAX_OSC_CHANNELS; chInd++) {
-        p.analog_channels[chInd].chNum = header.analog_vars[chInd].chNum;
-        p.analog_channels[chInd].var = createOscVar(header.analog_vars[chInd], p.device_id, OSC_VAR_TYPE::ANALOG);
+    for (int chInd = 1; chInd <= OSC_MAX_ANALOG_VARS; chInd++) {
+        OSC_ANALOG_CHANNEL& channel = p.analog_channels[chInd];
+        const OSC_FILE::VAR_DESCR& var = header.analog_vars[chInd];
+
+        channel.chNum = var.chNum;
+        channel.var = createOscVar(var, p.device_id, OSC_VAR_TYPE::ANALOG);
+        channel.gain = var.gain;
+        channel.offset = var.offset;
     }
 
-    for (int chInd = 1; chInd <= MAX_OSC_DISCRETE_VARS; chInd++) {
-        p.discrete_channels[chInd].chNum = header.discrete_vars[chInd].chNum;
-        p.discrete_channels[chInd].var = createOscVar(header.discrete_vars[chInd], p.device_id, OSC_VAR_TYPE::DESCRETE);
-        p.discrete_channels[chInd].firstBit = header.discrete_vars[chInd].firstBit;
-        p.discrete_channels[chInd].lastBit = header.discrete_vars[chInd].lastBit;
+    for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
+        OSC_DISCRETE_CHANNEL& channel = p.discrete_channels[chInd];
+        const OSC_FILE::VAR_DESCR& var = header.discrete_vars[chInd];
+
+        channel.chNum = var.chNum;
+        channel.var = createOscVar(var, p.device_id, OSC_VAR_TYPE::DISCRETE);
+        channel.firstBit = var.firstBit;
+        channel.lastBit = var.lastBit;
     }
 
     return res;
