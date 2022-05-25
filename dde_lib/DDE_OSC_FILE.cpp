@@ -50,17 +50,16 @@ _dde_func_return_t DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
 
     p.settings = header.settings;
 
-    for (int chInd = 1; chInd <= OSC_ANALOG_CHANNELS; chInd++) {
-        p.analog_channels[chInd].chNum = header.analog_ch[chInd].chNum;
-        p.analog_channels[chInd].var = createOscVar(header.analog_ch[chInd], p.device_id);
-        p.analog_channels[chInd].scale = header.analog_ch[chInd].gain;
+    for (int chInd = 1; chInd <= MAX_OSC_CHANNELS; chInd++) {
+        p.analog_channels[chInd].chNum = header.analog_vars[chInd].chNum;
+        p.analog_channels[chInd].var = createOscVar(header.analog_vars[chInd], p.device_id, OSC_VAR_TYPE::ANALOG);
     }
 
-    for (int chInd = 1; chInd <= OSC_DISCRETE_CHANNELS; chInd++) {
-        p.discrete_channels[chInd].chNum = header.discrete_ch[chInd].chNum;
-        p.discrete_channels[chInd].var = createOscVar(header.discrete_ch[chInd], p.device_id);
-        p.discrete_channels[chInd].firstBit = header.discrete_ch[chInd].firstBit;
-        p.discrete_channels[chInd].lastBit = header.discrete_ch[chInd].lastBit;
+    for (int chInd = 1; chInd <= MAX_OSC_DISCRETE_VARS; chInd++) {
+        p.discrete_channels[chInd].chNum = header.discrete_vars[chInd].chNum;
+        p.discrete_channels[chInd].var = createOscVar(header.discrete_vars[chInd], p.device_id, OSC_VAR_TYPE::DESCRETE);
+        p.discrete_channels[chInd].firstBit = header.discrete_vars[chInd].firstBit;
+        p.discrete_channels[chInd].lastBit = header.discrete_vars[chInd].lastBit;
     }
 
     return res;
@@ -86,7 +85,7 @@ _dde_func_return_t DDE_OSC_FILE::set(DDE_GET_OSC_HEADER& p)
     return res;
 }
 
-OSC_VAR DDE_OSC_FILE::createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId)
+OSC_VAR DDE_OSC_FILE::createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId, OSC_VAR_TYPE type)
 {
     OSC_VAR ret;
     ret.id = descr.var_id;
@@ -95,6 +94,8 @@ OSC_VAR DDE_OSC_FILE::createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t de
     ret.color = descr.color;
     ret.min = descr.min;
     ret.max = descr.max;
+    ret.scale = descr.gain;
+    ret.type = type;
 
     return ret;
 }

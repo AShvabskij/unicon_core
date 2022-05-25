@@ -173,8 +173,8 @@ private:
     QJsonObject createChannelObj(int requestId, const OscChannelDescr& ch);
     QJsonObject createStreamDataObj(const OscData& data, int error = 0);
     QString oscDataToString(const QJsonObject &obj);
-    OscChannelDescr createAnalogChannel(const OSC_ANALOG_CHANNEL& channel);
-    OscChannelDescr createDiscreteChannel(const OSC_DISCRETE_CHANNEL& channel);
+    OscChannelDescr createChannelDescr(const OSC_ANALOG_CHANNEL& channel);
+    OscChannelDescr createChannelDescr(const OSC_DISCRETE_CHANNEL& channel);
     qint32 discreteValue(qint16 rawValue, qint8 firstBit, qint8 lastBit);
 
     void startPooling();

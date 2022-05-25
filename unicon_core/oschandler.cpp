@@ -319,22 +319,22 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     out->desc = "osc desc";
     out->analogChannels.clear();
 
-    for (int chInd = 1; chInd <= OSC_ANALOG_CHANNELS; chInd++) {
+    for (int chInd = 1; chInd <= MAX_OSC_CHANNELS; chInd++) {
         const OSC_ANALOG_CHANNEL& channel = header.analog_channels[chInd];
         if (channel.var.id <= 0) {
             continue;
         }
 
-        out->analogChannels[chInd] = createAnalogChannel(channel);
+        out->analogChannels[chInd] = createChannelDescr(channel);
     }
 
-    for (int chInd = 1; chInd <= OSC_DISCRETE_CHANNELS; chInd++) {
+    for (int chInd = 1; chInd <= MAX_OSC_DISCRETE_VARS; chInd++) {
         const OSC_DISCRETE_CHANNEL& channel = header.discrete_channels[chInd];
-        if (channel.var.id <= 0) {
+        if (channel.chNum <=0 || channel.var.id <= 0) {
             continue;
         }
 
-        out->discreteChannels[chInd] = createDiscreteChannel(channel);
+        out->discreteChannels[chInd] = createChannelDescr(channel);
     }
 
     OscSettings settings;
@@ -353,13 +353,13 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     return 0;
 }
 
-OscChannelDescr OscHandler::createAnalogChannel(const OSC_ANALOG_CHANNEL& channel)
+OscChannelDescr OscHandler::createChannelDescr(const OSC_ANALOG_CHANNEL& channel)
 {
     OscChannelDescr ret;
     ret.channelNum = channel.chNum;
     ret.varId = channel.var.id;
     ret.varName = channel.var.name;
-    ret.scale = channel.scale;
+    ret.scale = channel.var.scale;
     ret.min = channel.var.min;
     ret.max = channel.var.max;
     ret.color = channel.var.color;
@@ -367,16 +367,20 @@ OscChannelDescr OscHandler::createAnalogChannel(const OSC_ANALOG_CHANNEL& channe
     return ret;
 }
 
-OscChannelDescr OscHandler::createDiscreteChannel(const OSC_DISCRETE_CHANNEL& channel)
+OscChannelDescr OscHandler::createChannelDescr(const OSC_DISCRETE_CHANNEL& channel)
 {
     OscChannelDescr ret;
     ret.channelNum = channel.chNum;
     ret.varId = channel.var.id;
     ret.varName = channel.var.name;
     ret.isDiscrete = true;
+    ret.color = channel.var.color;
+    ret.scale = channel.var.scale;
+    ret.min = channel.var.min;
+    ret.max = channel.var.max;
+
     ret.firstBit = channel.firstBit;
     ret.lastBit = channel.lastBit;
-    ret.color = channel.var.color;
 
     return ret;
 }

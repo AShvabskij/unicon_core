@@ -168,9 +168,9 @@ int OscFileDataWorker::getNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc)
 
         const auto& values = parseValues(line);
 
-        for (int chInd = 1; chInd <= OSC_ANALOG_CHANNELS; chInd++) {
-            uint16_t elemInd = m_header->analog_ch[chInd].colIndex;
-            uint8_t chNum = m_header->analog_ch[chInd].chNum;
+        for (int chInd = 1; chInd <= MAX_OSC_CHANNELS; chInd++) {
+            uint16_t elemInd = m_header->analog_vars[chInd].colIndex;
+            uint8_t chNum = m_header->analog_vars[chInd].chNum;
 
             if (elemInd == 0) continue;
 
@@ -180,12 +180,12 @@ int OscFileDataWorker::getNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc)
             }
 
             uint16_t rawValue = values[elemInd];
-            p.analog_data[chNum].buff[buffInd] = normalizeValue(rawValue, m_header->analog_ch[chInd].gain, m_header->analog_ch[chInd].offset);
+            p.analog_data[chNum].buff[buffInd] = normalizeValue(rawValue, m_header->analog_vars[chInd].gain, m_header->analog_vars[chInd].offset);
         }
 
-        for (int chInd = 1; chInd <= OSC_DISCRETE_CHANNELS; chInd++) {
-            uint16_t elemInd = m_header->discrete_ch[chInd].colIndex;
-            uint8_t chNum = m_header->discrete_ch[chInd].chNum;
+        for (int chInd = 1; chInd <= MAX_OSC_DISCRETE_VARS; chInd++) {
+            uint16_t elemInd = m_header->discrete_vars[chInd].colIndex;
+            uint8_t chNum = m_header->discrete_vars[chInd].chNum;
 
             if (elemInd == 0) continue;
 
@@ -318,10 +318,10 @@ int OscFileDataWorker::parseHeader(const std::ifstream& fileStream, FILE_HEADER&
 
         } else if (line[0] == '@') {
             const VAR_DESCR& analogChannel = createVarDescr(elems, ++varId, false);
-            header.analog_ch[analogChannel.chNum] = analogChannel;
+            header.analog_vars[analogChannel.chNum] = analogChannel;
 
         } else if (line[0] == '&') {
-            header.discrete_ch[++discrChInd] = createVarDescr(elems, ++varId, true);
+            header.discrete_vars[++discrChInd] = createVarDescr(elems, ++varId, true);
         } else {
             break;
         }

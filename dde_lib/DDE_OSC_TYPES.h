@@ -5,8 +5,9 @@
 
 #include "DDE_TYPES.h"
 
-#define OSC_ANALOG_CHANNELS 20
-#define OSC_DISCRETE_CHANNELS 128
+#define MAX_OSC_CHANNELS 20
+#define MAX_OSC_ANALOG_VARS 20
+#define MAX_OSC_DISCRETE_VARS 128
 
 struct RGB {
     uint8_t Red;
@@ -14,14 +15,24 @@ struct RGB {
     uint8_t Blue;
 };
 
+enum OSC_VAR_TYPE
+{
+     UNDEFINED = 0,
+     ANALOG,
+     DESCRETE
+};
+
 struct OSC_VAR
 {
     uint16_t device_id;
     uint16_t id;
+
+    OSC_VAR_TYPE type;
     char name[DDE_PARAMS_NAME_LENGTH];
     char dim[6];
     float min = 0.0;
     float max = 0.0;
+    float scale;
     RGB color;
 };
 
@@ -29,8 +40,6 @@ struct OSC_ANALOG_CHANNEL
 {
     uint16_t chNum;
     OSC_VAR var;
-
-    float scale;
 };
 
 struct OSC_DISCRETE_CHANNEL
@@ -67,8 +76,8 @@ struct DDE_GET_OSC_HEADER
 {
     uint16_t device_id;
 
-    OSC_ANALOG_CHANNEL analog_channels[OSC_ANALOG_CHANNELS + 1];
-    OSC_DISCRETE_CHANNEL discrete_channels[OSC_DISCRETE_CHANNELS + 1];
+    OSC_ANALOG_CHANNEL analog_channels[MAX_OSC_CHANNELS + 1];
+    OSC_DISCRETE_CHANNEL discrete_channels[MAX_OSC_DISCRETE_VARS + 1];
 
     OSC_SETTING settings;
 
@@ -87,8 +96,8 @@ struct DDE_GET_OSC_DATA
     bool next_ready;    // flag if next data frame is ready
     bool eof;    // flag if it is the last frame
 
-    OSC_ANALOG_DATA analog_data[OSC_ANALOG_CHANNELS + 1];
-    OSC_DISCRETE_DATA discret_data[OSC_DISCRETE_CHANNELS +1];
+    OSC_ANALOG_DATA analog_data[MAX_OSC_CHANNELS + 1];
+    OSC_DISCRETE_DATA discret_data[MAX_OSC_CHANNELS +1];
 };
 
 struct DDE_SET_OSC_DATA

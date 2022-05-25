@@ -22,7 +22,7 @@ struct VAR_DESCR
     float min = 0.0;
     float max = 0.0;
 
-    bool isDescrete = false;
+    bool isDiscrete = false;
     uint8_t firstBit = 0;
     uint8_t lastBit = 0;
 
@@ -32,8 +32,8 @@ struct VAR_DESCR
 struct FILE_HEADER
 {
     uint16_t device_id;
-    VAR_DESCR analog_ch[OSC_ANALOG_CHANNELS + 1];
-    VAR_DESCR discrete_ch[OSC_DISCRETE_CHANNELS + 1];
+    VAR_DESCR analog_vars[MAX_OSC_ANALOG_VARS + 1];
+    VAR_DESCR discrete_vars[MAX_OSC_DISCRETE_VARS + 1];
 
     OSC_SETTING settings;
 };

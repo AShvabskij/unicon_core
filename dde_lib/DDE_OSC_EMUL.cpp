@@ -23,7 +23,7 @@ _dde_func_return_t DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
     for (int ii =0; ii < CHANNELS_MAX; ii++)
     {
         p.analog_channels[ii].var.id = paramId++;
-        p.analog_channels[ii].scale = 0.1;
+        p.analog_channels[ii].var.scale = 0.1;
     }
 
 	return 0;
