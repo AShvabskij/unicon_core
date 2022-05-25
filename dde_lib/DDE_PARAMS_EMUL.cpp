@@ -48,7 +48,7 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
                 strcpy(m_devDescr[ii].el_descr[param_ID].name, s1.c_str());
                 s1 = s + " param "+ to_string(subix);
                 strcpy(m_devDescr[ii].el_descr[param_ID].descr, s1.c_str());
-                strcpy(m_devDescr[ii].el_descr[param_ID].unit, (subix != 0) ? valueUnitToString(GLIO_ELEMENT_UNIT_ENUM::UNIT_AMPERE).c_str()
+                strcpy(m_devDescr[ii].el_descr[param_ID].dim, (subix != 0) ? valueUnitToString(GLIO_ELEMENT_UNIT_ENUM::UNIT_AMPERE).c_str()
                                                                               : valueUnitToString(GLIO_ELEMENT_UNIT_ENUM::UNIT_UNDEFINED).c_str());
                 m_devData[ii].el[param_ID].ivalue = -1;
                 m_devData[ii].el[param_ID].timestamp = 0;

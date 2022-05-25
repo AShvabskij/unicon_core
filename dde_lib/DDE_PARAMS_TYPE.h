@@ -54,7 +54,7 @@
 #define DDE_PARAMS_TXTVALUE_LENGTH 32
 #define DDE_PARAMS_TXTVALUES_MAX_COUNT 32
 
-#define UNITS_SIZE 6
+#define DIM_SIZE 6
 
 //---------------------------------------------------------------------
 
@@ -95,7 +95,7 @@ typedef struct
     int format;
 #endif    
     float scale;
-    char unit[UNITS_SIZE]; // unit of measurement
+    char dim[DIM_SIZE]; // unit of measurement
     char* txtValues[DDE_PARAMS_TXTVALUES_MAX_COUNT]; // array of pointer's to 'text values'
     int txtSubIndexes[DDE_PARAMS_TXTVALUES_MAX_COUNT]; // array of index 'text values'
     bool writable;
@@ -215,7 +215,7 @@ typedef struct
 #endif    
 
     float scale;
-    char unit[UNITS_SIZE]; // unit of measurement
+    char dim[DIM_SIZE]; // unit of measurement
     char* txtValues; // list of predefined text values
     int txtSubIndexes;
     bool writable;

@@ -409,7 +409,7 @@ long ParamsHandler::getParamHeader(const ParamID& paramId, Param *out)
     for (const GLIO_ELEMENT_DESCR& elem : m_header->el_descr) {
         if (elem.id == paramId.id) {
             out->name = elem.name;
-            out->valueUnit = elem.unit;
+            out->valueUnit = elem.dim;
             out->writable = elem.writable;
             out->valueFormat = elem.format;
             out->valueScale = elem.scale;
@@ -451,7 +451,7 @@ long ParamsHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamLi
 
         p.name = elem.name;
         p.desc = elem.descr;
-        p.valueUnit = elem.unit;
+        p.valueUnit = elem.dim;
         p.writable = elem.writable;
         p.valueFormat = elem.format;
         p.valueScale = elem.scale;

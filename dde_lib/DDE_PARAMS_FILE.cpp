@@ -128,7 +128,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
 
             strcpy(el_descr.name, cells[1].c_str());
             strcpy(el_descr.descr, cells[2].c_str());
-            strcpy(el_descr.unit, cells[8].c_str());
+            strcpy(el_descr.dim, cells[8].c_str());
 
             el_descr.id = paramNum;
             el_descr.mod = moduleNum;
@@ -269,7 +269,7 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
             float fvalue = 0.0;
 
             const GLIO_ELEMENT_DESCR& param = m_devDescr[p.device_id].el_descr[elemId];
-            string unit = param.unit;
+            string unit = param.dim;
 
             if (unit == "A") {
                 fvalue = generateValue(0.1, 10, 0, systemTime());
