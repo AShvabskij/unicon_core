@@ -11,12 +11,12 @@
 
 //---------------------------------------------------------------------------
 
-class DDE : public IDDE
+class DDE_TOP : public IDDE
 {
 public:
 
-    DDE();
-    virtual ~DDE();
+    DDE_TOP();
+    virtual ~DDE_TOP();
 
     virtual _dde_func_return_t init(const char* system_type);
     virtual const char* system_type();

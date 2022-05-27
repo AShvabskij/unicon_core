@@ -171,7 +171,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
 void DDE_PARAMS_FILE::setTestLinks()
 {
     DDE_SET_PARAMS_DATA setDat;
-    for (int ii = DDE_DEV0_MODULE1_PARAM1_dev1_link; ii <= DDE_DEV0_MODULE2_PARAM63_dev63_link; ii++) {
+    for (int ii = DDE_DEV0_MODULE1_PARAM1_dev1_link; ii <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ii++) {
         setDat.device_id = 0;
         setDat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
         setDat.param_id = ii;

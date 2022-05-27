@@ -34,7 +34,7 @@
 #define	DDE_DEV0_MODULE1_DEVS_LINK                   1
 #define	    DDE_DEV0_MODULE1_PARAM0_devs_link	     0
 #define		DDE_DEV0_MODULE1_PARAM1_dev1_link		 1
-#define		DDE_DEV0_MODULE2_PARAM63_dev63_link		 63
+#define		DDE_DEV0_MODULE1_PARAM63_dev63_link		 63
 
 #define DDE_DEV0_MODULE2_DEVS_DESCR_UPDATE                2
 #define	    DDE_DEV0_MODULE2_PARAM0_devs_descr_update	  0
