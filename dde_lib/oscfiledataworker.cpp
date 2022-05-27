@@ -16,13 +16,45 @@ const std::string OSC_FILE_PARSE_ERROR = "Error while parsing th osc file!\n";
 const int SET_SIZE = 16;
 
 OscFileDataWorker::OscFileDataWorker()
-{
-
-}
+{}
 
 OscFileDataWorker::~OscFileDataWorker()
 {
     close(m_currDeviceId);
+}
+
+_dde_func_return_t OscFileDataWorker::open(uint16_t device_id, bool )
+{
+    _dde_func_return_t res = loadHeader(device_id);
+    if (!res) return res;
+
+    res = loadData(device_id);
+    return res;
+}
+
+_dde_func_return_t OscFileDataWorker::close(uint16_t device_id)
+{
+    if (m_currDeviceId != device_id || m_currDeviceId == 0) {
+        return _return_OK;
+    }
+
+    if (m_loadThread && m_loadThread->joinable()) {
+        m_loadThread->join();
+    }
+
+    delete m_loadThread;
+    m_loadThread = nullptr;
+    delete m_oscFileStream;
+    m_oscFileStream = nullptr;
+    m_oscFileBuff = "";
+    m_currDeviceId = 0;
+
+    return _return_OK;
+}
+
+_dde_func_return_t OscFileDataWorker::addData(DDE_GET_OSC_DATA& /*p*/)
+{
+    return _return_OK;
 }
 
 std::ifstream OscFileDataWorker::openOscFile(int fileNumber)
@@ -142,7 +174,7 @@ int OscFileDataWorker::th_loadData()
     return res;
 }
 
-int OscFileDataWorker::getNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc)
+_dde_func_return_t OscFileDataWorker::readNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc)
 {
     waitForLoad();
 
@@ -208,25 +240,58 @@ int OscFileDataWorker::getNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc)
     return _return_OK;
 }
 
-int OscFileDataWorker::close(uint16_t device_id)
+_dde_func_return_t OscFileDataWorker::getHeader(DDE_GET_OSC_HEADER &p)
 {
-    if (m_currDeviceId != device_id || m_currDeviceId == 0) {
-        return _return_OK;
+    OSC_FILE::FILE_HEADER header;
+    int res = getHeader(p.device_id, header);
+
+    if (res != _return_OK) return res;
+
+    p.settings = header.settings;
+
+    for (int chInd = 1; chInd <= OSC_MAX_ANALOG_VARS; chInd++) {
+        OSC_ANALOG_CHANNEL& channel = p.analog_channels[chInd];
+        const OSC_FILE::VAR_DESCR& var = header.analog_vars[chInd];
+
+        channel.chNum = var.chNum;
+        channel.var = createOscVar(var, p.device_id, OSC_VAR_TYPE::ANALOG);
+        channel.gain = var.gain;
+        channel.offset = var.offset;
     }
 
-    if (m_loadThread && m_loadThread->joinable()) {
-        m_loadThread->join();
-    }
+    for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
+        OSC_DISCRETE_CHANNEL& channel = p.discrete_channels[chInd];
+        const OSC_FILE::VAR_DESCR& var = header.discrete_vars[chInd];
 
-    delete m_loadThread;
-    m_loadThread = nullptr;
-    delete m_oscFileStream;
-    m_oscFileStream = nullptr;
-    m_oscFileBuff = "";
-    m_currDeviceId = 0;
+        channel.chNum = var.chNum;
+        channel.var = createOscVar(var, p.device_id, OSC_VAR_TYPE::DISCRETE);
+        channel.firstBit = var.firstBit;
+        channel.lastBit = var.lastBit;
+    }
 
     return _return_OK;
 }
+
+_dde_func_return_t OscFileDataWorker::setHeader(DDE_GET_OSC_HEADER &p)
+{
+    return _return_OK;
+}
+
+OSC_VAR OscFileDataWorker::createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId, OSC_VAR_TYPE type)
+{
+    OSC_VAR ret;
+    ret.id = descr.var_id;
+    ret.device_id = deviceId;
+    strcpy(ret.name, descr.name);
+    ret.color = descr.color;
+    ret.min = descr.min;
+    ret.max = descr.max;
+    ret.scale = descr.gain;
+    ret.type = type;
+
+    return ret;
+}
+
 
 std::string OscFileDataWorker::readLine(std::istream &stream)
 {

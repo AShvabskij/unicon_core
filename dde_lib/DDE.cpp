@@ -115,8 +115,8 @@ const char* DDE::system_type()
 void DDE::update()
 {
       m_params->update();
+      m_osc->update();
 
-      //osc->update();
       //evlog->update();
       //trend->update();
 }

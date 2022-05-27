@@ -106,7 +106,7 @@ int DDE_EMUL::thread_proc() //TODO this may be splited to thread_process_tx & th
     while (1)
     {
 
-        m_params->update();
+        update();
 
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }

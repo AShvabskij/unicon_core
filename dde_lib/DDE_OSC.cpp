@@ -54,3 +54,8 @@ _dde_func_return_t DDE_OSC::set(DDE_GET_OSC_HEADER& p)
     assert(m_osc);
     return m_osc->set(p);
 }
+
+void DDE_OSC::update()
+{
+    m_osc->update();
+}

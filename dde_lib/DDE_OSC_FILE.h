@@ -24,8 +24,8 @@ public:
     virtual _dde_func_return_t get(DDE_GET_OSC_DATA& p);
     virtual _dde_func_return_t set(DDE_GET_OSC_HEADER& p);
 
+    virtual void update();
 private:
-    OSC_VAR createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId, OSC_VAR_TYPE type);
 
     OscFileDataWorker* m_worker = nullptr;
     

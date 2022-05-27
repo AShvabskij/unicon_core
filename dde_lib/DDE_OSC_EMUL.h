@@ -18,6 +18,8 @@ public:
     virtual _dde_func_return_t get(DDE_GET_OSC_DATA& p);
     virtual _dde_func_return_t set(DDE_GET_OSC_HEADER& p);
 
+    virtual void update();
+
 private:
     time_t systemTime();
     time_t systemTimeNs();
@@ -25,5 +27,4 @@ private:
 
     time_t m_lastDataTimeNs;
     time_t m_startDataTimeNs;
-
 };

@@ -8,6 +8,7 @@
 
 #include "DDE_TYPES.h"
 #include "DDE_OSC_TYPES.h"
+#include "DDE_INTERFACES.h"
 
 namespace OSC_FILE {
 struct VAR_DESCR
@@ -39,20 +40,27 @@ struct FILE_HEADER
 };
 }
 
-class OscFileDataWorker
+class OscFileDataWorker : public IDDE_OSC_DATA
 {
 public:
     OscFileDataWorker();
     ~OscFileDataWorker();
 
+    _dde_func_return_t open(uint16_t device_id, bool needSaved);
+    virtual _dde_func_return_t close(uint16_t deviceId);
+
+    virtual _dde_func_return_t addData(DDE_GET_OSC_DATA& p);
+    virtual _dde_func_return_t  readNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc);
+
+    virtual _dde_func_return_t getHeader(DDE_GET_OSC_HEADER& p);
+    virtual _dde_func_return_t setHeader(DDE_GET_OSC_HEADER& p);
+
+private:
     int loadHeader(uint16_t device_id);
     int loadData(uint16_t device_id);
     int getHeader(uint16_t device_id, OSC_FILE::FILE_HEADER& header);
     int saveHeader(OSC_FILE::FILE_HEADER& header);
-    int getNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc);
-    int close(uint16_t device_id);
 
-private:
     int loadOscFile(uint16_t device_id, std::string* outBuff);
     void waitForLoad();
     std::ifstream openOscFile(int fileNumber);
@@ -63,7 +71,7 @@ private:
     float normalizeValue(uint16_t rawValue, float gain, float offset);
     std::vector<std::string> split(std::string inputStr, char delim);
     OSC_FILE::VAR_DESCR createVarDescr(std::vector<std::string> elems, uint16_t varId, bool isDiscrete);
-    OSC_VAR createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId);
+    OSC_VAR createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId, OSC_VAR_TYPE type);
     int th_loadData();
 
     int m_currDeviceId;
