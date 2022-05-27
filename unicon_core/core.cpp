@@ -2,7 +2,11 @@
 
 #include <iostream>
 
+#ifdef __WIN32__
 #include "DDE_EMUL.h"
+#else
+#include "DDE_TOP.h"
+#endif
 
 #include "requestmanager.h"
 #include "responsemanager.h"
@@ -31,9 +35,9 @@ void Core::start()
     dde->init("FILE_IO");
     m_ddeDisp->registerDDE(SysType::FILE_IO, dde);
 #else
-    IDDE* dde = new DDE();
-    dde->init("UAV_CAN"); // TODO: replace arg to const char*
-    m_ddeDisp->registerDDE(SysType::UAV_CAN, dde);
+    IDDE* dde = new DDE_TOP();
+    dde->init("UAVCAN"); // TODO: replace arg to const char*
+    m_ddeDisp->registerDDE(SysType::UAVCAN, dde);
 #endif
 
     m_ddeDisp->setDefaultDDE(dde);

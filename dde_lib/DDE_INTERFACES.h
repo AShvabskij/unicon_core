@@ -5,6 +5,30 @@
 #include "DDE_OSC_TYPES.h"
 #include "DDE_EVLOG_TYPES.h"
 
+class IDDE
+{
+public:
+
+    virtual ~IDDE() {};
+
+    virtual _dde_func_return_t init(const char* system_type) = 0;
+    virtual const char* system_type() = 0;
+
+    virtual _dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p) = 0;
+    virtual _dde_func_return_t get_params_data(DDE_GET_PARAMS_DATA& p) = 0;
+    virtual _dde_func_return_t set_params_data(DDE_SET_PARAMS_DATA& p) = 0;
+
+    virtual _dde_func_return_t get_osc_header(DDE_GET_OSC_HEADER& p) = 0;
+    virtual _dde_func_return_t get_osc_data(DDE_GET_OSC_DATA& p) = 0;
+    virtual _dde_func_return_t set_osc_data(DDE_SET_OSC_DATA& p) = 0;
+
+    virtual _dde_func_return_t get_evlog_header(DDE_GET_EVLOG_HEADER& p) = 0;
+    virtual _dde_func_return_t get_evlog_data(DDE_GET_EVLOG_DATA& p) = 0;
+    virtual _dde_func_return_t set_evlog_data(DDE_SET_EVLOG_DATA& p) = 0;
+
+    virtual void update() = 0;
+};
+
 class IDDE_PARAMS
 {
 public:

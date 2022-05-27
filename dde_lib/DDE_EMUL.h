@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DDE.h"
+#include "DDE_INTERFACES.h"
 
 class DDE_EMUL : public IDDE
 {

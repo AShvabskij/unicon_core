@@ -19,7 +19,7 @@ DDE_OSC_FILE::DDE_OSC_FILE()
 
 _dde_func_return_t DDE_OSC_FILE::init(const char *)
 {
-    m_worker = new OscFileDataWorker();
+    m_worker = new OscDataFileService();
 
     return _return_OK;
 }

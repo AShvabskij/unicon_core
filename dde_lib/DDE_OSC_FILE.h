@@ -9,7 +9,7 @@
 #include "DDE_OSC_TYPES.h"
 #include "DDE_INTERFACES.h"
 
-#include "oscfiledataworker.h"
+#include "oscdatafile.h"
 
 class DDE_OSC_FILE : public IDDE_OSC
 {
@@ -27,6 +27,6 @@ public:
     virtual void update();
 private:
 
-    OscFileDataWorker* m_worker = nullptr;
+    OscDataFileService* m_worker = nullptr;
     
 };

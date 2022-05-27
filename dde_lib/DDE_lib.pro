@@ -18,16 +18,16 @@ SOURCES += \
     DDE_PARAMS_FILE.cpp \
     DDE_EMUL.cpp \
     csvfile.cpp \
-    oscfiledataworker.cpp
+    oscdatafile.cpp
 
 unix: SOURCES += \
     DDE_PARAMS.cpp \
-    DDE.cpp
+    DDE_TOP.cpp
 
 HEADERS += \
     DDE_INTERFACES.h \
     cpp_inc.h \
-    DDE.h \
+    DDE_TOP.h \
     DDE_EVLOG.h \
     DDE_EVLOG_TYPES.h \
     DDE_OSC.h \
@@ -40,7 +40,7 @@ HEADERS += \
     DDE_PARAMS_TYPE.h \
     DDE_TYPES.h \
     DDE_EMUL.h \
-    oscfiledataworker.h
+    oscdatafile.h
 
 INCLUDEPATH += $$PWD/utils/csvfile
 
