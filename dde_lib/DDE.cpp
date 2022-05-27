@@ -1,9 +1,9 @@
 //---------------------------------------------------------------------------
 
 #include "DDE.h"
+#include "DDE_PARAMS.h"
 #include "DDE_OSC.h"
-#include "DDE_OSC_FILE.h"
-#include "DDE_PARAMS_FILE.h"
+#include "DDE_EVLOG.h"
 
 #include "stdint.h"
 #include "stdlib.h"
@@ -39,19 +39,19 @@ DDE::~DDE()
 
 _dde_func_return_t DDE::set_params_header(DDE_SET_PARAMS_HEADER& p)
 {
-    uint32_t res = _params->set(p);
+    uint32_t res = m_params->set(p);
     return res;
 }
 _dde_func_return_t DDE::get_params_header(DDE_GET_PARAMS_HEADER&p)
 {
-    uint32_t res = _params->get(p);
+    uint32_t res = m_params->get(p);
     return res;
 }
 
 _dde_func_return_t DDE::get_params_data(DDE_GET_PARAMS_DATA&p)
 {
     int res;
-    res = _params->get(p);
+    res = m_params->get(p);
     return res;
 
 }
@@ -59,24 +59,24 @@ _dde_func_return_t DDE::get_params_data(DDE_GET_PARAMS_DATA&p)
 _dde_func_return_t DDE::set_params_data(DDE_SET_PARAMS_DATA&p)
 {
     int res;
-    res= _params->set(p);
+    res= m_params->set(p);
     return res;
 }
 
 
 _dde_func_return_t DDE::get_osc_header(DDE_GET_OSC_HEADER&p)
 {
-    return 0;
+    return m_osc->get(p);
 }
 
 _dde_func_return_t DDE::get_osc_data(DDE_GET_OSC_DATA&p)
 {
-    return 0;
+    return m_osc->get(p);
 }
 
 _dde_func_return_t DDE::set_osc_data(DDE_SET_OSC_DATA&p)
 {
-    return 0;
+    return _return_OK; // m_osc->set(p);
 }
 
 _dde_func_return_t DDE::get_evlog_header(DDE_GET_EVLOG_HEADER&p)
@@ -94,32 +94,28 @@ _dde_func_return_t DDE::set_evlog_data(DDE_SET_EVLOG_DATA&p)
     return 0;
 }
 
-_dde_func_return_t DDE::init(char* system_type)
+_dde_func_return_t DDE::init(const char* system_type)
 {
+    m_params = new DDE_PARAMS();
+    m_params->init(system_type);
 
-    if (strcmp(system_type, "FILE") == 0) {
-        _params = new DDE_PARAMS_FILE();
-    } else {
-        _params = new DDE_PARAMS();
-    }
+    m_osc = new DDE_OSC();
+    m_osc->init(system_type);
 
-    _params = new DDE_PARAMS();
-    _params->init(system_type);
-
-    if (strcmp(system_type, "FILE") == 0) {
-        _osc = new DDE_OSC_FILE();
-    } else if (strcmp(system_type, "MVCP") == 0) {
-//      _osc = new OscMVCPWorker();
-    } else {
-        _osc = new DDE_OSC();
-    }
+    m_sysType = system_type;
 
     return 0;
 }
 
+const char* DDE::system_type()
+{
+    return m_sysType.c_str();
+}
+
 void DDE::update()
 {
-      _params->update();
+      m_params->update();
+
       //osc->update();
       //evlog->update();
       //trend->update();

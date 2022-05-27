@@ -4,11 +4,11 @@
 #include "DDE_TYPES.h"
 //#include "DDE_PARAMS_TYPE.h"
 #include "DDE_PARAMS_TYPE.h"
-#include "DDE_PARAMS.h"
 #include "DDE_OSC_TYPES.h"
-#include "DDE_OSC.h"
 #include "DDE_EVLOG_TYPES.h"
-#include "DDE_EVLOG.h"
+#include "DDE_INTERFACES.h"
+
+#include <string>
 
 //---------------------------------------------------------------------------
 
@@ -18,7 +18,8 @@ public:
 
     virtual ~IDDE() {};
 
-    virtual _dde_func_return_t init(char*device_description) = 0;
+    virtual _dde_func_return_t init(const char* system_type) = 0;
+    virtual const char* system_type() = 0;
 
     virtual _dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p) = 0;
     virtual _dde_func_return_t get_params_data(DDE_GET_PARAMS_DATA& p) = 0;
@@ -31,6 +32,8 @@ public:
     virtual _dde_func_return_t get_evlog_header(DDE_GET_EVLOG_HEADER& p) = 0;
     virtual _dde_func_return_t get_evlog_data(DDE_GET_EVLOG_DATA& p) = 0;
     virtual _dde_func_return_t set_evlog_data(DDE_SET_EVLOG_DATA& p) = 0;
+
+    virtual void update() = 0;
 };
 
 class DDE : public IDDE
@@ -39,9 +42,9 @@ public:
 
     DDE();
     virtual ~DDE();
-    void update();
 
-    virtual _dde_func_return_t init(char* system_type);
+    virtual _dde_func_return_t init(const char* system_type);
+    virtual const char* system_type();
 
     virtual _dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p);
     virtual _dde_func_return_t set_params_header(DDE_SET_PARAMS_HEADER& p);
@@ -56,11 +59,14 @@ public:
     virtual _dde_func_return_t get_evlog_data(DDE_GET_EVLOG_DATA& p);
     virtual _dde_func_return_t set_evlog_data(DDE_SET_EVLOG_DATA& p);
 
+    virtual void update();
+
 protected: // Protected members are accessible in the class that defines them and in classes that inherit from that class.
-    IDDE_PARAMS *_params;
-    IDDE_OSC *_osc;
-    IDDE_EVLOG *_evlog;
-private:
+    IDDE_PARAMS* m_params;
+    IDDE_OSC *m_osc;
+    IDDE_EVLOG *m_evlog;
+
+    std::string m_sysType = "";
 };
 
 // ---------------- DISCUSSION LIST

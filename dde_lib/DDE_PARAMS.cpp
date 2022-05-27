@@ -7029,11 +7029,11 @@ DDE_PARAMS::~DDE_PARAMS()
 
 }
 
-_dde_func_return_t DDE_PARAMS::init(char* s)
+_dde_func_return_t DDE_PARAMS::init(const char* sys_type)
 {
 
     //	std::thread*thr_params = new std::thread(&DDE_PARAMS::thread_proc, this);
-    PARAMS_DATA_init(device_description);
+    PARAMS_DATA_init(const_cast<char*>(sys_type));
 
     setTestDevice();
     setTestLinks();

@@ -28,7 +28,7 @@ void Core::start()
 
 #ifdef __WIN32__
     IDDE* dde = new DDE_EMUL();
-    dde->init("FILE"); // TODO: replace arg to const char*
+    dde->init("FILE_IO");
     m_ddeDisp->registerDDE(SysType::FILE_IO, dde);
 #else
     IDDE* dde = new DDE();

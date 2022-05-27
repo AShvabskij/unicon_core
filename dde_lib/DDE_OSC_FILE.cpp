@@ -17,7 +17,7 @@ DDE_OSC_FILE::DDE_OSC_FILE()
     delete m_worker;
 }
 
-_dde_func_return_t DDE_OSC_FILE::init(char *)
+_dde_func_return_t DDE_OSC_FILE::init(const char *)
 {
     m_worker = new OscFileDataWorker();
 

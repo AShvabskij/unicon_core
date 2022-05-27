@@ -16,7 +16,7 @@ class DDE_OSC_FILE : public IDDE_OSC
 public:
     DDE_OSC_FILE();
 
-    virtual _dde_func_return_t init(char* /*system_type*/);
+    virtual _dde_func_return_t init(const char* /*system_type*/);
     virtual _dde_func_return_t open(uint16_t device_id);
     virtual _dde_func_return_t close(uint16_t device_id);
 

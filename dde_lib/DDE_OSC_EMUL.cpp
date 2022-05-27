@@ -26,7 +26,7 @@ _dde_func_return_t DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
         p.analog_channels[ii].var.scale = 0.1;
     }
 
-	return 0;
+    return _return_OK;
 }
 
 _dde_func_return_t DDE_OSC_EMUL::get(DDE_GET_OSC_DATA& p)
@@ -50,7 +50,7 @@ _dde_func_return_t DDE_OSC_EMUL::get(DDE_GET_OSC_DATA& p)
 
     m_lastDataTimeNs = t;
 
-	return 0;
+    return _return_OK;
 }
 
 inline time_t DDE_OSC_EMUL::systemTime()
@@ -92,5 +92,10 @@ float DDE_OSC_EMUL::generateValue(int chNum, time_t timeMcs)
 
 _dde_func_return_t DDE_OSC_EMUL::set(DDE_GET_OSC_HEADER& /*p*/)
 {
-	return 0;
+    return _return_OK;
+}
+
+long DDE_OSC_EMUL::init(const char* )
+{
+    _return_OK;
 }

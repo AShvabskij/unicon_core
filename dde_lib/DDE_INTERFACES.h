@@ -11,13 +11,14 @@ public:
 
     virtual ~IDDE_PARAMS() {};
 
+    virtual _dde_func_return_t init(const char* sys_type) = 0;
     virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p) = 0;
+    virtual _dde_func_return_t set(DDE_SET_PARAMS_HEADER& p) = 0;
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p) = 0;
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p) = 0;
 
-    virtual _dde_func_return_t init(char* device_description) = 0;
-    virtual void update() = 0;
 
+    virtual void update() = 0;
 };
 
 class IDDE_EVLOG
@@ -36,7 +37,7 @@ class IDDE_OSC
 public:
     ~IDDE_OSC() {};
 
-    virtual _dde_func_return_t init(char* system_type) = 0;
+    virtual _dde_func_return_t init(const char* system_type) = 0;
     virtual _dde_func_return_t open(uint16_t deviceId) = 0;
     virtual _dde_func_return_t close(uint16_t deviceId) = 0;
 

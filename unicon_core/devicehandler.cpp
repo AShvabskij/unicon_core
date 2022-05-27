@@ -112,7 +112,7 @@ void DeviceHandler::handleReqDevices(int requestId)
 {
     QMap<SysType, QList<int>> allLinks;
 
-    for (int ival = SysType::Undefined; ival != SysType::Last; ival++ )
+    for (int ival = SysType::Undefined; ival != SysType::Unknown; ival++ )
     {
         SysType sysType = (SysType)ival;
         if (m_dde->dde(sysType) == nullptr) continue;
@@ -235,12 +235,16 @@ void DeviceHandler::handleReqModuleHeader(SysType sysType, int deviceId, int mod
 
 SysType DeviceHandler::sysType(QString sType)
 {
-    if (sType == "UAV_CAN") {
-        return SysType::UAV_CAN;
-    } else if (sType == "MOD_BUS") {
-        return SysType::MOD_BUS;
-    } else if (sType == "MOD_BUS_FO") {
-        return SysType::MOD_BUS_FO;
+    if (sType == "FILE_IO") {
+        return SysType::FILE_IO;
+    } else if (sType == "UAVCAN") {
+        return SysType::UAVCAN;
+    } else if (sType == "MODBUS") {
+        return SysType::MODBUS;
+    } else if (sType == "CANOPEN") {
+        return SysType::CANOPEN;
+    } else if (sType == "CONNEX_MVCP") {
+        return SysType::CONNEX_MVCP;
     }
 
     return SysType::Undefined;

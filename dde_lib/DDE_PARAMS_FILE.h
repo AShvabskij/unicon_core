@@ -28,10 +28,11 @@ public:
     ~DDE_PARAMS_FILE();
 
     virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p);
+    virtual _dde_func_return_t set(DDE_SET_PARAMS_HEADER& p);
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p);
 	
-    virtual _dde_func_return_t init(char* sys_type);
+    virtual _dde_func_return_t init(const char* sys_type);
 
     virtual void update() {};
 

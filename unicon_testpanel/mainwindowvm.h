@@ -9,11 +9,11 @@
 enum SysType
 {
     Undefined = 0,
-    FILE_IO,
-    UAV_CAN,
-    CAN_OPEN,
-    MOD_BUS,
-    MOD_BUS_FO
+    FILE_IO = 1,
+    UAVCAN = 2,
+    CANOPEN = 3,
+    MODBUS = 4,
+    CONNEX_MVCP = 5,
 };
 
 class MainWindowVM : public QObject

@@ -466,10 +466,10 @@ QString MainWindowVM::sysTypeToString(SysType sysType)
     switch (sysType) {
     case Undefined: return "Undefined";
     case FILE_IO: return "FILE_IO";
-    case CAN_OPEN: return "CAN_OPEN";
-    case MOD_BUS: return "MOD_BUS";
-    case UAV_CAN: return "UAV_CAN";
-    case MOD_BUS_FO: return "MOD_BUS_FO";
+    case CANOPEN: return "CANOPEN";
+    case MODBUS: return "MODBUS";
+    case UAVCAN: return "UAVCAN";
+    case CONNEX_MVCP: return "CONNEX_MVCP";
     }
 
     return "";

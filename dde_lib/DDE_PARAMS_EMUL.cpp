@@ -72,10 +72,10 @@ DDE_PARAMS_EMUL::~DDE_PARAMS_EMUL()
 
 }
 
-_dde_func_return_t DDE_PARAMS_EMUL::init(char* device_description)
+_dde_func_return_t DDE_PARAMS_EMUL::init(const char* sys_type)
 {
-    cout << device_description;
-	return 0;
+    cout << sys_type;
+    return _return_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ _dde_func_return_t DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_DATA& p)
 	//2) read params immediatly
 	read_params(p);
 
-	return 0;
+    return _return_OK;
 
 }
 
@@ -145,7 +145,7 @@ _dde_func_return_t DDE_PARAMS_EMUL::get(DDE_GET_PARAMS_DATA& p)
 //------------------------------------------------------------------------------
 _dde_func_return_t DDE_PARAMS_EMUL::set(DDE_SET_PARAMS_DATA& )
 {
-	return 0;
+    return _return_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -277,7 +277,7 @@ float DDE_PARAMS_EMUL::generateValue(uint16_t device_ID, uint16_t param_ID, time
 // ------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-void DDE_PARAMS_EMUL::proceed_request_list()
+void DDE_PARAMS_EMUL::update()
 {
 //	DDE_GET_PARAMS_DATA get_params;
 
@@ -305,39 +305,4 @@ void DDE_PARAMS_EMUL::proceed_request_list()
 	//	//read_params(get_params);
 	//}
 }
-
-
-//------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------
-int DDE_PARAMS_EMUL::thread_proc() //TODO this may be splited to thread_process_tx & thread_process_rx to one CAN chanell
-{
-
-/*
-    GLIO_ELEMENT_VALUE el;
-    el.code_ID = 0;
-	el.source_ID = 0;
-*/
-
-//proceed reauests from queue and send to some_layer. Now is emulation only
-// this work as balancing function. It works only certain time (some ms) 
-	while (1)
-	{
-
-		proceed_request_list();
-
-		//proceed_response_queue();
-
-		//if (msg_queue.size < queue_max_size)
-		//	msg_queue.push(msg);
-		//else {
-		//	assert("msg_queue.size < queue_max_size");
-		//	overflow++;
-		//}
-		std::cout << "thread_proc params" << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	}
-
-}
-
 

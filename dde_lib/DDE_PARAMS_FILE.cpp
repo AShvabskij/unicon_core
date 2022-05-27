@@ -21,7 +21,7 @@ DDE_PARAMS_FILE::DDE_PARAMS_FILE()
 DDE_PARAMS_FILE::~DDE_PARAMS_FILE()
 {}
 
-_dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
+_dde_func_return_t DDE_PARAMS_FILE::init(const char* sys_type)
 {
 
     setTestDevice();
@@ -227,6 +227,11 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
         memcpy(&p.el_descr[0], &m_devDescr[p.device_id].el_descr[elemId], sizeof(GLIO_ELEMENT_DESCR));
     }
 
+    return _return_OK;
+}
+
+long DDE_PARAMS_FILE::set(DDE_SET_PARAMS_HEADER &p)
+{
     return _return_OK;
 }
 
