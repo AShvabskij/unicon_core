@@ -2,9 +2,6 @@
 //---------------------------------------------------------------------------
 
 #include "DDE_TYPES.h"
-#include "DDE_PARAMS_TYPE.h"
-#include "DDE_OSC_TYPES.h"
-#include "DDE_EVLOG_TYPES.h"
 #include "DDE_INTERFACES.h"
 
 #include <string>
@@ -38,16 +35,16 @@ public:
 
 protected: // Protected members are accessible in the class that defines them and in classes that inherit from that class.
     IDDE_PARAMS* m_params;
-    IDDE_OSC *m_osc;
-    IDDE_EVLOG *m_evlog;
+    IDDE_OSC* m_osc;
+    IDDE_EVLOG* m_evlog;
 
     std::string m_sysType = "";
 };
 
 // ---------------- DISCUSSION LIST
-	//virtual void params_callback(int);// = 0;
-	//virtual void dlog_callback(int);// = 0;
-	//virtual void evlog_callback(int);// = 0;
+    //virtual void params_callback(int);// = 0;
+    //virtual void dlog_callback(int);// = 0;
+    //virtual void evlog_callback(int);// = 0;
 
 ////virtual _dde_func_return_t get_params_header(DDE_GET_PARAMS_HEADER& p);// = 0;
 //	{

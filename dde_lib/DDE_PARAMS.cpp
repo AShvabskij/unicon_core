@@ -1,3 +1,4 @@
+
 #include "DDE_PARAMS.h"
 
 #include "ipcmem_lib.h"
@@ -57,7 +58,7 @@ DDE_PARAMS::DDE_PARAMS()
     //	}
     //}
 
-    //this->list_get_max = 10; // fifo_size;
+    //this->list_read_max = 10; // fifo_size;
 }
 
 //------------------------------------------------------------------------------
@@ -70,14 +71,105 @@ DDE_PARAMS::~DDE_PARAMS()
 
 _dde_func_return_t DDE_PARAMS::init(const char* sys_type)
 {
-
     //	std::thread*thr_params = new std::thread(&DDE_PARAMS::thread_proc, this);
     PARAMS_DATA_init(const_cast<char*>(sys_type));
 
-    setTestDevice();
-    setTestLinks();
-    setTestData();
+    addTestDevice();
+    addTestLinks();
+    addTestData();
 
+    checkTestData();
+
+    //PARAMS_DESCR_init("UAVCAN"); // from SQLite3_lib
+    //thr_params.join();
+    return 0;
+}
+
+void DDE_PARAMS::addTestDevice()
+{
+    DDE_SET_PARAMS_DATA setDat;
+    for (int ii = 1; ii <= 4; ii++) {
+        setDat.device_id = 2;
+        setDat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
+        setDat.param_id = ii;
+        switch (ii)
+        {
+        case DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME:
+            setDat.ivalue = 0x4E564544;
+            break;
+        case DDE_DEV0_MODULE0_PARAM2_HW_REV:
+            setDat.ivalue = 0x33373030;
+            break;
+        case DDE_DEV0_MODULE0_PARAM3_SW_REV:
+            setDat.ivalue = 0x32363030;
+            break;
+        case DDE_DEV0_MODULE0_PARAM4_SPARE_REV:
+            setDat.ivalue = 0x37303130;
+            break;
+        }
+
+        PARAMS_DATA_direct_write(setDat);
+    }
+}
+
+void DDE_PARAMS::addTestLinks()
+{
+    DDE_SET_PARAMS_DATA setDat;
+    for (int devNum = DDE_DEV0_MODULE1_PARAM1_dev1_link; devNum <= DDE_DEV0_MODULE1_PARAM63_dev63_link; devNum++) {
+        setDat.device_id = 0;
+        setDat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
+        setDat.param_id = devNum;
+        switch (devNum)
+        {
+        case 1:
+            setDat.ivalue = 0;
+            break;
+        case 2:
+            setDat.ivalue = DDE_DEV_LINK_ONLINE;
+            break;
+        case 3:
+            setDat.ivalue = 0;
+            break;
+        case 4:
+            setDat.ivalue = 0;
+            break;
+        default: setDat.ivalue = 0;
+        }
+
+        PARAMS_DATA_direct_write(setDat);
+    }
+}
+
+void DDE_PARAMS::addTestData()
+{
+    DDE_SET_PARAMS_DATA setDat;
+    for (int ii = 1; ii <= 7; ii++) {
+        setDat.device_id = 2;
+        setDat.module_id = 1;
+        setDat.param_id = ii;
+        switch (ii)
+        {
+        case 1:
+            setDat.ivalue = 1;
+            break;
+        case 2:
+            setDat.ivalue = 0x2;
+            break;
+        case 3:
+            setDat.ivalue = 0x3;
+            break;
+        case 4:
+            setDat.ivalue = 0x37303130;
+            break;
+        default: setDat.ivalue = ii;
+        }
+
+        PARAMS_DATA_direct_write(setDat);
+    }
+}
+
+void DDE_PARAMS::checkTestData()
+{
     DDE_GET_PARAMS_DATA get;
     get.device_id = 2;
     for (int ii = 0; ii < 64; ii++) {
@@ -88,93 +180,6 @@ _dde_func_return_t DDE_PARAMS::init(const char* sys_type)
         for (int yy = 0; yy < 64; yy++)
             printf("%d ", get.el[yy].ivalue);
         printf("\n");
-    }
-
-    //PARAMS_DESCR_init("UAVCAN"); // from SQLite3_lib
-    //thr_params.join();
-    return 0;
-}
-
-void DDE_PARAMS::setTestDevice()
-{
-    DDE_SET_PARAMS_DATA setDat;
-    for (int ii = 1; ii <= 4; ii++) {
-        setDat.device_id = 2;
-        setDat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
-        setDat.param_id = ii;
-        switch (ii)
-        {
-            case DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME:
-                setDat.ivalue = 0x4E564544;
-                break;
-            case DDE_DEV0_MODULE0_PARAM2_HW_REV:
-                setDat.ivalue = 0x33373030;
-                break;
-            case DDE_DEV0_MODULE0_PARAM3_SW_REV:
-                setDat.ivalue = 0x32363030;
-                break;
-            case DDE_DEV0_MODULE0_PARAM4_SPARE_REV:
-                setDat.ivalue = 0x37303130;
-                break;
-        }
-
-        PARAMS_DATA_direct_write(setDat);
-    }
-}
-
-void DDE_PARAMS::setTestData()
-{
-    DDE_SET_PARAMS_DATA setDat;
-    for (int ii = 1; ii <= 7; ii++) {
-        setDat.device_id = 2;
-        setDat.module_id = 1;
-        setDat.param_id = ii;
-        switch (ii)
-        {
-            case 1:
-                setDat.ivalue = 1;
-                break;
-            case 2:
-                setDat.ivalue = 0x2;
-                break;
-            case 3:
-                setDat.ivalue = 0x3;
-                break;
-            case 4:
-                setDat.ivalue = 0x37303130;
-                break;
-        default: setDat.ivalue = ii;
-        }
-
-        PARAMS_DATA_direct_write(setDat);
-    }
-}
-
-void DDE_PARAMS::setTestLinks()
-{
-    DDE_SET_PARAMS_DATA setDat;
-    for (int ii = DDE_DEV0_MODULE1_PARAM1_dev1_link; ii <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ii++) {
-        setDat.device_id = 0;
-        setDat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
-        setDat.param_id = ii;
-        switch (ii)
-        {
-            case 1:
-                setDat.ivalue = 1;
-                break;
-            case 2:
-                setDat.ivalue = 1;
-                break;
-            case 3:
-                setDat.ivalue = 1;
-                break;
-            case 4:
-                setDat.ivalue = 0;
-                break;
-        default: setDat.ivalue = 0;
-        }
-
-        PARAMS_DATA_direct_write(setDat);
     }
 }
 
@@ -201,16 +206,15 @@ std::string DDE_PARAMS::create_name(const uint8_t device_id)//0x6D766370
             int charArrSize = sizeof(dat.el->ivalue);
             sub_name = string(charArr, charArrSize);
         }
-        res += sub_name; // forming full device name as combination of all parts
 
+        res += sub_name; // forming full device name as combination of all parts
     }
 
     return res;
 }
 
-_dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER &p)
+_dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
 {
-
     assert(p.device_id < DEVICE_ID_MAX);
     assert(p.module_id < MODULES_ID_MAX);
     assert(p.param_id < PARAMS_ID_MAX);
@@ -222,29 +226,34 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER &p)
     if (res) {
         res = hdr.get(&p, db_type::usual);
     }
+    if (res < 0) {
+        _return_FAIL;
+    }
 
-    _dde_func_return_t ret = res >= 0 ? _return_OK : _return_FAIL;
-    return ret;
+    return _return_OK;
 }
 
 //------------------------------------------------------------------------------
 
 _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
 {
-    int res;
     //assert(p.el.device_id < DEVICE_ID_MAX);
     assert(p.module_id < MODULES_ID_MAX);
     assert(p.param_id < PARAMS_ID_MAX);
 
-
     string table_name = create_name(p.device_id);
 
-    ParamDescr* hdr = new ParamDescr();
-    hdr->init(table_name.c_str(), "NONE", db_type::usual);
-    res = hdr->set(&p, db_type::usual);
+    ParamDescr hdr;
+    int res = hdr.init(table_name.c_str(), "NONE", db_type::usual);
+    if (res) {
+        res = hdr.set(&p, db_type::usual);
+    }
 
-    delete hdr;
-    return res;
+    if (res < 0) {
+        _return_FAIL;
+    }
+
+    return _return_OK;
 }
 
 //
@@ -261,8 +270,8 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
     p.timeout = 0;
 
     //1) Add request to queue
-    if (list_get.size() < list_get_max) {
-        list_get.push_back(p);
+    if (list_read.size() < list_read_max) {
+        list_read.push_back(p);
     } else {
         perror("if (get_queue.size< get_queue_max_size)");
         return -1;
@@ -289,8 +298,8 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
     //p.timeout = 0;
 
     //1) Add request to queue
-    if (list_set.size() < list_set_max) {
-        list_set.push_back(p);
+    if (list_write.size() < list_write_max) {
+        list_write.push_back(p);
     }
     else {
 
@@ -302,27 +311,27 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
     return 0;
 }
 
-_dde_func_return_t DDE_PARAMS::pop_next_get_request(DDE_GET_PARAMS_DATA& p)
+_dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
 {
     //DDE_GET_PARAMS_DATA p_data;
 
-    if (list_get.empty()) return _return_FAIL;
+    if (list_read.empty()) return _return_FAIL;
 
-    p = list_get.front();
-    int a1 = list_get.size();
-    list_get.pop_front();
-    int a2 = list_get.size();
+    p = list_read.front();
+    int a1 = list_read.size();
+    list_read.pop_front();
+    int a2 = list_read.size();
 
 
     return _return_OK;
 }
 
-_dde_func_return_t DDE_PARAMS::pop_next_set_request(DDE_SET_PARAMS_DATA& p)
+_dde_func_return_t DDE_PARAMS::pop_write_request(DDE_SET_PARAMS_DATA& p)
 {
-    if (list_set.empty()) return _return_FAIL;
+    if (list_write.empty()) return _return_FAIL;
 
-    p = list_set.front();
-    list_set.pop_front();
+    p = list_write.front();
+    list_write.pop_front();
     return _return_OK;
 }
 
@@ -402,23 +411,31 @@ void DDE_PARAMS::update()
         uint32_t attempts = 0;
         while (!((get_empty && set_empty) || timeout))
         {
-            int res = pop_next_get_request(get_params);// get_list.front();
+            int res = pop_read_request(get_params);// get_list.front();
 
             if (res == _return_OK) {
                 uint8_t device_id = get_params.device_id;
                 cmd.module_id = get_params.module_id;
                 cmd.param_id = get_params.param_id;
                 cmd.nRW = 0;
-                res = 0; attempts = 0;
-                while ((res != 1)&&(!timeout)){				//TODO ???? ????????? ?? ??????? ????, ??
-                                                //??? ????????. ? ??? ?????? ? ?? ????
+                res = 0;
+                attempts = 0;
+
+                while ((res != 1) && (!timeout)){
                     res = PARAMS_DATA_write_cmd(device_id, cmd);
                     if (res != 1) {
                         attempts++;
                         if (attempts > 10)
                         {
                             err_write_cmd_counter++;
-                            //TODO - add dev_err ????? direct write to device_id
+
+                            DDE_SET_PARAMS_DATA set_err;
+                            set_err.device_id = device_id;
+                            set_err.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
+                            set_err.param_id = DDE_DEV0_MODULE0_PARAM14_READ_CMD_ERR_COUNTER;
+                            set_err.ivalue = err_write_cmd_counter;
+
+                            direct_write(set_err);
                             timeout = true;
                         }
                         usleep(100);
@@ -433,7 +450,7 @@ void DDE_PARAMS::update()
 
 
             timeout = false;
-            res = pop_next_set_request(set_params);// get_list.front();
+            res = pop_write_request(set_params);// get_list.front();
 
             if (res == _return_OK) {
                 uint8_t device_id = set_params.device_id;
@@ -442,11 +459,23 @@ void DDE_PARAMS::update()
                 cmd.ivalue = set_params.ivalue;
                 cmd.nRW = 1;
                 res = 0; attempts = 0;
-                while ((res != 1) && (!timeout)) { //TODO same as above
+                while ((res != 1) && (!timeout)) {
                     res = PARAMS_DATA_write_cmd(device_id, cmd);
                     if (res != 1) {
                         attempts++;
-                        if (attempts > 10) timeout = true;
+                        if (attempts > 10)
+                        {
+                            err_read_cmd_counter++;
+
+                            DDE_SET_PARAMS_DATA set_err;
+                            set_err.device_id = device_id;
+                            set_err.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
+                            set_err.param_id = DDE_DEV0_MODULE0_PARAM15_WRIT_CMD_ERR_COUNTER;
+                            set_err.ivalue = err_read_cmd_counter;
+
+                            direct_write(set_err);
+                            timeout = true;
+                        }
                         usleep(100);
                     }
                 }
@@ -460,4 +489,3 @@ void DDE_PARAMS::update()
 
         if (timeout == true) perror("while ((get_empty && set_empty) || timeout) resulted with timeout");
 }
-

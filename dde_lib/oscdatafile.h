@@ -40,11 +40,11 @@ struct FILE_HEADER
 };
 }
 
-class OscDataFileService : public IDDE_OSC_DATA
+class OscDataFile : public IDDE_OSC_DATA
 {
 public:
-    OscDataFileService();
-    ~OscDataFileService();
+    OscDataFile();
+    ~OscDataFile();
 
     _dde_func_return_t open(uint16_t device_id, bool needSaved);
     virtual _dde_func_return_t close(uint16_t deviceId);

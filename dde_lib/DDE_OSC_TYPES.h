@@ -3,8 +3,7 @@
 #include <cstdint>
 #include <time.h>
 
-#include "DDE_TYPES.h"
-
+#define OSC_VAR_NAME_LENGTH 64
 #define OSC_MAX_CHANNELS 48
 #define OSC_MAX_ANALOG_VARS 48
 #define OSC_MAX_DISCRETE_VARS 128
@@ -28,7 +27,7 @@ struct OSC_VAR
     uint16_t id;
 
     OSC_VAR_TYPE type;
-    char name[DDE_PARAMS_NAME_LENGTH];
+    char name[OSC_VAR_NAME_LENGTH];
     char dim[6];
     float min = 0.0;
     float max = 0.0;

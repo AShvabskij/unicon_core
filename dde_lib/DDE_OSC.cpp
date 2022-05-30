@@ -3,7 +3,7 @@
 #include "cpp_inc.h"
 
 #include "DDE_OSC_FILE.h"
-#include "DDE_OSC_EMUL.h"
+// #include "DDE_OSC_EMUL.h"
 
 DDE_OSC::DDE_OSC()
 {}
@@ -16,10 +16,10 @@ _dde_func_return_t DDE_OSC::init(const char* sys_type )
     if (strcmp(sys_type, "FILE_IO") == 0) {
         m_osc = new DDE_OSC_FILE();
     } else if (strcmp(sys_type, "MVCP") == 0) {
-//      m_osc = new OscMVCPWorker();
+//      m_osc = new DDE_OSC_MVCP();
     } else {
-        std::cout << "Error! This system type is not recognised, sys_type = " << sys_type;
-        m_osc = new DDE_OSC_EMUL();
+        std::cout << "Osc error! This system type is not recognised , sys_type = " << sys_type << "\n";
+        m_osc = new DDE_OSC_STUB();
     }
 
     return m_osc->init(sys_type);

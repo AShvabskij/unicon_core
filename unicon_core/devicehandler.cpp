@@ -99,7 +99,7 @@ long DeviceHandler::requestDeviceLinks(SysType sysType, QList<int>& links)
     _dde_func_return_t res = (*m_dde)(sysType)->get_params_data(dat);
     if (res <= _return_FAIL) return res;
 
-    for (int i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE2_PARAM63_dev63_link; ++i) {
+    for (int i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ++i) {
         if (dat.el[i].ivalue == 1) {
             links << i;
         }
