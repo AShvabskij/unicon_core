@@ -19,6 +19,17 @@ struct Device
     QString desc;
     ChannelType channel = Undefined;
     QVector<int> modules;
+
+    Device()= default;
+    Device(int id) {
+        this->id = id;
+    }
+    bool isValid() {
+        return id >= 0;
+    }
+    bool isEmpty() {
+        return name.isEmpty() || modules.count() == 0;
+    }
 };
 typedef QVector<Device> DeviceList;
 
@@ -43,17 +54,23 @@ public:
     virtual int handle(const QJsonObject &request);
 
 private:
-    int handleGetHeader(const QJsonObject &request);
-    int handleSystemStatus(const QJsonObject& request);
+    void handleGetHeader(const QJsonObject &request);
+    void handleSystemStatus(const QJsonObject& request);
+    void handleDeviceLinks(const QJsonObject &request);
+    void handleReqDevices(int requestId);
+    void handleReqDeviceHeader(int deviceId, int requestId);
+    void handleReqModuleHeader(int deviceId, int moduleId, int requestId);
+
+    long requestDeviceLinks(QList<int>& links);
+    long requestDevice(Device& device);
+    QString getDeviceName(int deviceId);
+
+    ChannelType channelType(QString chName);
+
     QJsonObject createResponse(int requestId, const DeviceList& devices);
     QJsonObject createResponse(int requestId, const Module& module);
     QJsonObject createResponse(int requestId, const SystemStatus& status);
-
-    int requestDevices(int requestId);
-    int requestDeviceHeader(int deviceId, int requestId);
-    int requestModuleHeader(int deviceId, int moduleId, int requestId);
-
-    ChannelType channelType(QString chName);
+    QJsonObject createResponse(int requestId, const QList<int>& links);
 };
 
 #endif // DEVICE_HANDLER_H

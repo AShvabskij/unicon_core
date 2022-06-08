@@ -71,11 +71,12 @@ static QString getIdentifier(QWebSocket *peer)
 //! [constructor]
 SocketServer::SocketServer(quint16 port, QObject *parent) :
     QObject(parent),
-    m_port(port),
-    m_socketServer(new QWebSocketServer(QStringLiteral("Socket Server"),
-                                            QWebSocketServer::NonSecureMode,
-                                            this))
+    m_port(port)
 {
+    m_socketServer = new QWebSocketServer(QStringLiteral("Socket Server"),
+                                            QWebSocketServer::NonSecureMode,
+                                            this);
+
 }
 
 SocketServer::~SocketServer()
@@ -88,8 +89,6 @@ void SocketServer::start()
     Q_ASSERT(m_socketServer);
     Q_ASSERT(m_request);
 
-    m_request->start();
-
     if (m_socketServer->listen(QHostAddress::Any, m_port))
     {
         QTextStream(stdout) << "Socket Server listening on port " << m_port << '\n';
@@ -99,6 +98,9 @@ void SocketServer::start()
         QTextStream(stdout) << "Failed to listen on the port! " << m_port << '\n';
         return;
     }
+
+    m_request->start();
+
 }
 
 void SocketServer::stop()

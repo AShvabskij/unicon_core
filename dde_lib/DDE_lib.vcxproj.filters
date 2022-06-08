@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="utils">
+      <UniqueIdentifier>{d135aaf5-5d55-4a2c-96ea-d8af2ede09f9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="utils\sql3_db\db_sqlib.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\IPCmemLib\ipcmem_lib.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="cpp_inc.h" />
+    <ClInclude Include="csvfile.h" />
+    <ClInclude Include="DDE.h" />
+    <ClInclude Include="DDE_PARAMS.h" />
+    <ClInclude Include="DDE_PARAMS_TYPE.h" />
+    <ClInclude Include="DDE_TYPES.h" />
+    <ClInclude Include="DDE_OSC_TYPES.h" />
+    <ClInclude Include="DDE_OSC.h" />
+    <ClInclude Include="DDE_EVLOG.h" />
+    <ClInclude Include="DDE_EVLOG_TYPES.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main_test.cpp" />
+    <ClCompile Include="csvfile.cpp" />
+    <ClCompile Include="DDE.cpp" />
+    <ClCompile Include="DDE_PARAMS.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="utils\sql3_db\bin\x64\Debug\db_lib.a">
+      <Filter>utils</Filter>
+    </Library>
+    <Library Include="utils\IPCmemLib\bin\x64\Debug\libipcmem_lib.a">
+      <Filter>utils</Filter>
+    </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitignore" />
+  </ItemGroup>
+</Project>

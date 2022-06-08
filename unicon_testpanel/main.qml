@@ -30,6 +30,7 @@ ApplicationWindow {
         deviceId: devicePane.deviceId
         paramId1: readParam.paramId
         paramId2: writeParam.paramId
+        host: connectPane.host
 
         onDataReceived: {
             dataLog.text += "Received: " + msg + "\n"

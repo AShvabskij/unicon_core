@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="ipcmem_lib.cpp" />
+    <ClCompile Include="ipcmem.c" />
+    <ClCompile Include="..\clogs\func.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ipcmem_lib.h" />
+    <ClInclude Include="ipcmem.h" />
+    <ClInclude Include="..\..\..\dde_lib\cpp_inc.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\csvfile.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\DDE.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\DDE_EVLOG.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\DDE_EVLOG_TYPES.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\DDE_OSC.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\DDE_OSC_EMUL.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\DDE_OSC_FILE.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\DDE_OSC_TYPES.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\DDE_PARAMS.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\DDE_PARAMS_EMUL.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\DDE_PARAMS_FILE.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\DDE_PARAMS_TYPE.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\dde_lib\DDE_TYPES.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\clogs\func.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\clogs\inc.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="dde_lib">
+      <UniqueIdentifier>{9139d47d-94b0-4643-af41-0b0d9f241e25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{86d72466-5fa1-411f-87ad-71d363647c14}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

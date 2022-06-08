@@ -10,6 +10,9 @@
 #include "devicehandler.h"
 #include "oschandler.h"
 
+#include <QtWebSockets>
+#include <QtCore>
+
 Core::Core()
 {
 }
@@ -21,8 +24,13 @@ Core::~Core()
 
 void Core::start()
 {
+#ifdef __WIN32__
     IDDE* dde = new DDE_EMUL();
-    dde->init(0); //run thread
+#else
+    IDDE* m_dde = new DDE();
+#endif
+
+    dde->init("UAVCAN"); //run thread
 
     ParamsHandler* params = new ParamsHandler(dde);
     DeviceHandler* device = new DeviceHandler(dde);
@@ -54,7 +62,11 @@ int Core::test()
     std::cout << "DDE template started..." << std::endl;
 
 
+#ifdef __WIN32__
     m_dde = new DDE_EMUL();
+#else
+    m_dde = new DDE();
+#endif
 
     m_dde->init(0); //run thread
 
@@ -80,7 +92,7 @@ int Core::test()
 
     //build params tree
     DDE_GET_PARAMS_HEADER get_devices_header;
-    get_devices_header.device_ID = 0;
+    get_devices_header.device_id = 0;
     m_dde->get_params_header(get_devices_header);
 
     std::cout << "HEADER el_count =" << get_devices_header.el_count << std::endl;
@@ -91,7 +103,7 @@ int Core::test()
 
         ////try to get modules from device
         DDE_GET_PARAMS_HEADER get_modules_header;
-        get_modules_header.device_ID = get_devices_header.el_descr[ii].id;
+        get_modules_header.device_id = get_devices_header.el_descr[ii].id;
         m_dde->get_params_header(get_modules_header);
         print_modules(get_modules_header);
     }
@@ -112,10 +124,10 @@ void Core::print_modules(const DDE_GET_PARAMS_HEADER& p)
 
 
             DDE_GET_PARAMS_HEADER get_params_header;
-            get_params_header.device_ID = p.device_ID;
-            get_params_header.module_ID = p.el_descr[ii].id;
+            get_params_header.device_id = p.device_id;
+            get_params_header.module_id = p.el_descr[ii].id;
             m_dde->get_params_header(get_params_header);
-            print_params(p.device_ID,ii,get_params_header);
+            print_params(p.device_id,ii,get_params_header);
     }
     std::cout << std::endl;
 }
