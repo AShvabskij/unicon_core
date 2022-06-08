@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <chrono>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -11,7 +12,7 @@
 using namespace std;
 using namespace OSC_FILE;
 
-const std::string OSC_FILE_ERROR = "Osc data file error!\n";
+const char* OSC_FILE_ERROR = "Osc data file error!\n";
 const std::string OSC_FILE_PARSE_ERROR = "Error while parsing th osc file!\n";
 const int SET_SIZE = 16;
 
@@ -94,7 +95,7 @@ int OscDataFile::loadOscFile(uint16_t device_id, string *outBuff)
     file.close();
 
     if (outBuff->empty()) {
-        cout << OSC_FILE_ERROR;
+        std::cout << OSC_FILE_ERROR;
         return _return_FAIL;
     }
 
@@ -128,7 +129,12 @@ int OscDataFile::loadHeader(uint16_t device_id)
     m_header->device_id = device_id;
 
     ifstream fileStream = openOscFile(device_id);
-    int res = parseHeader(fileStream, *m_header);
+    int res = fileStream.is_open() ? _return_OK : _return_FAIL;
+
+    if (res == _return_OK) {
+        res = parseHeader(fileStream, *m_header);
+    }
+
     fileStream.close();
 
     delete m_oscFileStream;

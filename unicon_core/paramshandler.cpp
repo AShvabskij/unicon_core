@@ -145,8 +145,9 @@ void ParamsHandler::handleSetValue(const QJsonObject &request)
     val.timestamp = QDateTime::currentMSecsSinceEpoch();
 
     long res = setParamValue(val);
+    int error = (res <= 0) ? static_cast<int>(res): 0;
 
-    QJsonObject response = createValueObj(requestId, val, res);
+    QJsonObject response = createValueObj(requestId, val, error);
     send(response);
 }
 

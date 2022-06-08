@@ -39,10 +39,10 @@ _dde_func_return_t DDE_OSC_FILE::close(uint16_t device_id)
 
 _dde_func_return_t DDE_OSC_FILE::get(DDE_GET_OSC_HEADER& p)
 {
-    m_oscData->open(p.device_id, false);
+    _dde_func_return_t res = m_oscData->open(p.device_id, false);
+    if (!res) return res;
 
-    int res = m_oscData->getHeader(p);
-
+    res = m_oscData->getHeader(p);
     return res;
 }
 

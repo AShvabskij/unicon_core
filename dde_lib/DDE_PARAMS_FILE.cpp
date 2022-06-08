@@ -34,7 +34,7 @@ _dde_func_return_t DDE_PARAMS_FILE::init(const char* sys_type)
 void DDE_PARAMS_FILE::setTestDevice()
 {
     int devices_count = 4;
-    int devices_step = 1;
+    int devices_step = 10;
 
     for (int i = 1; i <= devices_count * devices_step; i = i + devices_step) {
         for (int ii = 1; ii <= 4; ii++) {
@@ -54,7 +54,7 @@ void DDE_PARAMS_FILE::setTestDevice()
                 setDat.ivalue = 0x32363030;
                 break;
             case DDE_DEV0_MODULE0_PARAM4_SPARE_REV:
-                setDat.ivalue = 0x37303130 + i;
+                setDat.ivalue = 0x37303130 + (i/devices_step);
                 break;
             }
 
@@ -69,7 +69,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
 
     int res = 0;
     int devices_count = 4;
-    int devices_step = 1;
+    int devices_step = 10;
 
     CsvFile* file = new CsvFile();
     assert(file);
@@ -79,7 +79,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
 #endif
 
     for (int ii = 1; ii <= devices_count * devices_step; ii = ii + devices_step)	{
-        string fileName = "parameters_"+to_string(ii) + ".csv";
+        string fileName = "parameters_" + to_string(ii) + ".csv";
         res = file->open(fileName);
         if (res != 0) {
             return _return_FAIL;
@@ -116,11 +116,11 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
             uint16_t moduleId = elemId >> 6 << 6;
 
             uint16_t paramNum = elemId - moduleId;
-
+/*
             if (moduleNum == 0 && paramNum == 0) {
                 continue;
             }
-
+*/
             strcpy(m_devDescr[ii].el_descr[moduleId].name, cells[0].c_str());
 
             GLIO_ELEMENT_DESCR& el_descr = m_devDescr[ii].el_descr[elemId];
@@ -180,13 +180,13 @@ void DDE_PARAMS_FILE::setTestLinks()
             case 1:
                 setDat.ivalue = 1;
                 break;
-            case 2:
+            case 11:
                 setDat.ivalue = 1;
                 break;
-            case 3:
+            case 21:
                 setDat.ivalue = 1;
                 break;
-            case 4:
+            case 31:
                 setDat.ivalue = 1;
                 break;
         default: setDat.ivalue = 0;
@@ -206,6 +206,10 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
     // request for master device params
     if (p.device_id == 0) {
         return _return_OK;
+    }
+
+    if (p.module_id == 0) {
+        strcpy(p.module_name, m_devDescr[p.device_id].name);
     }
 
     // request for module params

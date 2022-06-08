@@ -52,7 +52,7 @@ private:
     void handleGetHeader(const QJsonObject &request);
     void handleSystemStatus(const QJsonObject& request);
     void handleDeviceLinks(const QJsonObject &request);
-    void handleReqDevices(int requestId);
+    void handleReqDevices(SysType sysType, int requestId);
     void handleReqDeviceHeader(SysType sysType, int deviceId, int requestId);
     void handleReqModuleHeader(SysType sysType, int deviceId, int moduleId, int requestId);
 

@@ -47,7 +47,7 @@ void DeviceHandler::handleGetHeader(const QJsonObject& request)
     int moduleId = cmdBody.value("module_id").toInt();
 
     if (deviceId == 0) {
-        handleReqDevices(requestId);
+        handleReqDevices(sysType, requestId);
     } else if (moduleId == 0) {
         handleReqDeviceHeader(sysType, deviceId, requestId);
     } else {
@@ -108,18 +108,24 @@ long DeviceHandler::requestDeviceLinks(SysType sysType, QList<int>& links)
     return 1;
 }
 
-void DeviceHandler::handleReqDevices(int requestId)
+void DeviceHandler::handleReqDevices(SysType sysType, int requestId)
 {
     QMap<SysType, QList<int>> allLinks;
 
-    for (int ival = SysType::Undefined; ival != SysType::Unknown; ival++ )
-    {
-        SysType sysType = (SysType)ival;
-        if (m_dde->dde(sysType) == nullptr) continue;
-
+    if (sysType != SysType::Undefined) {
         QList<int> links;
         requestDeviceLinks(sysType, links);
         allLinks.insert(sysType, links);
+    } else {
+        for (int ival = SysType::Undefined; ival != SysType::Unknown; ival++ )
+        {
+            SysType sysType = (SysType)ival;
+            if (m_dde->dde(sysType) == nullptr) continue;
+
+            QList<int> links;
+            requestDeviceLinks(sysType, links);
+            allLinks.insert(sysType, links);
+        }
     }
 
     DeviceList devices;
@@ -169,9 +175,15 @@ long DeviceHandler::requestDevice(Device& device)
 
         _dde_func_return_t res = (*m_dde)(device.sysType)->get_params_header(header);
 
-        if (res <= _return_FAIL || header.el_count == 0) continue;
+        if (res == _return_FAIL ) continue;
 
-        device.modules.append(header.module_id);
+        if (header.module_id == 0) {
+            device.desc = header.module_name; // temporaly
+        }
+
+        if (header.el_count > 0) {
+            device.modules.append(header.module_id);
+        }
     }
 
     return _return_OK;

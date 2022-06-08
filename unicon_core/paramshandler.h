@@ -12,6 +12,10 @@ struct ParamID
     bool isValid() const {
         return id != 0 && moduleId != 0 && devId.isValid();
     }
+
+    int uid() const {
+        return (moduleId << 6) + id;
+    }
 };
 
 bool operator==(const ParamID& a, const ParamID& b);

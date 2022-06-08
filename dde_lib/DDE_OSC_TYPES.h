@@ -23,7 +23,7 @@ enum OSC_VAR_TYPE
 
 struct OSC_VAR
 {
-    uint16_t device_id;
+    uint16_t device_id; // TODO: rename to osc_id
     uint16_t id;
 
     OSC_VAR_TYPE type;

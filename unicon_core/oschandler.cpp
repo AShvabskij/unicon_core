@@ -350,7 +350,7 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
 
     out->settings = settings;
 
-    return 0;
+    return _return_OK;
 }
 
 OscChannelDescr OscHandler::createChannelDescr(const OSC_ANALOG_CHANNEL& channel)
@@ -468,7 +468,7 @@ QString OscHandler::oscDataToString(const QJsonObject &obj)
 QString colorToString(const RGB &c)
 {
     return QString("#%1%2%3")
-            .arg(c.Red,0,16)
-            .arg(c.Green,0,16)
-            .arg(c.Blue,0,16);
+            .arg(QString::number( c.Red, 16).rightJustified(2, '0'))
+            .arg(QString::number( c.Green, 16).rightJustified(2, '0'))
+            .arg(QString::number( c.Blue, 16).rightJustified(2, '0'));
 }

@@ -10,6 +10,7 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    DDE_TOP.cpp \
     DDE_EVLOG.cpp \
     DDE_OSC.cpp \
     DDE_OSC_EMUL.cpp \
@@ -21,8 +22,7 @@ SOURCES += \
     oscdatafile.cpp
 
 unix: SOURCES += \
-    DDE_PARAMS.cpp \
-    DDE_TOP.cpp
+    DDE_PARAMS.cpp
 
 HEADERS += \
     DDE_INTERFACES.h \
