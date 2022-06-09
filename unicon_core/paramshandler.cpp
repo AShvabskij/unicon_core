@@ -478,6 +478,8 @@ QJsonObject ParamsHandler::createHeaderObj(int requestId, const ParamList& param
         obj["device_id"] = param.ID.devId.id;
         obj["module_id"] = param.ID.moduleId;
         obj["param_id"] = param.ID.id;
+        obj["u_id"] = param.ID.uid();
+
         obj["name"] = param.name;
         obj["desc"] = param.desc;
         obj["value_unit"] = param.valueUnit;
@@ -511,6 +513,8 @@ QJsonObject ParamsHandler::createValueObj(int requestId, const ParamValue& value
     body["device_id"] = value.paramID.devId.id;
     body["module_id"] = value.paramID.moduleId;
     body["param_id"] = value.paramID.id;
+    body["u_id"] = value.paramID.uid();
+
     body["value"] = value.toJsonValue();
     body["format"] = value.format;
     body["scale"] = double(value.scale);
@@ -531,6 +535,8 @@ QJsonObject ParamsHandler::createStreamValueObj(const ParamValue& value, int err
     res["d_id"] = value.paramID.devId.id;
     res["m_id"] = value.paramID.moduleId;
     res["p_id"] = value.paramID.id;
+    res["u_id"] = value.paramID.uid();
+
     res["value"] = value.toJsonValue();
     if (error != 0) {
         res["error"] = error;
