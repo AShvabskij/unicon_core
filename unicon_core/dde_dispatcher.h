@@ -56,7 +56,7 @@ public:
         if (m_ddeList.contains(sysType)) {
             return m_ddeList.value(sysType);
         } else {
-            Q_ASSERT(false);
+//          Q_ASSERT(false);
             return m_defDDE;
         }
     }
