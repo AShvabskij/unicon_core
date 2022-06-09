@@ -7,7 +7,13 @@ const QString CMD_PARAMS_DATA = "param_data";
 const int DATA_YELD_INTERVAL_MSC = 100;
 const int STREAM_OBJECT_LIMIT = 6000;//*100;
 
-ParamsHandler::ParamsHandler(IDDE* dde): BaseReqHandler(dde)
+bool operator==(const ParamID& a, const ParamID& b) {
+    return a.devId == b.devId &&
+            a.moduleId == b.moduleId &&
+            a.id == b.id;
+}
+
+ParamsHandler::ParamsHandler(IDDE_Dispatcher* dde): BaseReqHandler(dde)
 {
     m_streamTimer = new QTimer(this);
     m_streamTimer->setTimerType(Qt::PreciseTimer);
@@ -48,13 +54,17 @@ int ParamsHandler::handle(const QJsonObject &request)
             handleCloseStream(request);
         }
     } else {
-        BaseReqHandler::handle(request);
+        return BaseReqHandler::handle(request);
     }
+
+    return 1;
 }
 
 void ParamsHandler::handleGetHeader(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
+    SysType sysType = (SysType)request.value("sys_type").toInt();
+
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -68,11 +78,13 @@ void ParamsHandler::handleGetHeader(const QJsonObject &request)
     ParamList params;
     long ret = true;
 
+    DevID devID = {sysType, deviceId};
     if (paramId == 0) {
-        ret = getParamHeaders(deviceId, moduleId, &params);
+        ret = getParamHeaders(devID, moduleId, &params);
     } else {
         Param p;
-        ret = getParamHeader(deviceId, moduleId, paramId, &p);
+        p.ID = {devID, moduleId, paramId};
+        ret = getParamHeader(p.ID, &p);
         if (ret > 0) {
             params << p;
         }
@@ -85,6 +97,7 @@ void ParamsHandler::handleGetHeader(const QJsonObject &request)
 void ParamsHandler::handleGetValue(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
+    SysType sysType = (SysType)request.value("sys_type").toInt();
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -96,11 +109,9 @@ void ParamsHandler::handleGetValue(const QJsonObject &request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     ParamValue val;
-    val.deviceId = deviceId;
-    val.moduleId = moduleId;
-    val.paramId = paramId;
+    val.paramID = {{sysType,deviceId}, moduleId, paramId};
 
-    long res = getParamValue(deviceId, moduleId, paramId, &val);
+    long res = getParamValue(val.paramID, &val);
     int error = (res <= 0) ? static_cast<int>(res): 0;
 
     QJsonObject response = createValueObj(requestId, val, error);
@@ -110,6 +121,8 @@ void ParamsHandler::handleGetValue(const QJsonObject &request)
 void ParamsHandler::handleSetValue(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
+    SysType sysType = (SysType)request.value("sys_type").toInt();
+
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -121,7 +134,8 @@ void ParamsHandler::handleSetValue(const QJsonObject &request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     Param p;
-    _dde_func_return_t ret = getParamHeader(deviceId, moduleId, paramId, &p);
+    p.ID = {{sysType,deviceId}, moduleId, paramId};
+    _dde_func_return_t ret = getParamHeader(p.ID, &p);
     if (ret <= _return_FAIL) {
         return;
     }
@@ -131,8 +145,9 @@ void ParamsHandler::handleSetValue(const QJsonObject &request)
     val.timestamp = QDateTime::currentMSecsSinceEpoch();
 
     long res = setParamValue(val);
+    int error = (res <= 0) ? static_cast<int>(res): 0;
 
-    QJsonObject response = createValueObj(requestId, val, res);
+    QJsonObject response = createValueObj(requestId, val, error);
     send(response);
 }
 
@@ -140,9 +155,9 @@ long ParamsHandler::setParamValue(const ParamValue& value)
 {
     DDE_SET_PARAMS_DATA m_data;
 
-    m_data.param_id = static_cast<uint16_t>(value.paramId);
-    m_data.device_id = static_cast<uint16_t>(value.deviceId);
-    m_data.module_id = static_cast<uint16_t>(value.moduleId);
+    m_data.param_id = static_cast<uint16_t>(value.paramID.id);
+    m_data.device_id = static_cast<uint16_t>(value.paramID.devId.id);
+    m_data.module_id = static_cast<uint16_t>(value.paramID.moduleId);
     m_data.ivalue = 0;
 
     switch (value.format) {
@@ -164,7 +179,7 @@ long ParamsHandler::setParamValue(const ParamValue& value)
     }
     }
 
-    _dde_func_return_t res = m_dde->set_params_data(m_data);
+    _dde_func_return_t res = (*m_dde)(value.paramID.devId.type)->set_params_data(m_data);
 
     return res;
 }
@@ -172,6 +187,7 @@ long ParamsHandler::setParamValue(const ParamValue& value)
 void ParamsHandler::handleOpenStream(const QJsonObject& request)
 {
     int requestId = request.value("request_id").toInt();
+    SysType sysType = (SysType)request.value("sys_type").toInt();
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -183,7 +199,8 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     Param p;
-    long ret = getParamHeader(deviceId, moduleId, paramId, &p);
+    p.ID = {{sysType,deviceId}, moduleId, paramId};
+    long ret = getParamHeader(p.ID, &p);
     if (ret <= _return_FAIL) {
         return;
     }
@@ -202,6 +219,7 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
 void ParamsHandler::handleCloseStream(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
+    SysType sysType = (SysType)request.value("sys_type").toInt();
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -209,10 +227,13 @@ void ParamsHandler::handleCloseStream(const QJsonObject &request)
     }
 
     int deviceId = cmdBody.value("device_id").toInt();
+    int moduleId = cmdBody.value("module_id").toInt();
     int paramId  = cmdBody.value("param_id").toInt();
 
+    ParamID pID = {{sysType,deviceId}, moduleId, paramId};
+
     for (const Param &p: m_capturedParams) {
-        if (p.id == paramId && p.deviceId == deviceId) {
+        if (p.ID == pID) {
             m_capturedParams.removeAll(p);
 
             QMetaObject::invokeMethod(this, "sendActualParamValue", Qt::AutoConnection,
@@ -235,23 +256,21 @@ void ParamsHandler::sendActualParamValue(const Param &param, int requestId, int 
 {
     ParamValue val(param);
 
-    long res = getParamValue(param.deviceId, param.moduleId, param.id, &val);
+    long res = getParamValue(param.ID, &val);
     if (res <= 0) return;
 
     QJsonObject response = createValueObj(requestId, val, error);
     send(response);
 }
 
-ParamValue ParamsHandler::valueFrom(int deviceId, int moduleId, int paramId, const GLIO_ELEMENT_VALUE& el)
+ParamValue ParamsHandler::valueFrom(const ParamID& paramId, const GLIO_ELEMENT_VALUE& el)
 {
     if (el.deprecated) {
         return ParamValue();
     }
 
     ParamValue res;
-    res.paramId = paramId;
-    res.deviceId = deviceId;
-    res.moduleId = moduleId;
+    res.paramID = paramId;
     res.timestamp = el.timestamp; //QDateTime::currentMSecsSinceEpoch();
 
     res.format = (GLIO_ELEMENT_FORMAT_ENUM)el.format;
@@ -326,7 +345,7 @@ void ParamsHandler::stopStreamsParamValue()
 
 void ParamsHandler::stopStreamParamValue(const Param &param)
 {
-    if (param.id == 0) {
+    if (!param.ID.isValid()) {
         return;
     }
 
@@ -356,44 +375,42 @@ void ParamsHandler::onStreamTimerAlarm()
 
 long ParamsHandler::getParamValue(const Param& p, ParamValue* out)
 {
-    return getParamValue(p.deviceId, p.moduleId, p.id, out);
+    return getParamValue(p.ID, out);
 }
 
-long ParamsHandler::getParamValue(int deviceId, int moduleId, int paramId, ParamValue* out)
+long ParamsHandler::getParamValue(const ParamID& paramId, ParamValue* out)
 {
     Q_ASSERT(out);
 
-    m_data->device_id = static_cast<uint16_t>(deviceId);
-    m_data->module_id = static_cast<uint16_t>(moduleId);
-    m_data->param_id = static_cast<uint16_t>(paramId);
+    m_data->device_id = static_cast<uint16_t>(paramId.devId.id);
+    m_data->module_id = static_cast<uint16_t>(paramId.moduleId);
+    m_data->param_id = static_cast<uint16_t>(paramId.id);
 
-    _dde_func_return_t res = m_dde->get_params_data(*m_data);
+    _dde_func_return_t res = (*m_dde)(paramId.devId.type)->get_params_data(*m_data);
 
     if (res <= _return_FAIL) return res;
 
-    *out = valueFrom(deviceId, moduleId, paramId, m_data->el[0]);
+    *out = valueFrom(paramId, m_data->el[0]);
 
     return _return_OK;
 }
 
-long ParamsHandler::getParamHeader(int deviceId, int moduleId, int paramId, Param *out)
+long ParamsHandler::getParamHeader(const ParamID& paramId, Param *out)
 {
-    m_header->device_id = static_cast<uint16_t>(deviceId);
-    m_header->module_id = static_cast<uint16_t>(moduleId);
-    m_header->param_id = static_cast<uint16_t>(paramId);
+    m_header->device_id = static_cast<uint16_t>(paramId.devId.id);
+    m_header->module_id = static_cast<uint16_t>(paramId.moduleId);
+    m_header->param_id = static_cast<uint16_t>(paramId.id);
 
-    _dde_func_return_t res = m_dde->get_params_header(*m_header);
+    _dde_func_return_t res = (*m_dde)(paramId.devId.type)->get_params_header(*m_header);
 
     if (res <= _return_FAIL) return res;
 
-    out->deviceId = deviceId;
-    out->moduleId = moduleId;
-    out->id = paramId;
+    out->ID = paramId;
 
     for (const GLIO_ELEMENT_DESCR& elem : m_header->el_descr) {
-        if (elem.id == paramId) {
+        if (elem.id == paramId.id) {
             out->name = elem.name;
-            out->valueUnit = elem.unit;
+            out->valueUnit = elem.dim;
             out->writable = elem.writable;
             out->valueFormat = elem.format;
             out->valueScale = elem.scale;
@@ -411,15 +428,15 @@ long ParamsHandler::getParamHeader(int deviceId, int moduleId, int paramId, Para
     return _return_OK;
 }
 
-long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)
+long ParamsHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamList *out)
 {
     Q_ASSERT(out);
 
-    m_header->device_id = static_cast<uint16_t>(deviceId);
+    m_header->device_id = static_cast<uint16_t>(deviceId.id);
     m_header->module_id = static_cast<uint16_t>(moduleId);
     m_header->param_id = 0;
 
-    _dde_func_return_t res = m_dde->get_params_header(*m_header);
+    _dde_func_return_t res = (*m_dde)(deviceId.type)->get_params_header(*m_header);
 
     if (res <= _return_FAIL) return res;
 
@@ -431,12 +448,11 @@ long ParamsHandler::getParamHeaders(int deviceId, int moduleId, ParamList *out)
         }
 
         Param p;
-        p.deviceId = deviceId;
-        p.moduleId = moduleId;
-        p.id = elem.id;
+        p.ID = {deviceId, moduleId, elem.id};
+
         p.name = elem.name;
         p.desc = elem.descr;
-        p.valueUnit = elem.unit;
+        p.valueUnit = elem.dim;
         p.writable = elem.writable;
         p.valueFormat = elem.format;
         p.valueScale = elem.scale;
@@ -459,9 +475,9 @@ QJsonObject ParamsHandler::createHeaderObj(int requestId, const ParamList& param
 
     for (const Param& param : params) {
         QJsonObject obj;
-        obj["device_id"] = param.deviceId;
-        obj["module_id"] = param.moduleId;
-        obj["param_id"] = param.id;
+        obj["device_id"] = param.ID.devId.id;
+        obj["module_id"] = param.ID.moduleId;
+        obj["param_id"] = param.ID.id;
         obj["name"] = param.name;
         obj["desc"] = param.desc;
         obj["value_unit"] = param.valueUnit;
@@ -492,9 +508,9 @@ QJsonObject ParamsHandler::createHeaderObj(int requestId, const ParamList& param
 QJsonObject ParamsHandler::createValueObj(int requestId, const ParamValue& value, int error)
 {
     QJsonObject body;
-    body["device_id"] = value.deviceId;
-    body["module_id"] = value.moduleId;
-    body["param_id"] = value.paramId;
+    body["device_id"] = value.paramID.devId.id;
+    body["module_id"] = value.paramID.moduleId;
+    body["param_id"] = value.paramID.id;
     body["value"] = value.toJsonValue();
     body["format"] = value.format;
     body["scale"] = double(value.scale);
@@ -512,9 +528,9 @@ QJsonObject ParamsHandler::createValueObj(int requestId, const ParamValue& value
 QJsonObject ParamsHandler::createStreamValueObj(const ParamValue& value, int error)
 {
     QJsonObject res;
-    res["d_id"] = value.deviceId;
-    res["m_id"] = value.moduleId;
-    res["p_id"] = value.paramId;
+    res["d_id"] = value.paramID.devId.id;
+    res["m_id"] = value.paramID.moduleId;
+    res["p_id"] = value.paramID.id;
     res["value"] = value.toJsonValue();
     if (error != 0) {
         res["error"] = error;

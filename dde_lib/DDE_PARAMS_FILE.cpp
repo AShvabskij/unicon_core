@@ -21,7 +21,7 @@ DDE_PARAMS_FILE::DDE_PARAMS_FILE()
 DDE_PARAMS_FILE::~DDE_PARAMS_FILE()
 {}
 
-_dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
+_dde_func_return_t DDE_PARAMS_FILE::init(const char* sys_type)
 {
 
     setTestDevice();
@@ -34,7 +34,7 @@ _dde_func_return_t DDE_PARAMS_FILE::init(char* device_description)
 void DDE_PARAMS_FILE::setTestDevice()
 {
     int devices_count = 4;
-    int devices_step = 1;
+    int devices_step = 10;
 
     for (int i = 1; i <= devices_count * devices_step; i = i + devices_step) {
         for (int ii = 1; ii <= 4; ii++) {
@@ -54,7 +54,7 @@ void DDE_PARAMS_FILE::setTestDevice()
                 setDat.ivalue = 0x32363030;
                 break;
             case DDE_DEV0_MODULE0_PARAM4_SPARE_REV:
-                setDat.ivalue = 0x37303130 + i;
+                setDat.ivalue = 0x37303130 + (i/devices_step);
                 break;
             }
 
@@ -69,7 +69,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
 
     int res = 0;
     int devices_count = 4;
-    int devices_step = 1;
+    int devices_step = 10;
 
     CsvFile* file = new CsvFile();
     assert(file);
@@ -79,7 +79,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
 #endif
 
     for (int ii = 1; ii <= devices_count * devices_step; ii = ii + devices_step)	{
-        string fileName = "parameters_"+to_string(ii) + ".csv";
+        string fileName = "parameters_" + to_string(ii) + ".csv";
         res = file->open(fileName);
         if (res != 0) {
             return _return_FAIL;
@@ -116,11 +116,11 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
             uint16_t moduleId = elemId >> 6 << 6;
 
             uint16_t paramNum = elemId - moduleId;
-
+/*
             if (moduleNum == 0 && paramNum == 0) {
                 continue;
             }
-
+*/
             strcpy(m_devDescr[ii].el_descr[moduleId].name, cells[0].c_str());
 
             GLIO_ELEMENT_DESCR& el_descr = m_devDescr[ii].el_descr[elemId];
@@ -128,7 +128,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
 
             strcpy(el_descr.name, cells[1].c_str());
             strcpy(el_descr.descr, cells[2].c_str());
-            strcpy(el_descr.unit, cells[8].c_str());
+            strcpy(el_descr.dim, cells[8].c_str());
 
             el_descr.id = paramNum;
             el_descr.mod = moduleNum;
@@ -171,7 +171,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
 void DDE_PARAMS_FILE::setTestLinks()
 {
     DDE_SET_PARAMS_DATA setDat;
-    for (int ii = DDE_DEV0_MODULE1_PARAM1_dev1_link; ii <= DDE_DEV0_MODULE2_PARAM63_dev63_link; ii++) {
+    for (int ii = DDE_DEV0_MODULE1_PARAM1_dev1_link; ii <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ii++) {
         setDat.device_id = 0;
         setDat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
         setDat.param_id = ii;
@@ -180,13 +180,13 @@ void DDE_PARAMS_FILE::setTestLinks()
             case 1:
                 setDat.ivalue = 1;
                 break;
-            case 2:
+            case 11:
                 setDat.ivalue = 1;
                 break;
-            case 3:
+            case 21:
                 setDat.ivalue = 1;
                 break;
-            case 4:
+            case 31:
                 setDat.ivalue = 1;
                 break;
         default: setDat.ivalue = 0;
@@ -208,6 +208,10 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
         return _return_OK;
     }
 
+    if (p.module_id == 0) {
+        strcpy(p.module_name, m_devDescr[p.device_id].name);
+    }
+
     // request for module params
     if (p.param_id == 0) {
         p.el_count = 0;
@@ -227,6 +231,11 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
         memcpy(&p.el_descr[0], &m_devDescr[p.device_id].el_descr[elemId], sizeof(GLIO_ELEMENT_DESCR));
     }
 
+    return _return_OK;
+}
+
+long DDE_PARAMS_FILE::set(DDE_SET_PARAMS_HEADER &p)
+{
     return _return_OK;
 }
 
@@ -269,7 +278,7 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
             float fvalue = 0.0;
 
             const GLIO_ELEMENT_DESCR& param = m_devDescr[p.device_id].el_descr[elemId];
-            string unit = param.unit;
+            string unit = param.dim;
 
             if (unit == "A") {
                 fvalue = generateValue(0.1, 10, 0, systemTime());

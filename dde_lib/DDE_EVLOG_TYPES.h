@@ -1,6 +1,7 @@
 #pragma once
 
-#include "DDE_TYPES.h"
+#include <cstdint>
+#include <time.h>
 
 struct DDE_EVLOG_MSG
 {

@@ -5,11 +5,16 @@ const QString CMD_SYSTEM_STATUS = "system_status";
 const QString CMD_DEVICE_LINKS = "device_links";
 const QString CMD_TYPE = "get";
 
-DeviceHandler::DeviceHandler(IDDE *dde): BaseReqHandler(dde)
+bool operator==(const DevID& a, const DevID& b) {
+    return a.type == b.type &&
+            a.id == b.id;
+}
+
+DeviceHandler::DeviceHandler(IDDE_Dispatcher* dde): BaseReqHandler(dde)
 {
 }
 
-int DeviceHandler::handle(const QJsonObject &request)
+int DeviceHandler::handle(const QJsonObject& request)
 {
     QJsonObject cmdObj = request.value("cmd").toObject();
     QString cmdName = cmdObj.value("name").toString();
@@ -31,6 +36,7 @@ int DeviceHandler::handle(const QJsonObject &request)
 void DeviceHandler::handleGetHeader(const QJsonObject& request)
 {
     int requestId = request.value("request_id").toInt();
+    SysType sysType = (SysType)request.value("sys_type").toInt();
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -41,11 +47,11 @@ void DeviceHandler::handleGetHeader(const QJsonObject& request)
     int moduleId = cmdBody.value("module_id").toInt();
 
     if (deviceId == 0) {
-        handleReqDevices(requestId);
+        handleReqDevices(sysType, requestId);
     } else if (moduleId == 0) {
-        handleReqDeviceHeader(deviceId, requestId);
+        handleReqDeviceHeader(sysType, deviceId, requestId);
     } else {
-        handleReqModuleHeader(deviceId, moduleId, requestId);
+        handleReqModuleHeader(sysType, deviceId, moduleId, requestId);
     }
 
     return;
@@ -54,11 +60,14 @@ void DeviceHandler::handleGetHeader(const QJsonObject& request)
 void DeviceHandler::handleSystemStatus(const QJsonObject& request)
 {
     int requestId = request.value("request_id").toInt();
+    SysType sysType = (SysType)request.value("sys_type").toInt();
+
     QJsonObject cmdBody = request.value("body").toObject();
     if (requestId <= 0) return;
 
     SystemStatus status;
     status.isChanged = true;
+    status.statusList[sysType] = true;
 
     QJsonObject response = createResponse(requestId, status);
     send(response);
@@ -68,8 +77,9 @@ void DeviceHandler::handleSystemStatus(const QJsonObject& request)
 
 void DeviceHandler::handleDeviceLinks(const QJsonObject& request)
 {
+    SysType sysType = (SysType)request.value("sys_type").toInt();
     QList<int> links;
-    long res = requestDeviceLinks(links);
+    long res = requestDeviceLinks(sysType, links);
     if (res <= 0) return;
 
     int requestId = request.value("request_id").toInt();
@@ -79,17 +89,17 @@ void DeviceHandler::handleDeviceLinks(const QJsonObject& request)
     return;
 }
 
-long DeviceHandler::requestDeviceLinks(QList<int>& links)
+long DeviceHandler::requestDeviceLinks(SysType sysType, QList<int>& links)
 {
     DDE_GET_PARAMS_DATA dat;
     dat.device_id = DDE_DEV0_MODULE0_DESCRIPTION;
     dat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
     dat.param_id = 0;
 
-    _dde_func_return_t res = m_dde->get_params_data(dat);
+    _dde_func_return_t res = (*m_dde)(sysType)->get_params_data(dat);
     if (res <= _return_FAIL) return res;
 
-    for (int i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE2_PARAM63_dev63_link; ++i) {
+    for (int i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ++i) {
         if (dat.el[i].ivalue == 1) {
             links << i;
         }
@@ -98,22 +108,37 @@ long DeviceHandler::requestDeviceLinks(QList<int>& links)
     return 1;
 }
 
-void DeviceHandler::handleReqDevices(int requestId)
+void DeviceHandler::handleReqDevices(SysType sysType, int requestId)
 {
-    QList<int> links;
-    long res = requestDeviceLinks(links);
-    if (res <= 0) return;
+    QMap<SysType, QList<int>> allLinks;
+
+    if (sysType != SysType::Undefined) {
+        QList<int> links;
+        requestDeviceLinks(sysType, links);
+        allLinks.insert(sysType, links);
+    } else {
+        for (int ival = SysType::Undefined; ival != SysType::Unknown; ival++ )
+        {
+            SysType sysType = (SysType)ival;
+            if (m_dde->dde(sysType) == nullptr) continue;
+
+            QList<int> links;
+            requestDeviceLinks(sysType, links);
+            allLinks.insert(sysType, links);
+        }
+    }
 
     DeviceList devices;
+    for (SysType key: allLinks.keys()) {
+        for (int i : allLinks[key]) {
+            Device d({key, i});
 
-    for (int i : links) {
-        Device d(i);
+            long res = requestDevice(d);
 
-        long res = requestDevice(d);
+            if (res <= 0 || d.isEmpty()) continue;
 
-        if (res <= 0 || d.isEmpty()) continue;
-
-        devices << d;
+            devices << d;
+        }
     }
 
     QJsonObject response = createResponse(requestId, devices);
@@ -122,9 +147,9 @@ void DeviceHandler::handleReqDevices(int requestId)
     return;
 }
 
-void DeviceHandler::handleReqDeviceHeader(int deviceId, int requestId)
+void DeviceHandler::handleReqDeviceHeader(SysType sysType, int deviceId, int requestId)
 {
-    Device device(deviceId);
+    Device device({sysType, deviceId});
     requestDevice(device);
 
     QJsonObject response = createResponse(requestId, {device});
@@ -137,38 +162,43 @@ long DeviceHandler::requestDevice(Device& device)
 {
     if (!device.isValid()) return _return_FAIL;
 
-    device.name = getDeviceName(device.id);
+    device.name = getDeviceName(device.ID);
     if (device.name.isEmpty()) return _return_OK;
 
     device.desc = ""; // todo: получать из другого сервиса
-    device.channel = ChannelType::CAN_UAV;
 
     for (int i = 0; i < MODULES_ID_MAX; ++i) {
         DDE_GET_PARAMS_HEADER header;
-        header.device_id = static_cast<uint16_t>(device.id);
+        header.device_id = static_cast<uint16_t>(device.ID.id);
         header.module_id = static_cast<uint16_t>(i);
         header.param_id = 0;
 
-        _dde_func_return_t res = m_dde->get_params_header(header);
+        _dde_func_return_t res = (*m_dde)(device.sysType)->get_params_header(header);
 
-        if (res <= _return_FAIL || header.el_count == 0) continue;
+        if (res == _return_FAIL ) continue;
 
-        device.modules.append(header.module_id);
+        if (header.module_id == 0) {
+            device.desc = header.module_name; // temporaly
+        }
+
+        if (header.el_count > 0) {
+            device.modules.append(header.module_id);
+        }
     }
 
     return _return_OK;
 }
 
-QString DeviceHandler::getDeviceName(int deviceId)
+QString DeviceHandler::getDeviceName(const DevID& deviceId)
 {
     QString retName = "";
 
     DDE_GET_PARAMS_DATA dat;
-    dat.device_id = static_cast<uint16_t>(deviceId);
+    dat.device_id = static_cast<uint16_t>(deviceId.id);
     dat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
     dat.param_id = 0;
 
-    _dde_func_return_t res = m_dde->get_params_data(dat);
+    _dde_func_return_t res = (*m_dde)(deviceId.type)->get_params_data(dat);
     if (res <= _return_FAIL) return "";
 
     for (int i = 0; i < 4; i++) {
@@ -184,7 +214,7 @@ QString DeviceHandler::getDeviceName(int deviceId)
     return retName.trimmed();
 }
 
-void DeviceHandler::handleReqModuleHeader(int deviceId, int moduleId, int requestId)
+void DeviceHandler::handleReqModuleHeader(SysType sysType, int deviceId, int moduleId, int requestId)
 {
     if (moduleId == 0) return;
 
@@ -197,7 +227,7 @@ void DeviceHandler::handleReqModuleHeader(int deviceId, int moduleId, int reques
     header.module_id = static_cast<uint16_t>(moduleId);
     header.param_id = 0;
 
-    _dde_func_return_t res = m_dde->get_params_header(header);
+    _dde_func_return_t res = (*m_dde)(sysType)->get_params_header(header);
 
     if (res == _return_OK && header.el_count > 0) {
         module.name = header.el_descr->name;
@@ -215,17 +245,21 @@ void DeviceHandler::handleReqModuleHeader(int deviceId, int moduleId, int reques
     return;
 }
 
-ChannelType DeviceHandler::channelType(QString chName)
+SysType DeviceHandler::sysType(QString sType)
 {
-    if (chName == "UAV_CAN") {
-        return ChannelType::CAN_UAV;
-    } else if (chName == "MOD_BUS") {
-        return ChannelType::MOD_BUS;
-    } else if (chName == "MOD_BUS_FO") {
-        return ChannelType::MOD_BUS_FO;
+    if (sType == "FILE_IO") {
+        return SysType::FILE_IO;
+    } else if (sType == "UAVCAN") {
+        return SysType::UAVCAN;
+    } else if (sType == "MODBUS") {
+        return SysType::MODBUS;
+    } else if (sType == "CANOPEN") {
+        return SysType::CANOPEN;
+    } else if (sType == "CONNEX_MVCP") {
+        return SysType::CONNEX_MVCP;
     }
 
-    return ChannelType::Undefined;
+    return SysType::Undefined;
 }
 
 QJsonObject DeviceHandler::createResponse(int requestId, const DeviceList& devices)
@@ -234,10 +268,10 @@ QJsonObject DeviceHandler::createResponse(int requestId, const DeviceList& devic
 
     for (const Device& d : devices) {
         QJsonObject obj;
-        obj["id"] = d.id;
+        obj["id"] = d.ID.id;
         obj["name"] = d.name;
         obj["desc"] = d.desc;
-        obj["channel"] = d.channel;
+        obj["channel"] = d.ID.type;
 
         QJsonArray modules;
         for (int moduleId : d.modules) {

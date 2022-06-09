@@ -37,7 +37,7 @@ void prnDesc(DDE_GET_PARAMS_HEADER *r, int dev_id, int el_id, int counter)
     for (int i; i <= counter; i++)
     {
         sprintf(buf, "\tdev_id:%d\n\tel_id:%d\n\tmod_id:%d\n\tname:'%s'\n\tdesc:'%s'\n\tformat:%d\n\tscale:%.3f\n\tunits:'%s'\n\tr/w:%d\n\ttxt_id:%d%s",
-                        dev_id, el_id, r->el_descr[i].id, r->el_descr[i].name, r->el_descr[i].descr, r->el_descr[i].format, r->el_descr[i].scale, r->el_descr[i].unit, r->el_descr[i].writable, r->el_descr[i].txtSubIndexes[0], eoline);
+                        dev_id, el_id, r->el_descr[i].id, r->el_descr[i].name, r->el_descr[i].descr, r->el_descr[i].format, r->el_descr[i].scale, r->el_descr[i].dim, r->el_descr[i].writable, r->el_descr[i].txtSubIndexes[0], eoline);
         print_msg_sql(buf, 0);
     }
 }
@@ -146,7 +146,7 @@ int add_rec(const char* device_name, const char* device_description, DDE_SET_PAR
 
         sprintf(tmp, "INSERT INTO `%s` (param_id_s, mod_id_s, name_s, descr_s, format_s, scale_s, units_s, writable_s, txt_id_s) \
             VALUES (%d,%d,\"%s\",\"%s\",%d,%f,\"%s\",%d,%d);", tbl_name,
-            buf->param_id, buf->module_id, buf->name, buf->descr, buf->format, buf->scale, buf->unit, buf->writable, buf->id);
+            buf->param_id, buf->module_id, buf->name, buf->descr, buf->format, buf->scale, buf->dim, buf->writable, buf->id);
 
         rc = sqlite3_exec(dbc, tmp, NULL, 0, &err);
 
@@ -198,7 +198,7 @@ int one_desc_recs(void *uk, int columns, char **aDat, char **aName)
     memcpy(struc->el_descr[glio_counter].descr,							   aDat[5], DDE_PARAMS_DESCR_LENGTH - 1);
     struc->el_descr[glio_counter].format =  (GLIO_ELEMENT_FORMAT_ENUM)atoi(aDat[6]);
     struc->el_descr[glio_counter].scale								= atof(aDat[7]);
-    memcpy(struc->el_descr[glio_counter].unit,							   aDat[8], UNITS_SIZE);
+    memcpy(struc->el_descr[glio_counter].dim,							   aDat[8], DIM_SIZE);
     struc->el_descr[glio_counter].writable							= atoi(aDat[9]);
 
     glio_counter++;
@@ -236,7 +236,7 @@ int one_txt_recs(void *uk, int columns, char **aDat, char **aName)
         strncpy(struc->el_descr[num_glio + offset + txt_counter].descr, struc->el_descr[num_glio].descr, DDE_PARAMS_NAME_LENGTH - 1);
         struc->el_descr[num_glio + offset + txt_counter].format = struc->el_descr[num_glio].format;
         struc->el_descr[num_glio + offset + txt_counter].scale = struc->el_descr[num_glio].scale;
-        memcpy(&struc->el_descr[num_glio + offset + txt_counter].unit, &struc->el_descr[num_glio].unit, UNITS_SIZE);
+        memcpy(&struc->el_descr[num_glio + offset + txt_counter].dim, &struc->el_descr[num_glio].dim, DIM_SIZE);
         struc->el_descr[num_glio + offset + txt_counter].writable = struc->el_descr[num_glio].writable;
     }
 

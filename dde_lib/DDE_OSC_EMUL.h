@@ -10,9 +10,15 @@ public:
     DDE_OSC_EMUL() = default;
     ~DDE_OSC_EMUL() = default;
 
-    virtual int get(DDE_GET_OSC_HEADER& p);
-    virtual int get(DDE_GET_OSC_DATA& p);
-    virtual int set(DDE_GET_OSC_HEADER& p);
+    virtual _dde_func_return_t init(const char* system_type);
+    virtual _dde_func_return_t open(uint16_t deviceId);
+    virtual _dde_func_return_t close(uint16_t deviceId);
+
+    virtual _dde_func_return_t get(DDE_GET_OSC_HEADER& p);
+    virtual _dde_func_return_t get(DDE_GET_OSC_DATA& p);
+    virtual _dde_func_return_t set(DDE_GET_OSC_HEADER& p);
+
+    virtual void update();
 
 private:
     time_t systemTime();
@@ -21,5 +27,4 @@ private:
 
     time_t m_lastDataTimeNs;
     time_t m_startDataTimeNs;
-
 };

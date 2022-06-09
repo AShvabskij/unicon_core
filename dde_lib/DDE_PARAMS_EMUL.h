@@ -51,15 +51,14 @@ public:
     DDE_PARAMS_EMUL();
     ~DDE_PARAMS_EMUL();
 
+    virtual _dde_func_return_t init(const char* sys_type);
     virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p);
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p);
 	
-    virtual _dde_func_return_t init(char* device_description);
-
+    virtual void update();
 protected:
     uint32_t get_list_maxsize;
-    void proceed_request_list();
     //void proceed_response_queue();
     void read_params(DDE_GET_PARAMS_DATA& get_params);
     uint32_t overflow = 0;
@@ -74,7 +73,6 @@ private:
     std::thread* thr_params;
     //std::queue <GLIO_ELEMENT> msg_queue;
     std::list <DDE_GET_PARAMS_DATA> request_list;
-    int thread_proc();
     inline time_t systemTime();
     float generateValue(uint16_t device_ID, uint16_t param_ID, time_t t);
 };

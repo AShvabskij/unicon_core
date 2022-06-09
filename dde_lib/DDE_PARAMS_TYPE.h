@@ -30,18 +30,22 @@
 #define     DDE_DEV0_MODULE0_PARAM11_RX_ERR_COUNTER       11
 #define     DDE_DEV0_MODULE0_PARAM12_TX_ERR_COUNTER       12
 #define     DDE_DEV0_MODULE0_PARAM13_LINK                 13
+#define     DDE_DEV0_MODULE0_PARAM14_READ_CMD_ERR_COUNTER 14
+#define     DDE_DEV0_MODULE0_PARAM15_WRIT_CMD_ERR_COUNTER 15
+
 
 #define	DDE_DEV0_MODULE1_DEVS_LINK                   1
 #define	    DDE_DEV0_MODULE1_PARAM0_devs_link	     0
 #define		DDE_DEV0_MODULE1_PARAM1_dev1_link		 1
-#define		DDE_DEV0_MODULE2_PARAM63_dev63_link		 63
+#define		DDE_DEV0_MODULE1_PARAM63_dev63_link		 63
+#define		DDE_DEV_LINK_ONLINE		 1
 
 #define DDE_DEV0_MODULE2_DEVS_DESCR_UPDATE                2
 #define	    DDE_DEV0_MODULE2_PARAM0_devs_descr_update	  0
 #define		DDE_DEV0_MODULE2_PARAM1_dev1_descr_update	  1
 #define		DDE_DEV0_MODULE2_PARAM63_dev63_descr_update	  63
 
-
+#define END_OF_TABLE                                     -1 // end-of-db-table character
 
 #define DDE_DEVICE_NAME_LENGTH          4
 #define DDE_DEVICE_HW_REV_LENGTH        4
@@ -54,19 +58,19 @@
 #define DDE_PARAMS_TXTVALUE_LENGTH 32
 #define DDE_PARAMS_TXTVALUES_MAX_COUNT 32
 
-#define UNITS_SIZE 6
+#define DIM_SIZE 6
 
 //---------------------------------------------------------------------
 
 enum GLIO_ELEMENT_FORMAT_ENUM
 {
-	 FORMAT_UNDEFINED = 0,
-     FORMAT_BIN,
-	 FORMAT_INT,
-	 FORMAT_FLOAT,
-	 FORMAT_HEX32,
-	 FORMAT_TEXT,
-     FORMAT_ASCII
+    FORMAT_UNDEFINED = 0,
+    FORMAT_BIN,
+    FORMAT_INT,
+    FORMAT_FLOAT,
+    FORMAT_HEX32,
+    FORMAT_TEXT,
+    FORMAT_ASCII
 };
 
 enum GLIO_ELEMENT_UNIT_ENUM
@@ -81,7 +85,6 @@ enum GLIO_ELEMENT_UNIT_ENUM
 
 //---------------------------------------------------------------------
 
-
 #pragma pack(push,1)
 typedef struct
 {
@@ -95,7 +98,7 @@ typedef struct
     int format;
 #endif    
     float scale;
-    char unit[UNITS_SIZE]; // unit of measurement
+    char dim[DIM_SIZE]; // unit of measurement
     char* txtValues[DDE_PARAMS_TXTVALUES_MAX_COUNT]; // array of pointer's to 'text values'
     int txtSubIndexes[DDE_PARAMS_TXTVALUES_MAX_COUNT]; // array of index 'text values'
     bool writable;
@@ -111,7 +114,7 @@ typedef struct {
     time_t timestamp;
     uint16_t format:4;
     uint16_t text_id:11;
-    uint16_t deprecated:1; 
+    uint16_t deprecated:1;
 } GLIO_ELEMENT_VALUE;
 #pragma pack(pop)
 
@@ -122,7 +125,7 @@ typedef struct {
     uint8_t cmd_flag : 1;     //0 - IDLE, 1 - BUSY
     uint8_t nRW : 1;          //1 to write , 0 to read
     uint8_t none : 6;
-    //uint8_t device_id; A&D this struct is a part of DEVICE_ELEMENT array in IPCMEM, no need to pass device_id 
+    //uint8_t device_id; A&D this struct is a part of DEVICE_ELEMENT array in IPCMEM, no need to pass device_id
     uint8_t module_id;
     uint8_t param_id;
     uint32_t ivalue;
@@ -142,7 +145,7 @@ typedef struct
 
     DDE_PARAMS_CMD cmd;
     GLIO_ELEMENT_VALUE el[ELEMENTS_ID_MAX];
- 
+
 } DEVICE_ELEMENTS;
 #pragma pack(pop)
 
@@ -166,10 +169,10 @@ typedef struct
     uint16_t param_id;
     uint16_t el_count; //count of elements for responce
     char module_name[DDE_PARAMS_NAME_LENGTH];
-	GLIO_ELEMENT_DESCR el_descr[64]; //not more then 64 params at a time
+    GLIO_ELEMENT_DESCR el_descr[64]; //not more then 64 params at a time
     uint16_t timeout; //each request has it own timeout counter
     uint16_t timeout_flg;//
-} DDE_GET_PARAMS_HEADER;
+} DDE_GET_PARAMS_HEADER; 
 //#pragma pack(pop)
 
 
@@ -178,14 +181,14 @@ typedef struct
 typedef struct
 {
     uint32_t header_reset;		//if flag is set update the header, clear  and draw data
-	//DDE_REQ_PARAMS_TYPE req_type;
+    //DDE_REQ_PARAMS_TYPE req_type;
     uint16_t device_id;
     uint16_t module_id;
     uint16_t param_id;
     GLIO_ELEMENT_VALUE el[64];	//not more then 64 params at a time
     uint16_t timeout; //each request has it own timeout counter
     uint16_t timeout_flg;//
-	//void* (*callback_func)();
+    //void* (*callback_func)();
     //std::queue <DDE_EVLOG_MSG> queue; this will requier auto_ptr to be deleted, i prefer to control memory
 } DDE_GET_PARAMS_DATA;
 //#pragma pack(pop)
@@ -215,7 +218,7 @@ typedef struct
 #endif    
 
     float scale;
-    char unit[UNITS_SIZE]; // unit of measurement
+    char dim[DIM_SIZE]; // unit of measurement
     char* txtValues; // list of predefined text values
     int txtSubIndexes;
     bool writable;

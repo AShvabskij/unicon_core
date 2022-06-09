@@ -5,14 +5,20 @@
 #include "DDE_OSC_FILE.h"
 #include "DDE_PARAMS_FILE.h"
 
-_dde_func_return_t DDE_EMUL::init(char* device_description)
+_dde_func_return_t DDE_EMUL::init(const char* sys_type)
 {
     m_params = new DDE_PARAMS_FILE();
+    m_params->init(sys_type);
+
     m_osc = new DDE_OSC_FILE();
+    m_osc->init(sys_type);
 
-    m_params->init(device_description);
+    return 0;
+}
 
-	return 0;
+const char* DDE_EMUL::system_type()
+{
+    return "FILE_IO";
 }
 
 _dde_func_return_t DDE_EMUL::get_params_header(DDE_GET_PARAMS_HEADER& p)
@@ -83,6 +89,26 @@ _dde_func_return_t DDE_EMUL::get_evlog_data(DDE_GET_EVLOG_DATA& p)
 
 _dde_func_return_t DDE_EMUL::set_evlog_data(DDE_SET_EVLOG_DATA&)
 {
-	return 0;
+    return 0;
+}
+
+void DDE_EMUL::update()
+{
+    m_params->update();
+//  m_osc->update();
+}
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+int DDE_EMUL::thread_proc() //TODO this may be splited to thread_process_tx & thread_process_rx to one CAN chanell
+{
+    while (1)
+    {
+
+        update();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
 }
 

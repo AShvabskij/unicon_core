@@ -1,0 +1,122 @@
+//---------------------------------------------------------------------------
+
+#include "DDE_TOP.h"
+#include "DDE_PARAMS.h"
+#include "DDE_OSC.h"
+#include "DDE_EVLOG.h"
+
+#include "stdint.h"
+#include "stdlib.h"
+
+//#include "ipcmem_lib.h"
+//#include "db_sqlib.h"
+
+DDE_TOP::DDE_TOP()
+{
+
+
+}
+
+DDE_TOP::~DDE_TOP()
+{
+}
+
+//void DDE_TOP::get_status(DDE_STATUS*p)
+//{
+//	p->open = status.open;
+//	p->device = status.device;
+//	p->baudrate = status.baudrate;
+//	p->error = status.error;
+//	//strcpy(p->last_error_source, status.last_error_source);
+//	//status.error = 0;
+//	//status.last_error_source[0] = 0;
+//
+//}
+//---------------------------------------------------------------------------
+
+
+//---------------------------------------------------------------------------
+
+_dde_func_return_t DDE_TOP::set_params_header(DDE_SET_PARAMS_HEADER& p)
+{
+    uint32_t res = m_params->set(p);
+    return res;
+}
+_dde_func_return_t DDE_TOP::get_params_header(DDE_GET_PARAMS_HEADER& p)
+{
+    uint32_t res = m_params->get(p);
+    return res;
+}
+
+_dde_func_return_t DDE_TOP::get_params_data(DDE_GET_PARAMS_DATA& p)
+{
+    int res;
+    res = m_params->get(p);
+    return res;
+
+}
+
+_dde_func_return_t DDE_TOP::set_params_data(DDE_SET_PARAMS_DATA& p)
+{
+    int res;
+    res = m_params->set(p);
+    return res;
+}
+
+
+_dde_func_return_t DDE_TOP::get_osc_header(DDE_GET_OSC_HEADER& p)
+{
+    return m_osc->get(p);
+}
+
+_dde_func_return_t DDE_TOP::get_osc_data(DDE_GET_OSC_DATA& p)
+{
+    return m_osc->get(p);
+}
+
+_dde_func_return_t DDE_TOP::set_osc_data(DDE_SET_OSC_DATA& p)
+{
+    return _return_OK; // m_osc->set(p);
+}
+
+_dde_func_return_t DDE_TOP::get_evlog_header(DDE_GET_EVLOG_HEADER& p)
+{
+    return 0;
+}
+
+_dde_func_return_t DDE_TOP::get_evlog_data(DDE_GET_EVLOG_DATA& p)
+{
+    return 0;
+}
+
+_dde_func_return_t DDE_TOP::set_evlog_data(DDE_SET_EVLOG_DATA& p)
+{
+    return 0;
+}
+
+_dde_func_return_t DDE_TOP::init(const char* system_type)
+{
+    m_params = new DDE_PARAMS();
+    m_params->init(system_type);
+
+    m_osc = new DDE_OSC();
+    m_osc->init(system_type);
+
+    m_sysType = system_type;
+
+    return 0;
+}
+
+const char* DDE_TOP::system_type()
+{
+    return m_sysType.c_str();
+}
+
+void DDE_TOP::update()
+{
+    m_params->update();
+    m_osc->update();
+
+    //evlog->update();
+    //trend->update();
+}

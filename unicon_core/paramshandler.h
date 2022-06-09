@@ -3,11 +3,27 @@
 
 #include "basereqhandler.h"
 
+struct ParamID
+{
+    DevID devId;
+    int moduleId;
+    int id;
+
+    bool isValid() const {
+        return id != 0 && moduleId != 0 && devId.isValid();
+    }
+
+    int uid() const {
+        return (moduleId << 6) + id;
+    }
+};
+
+bool operator==(const ParamID& a, const ParamID& b);
+
 struct Param
 {
-    int id = 0;
-    int deviceId = 0;
-    int moduleId = 0;
+    ParamID ID = {DevID(), 0, 0};
+
     QString name = "";
     QString desc = "";
     QString valueUnit = "";
@@ -17,16 +33,15 @@ struct Param
     bool writable = false;
 
     bool operator == (const Param& p) const {
-        return this->id == p.id && this->deviceId == p.deviceId && this->moduleId == p.moduleId;
+        return this->ID == p.ID;
     }
 };
+
 typedef QVector<Param> ParamList;
 
 struct ParamValue
 {
-    int paramId = 0;
-    int deviceId = 0;
-    int moduleId = 0;
+    ParamID paramID;
 
     QVariant value;
     qlonglong timestamp = 0;
@@ -44,9 +59,8 @@ struct ParamValue
 
     ParamValue() = default;
     ParamValue(const Param& p) {
-        moduleId = p.moduleId;
-        deviceId = p.deviceId;
-        paramId = p.id;
+        paramID = p.ID;
+
         format = p.valueFormat;
         scale = p.valueScale;
     }
@@ -58,7 +72,7 @@ class ParamsHandler : public BaseReqHandler
 {
     Q_OBJECT
 public:
-    ParamsHandler(IDDE* dde);
+    ParamsHandler(IDDE_Dispatcher*);
     ~ParamsHandler();
 
     virtual int handle(const QJsonObject& request);
@@ -77,12 +91,12 @@ private:
     void handleCloseStream(const QJsonObject &request);
 
     long getParamValue(const Param &p, ParamValue* out);
-    long getParamValue(int deviceId, int moduleId, int paramId, ParamValue* out);
-    long getParamHeader(int deviceId, int moduleId, int paramId, Param *out);
-    long getParamHeaders(int deviceId, int moduleId, ParamList *out);
+    long getParamValue(const ParamID &paramId, ParamValue* out);
+    long getParamHeader(const ParamID& paramId, Param *out);
+    long getParamHeaders(const DevID& deviceId, int moduleId, ParamList *out);
     long setParamValue(const ParamValue &value);
 
-    ParamValue valueFrom(int deviceId, int moduleId, int paramId, const GLIO_ELEMENT_VALUE &el);
+    ParamValue valueFrom(const ParamID &paramId, const GLIO_ELEMENT_VALUE &el);
     QJsonObject createHeaderObj(int requestId, const ParamList &params);
     QJsonObject createValueObj(int requestId, const ParamValue& value, int error = 0);
     QJsonObject createStreamValueObj(const ParamValue& value, int error = 0);

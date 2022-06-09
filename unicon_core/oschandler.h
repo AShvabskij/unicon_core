@@ -21,7 +21,7 @@ struct OscChannelValues
 struct OscData
 {
     uint16_t oscId;
-    uint16_t deviceId;
+    DevID deviceID;
     OscChannelValues analogValues[OSC_CHANNELS_MAX + 1];
     OscChannelValues discreteValues[OSC_DISCRETES_MAX + 1];
     qlonglong timestamp = 0;
@@ -66,7 +66,7 @@ QString colorToString(const RGB& c);
 struct OscHeader
 {
     int id = 0;
-    int deviceId = 0;
+    DevID deviceID = {SysType::Undefined, 0};
     QString name = "";
     QString desc = "";
 
@@ -75,7 +75,7 @@ struct OscHeader
     OscSettings settings;
 
     bool operator == (const OscHeader& o) const {
-        return this->id == o.id && this->deviceId == o.deviceId;
+        return this->id == o.id && this->deviceID == o.deviceID;
     }
 
     OscChannelDescr channel(quint8 chNum)
@@ -99,7 +99,7 @@ struct OscHeader
     QJsonObject toJson() const {
         QJsonObject res;
 
-        res["device_id"] = deviceId;
+        res["device_id"] = deviceID.id;
         res["id"] = id;
         res["desc"] = desc;
         res["name"] = name;
@@ -110,10 +110,9 @@ struct OscHeader
         for (quint8 chInd : analogChannels.keys()) {
             const OscChannelDescr& ch = analogChannels.value(chInd);
             QJsonObject obj;
-            obj["ind"] = chInd;
-            obj["num"] = ch.channelNum;
-            obj["name"] = ch.varName;
+            obj["ch_num"] = ch.channelNum;
             obj["var_id"] = ch.varId;
+            obj["name"] = ch.varName;
             obj["scale"] = ch.scale;
             obj["min"] = ch.min;
             obj["max"] = ch.max;
@@ -129,10 +128,9 @@ struct OscHeader
         for (quint8 chInd : discreteChannels.keys()) {
             const OscChannelDescr& ch = discreteChannels.value(chInd);
             QJsonObject obj;
-            obj["ind"] = chInd;
-            obj["num"] = ch.channelNum;
-            obj["name"] = ch.varName;
+            obj["ch_num"] = ch.channelNum;
             obj["var_id"] = ch.varId;
+            obj["name"] = ch.varName;
             obj["color"] = colorToString(ch.color);
             obj["isDiscrete"] = true;
 
@@ -151,7 +149,7 @@ class OscHandler : public BaseReqHandler
 {
     Q_OBJECT
 public:
-    OscHandler(IDDE* dde);
+    OscHandler(IDDE_Dispatcher* );
     virtual int handle(const QJsonObject& request);
 
 signals:
@@ -167,14 +165,14 @@ private:
     int handleCloseStream(const QJsonObject &request);
 
     long getData(const OscHeader &osc, OscData* out);
-    long getHeader(int deviceId, int oscId, OscHeader *out);
+    long getHeader(const DevID& deviceID, int oscId, OscHeader *out);
 
     QJsonObject createHeaderObj(int requestId, const OscHeader& header);
     QJsonObject createChannelObj(int requestId, const OscChannelDescr& ch);
     QJsonObject createStreamDataObj(const OscData& data, int error = 0);
     QString oscDataToString(const QJsonObject &obj);
-    OscChannelDescr createAnalogChannel(const OSC_ANALOG_CHANNEL& channel);
-    OscChannelDescr createDiscreteChannel(const OSC_DISCRETE_CHANNEL& channel);
+    OscChannelDescr createChannelDescr(const OSC_ANALOG_CHANNEL& channel);
+    OscChannelDescr createChannelDescr(const OSC_DISCRETE_CHANNEL& channel);
     qint32 discreteValue(qint16 rawValue, qint8 firstBit, qint8 lastBit);
 
     void startPooling();

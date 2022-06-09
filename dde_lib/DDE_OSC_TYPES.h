@@ -3,10 +3,10 @@
 #include <cstdint>
 #include <time.h>
 
-#include "DDE_TYPES.h"
-
-#define OSC_ANALOG_CHANNELS 47
-#define OSC_DISCRETE_CHANNELS 128
+#define OSC_VAR_NAME_LENGTH 64
+#define OSC_MAX_CHANNELS 48
+#define OSC_MAX_ANALOG_VARS 48
+#define OSC_MAX_DISCRETE_VARS 128
 
 struct RGB {
     uint8_t Red;
@@ -14,14 +14,24 @@ struct RGB {
     uint8_t Blue;
 };
 
+enum OSC_VAR_TYPE
+{
+     UNDEFINED = 0,
+     ANALOG,
+     DISCRETE
+};
+
 struct OSC_VAR
 {
-    uint16_t device_id;
+    uint16_t device_id; // TODO: rename to osc_id
     uint16_t id;
-    char name[DDE_PARAMS_NAME_LENGTH];
-    char measure_unit[6];
+
+    OSC_VAR_TYPE type;
+    char name[OSC_VAR_NAME_LENGTH];
+    char dim[6];
     float min = 0.0;
     float max = 0.0;
+    float scale;
     RGB color;
 };
 
@@ -30,7 +40,8 @@ struct OSC_ANALOG_CHANNEL
     uint16_t chNum;
     OSC_VAR var;
 
-    float scale;
+    float gain = 0;
+    float offset = 0;
 };
 
 struct OSC_DISCRETE_CHANNEL
@@ -67,8 +78,8 @@ struct DDE_GET_OSC_HEADER
 {
     uint16_t device_id;
 
-    OSC_ANALOG_CHANNEL analog_channels[OSC_ANALOG_CHANNELS + 1];
-    OSC_DISCRETE_CHANNEL discrete_channels[OSC_DISCRETE_CHANNELS + 1];
+    OSC_ANALOG_CHANNEL analog_channels[OSC_MAX_ANALOG_VARS + 1];
+    OSC_DISCRETE_CHANNEL discrete_channels[OSC_MAX_DISCRETE_VARS + 1];
 
     OSC_SETTING settings;
 
@@ -79,7 +90,7 @@ struct DDE_GET_OSC_HEADER
 
 struct DDE_GET_OSC_DATA
 {
-    uint16_t device_ID;
+    uint16_t device_id;
 
     uint32_t header_updated;    //if flag is set update the header, clear screen and draw data
     uint16_t data_length;   // The length of a data in OSC_CH_DATA
@@ -87,8 +98,8 @@ struct DDE_GET_OSC_DATA
     bool next_ready;    // flag if next data frame is ready
     bool eof;    // flag if it is the last frame
 
-    OSC_ANALOG_DATA analog_data[OSC_ANALOG_CHANNELS + 1];
-    OSC_DISCRETE_DATA discret_data[OSC_DISCRETE_CHANNELS +1];
+    OSC_ANALOG_DATA analog_data[OSC_MAX_CHANNELS + 1];
+    OSC_DISCRETE_DATA discret_data[OSC_MAX_CHANNELS +1];
 };
 
 struct DDE_SET_OSC_DATA
