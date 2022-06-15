@@ -187,7 +187,7 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
 
     for (int chInd : osc.analogChannels.keys()) {
 
-        const OSC_ANALOG_DATA& chData = m_oscRawDataBuff->analog_data[chInd];
+        const OSC_DATA& chData = m_oscRawDataBuff->data[chInd];
         const OscChannelDescr& chDescr = osc.analogChannels[chInd];
 
         if (chDescr.varId == 0 && chDescr.varName.isEmpty()) {
@@ -203,7 +203,7 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         chValues.values.clear();
 
         for (int i = 0; i < m_oscRawDataBuff->data_length; i++) {
-            chValues.values << chData.buff[i];
+            chValues.values << chData.f_buff[i];
         }
     }
 
@@ -222,9 +222,9 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         chValues.valueDensity = chValues.valuesize / DATA_YELD_INTERVAL_MSC;
         chValues.values.clear();
 
-        const OSC_DISCRETE_DATA& chData = m_oscRawDataBuff->discret_data[chDescr.channelNum];
+        const OSC_DATA& chData = m_oscRawDataBuff->data[chDescr.channelNum];
         for (int i = 0; i < m_oscRawDataBuff->data_length; i++) {
-            uint32_t rawValue = chData.buff[i];
+            uint32_t rawValue = chData.i_buff[i];
             chValues.values << discreteValue(rawValue, chDescr.firstBit, chDescr.lastBit);
         }
     }
@@ -320,21 +320,21 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     out->analogChannels.clear();
 
     for (int chInd = 1; chInd <= OSC_MAX_ANALOG_VARS; chInd++) {
-        const OSC_ANALOG_CHANNEL& channel = header.analog_channels[chInd];
+        const OSC_CHANNEL& channel = header.analog_channels[chInd];
         if (channel.var.id <= 0) {
             continue;
         }
 
-        out->analogChannels[chInd] = createChannelDescr(channel);
+        out->analogChannels[chInd] = createChannelDescr(channel, false);
     }
 
     for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
-        const OSC_DISCRETE_CHANNEL& channel = header.discrete_channels[chInd];
+        const OSC_CHANNEL& channel = header.discrete_channels[chInd];
         if (channel.chNum <=0 || channel.var.id <= 0) {
             continue;
         }
 
-        out->discreteChannels[chInd] = createChannelDescr(channel);
+        out->discreteChannels[chInd] = createChannelDescr(channel, true);
     }
 
     OscSettings settings;
@@ -353,31 +353,17 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     return _return_OK;
 }
 
-OscChannelDescr OscHandler::createChannelDescr(const OSC_ANALOG_CHANNEL& channel)
+OscChannelDescr OscHandler::createChannelDescr(const OSC_CHANNEL& channel, bool isDiscrete)
 {
     OscChannelDescr ret;
     ret.channelNum = channel.chNum;
     ret.varId = channel.var.id;
     ret.varName = channel.var.name;
+    ret.isDiscrete = isDiscrete;
     ret.scale = channel.var.scale;
     ret.min = channel.var.min;
     ret.max = channel.var.max;
     ret.color = channel.var.color;
-
-    return ret;
-}
-
-OscChannelDescr OscHandler::createChannelDescr(const OSC_DISCRETE_CHANNEL& channel)
-{
-    OscChannelDescr ret;
-    ret.channelNum = channel.chNum;
-    ret.varId = channel.var.id;
-    ret.varName = channel.var.name;
-    ret.isDiscrete = true;
-    ret.color = channel.var.color;
-    ret.scale = channel.var.scale;
-    ret.min = channel.var.min;
-    ret.max = channel.var.max;
 
     ret.firstBit = channel.firstBit;
     ret.lastBit = channel.lastBit;

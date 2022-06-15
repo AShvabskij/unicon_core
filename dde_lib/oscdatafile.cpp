@@ -13,7 +13,7 @@ using namespace std;
 using namespace OSC_FILE;
 
 const char* OSC_FILE_ERROR = "Osc data file error!\n";
-const std::string OSC_FILE_PARSE_ERROR = "Error while parsing th osc file!\n";
+const char* OSC_FILE_PARSE_ERROR = "Error while parsing th osc file!\n";
 const int SET_SIZE = 16;
 
 OscDataFile::OscDataFile()
@@ -219,7 +219,7 @@ _dde_func_return_t OscDataFile::readNextData(DDE_GET_OSC_DATA& p, int datYeldInt
             }
 
             uint16_t rawValue = values[elemInd];
-            p.analog_data[chNum].buff[buffInd] = normalizeValue(rawValue, m_header->analog_vars[chInd].gain, m_header->analog_vars[chInd].offset);
+            p.data[chNum].f_buff[buffInd] = normalizeValue(rawValue, m_header->analog_vars[chInd].gain, m_header->analog_vars[chInd].offset);
         }
 
         for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
@@ -236,7 +236,7 @@ _dde_func_return_t OscDataFile::readNextData(DDE_GET_OSC_DATA& p, int datYeldInt
             }
 
             uint16_t rawValue = values[elemInd];
-            p.discret_data[chNum].buff[buffInd] = rawValue;
+            p.data[chNum].i_buff[buffInd] = rawValue;
         }
     }
 
@@ -257,7 +257,7 @@ _dde_func_return_t OscDataFile::getHeader(DDE_GET_OSC_HEADER &p)
     p.settings = header.settings;
 
     for (int chInd = 1; chInd <= OSC_MAX_ANALOG_VARS; chInd++) {
-        OSC_ANALOG_CHANNEL& channel = p.analog_channels[chInd];
+        OSC_CHANNEL& channel = p.analog_channels[chInd];
         const OSC_FILE::VAR_DESCR& var = header.analog_vars[chInd];
 
         channel.chNum = var.chNum;
@@ -267,13 +267,16 @@ _dde_func_return_t OscDataFile::getHeader(DDE_GET_OSC_HEADER &p)
     }
 
     for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
-        OSC_DISCRETE_CHANNEL& channel = p.discrete_channels[chInd];
+        OSC_CHANNEL& channel = p.discrete_channels[chInd];
         const OSC_FILE::VAR_DESCR& var = header.discrete_vars[chInd];
 
         channel.chNum = var.chNum;
         channel.var = createOscVar(var, p.device_id, OSC_VAR_TYPE::DISCRETE);
+        channel.gain = var.gain;
+        channel.offset = var.offset;
         channel.firstBit = var.firstBit;
         channel.lastBit = var.lastBit;
+
     }
 
     return _return_OK;

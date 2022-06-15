@@ -43,7 +43,7 @@ _dde_func_return_t DDE_OSC_EMUL::get(DDE_GET_OSC_DATA& p)
         t = m_lastDataTimeNs;
         for (int jj = 0; jj < p.data_length; jj++)
         {
-            p.analog_data[ii].buff[jj] = generateValue(ii, t);
+            p.data[ii].f_buff[jj] = generateValue(ii, t);
             t += RESOLUTION_NS;
         }
     }
