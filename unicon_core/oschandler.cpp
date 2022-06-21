@@ -129,7 +129,7 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
 
     int deviceId = cmdBody.value("device_id").toInt();
     int oscId = cmdBody.value("osc_id").toInt();
-    QJsonArray channels = cmdBody.value("channels").toArray();
+    QJsonArray oscVars = cmdBody.value("osc_vars").toArray();
 
     OscHeader header;
     DevID devId = {sysType, deviceId};
@@ -141,11 +141,11 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
     m_capturedOsc = header;
     m_dataCounter = 0;
 
-    m_capturedChannels.clear();
-    for (const QJsonValue& val : channels) {
-        m_capturedChannels << val.toInt();
+    m_capturedVars.clear();
+    for (const QJsonValue& val : oscVars) {
+        m_capturedVars << val.toInt();
     }
-    m_capturedChannels.removeAll(0);
+    m_capturedVars.removeAll(0);
 
     startPooling();
 
@@ -270,7 +270,7 @@ void OscHandler::startPooling()
 void OscHandler::stopPooling()
 {
     m_capturedOsc = OscHeader();
-    m_capturedChannels.clear();
+    m_capturedVars.clear();
     m_streamTimer->stop();
 }
 
@@ -281,7 +281,8 @@ int OscHandler::streamData()
     }
 
     long res = getData(m_capturedOsc, m_oscDataBuff);
-    QJsonObject response = createStreamDataObj(*m_oscDataBuff, res);
+    int error = (res <= 0) ? static_cast<int>(res) : 0;
+    QJsonObject response = createStreamDataObj(*m_oscDataBuff, error);
     emit stream(response);
 
     return res;
@@ -402,28 +403,32 @@ QJsonObject OscHandler::createChannelObj(int requestId, const OscChannelDescr& c
 QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
 {
     QJsonObject res;
-    QJsonArray channelValues;
-    QJsonArray channels;
+    QJsonArray valuesObj;
+    QJsonArray varIdListObj;
 
     for (const OscChannelValues& chVal : data.analogValues) {
-        if (chVal.channelNum == 0) continue;
-        if (!m_capturedChannels.empty() && !m_capturedChannels.contains(chVal.channelNum)) continue;
+        if (chVal.varId == 0) continue;
+        if (!m_capturedVars.empty() && !m_capturedVars.contains(chVal.varId)) {
+            continue;
+        }
 
-        channels << chVal.channelNum;
-        channelValues << QJsonArray::fromVariantList(chVal.values);
+        varIdListObj << chVal.varId;
+        valuesObj << QJsonArray::fromVariantList(chVal.values);
     }
 
     for (const OscChannelValues& chVal : data.discreteValues) {
-        if (chVal.channelNum == 0) continue;
-        if (!m_capturedChannels.empty() && !m_capturedChannels.contains(chVal.channelNum)) continue;
+        if (chVal.varId == 0) continue;
+        if (!m_capturedVars.empty() && !m_capturedVars.contains(chVal.varId)) {
+            continue;
+        }
 
-        channels << chVal.channelNum;
-        channelValues << QJsonArray::fromVariantList(chVal.values);
+        varIdListObj << chVal.varId;
+        valuesObj << QJsonArray::fromVariantList(chVal.values);
     }
 
     res["d_id"] = data.deviceID.id;
-    res["values"] = channelValues;
-    res["channels"] = channels;
+    res["values"] = valuesObj;
+    res["vars"] = varIdListObj;
     res["time"] = data.timestamp;
     res["error"] = 0;
 

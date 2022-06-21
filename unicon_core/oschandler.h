@@ -122,7 +122,7 @@ struct OscHeader
             channelsObj << obj;
         }
 
-        res["channels"] = channelsObj;
+        res["analog_channels"] = channelsObj;
 
         QJsonArray discretesObj;
         for (quint8 chInd : discreteChannels.keys()) {
@@ -137,7 +137,7 @@ struct OscHeader
             discretesObj << obj;
         }
 
-        res["discretes"] = discretesObj;
+        res["discrete_channels"] = discretesObj;
 
         return res;
     }
@@ -181,7 +181,7 @@ private:
     void stopStreamData(const OscHeader& osc);
 
     OscHeader m_capturedOsc;
-    QVector<int> m_capturedChannels;
+    QVector<int> m_capturedVars;
     int m_streamValCount = 0;
     QTimer* m_streamTimer;
     DDE_GET_OSC_DATA* m_oscRawDataBuff; // buffer to receive data from osc

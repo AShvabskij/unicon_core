@@ -56,7 +56,7 @@ public:
     Q_INVOKABLE void requestParamValues(QString arg);
     Q_INVOKABLE void startStreamParamValues(QString arg);
     Q_INVOKABLE void stopStreamParamValues(QString arg);
-    Q_INVOKABLE void startOscParamValues(int oscId, int chNum);
+    Q_INVOKABLE void startOscParamValues(int oscId, int varId);
     Q_INVOKABLE void stopOscParamValues(QString oscId);
     Q_INVOKABLE void changeParamValue(QString paramArg, QVariant paramValue);
 
@@ -100,7 +100,7 @@ private slots:
     QJsonObject createCmd(QString name);
     QJsonObject createParamCmdBody(QString name, int deviceId, CompositeId elemId = CompositeId(), QVariant value = QVariant());
     QJsonObject createDeviceCmdBody(QString cmd, int deviceId, int moduleId = 0);
-    QJsonObject createOscCmdBody(QString cmd, int deviceId, int oscId, int chNum = -1);
+    QJsonObject createOscCmdBody(QString cmd, int deviceId, int oscId, int chArg = -1);
 
 private:
     CompositeId parse(QString arg) const;

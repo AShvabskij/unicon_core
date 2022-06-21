@@ -153,13 +153,13 @@ void MainWindowVM::stopStreamParamValues(QString paramArg)
     sendRequest(req);
 }
 
-void MainWindowVM::startOscParamValues(int oscId, int chNum)
+void MainWindowVM::startOscParamValues(int oscId, int varId)
 {
     QJsonObject req;
     req["request_id"] = OSC_DATA_REQUEST_ID;
     req["sys_type"] = m_currSysType;
     req["cmd"] = createCmd("OSC_PARAM_DATA");
-    req["body"] = createOscCmdBody("OSC_PARAM_DATA", oscId, oscId, chNum);
+    req["body"] = createOscCmdBody("OSC_PARAM_DATA", oscId, oscId, varId);
 
     sendRequest(req, true);
 }
@@ -218,8 +218,8 @@ void MainWindowVM::setOscDescr(const QJsonObject &obj)
 {
     int deviceId = obj.value("device_id").toInt();
     QString name = obj.value("name").toString();
-    int analogCount = obj.value("channels").toArray().count();
-    int descreteCount = obj.value("discretes").toArray().count();
+    int analogCount = obj.value("analog_channels").toArray().count();
+    int descreteCount = obj.value("discrete_channels").toArray().count();
 
     QString output = QString("Osc: device id = %1, name = %2, analog = %3  discrete = %4 channels")
             .arg(deviceId)
@@ -318,13 +318,8 @@ QJsonObject MainWindowVM::createDeviceCmdBody(QString cmd, int deviceId, int mod
     return res;
 }
 
-QJsonObject MainWindowVM::createOscCmdBody(QString cmd, int deviceId, int oscId, int chNum)
+QJsonObject MainWindowVM::createOscCmdBody(QString cmd, int deviceId, int oscId, int chArg)
 {
-    QJsonArray channels;
-    if (chNum > 0) {
-        channels.append(QJsonValue(chNum));
-    }
-
     QJsonObject res;
     if (cmd == "GET_OSC_HEADER") {
         res["device_id"] = deviceId;
@@ -332,12 +327,15 @@ QJsonObject MainWindowVM::createOscCmdBody(QString cmd, int deviceId, int oscId,
     } else if (cmd == "GET_OSC_CHANNEL") {
         res["device_id"] = deviceId;
         res["osc_id"] = oscId;
-        res["channel_num"] = chNum;
+        res["channel_num"] = chArg;
     } else if (cmd == "OSC_PARAM_DATA") {
         res["device_id"] = deviceId;
         res["osc_id"] = oscId;
-        if (!channels.isEmpty()) {
-            res["channels"] = channels;
+
+        if (chArg > 0) {
+            QJsonArray channels;
+            channels.append(QJsonValue(chArg));
+            res["osc_vars"] = channels;
         }
     }
 
