@@ -24,6 +24,7 @@ struct VAR_DESCR
     float max = 0.0;
 
     bool isDiscrete = false;
+    bool isDigital = false;
     uint8_t firstBit = 0;
     uint8_t lastBit = 0;
 
@@ -70,7 +71,7 @@ private:
     std::vector<std::uint16_t> parseValues(std::string line);
     float normalizeValue(uint16_t rawValue, float gain, float offset);
     std::vector<std::string> split(std::string inputStr, char delim);
-    OSC_FILE::VAR_DESCR createVarDescr(std::vector<std::string> elems, uint16_t varId, bool isDiscrete);
+    OSC_FILE::VAR_DESCR createVarDescr(std::vector<std::string> elems, uint16_t varId, bool isDigital);
     OSC_VAR createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId, OSC_VAR_TYPE type);
     int th_loadData();
 

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 #include "cpp_inc.h"
 #include "csvfile.h"
@@ -148,7 +149,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
             el_value.text_id = (el_descr.format == GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT) ? el_value.ivalue : 0;
 
             if (cells.size() >= 12) {
-                auto txtValues = split(cells[11].c_str(), ',');
+                auto txtValues = split(cells[11], ',');
 
                 for (unsigned long i = 0; i < txtValues.size(); ++i) {
                     if (i >= DDE_PARAMS_TXTVALUES_MAX_COUNT) {
@@ -290,6 +291,9 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
 
                 fvalue = generateValue(currValue, 0.01);
                 el.ivalue = *(int*)&fvalue;
+            } else {
+                auto& el = m_devData[p.device_id].el[elemId];
+                fvalue = *(float*)&el.ivalue;
             }
 
             p.el[0].ivalue = *(int*)&fvalue;
@@ -366,9 +370,30 @@ StringList DDE_PARAMS_FILE::split(std::string inputStr, char delim)
 {
     std::vector<std::string> res;
     std::string item;
-    std::stringstream ss(inputStr);
+    std::stringstream inputStream(inputStr);
 
-    while(std::getline(ss, item, delim)) {
+    char specChars[] = "\"\'`";
+    while(std::getline(inputStream, item, delim)) {
+        if (item.empty()) {
+            continue;
+        }
+
+        if (std::isspace(*item.begin())) {
+            item.erase(item.begin());
+        }
+
+        if (std::isspace(*item.rbegin())) {
+            item.erase(item.length()-1);
+        }
+
+        item.erase(std::remove_if(std::begin(item), std::end(item),[specChars](const char & c) {
+            for (unsigned int i = 0; i < strlen(specChars); ++i)
+            {
+                if (c == specChars[i]) return true;
+            }
+            return false;
+        }), item.end());
+
         res.push_back(item);
     }
 

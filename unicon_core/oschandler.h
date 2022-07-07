@@ -37,6 +37,7 @@ struct OscChannelDescr
     float max = 0.0;
 
     bool isDiscrete = false;
+    bool isDigital = false;
     qint8 firstBit = 0;
     qint8 lastBit = 0;
 

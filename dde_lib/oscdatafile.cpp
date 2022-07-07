@@ -392,22 +392,27 @@ int OscDataFile::parseHeader(const std::ifstream& fileStream, FILE_HEADER& heade
                 header.settings.time_resolution_ns = stof(elems[1].c_str()) * 1000 * 1000;
             }
 
+            continue;
+        }
 
-        } else if (line[0] == '@') {
-            const VAR_DESCR& analogChannel = createVarDescr(elems, ++varId, false);
-            header.analog_vars[analogChannel.chNum] = analogChannel;
+        if (line[0] != '@' && line[0] != '&') {
+            continue;
+        }
 
-        } else if (line[0] == '&') {
-            header.discrete_vars[++discrChInd] = createVarDescr(elems, ++varId, true);
+        bool isDigital = (line[0] == '&');
+
+        const VAR_DESCR& var = createVarDescr(elems, ++varId, isDigital);
+        if (var.isDiscrete) {
+            header.discrete_vars[++discrChInd] = var;
         } else {
-            break;
+            header.analog_vars[var.chNum] = var;
         }
     }
 
     return res;
 }
 
-VAR_DESCR OscDataFile::createVarDescr(std::vector<std::string> elems, uint16_t varId, bool isDiscrete)
+VAR_DESCR OscDataFile::createVarDescr(std::vector<std::string> elems, uint16_t varId, bool isDigital)
 {
     int setNum = atoi(elems[1].substr(1).c_str());
     int setChNum = atoi(elems[2].c_str());
@@ -419,17 +424,22 @@ VAR_DESCR OscDataFile::createVarDescr(std::vector<std::string> elems, uint16_t v
     int k = (setChNum <= 8) ? 2 : 1;
     chDescr.colIndex = (setNum - 1) * (SET_SIZE/k) + setChNum;
     chDescr.chNum = chNum;
+    chDescr.isDigital = isDigital;
 
-    if (isDiscrete) {
+    if (isDigital) {
         chDescr.firstBit = atoi(elems[3].substr(1).c_str());
         bool isBitType = (strcmp(elems[4].c_str(),"BIT") == 0);
         chDescr.lastBit = isBitType ? chDescr.firstBit : atoi(elems[4].substr(1).c_str());
+        chDescr.gain = 1;
+        chDescr.offset = 0;
+        chDescr.isDiscrete = isBitType;
     } else {
         chDescr.gain = stof(elems[5]);
         chDescr.offset = stof(elems[6]);
+        chDescr.isDiscrete = false;
     }
 
-    int colorInd = isDiscrete ? 5 : 7;
+    int colorInd = isDigital ? 5 : 7;
     string color = elems[colorInd];
     vector<string> colors = split(color, ' ');
     chDescr.color.Red = stoi(colors[0]);
