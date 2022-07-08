@@ -203,7 +203,12 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         chValues.values.clear();
 
         for (int i = 0; i < m_oscRawDataBuff->data_length; i++) {
-            chValues.values << chData.f_buff[i];
+            if (chDescr.isDigital) {
+                uint32_t rawValue = chData.i_buff[i];
+                chValues.values << discreteValue(rawValue, chDescr.firstBit, chDescr.lastBit);
+            } else {
+                chValues.values << chData.f_buff[i];
+            }
         }
     }
 
@@ -326,7 +331,7 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
             continue;
         }
 
-        out->analogChannels[chInd] = createChannelDescr(channel, false);
+        out->analogChannels[chInd] = createChannelDescr(channel);
     }
 
     for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
@@ -335,7 +340,7 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
             continue;
         }
 
-        out->discreteChannels[chInd] = createChannelDescr(channel, true);
+        out->discreteChannels[chInd] = createChannelDescr(channel);
     }
 
     OscSettings settings;
@@ -354,13 +359,12 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     return _return_OK;
 }
 
-OscChannelDescr OscHandler::createChannelDescr(const OSC_CHANNEL& channel, bool isDiscrete)
+OscChannelDescr OscHandler::createChannelDescr(const OSC_CHANNEL& channel)
 {
     OscChannelDescr ret;
     ret.channelNum = channel.chNum;
     ret.varId = channel.var.id;
     ret.varName = channel.var.name;
-    ret.isDiscrete = isDiscrete;
     ret.scale = channel.var.scale;
     ret.min = channel.var.min;
     ret.max = channel.var.max;
@@ -368,6 +372,9 @@ OscChannelDescr OscHandler::createChannelDescr(const OSC_CHANNEL& channel, bool 
 
     ret.firstBit = channel.firstBit;
     ret.lastBit = channel.lastBit;
+
+    ret.isDiscrete = (channel.var.type == OSC_VAR_TYPE::DISCRETE);
+    ret.isDigital = (channel.var.type == OSC_VAR_TYPE::DIGITAL);
 
     return ret;
 }
@@ -423,7 +430,8 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
         }
 
         varIdListObj << chVal.varId;
-        valuesObj << QJsonArray::fromVariantList(chVal.values);
+        QJsonArray arr = QJsonArray::fromVariantList(chVal.values);
+        valuesObj << arr;
     }
 
     res["d_id"] = data.deviceID.id;

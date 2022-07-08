@@ -18,6 +18,7 @@ enum OSC_VAR_TYPE
 {
      UNDEFINED = 0,
      ANALOG,
+     DIGITAL,
      DISCRETE
 };
 

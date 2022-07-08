@@ -72,7 +72,7 @@ private:
     float normalizeValue(uint16_t rawValue, float gain, float offset);
     std::vector<std::string> split(std::string inputStr, char delim);
     OSC_FILE::VAR_DESCR createVarDescr(std::vector<std::string> elems, uint16_t varId, bool isDigital);
-    OSC_VAR createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId, OSC_VAR_TYPE type);
+    OSC_VAR createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId);
     int th_loadData();
 
     int m_currDeviceId;

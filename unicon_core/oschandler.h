@@ -36,8 +36,9 @@ struct OscChannelDescr
     float min = 0.0;
     float max = 0.0;
 
-    bool isDiscrete = false;
     bool isDigital = false;
+    bool isDiscrete = false;
+
     qint8 firstBit = 0;
     qint8 lastBit = 0;
 
@@ -172,7 +173,7 @@ private:
     QJsonObject createChannelObj(int requestId, const OscChannelDescr& ch);
     QJsonObject createStreamDataObj(const OscData& data, int error = 0);
     QString oscDataToString(const QJsonObject &obj);
-    OscChannelDescr createChannelDescr(const OSC_CHANNEL &channel, bool isDiscrete);
+    OscChannelDescr createChannelDescr(const OSC_CHANNEL &channel);
     qint32 discreteValue(qint16 rawValue, qint8 firstBit, qint8 lastBit);
 
     void startPooling();

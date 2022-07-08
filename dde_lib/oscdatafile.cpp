@@ -208,8 +208,9 @@ _dde_func_return_t OscDataFile::readNextData(DDE_GET_OSC_DATA& p, int datYeldInt
         const auto& values = parseValues(line);
 
         for (int chInd = 1; chInd <= OSC_MAX_CHANNELS; chInd++) {
-            uint16_t elemInd = m_header->analog_vars[chInd].colIndex;
-            uint8_t chNum = m_header->analog_vars[chInd].chNum;
+            auto& var = m_header->analog_vars[chInd];
+            uint16_t elemInd = var.colIndex;
+            uint8_t chNum = var.chNum;
 
             if (elemInd == 0) continue;
 
@@ -219,12 +220,23 @@ _dde_func_return_t OscDataFile::readNextData(DDE_GET_OSC_DATA& p, int datYeldInt
             }
 
             uint16_t rawValue = values[elemInd];
-            p.data[chNum].f_buff[buffInd] = normalizeValue(rawValue, m_header->analog_vars[chInd].gain, m_header->analog_vars[chInd].offset);
+            if (var.isDigital) {
+                uint16_t val = rawValue;
+                if (var.firstBit == 0 && var.lastBit == 15) {
+                    val = normalizeValue(rawValue, var.gain, var.offset);
+                }
+                p.data[chNum].i_buff[buffInd] = val;
+            } else {
+                float val = normalizeValue(rawValue, var.gain, var.offset);
+                p.data[chNum].f_buff[buffInd] = val;
+            }
         }
 
         for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
-            uint16_t elemInd = m_header->discrete_vars[chInd].colIndex;
-            uint8_t chNum = m_header->discrete_vars[chInd].chNum;
+            auto& var = m_header->discrete_vars[chInd];
+
+            uint16_t elemInd = var.colIndex;
+            uint8_t chNum = var.chNum;
 
             if (elemInd == 0) continue;
 
@@ -261,9 +273,11 @@ _dde_func_return_t OscDataFile::getHeader(DDE_GET_OSC_HEADER &p)
         const OSC_FILE::VAR_DESCR& var = header.analog_vars[chInd];
 
         channel.chNum = var.chNum;
-        channel.var = createOscVar(var, p.device_id, OSC_VAR_TYPE::ANALOG);
+        channel.var = createOscVar(var, p.device_id);
         channel.gain = var.gain;
         channel.offset = var.offset;
+        channel.firstBit = var.firstBit;
+        channel.lastBit = var.lastBit;
     }
 
     for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
@@ -271,12 +285,11 @@ _dde_func_return_t OscDataFile::getHeader(DDE_GET_OSC_HEADER &p)
         const OSC_FILE::VAR_DESCR& var = header.discrete_vars[chInd];
 
         channel.chNum = var.chNum;
-        channel.var = createOscVar(var, p.device_id, OSC_VAR_TYPE::DISCRETE);
+        channel.var = createOscVar(var, p.device_id);
         channel.gain = var.gain;
         channel.offset = var.offset;
         channel.firstBit = var.firstBit;
         channel.lastBit = var.lastBit;
-
     }
 
     return _return_OK;
@@ -287,7 +300,7 @@ _dde_func_return_t OscDataFile::setHeader(DDE_GET_OSC_HEADER &p)
     return _return_OK;
 }
 
-OSC_VAR OscDataFile::createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId, OSC_VAR_TYPE type)
+OSC_VAR OscDataFile::createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId)
 {
     OSC_VAR ret;
     ret.id = descr.var_id;
@@ -297,7 +310,7 @@ OSC_VAR OscDataFile::createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t dev
     ret.min = descr.min;
     ret.max = descr.max;
     ret.scale = descr.gain;
-    ret.type = type;
+    ret.type = descr.isDiscrete ? OSC_VAR_TYPE::DISCRETE : (descr.isDigital ? OSC_VAR_TYPE::DIGITAL : OSC_VAR_TYPE::ANALOG);
 
     return ret;
 }
@@ -322,6 +335,10 @@ std::string OscDataFile::readLine(std::istream &stream)
 
 float OscDataFile::normalizeValue(uint16_t rawValue, float gain, float offset)
 {
+    if (rawValue == 0) {
+        return rawValue;
+    }
+
     uint16_t zeroLevel = 0x7FFF;
     float normValue = rawValue - zeroLevel;
     normValue =  normValue * gain + offset;
