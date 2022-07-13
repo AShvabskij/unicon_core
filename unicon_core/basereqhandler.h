@@ -18,6 +18,8 @@ public:
     void setResponseManager(ResponseManager* response);
 
 protected:
+    SysType sysTypeId(const QJsonObject& request);
+
     IReqHandler* m_next = nullptr;
     ResponseManager* m_response = nullptr;
     IDDE_Dispatcher* m_dde = nullptr;

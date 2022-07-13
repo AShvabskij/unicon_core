@@ -36,7 +36,6 @@ int DeviceHandler::handle(const QJsonObject& request)
 void DeviceHandler::handleGetHeader(const QJsonObject& request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = (SysType)request.value("sys_type").toInt();
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -45,6 +44,8 @@ void DeviceHandler::handleGetHeader(const QJsonObject& request)
 
     int deviceId = cmdBody.value("device_id").toInt();
     int moduleId = cmdBody.value("module_id").toInt();
+
+    SysType sysType = sysTypeId(request);
 
     if (deviceId == 0) {
         handleReqDevices(sysType, requestId);
@@ -60,7 +61,7 @@ void DeviceHandler::handleGetHeader(const QJsonObject& request)
 void DeviceHandler::handleSystemStatus(const QJsonObject& request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = (SysType)request.value("sys_type").toInt();
+    SysType sysType = sysTypeId(request);
 
     QJsonObject cmdBody = request.value("body").toObject();
     if (requestId <= 0) return;
@@ -77,7 +78,7 @@ void DeviceHandler::handleSystemStatus(const QJsonObject& request)
 
 void DeviceHandler::handleDeviceLinks(const QJsonObject& request)
 {
-    SysType sysType = (SysType)request.value("sys_type").toInt();
+    SysType sysType = sysTypeId(request);
     QList<int> links;
     long res = requestDeviceLinks(sysType, links);
     if (res <= 0) return;

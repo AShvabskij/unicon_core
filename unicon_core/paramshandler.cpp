@@ -21,8 +21,6 @@ ParamsHandler::ParamsHandler(IDDE_Dispatcher* dde): BaseReqHandler(dde)
 
     m_header = new DDE_GET_PARAMS_HEADER();
     m_data = new DDE_GET_PARAMS_DATA();
-
-    qRegisterMetaType<Param>("Param");
 }
 
 ParamsHandler::~ParamsHandler()
