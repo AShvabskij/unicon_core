@@ -19,7 +19,7 @@ void segfault_handler(int signal, siginfo_t* info, void* void_context)
 {
     print_msg_sql("\n------------Segmentation Fault while reading the database------------\n\n", 0);
     ucontext_t* context = (ucontext_t*)void_context;
-    context->uc_mcontext.gregs[14] = context_to_return.uc_mcontext.gregs[14];
+    // context->uc_mcontext.gregs[14] = context_to_return.uc_mcontext.gregs[14];
 }
 //****************************************************************************************************
 void print_msg_sql(const char *st, uint8_t with)

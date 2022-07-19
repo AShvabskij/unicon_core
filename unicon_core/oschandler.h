@@ -2,7 +2,7 @@
 #define OSCSHANDLER_H
 
 #include "basereqhandler.h"
-#include "DDE.h"
+#include "DDE_TOP.h"
 
 #include <QTimer>
 
