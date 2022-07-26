@@ -30,8 +30,8 @@ SysType BaseReqHandler::sysTypeId(const QJsonObject& request)
     int requestId = request.value("request_id").toInt();
 
     int res;
-    if (request.contains("sys_type")) {
-        res = request.value("sys_type").toInt();
+    if (request.contains("sys_type_id")) {
+        res = request.value("sys_type_id").toInt();
     } else {
         res = requestId / TIME_STAMP_MAX;
     }

@@ -40,7 +40,7 @@ void MainWindowVM::requestParamInfo(QString arg)
 {
     QJsonObject req;
     req["request_id"] = PARAM_REQUEST_ID;
-    req["sys_type"] = m_currSysType;
+    req["sys_type_id"] = m_currSysType;
     req["cmd"] = createCmd("GET_PARAM_HEADER");
 
     CompositeId paramId = parse(arg);
@@ -68,7 +68,7 @@ void MainWindowVM::requestDeviceInfo(int moduleId)
 
     QJsonObject req;
     req["request_id"] = DEVICE_REQUEST_ID;
-    req["sys_type"] = m_currSysType;
+    req["sys_type_id"] = m_currSysType;
     req["cmd"] = createCmd("GET_DEVICE_HEADER");
     req["body"] = createDeviceCmdBody("GET_DEVICE_HEADER", m_deviceId, moduleId);
 
@@ -81,7 +81,7 @@ void MainWindowVM::requestOscInfo(int oscId)
 
     QJsonObject req;
     req["request_id"] = OSC_REQUEST_ID;
-    req["sys_type"] = m_currSysType;
+    req["sys_type_id"] = m_currSysType;
     req["cmd"] = createCmd("GET_OSC_HEADER");
     req["body"] = createOscCmdBody("GET_OSC_HEADER", deviceId, oscId);
 
@@ -94,7 +94,7 @@ void MainWindowVM::requestChannelInfo(int oscId, int chNum)
 
     QJsonObject req;
     req["request_id"] = OSC_CHANNEL_REQUEST_ID;
-    req["sys_type"] = m_currSysType;
+    req["sys_type_id"] = m_currSysType;
     req["cmd"] = createCmd("GET_OSC_CHANNEL");
     req["body"] = createOscCmdBody("GET_OSC_CHANNEL", deviceId, oscId, chNum);
 
@@ -105,7 +105,7 @@ void MainWindowVM::requestParamValues(QString arg)
 {
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_REQUEST_ID;
-    req["sys_type"] = m_currSysType;
+    req["sys_type_id"] = m_currSysType;
     req["cmd"] = createCmd("GET_PARAM_DATA");
 
     CompositeId elem = parse(arg);
@@ -118,7 +118,7 @@ void MainWindowVM::changeParamValue(QString paramArg, QVariant paramValue)
 {
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_SET_ID;
-    req["sys_type"] = m_currSysType;
+    req["sys_type_id"] = m_currSysType;
     req["cmd"] = createCmd("SET_PARAM_DATA");
 
     CompositeId elem = parse(paramArg);
@@ -133,7 +133,7 @@ void MainWindowVM::startStreamParamValues(QString arg)
 
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_REQUEST_ID;
-    req["sys_type"] = m_currSysType;
+    req["sys_type_id"] = m_currSysType;
     req["cmd"] = createCmd("STREAM_PARAM_DATA");
     req["body"] = createParamCmdBody("STREAM_PARAM_DATA", m_deviceId, elem);
 
@@ -146,7 +146,7 @@ void MainWindowVM::stopStreamParamValues(QString paramArg)
 
     QJsonObject req;
     req["request_id"] = PARAM_VALUE_REQUEST_ID;
-    req["sys_type"] = m_currSysType;
+    req["sys_type_id"] = m_currSysType;
     req["cmd"] = createCmd("STREAM_STOP_PARAM_DATA");
     req["body"] = createParamCmdBody("STREAM_PARAM_DATA", m_deviceId, elem);
 
@@ -157,7 +157,7 @@ void MainWindowVM::startOscParamValues(int oscId, int varId)
 {
     QJsonObject req;
     req["request_id"] = OSC_DATA_REQUEST_ID;
-    req["sys_type"] = m_currSysType;
+    req["sys_type_id"] = m_currSysType;
     req["cmd"] = createCmd("OSC_PARAM_DATA");
     req["body"] = createOscCmdBody("OSC_PARAM_DATA", oscId, oscId, varId);
 
@@ -168,7 +168,7 @@ void MainWindowVM::stopOscParamValues(QString oscId)
 {
     QJsonObject req;
     req["request_id"] = OSC_DATA_REQUEST_ID;
-    req["sys_type"] = m_currSysType;
+    req["sys_type_id"] = m_currSysType;
     req["cmd"] = createCmd("OSC_STOP_PARAM_DATA");
     req["body"] = createOscCmdBody("OSC_PARAM_DATA", oscId.toInt(), oscId.toInt());
 
@@ -197,7 +197,7 @@ void MainWindowVM::setDeviceDescr(const QJsonObject &obj)
     int deviceId = obj.value("id").toInt();
     QString name = obj.value("name").toString();
     int modulesCount = obj.value("modules").toArray().count();
-    int sysType = obj.value("system_type_id").toInt();
+    int sysType = obj.value("sys_type_id").toInt();
     QString descr = obj.value("desc").toString();
 
     QString output = QString("Device: id = %1, name = %2, modules = %3, system type = %4")

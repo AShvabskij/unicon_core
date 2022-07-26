@@ -272,7 +272,7 @@ QJsonObject DeviceHandler::createResponse(int requestId, const DeviceList& devic
         obj["id"] = d.ID.id;
         obj["name"] = d.name;
         obj["desc"] = d.desc;
-        obj["system_type_id"] = d.ID.type;
+        obj["sys_type_id"] = d.ID.type;
 
         QJsonArray modules;
         for (int moduleId : d.modules) {

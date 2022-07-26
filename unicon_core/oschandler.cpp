@@ -72,7 +72,7 @@ void OscHandler::onStreamTimerAlarm()
 int OscHandler::handleGetHeader(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = (SysType)request.value("sys_type").toInt();
+    SysType sysType = sysTypeId(request);
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -95,7 +95,7 @@ int OscHandler::handleGetHeader(const QJsonObject &request)
 int OscHandler::handleGetChannel(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = (SysType)request.value("sys_type").toInt();
+    SysType sysType = sysTypeId(request);
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -120,7 +120,7 @@ int OscHandler::handleGetChannel(const QJsonObject &request)
 int OscHandler::handleOpenStream(const QJsonObject& request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = (SysType)request.value("sys_type").toInt();
+    SysType sysType = sysTypeId(request);
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -155,7 +155,7 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
 int OscHandler::handleCloseStream(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = (SysType)request.value("sys_type").toInt();
+    SysType sysType = sysTypeId(request);
 
     QJsonObject cmdBody = request.value("body").toObject();
     int deviceId = cmdBody.value("device_id").toInt();

@@ -61,7 +61,7 @@ int ParamsHandler::handle(const QJsonObject &request)
 void ParamsHandler::handleGetHeader(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = (SysType)request.value("sys_type").toInt();
+    SysType sysType = (SysType)request.value("sys_type_id").toInt();
 
     QJsonObject cmdBody = request.value("body").toObject();
 
