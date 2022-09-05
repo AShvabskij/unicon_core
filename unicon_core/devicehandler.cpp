@@ -2,6 +2,7 @@
 
 const QString CMD_DEVICE_HEADER = "device_header";
 const QString CMD_SYSTEM_STATUS = "system_status";
+const QString CMD_SYSTEM_INIT = "system_init";
 const QString CMD_DEVICE_LINKS = "device_links";
 const QString CMD_TYPE = "get";
 
@@ -24,6 +25,9 @@ int DeviceHandler::handle(const QJsonObject& request)
         handleGetHeader(request);
     } else if (cmdName == CMD_SYSTEM_STATUS && cmdType == CMD_TYPE) {
         handleSystemStatus(request);
+    } else if (cmdName == CMD_SYSTEM_INIT) {
+        handleSystemInit(request);
+        BaseReqHandler::handle(request); // handle by a next handler
     } else if (cmdName == CMD_DEVICE_LINKS && cmdType == CMD_TYPE) {
         handleDeviceLinks(request);
     } else {
@@ -71,6 +75,17 @@ void DeviceHandler::handleSystemStatus(const QJsonObject& request)
     status.statusList[sysType] = true;
 
     QJsonObject response = createResponse(requestId, status);
+    send(response);
+
+    return;
+}
+
+void DeviceHandler::handleSystemInit(const QJsonObject& request)
+{
+    int requestId = request.value("request_id").toInt();
+    if (requestId <= 0) return;
+
+    QJsonObject response = createEmptyResponse(requestId);
     send(response);
 
     return;
@@ -246,23 +261,6 @@ void DeviceHandler::handleReqModuleHeader(SysType sysType, int deviceId, int mod
     return;
 }
 
-SysType DeviceHandler::sysType(QString sType)
-{
-    if (sType == "FILE_IO") {
-        return SysType::FILE_IO;
-    } else if (sType == "UAVCAN") {
-        return SysType::UAVCAN;
-    } else if (sType == "MODBUS") {
-        return SysType::MODBUS;
-    } else if (sType == "CANOPEN") {
-        return SysType::CANOPEN;
-    } else if (sType == "CONNEX_MVCP") {
-        return SysType::CONNEX_MVCP;
-    }
-
-    return SysType::Undefined;
-}
-
 QJsonObject DeviceHandler::createResponse(int requestId, const DeviceList& devices)
 {
     QJsonArray body;
@@ -302,6 +300,15 @@ QJsonObject DeviceHandler::createResponse(int requestId, const QList<int>& links
     QJsonObject res;
     res["request_id"] = requestId;
     res["body"] = body;
+
+    return res;
+}
+
+QJsonObject DeviceHandler::createEmptyResponse(int requestId)
+{
+    QJsonObject res;
+    res["request_id"] = requestId;
+    res["body"] = QJsonArray();
 
     return res;
 }

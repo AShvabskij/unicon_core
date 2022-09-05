@@ -89,6 +89,7 @@ private:
     void handleSetValue(const QJsonObject &request);
     void handleOpenStream(const QJsonObject &request);
     void handleCloseStream(const QJsonObject &request);
+    void handleCloseAllStreams(const QJsonObject &request);
 
     long getParamValue(const Param &p, ParamValue* out);
     long getParamValue(const ParamID &paramId, ParamValue* out);
