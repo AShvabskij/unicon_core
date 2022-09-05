@@ -24,7 +24,7 @@ enum OSC_VAR_TYPE
 
 struct OSC_VAR
 {
-    uint16_t device_id; // TODO: rename to osc_id
+    uint16_t device_id; // TODO: better to remove
     uint16_t id;
 
     OSC_VAR_TYPE type;
@@ -68,7 +68,7 @@ struct OSC_SETTING
 
 struct DDE_GET_OSC_HEADER
 {
-    uint16_t device_id;
+    uint16_t device_id; // todo rename to osc_id
 
     OSC_CHANNEL analog_channels[OSC_MAX_ANALOG_VARS + 1];
     OSC_CHANNEL discrete_channels[OSC_MAX_DISCRETE_VARS + 1];

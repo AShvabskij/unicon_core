@@ -11,7 +11,7 @@ int BaseReqHandler::handle(const QJsonObject &request)
         m_next->handle(request);
     }
 
-    return 0;
+    return 1;
 }
 
 void BaseReqHandler::setNext(IReqHandler *next)

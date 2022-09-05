@@ -4,6 +4,8 @@
 const QString CMD_PARAMS_HEADER = "param_header";
 const QString CMD_TYPE = "get";
 const QString CMD_PARAMS_DATA = "param_data";
+const QString CMD_SYSTEM_INIT = "system_init";
+
 const int DATA_YELD_INTERVAL_MSC = 100;
 const int STREAM_OBJECT_LIMIT = 6000;//*100;
 
@@ -51,6 +53,8 @@ int ParamsHandler::handle(const QJsonObject &request)
         } else if (cmdType == "close_stream") {
             handleCloseStream(request);
         }
+    } else if (cmdName == CMD_SYSTEM_INIT) {
+        handleCloseAllStreams(request);
     } else {
         return BaseReqHandler::handle(request);
     }
@@ -61,7 +65,7 @@ int ParamsHandler::handle(const QJsonObject &request)
 void ParamsHandler::handleGetHeader(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = (SysType)request.value("sys_type_id").toInt();
+    SysType sysType = sysTypeId(request);
 
     QJsonObject cmdBody = request.value("body").toObject();
 
@@ -95,7 +99,7 @@ void ParamsHandler::handleGetHeader(const QJsonObject &request)
 void ParamsHandler::handleGetValue(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = (SysType)request.value("sys_type").toInt();
+    SysType sysType = sysTypeId(request);
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -119,7 +123,7 @@ void ParamsHandler::handleGetValue(const QJsonObject &request)
 void ParamsHandler::handleSetValue(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = (SysType)request.value("sys_type").toInt();
+    SysType sysType = sysTypeId(request);
 
     QJsonObject cmdBody = request.value("body").toObject();
 
@@ -185,7 +189,7 @@ long ParamsHandler::setParamValue(const ParamValue& value)
 void ParamsHandler::handleOpenStream(const QJsonObject& request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = (SysType)request.value("sys_type").toInt();
+    SysType sysType = sysTypeId(request);
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -217,7 +221,7 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
 void ParamsHandler::handleCloseStream(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = (SysType)request.value("sys_type").toInt();
+    SysType sysType = sysTypeId(request);
     QJsonObject cmdBody = request.value("body").toObject();
 
     if (requestId <= 0 || cmdBody.isEmpty()) {
@@ -245,6 +249,32 @@ void ParamsHandler::handleCloseStream(const QJsonObject &request)
 
     if (m_capturedParams.isEmpty()) {
         stopPooling();
+    }
+
+    return;
+}
+
+void ParamsHandler::handleCloseAllStreams(const QJsonObject &request)
+{
+    int requestId = request.value("request_id").toInt();
+    SysType sysType = sysTypeId(request);
+
+    if (requestId <= 0) {
+        return;
+    }
+
+    ParamList params;
+    for (const Param &p: m_capturedParams) {
+        if (p.ID.devId.type != sysType) {
+            params.append(p);
+        }
+    }
+
+    if (!params.isEmpty()) {
+        m_capturedParams = params;
+    } else if (!m_capturedParams.isEmpty()) {
+        stopPooling();
+        m_capturedParams .clear();
     }
 
     return;
