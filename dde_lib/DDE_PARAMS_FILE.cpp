@@ -24,6 +24,7 @@ DDE_PARAMS_FILE::~DDE_PARAMS_FILE()
 
 _dde_func_return_t DDE_PARAMS_FILE::init(const char* sys_type)
 {
+    if (std::string(sys_type) == "") return _return_FAIL;
 
     setTestDevice();
     setTestLinks();
@@ -235,7 +236,7 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
     return _return_OK;
 }
 
-long DDE_PARAMS_FILE::set(DDE_SET_PARAMS_HEADER &p)
+long DDE_PARAMS_FILE::set(DDE_SET_PARAMS_HEADER&)
 {
     return _return_OK;
 }
@@ -316,9 +317,6 @@ inline time_t DDE_PARAMS_FILE::systemTime()
 _dde_func_return_t DDE_PARAMS_FILE::set(DDE_SET_PARAMS_DATA& p)
 {
     //check valid input
-    if (p.device_id < 0 || p.param_id < 0) {
-        return _return_FAIL;
-    }
 
     if (p.device_id > DEVICE_ID_MAX || p.param_id > ELEMENTS_ID_MAX/*PARAMS_ID_MAX*/ ) {
         return _return_FAIL;

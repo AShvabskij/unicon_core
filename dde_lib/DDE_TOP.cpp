@@ -74,22 +74,22 @@ _dde_func_return_t DDE_TOP::get_osc_data(DDE_GET_OSC_DATA& p)
     return m_osc->get(p);
 }
 
-_dde_func_return_t DDE_TOP::set_osc_data(DDE_SET_OSC_DATA& p)
+_dde_func_return_t DDE_TOP::set_osc_data(DDE_SET_OSC_DATA& )
 {
     return _return_OK; // m_osc->set(p);
 }
 
-_dde_func_return_t DDE_TOP::get_evlog_header(DDE_GET_EVLOG_HEADER& p)
+_dde_func_return_t DDE_TOP::get_evlog_header(DDE_GET_EVLOG_HEADER& )
 {
     return 0;
 }
 
-_dde_func_return_t DDE_TOP::get_evlog_data(DDE_GET_EVLOG_DATA& p)
+_dde_func_return_t DDE_TOP::get_evlog_data(DDE_GET_EVLOG_DATA& )
 {
     return 0;
 }
 
-_dde_func_return_t DDE_TOP::set_evlog_data(DDE_SET_EVLOG_DATA& p)
+_dde_func_return_t DDE_TOP::set_evlog_data(DDE_SET_EVLOG_DATA& )
 {
     return 0;
 }

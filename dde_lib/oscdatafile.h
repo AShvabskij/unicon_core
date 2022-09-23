@@ -36,6 +36,7 @@ struct FILE_HEADER
     uint16_t device_id;
     VAR_DESCR analog_vars[OSC_MAX_ANALOG_VARS + 1];
     VAR_DESCR discrete_vars[OSC_MAX_DISCRETE_VARS + 1];
+    VAR_DESCR vars[OSC_MAX_VARS + 1];
 
     OSC_SETTING settings;
 };

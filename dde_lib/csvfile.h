@@ -15,7 +15,7 @@ public:
     ~CsvFile();
 
     int open(const std::string &fileName);
-    int setWorkDirectory(const std::string &path);
+    void setWorkDirectory(const std::string &path);
     StringList readNextRow(const std::function<bool(StringList)>& isValid);
     bool eof();
 

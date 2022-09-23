@@ -78,13 +78,13 @@ class DDE_OSC_STUB : public IDDE_OSC
 public:
     virtual ~DDE_OSC_STUB() {};
 
-    virtual _dde_func_return_t init(const char* system_type) { return _return_OK;};
-    virtual _dde_func_return_t open(uint16_t deviceId) { return _return_OK; };
-    virtual _dde_func_return_t close(uint16_t deviceId) { return _return_OK; };
+    virtual _dde_func_return_t init(const char* ) { return _return_OK;};
+    virtual _dde_func_return_t open(uint16_t ) { return _return_OK; };
+    virtual _dde_func_return_t close(uint16_t ) { return _return_OK; };
 
-    virtual _dde_func_return_t get(DDE_GET_OSC_HEADER& p) { return _return_OK; };
-    virtual _dde_func_return_t get(DDE_GET_OSC_DATA& p) { return _return_OK; };
-    virtual _dde_func_return_t set(DDE_GET_OSC_HEADER& p) { return _return_OK; };
+    virtual _dde_func_return_t get(DDE_GET_OSC_HEADER& ) { return _return_OK; };
+    virtual _dde_func_return_t get(DDE_GET_OSC_DATA& ) { return _return_OK; };
+    virtual _dde_func_return_t set(DDE_GET_OSC_HEADER& ) { return _return_OK; };
 
     virtual void update() {};
 };

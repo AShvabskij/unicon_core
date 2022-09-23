@@ -20,10 +20,10 @@ _dde_func_return_t DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
 
     uint16_t paramId = 65;
 
-    for (int ii =0; ii < CHANNELS_MAX; ii++)
+    for (int ii =0; ii < OSC_MAX_ANALOG_VARS; ii++)
     {
-        p.analog_channels[ii].var.id = paramId++;
-        p.analog_channels[ii].var.scale = 0.1;
+        p.channels[ii].var.id = paramId++;
+        p.channels[ii].var.scale = 0.1;
     }
 
     return _return_OK;
@@ -97,5 +97,5 @@ _dde_func_return_t DDE_OSC_EMUL::set(DDE_GET_OSC_HEADER& /*p*/)
 
 long DDE_OSC_EMUL::init(const char* )
 {
-    _return_OK;
+    return _return_OK;
 }

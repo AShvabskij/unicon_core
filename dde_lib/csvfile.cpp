@@ -22,7 +22,7 @@ CsvFile::~CsvFile()
     delete m_loadThread;
 }
 
-int CsvFile::setWorkDirectory(const string &path)
+void CsvFile::setWorkDirectory(const string &path)
 {
     m_workDirectory = path;
 }

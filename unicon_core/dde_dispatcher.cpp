@@ -1,4 +1,5 @@
 #include "dde_dispatcher.h"
+#include "DDE_INTERFACES.h"
 
 DDE_Dispatcher::~DDE_Dispatcher()
 {

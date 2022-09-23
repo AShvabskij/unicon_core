@@ -325,18 +325,18 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     out->desc = "osc desc";
     out->analogChannels.clear();
 
-    for (int chInd = 1; chInd <= OSC_MAX_ANALOG_VARS; chInd++) {
-        const OSC_CHANNEL& channel = header.analog_channels[chInd];
-        if (channel.var.id <= 0) {
+    for (int chInd = 1; chInd <= OSC_MAX_VARS; chInd++) {
+        const OSC_CHANNEL& channel = header.channels[chInd];
+        if (channel.var.id <= 0 || channel.var.type != OSC_VAR_TYPE::ANALOG) {
             continue;
         }
 
         out->analogChannels[chInd] = createChannelDescr(channel);
     }
 
-    for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
-        const OSC_CHANNEL& channel = header.discrete_channels[chInd];
-        if (channel.chNum <=0 || channel.var.id <= 0) {
+    for (int chInd = 1; chInd <= OSC_MAX_VARS; chInd++) {
+        const OSC_CHANNEL& channel = header.channels[chInd];
+        if (channel.var.id <= 0 || channel.var.type != OSC_VAR_TYPE::DIGITAL || channel.var.type != OSC_VAR_TYPE::DISCRETE) {
             continue;
         }
 

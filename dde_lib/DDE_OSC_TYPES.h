@@ -7,6 +7,7 @@
 #define OSC_MAX_CHANNELS 48
 #define OSC_MAX_ANALOG_VARS 48
 #define OSC_MAX_DISCRETE_VARS 128
+#define OSC_MAX_VARS 128
 
 struct RGB {
     uint8_t Red;
@@ -70,8 +71,7 @@ struct DDE_GET_OSC_HEADER
 {
     uint16_t device_id; // todo rename to osc_id
 
-    OSC_CHANNEL analog_channels[OSC_MAX_ANALOG_VARS + 1];
-    OSC_CHANNEL discrete_channels[OSC_MAX_DISCRETE_VARS + 1];
+    OSC_CHANNEL channels[OSC_MAX_VARS + 1];
 
     OSC_SETTING settings;
 

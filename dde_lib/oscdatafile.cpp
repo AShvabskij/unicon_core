@@ -268,21 +268,9 @@ _dde_func_return_t OscDataFile::getHeader(DDE_GET_OSC_HEADER &p)
 
     p.settings = header.settings;
 
-    for (int chInd = 1; chInd <= OSC_MAX_ANALOG_VARS; chInd++) {
-        OSC_CHANNEL& channel = p.analog_channels[chInd];
-        const OSC_FILE::VAR_DESCR& var = header.analog_vars[chInd];
-
-        channel.chNum = var.chNum;
-        channel.var = createOscVar(var, p.device_id);
-        channel.gain = var.gain;
-        channel.offset = var.offset;
-        channel.firstBit = var.firstBit;
-        channel.lastBit = var.lastBit;
-    }
-
-    for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
-        OSC_CHANNEL& channel = p.discrete_channels[chInd];
-        const OSC_FILE::VAR_DESCR& var = header.discrete_vars[chInd];
+    for (int chInd = 1; chInd <= OSC_MAX_VARS; chInd++) {
+        OSC_CHANNEL& channel = p.channels[chInd];
+        const OSC_FILE::VAR_DESCR& var = header.vars[chInd];
 
         channel.chNum = var.chNum;
         channel.var = createOscVar(var, p.device_id);
@@ -295,7 +283,7 @@ _dde_func_return_t OscDataFile::getHeader(DDE_GET_OSC_HEADER &p)
     return _return_OK;
 }
 
-_dde_func_return_t OscDataFile::setHeader(DDE_GET_OSC_HEADER &p)
+_dde_func_return_t OscDataFile::setHeader(DDE_GET_OSC_HEADER&)
 {
     return _return_OK;
 }
