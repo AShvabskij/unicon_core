@@ -207,18 +207,16 @@ _dde_func_return_t OscDataFile::readNextData(DDE_GET_OSC_DATA& p, int datYeldInt
 
         const auto& values = parseValues(line);
 
-        for (int chInd = 1; chInd <= OSC_MAX_CHANNELS; chInd++) {
-            auto& var = m_header->analog_vars[chInd];
+        for (int chInd = 1; chInd <= OSC_MAX_VARS; chInd++) {
+            auto& var = m_header->vars[chInd];
             uint16_t elemInd = var.colIndex;
-            uint8_t chNum = var.chNum;
-
             if (elemInd == 0) continue;
-
             if (elemInd >= values.size() ) {
                 cout << OSC_FILE_PARSE_ERROR;
                 continue;
             }
 
+            uint8_t chNum = var.chNum;
             uint16_t rawValue = values[elemInd];
             if (var.isDigital) {
                 uint16_t val = rawValue;
@@ -226,29 +224,12 @@ _dde_func_return_t OscDataFile::readNextData(DDE_GET_OSC_DATA& p, int datYeldInt
                     val = normalizeValue(rawValue, var.gain, var.offset);
                 }
                 p.data[chNum].i_buff[buffInd] = val;
-            } else {
+            } else if (var.isDiscrete) {
+                p.data[chNum].i_buff[buffInd] = rawValue;
+            } else { // if analog var
                 float val = normalizeValue(rawValue, var.gain, var.offset);
                 p.data[chNum].f_buff[buffInd] = val;
             }
-        }
-
-        for (int chInd = 1; chInd <= OSC_MAX_DISCRETE_VARS; chInd++) {
-            auto& var = m_header->discrete_vars[chInd];
-
-            uint16_t elemInd = var.colIndex;
-            uint8_t chNum = var.chNum;
-
-            if (elemInd == 0) continue;
-
-            if (chNum > OSC_MAX_CHANNELS) continue;
-
-            if (elemInd >= values.size() ) {
-                cout << OSC_FILE_PARSE_ERROR;
-                continue;
-            }
-
-            uint16_t rawValue = values[elemInd];
-            p.data[chNum].i_buff[buffInd] = rawValue;
         }
     }
 
@@ -367,7 +348,7 @@ int OscDataFile::parseHeader(const std::ifstream& fileStream, FILE_HEADER& heade
     }
 
     int varId = 0;
-    int discrChInd = 0;
+    int chIndex = 0;
     int res = _return_OK;
 
     for (std::string line; std::getline(stream, line); ) {
@@ -407,11 +388,11 @@ int OscDataFile::parseHeader(const std::ifstream& fileStream, FILE_HEADER& heade
         bool isDigital = (line[0] == '&');
 
         const VAR_DESCR& var = createVarDescr(elems, ++varId, isDigital);
-        if (var.isDiscrete) {
-            header.discrete_vars[++discrChInd] = var;
-        } else {
-            header.analog_vars[var.chNum] = var;
+        if (++chIndex > OSC_MAX_VARS) {
+            break;
         }
+
+        header.vars[chIndex] = var;
     }
 
     return res;
