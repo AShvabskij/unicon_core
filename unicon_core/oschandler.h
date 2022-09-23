@@ -6,7 +6,7 @@
 
 #include <QTimer>
 
-#define OSC_CHANNELS_MAX 47
+#define OSC_CHANNELS_MAX 48
 #define OSC_DISCRETES_MAX 128
 struct OscChannelValues
 {
@@ -72,7 +72,7 @@ struct OscHeader
     QString name = "";
     QString desc = "";
 
-    QMap<quint8/*channel index*/, OscChannelDescr> analogChannels;
+    QMap<quint8/*channel index*/, OscChannelDescr> analogChannels; // todo: replace to QList, get rid of "channel index" key
     QMap<quint8/*channel index*/, OscChannelDescr> discreteChannels;
     OscSettings settings;
 
