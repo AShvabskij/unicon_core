@@ -188,7 +188,7 @@ void DDE_PARAMS::checkTestData()
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-std::string DDE_PARAMS::create_device_name(const uint16_t device_id)//0x6D766370
+std::string DDE_PARAMS::create_device_name(const uint8_t device_id)//0x6D766370
 {
     std::string res;
     std::string sub_name;
@@ -197,7 +197,7 @@ std::string DDE_PARAMS::create_device_name(const uint16_t device_id)//0x6D766370
     dat.device_id = device_id;
     dat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
 
-    for (int i = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME; i <= DDE_DEV0_MODULE0_PARAM4_SPARE_REV; i++)
+    for (int i = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME; i < DDE_DEV0_MODULE0_PARAM4_SPARE_REV; i++)
     {
         dat.param_id = i;
         PARAMS_DATA_direct_read(dat); // read one of name part for the given device from ipc
@@ -224,7 +224,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
     string dev_name = create_device_name(p.device_id);
 
     ParamDescr descr;
-    int res = descr.init(table_name.c_str(), "NONE", db_type::usual); // we need to look in db for correct table according device_name and device_revision
+    int res = descr.init(dev_name.c_str(), "NONE", db_type::usual); // we need to look in db for correct table according device_name and device_revision
     if (res) {
         res = descr.get(&p, db_type::usual);
     }
@@ -244,13 +244,20 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
 
     ParamDescr hdr;
     int res = hdr.init(dev_name.c_str(), "NONE", db_type::usual);
-    if (res) {
+    if (res == _return_OK) {
         res = hdr.set(&p, db_type::usual);
     }
 
-    if (res < 0) {
-        _return_FAIL;
-    }
+    if (res != _return_OK) return res;
+
+    GLIO_ELEMENT_DESCR el;
+    el.id = p.param_id;
+    el.mod = p.module_id;
+    el.format = p.format;
+    el.scale = p.scale;
+    strncpy(el.dim, p.dim, DIM_SIZE);
+
+    update_data_descr(p.device_id, el);
 
     return _return_OK;
 }
@@ -306,8 +313,6 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
         return -1;
     }
 
-    //2) temporaly write params immediatly, todo: remove later
-    direct_write(p);
 
     return 0;
 }
@@ -370,9 +375,12 @@ _dde_func_return_t DDE_PARAMS::direct_read(DDE_GET_PARAMS_DATA& get_params)
     int res = PARAMS_DATA_direct_read(get_params);
     if (res < 0) return _return_FAIL;
 
-    return _return_OK;
+    return _return_OK;    //if (get_params.callback_func != NULL) get_params.callback_func();
+}
 
-    //if (get_params.callback_func != NULL) get_params.callback_func();
+_dde_func_return_t DDE_PARAMS::update_data_descr(uint16_t device_id, GLIO_ELEMENT_DESCR& el)
+{
+    PARAMS_DATA_update_descr(device_id, el);
 }
 
 
