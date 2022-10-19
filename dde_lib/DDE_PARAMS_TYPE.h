@@ -17,6 +17,7 @@
 
 #define DEVICE_ID_MAX		(32+1)
 
+#define DDE_DEV0_DESCRIPTION                         0
 #define DDE_DEV0_MODULE0_DESCRIPTION                 0
 #define     DDE_DEV0_MODULE0_PARAM0_DESCRIPTION      0
 #define     DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME      1

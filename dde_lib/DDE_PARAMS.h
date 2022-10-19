@@ -17,8 +17,8 @@
 class DDE_PARAMS : public IDDE_PARAMS
 {
 public:
-	DDE_PARAMS();
-	~DDE_PARAMS();
+    DDE_PARAMS();
+    ~DDE_PARAMS();
 
     virtual _dde_func_return_t init(const char* sys_type);
     virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p);
@@ -28,7 +28,7 @@ public:
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p);
 
 
-	//virtual int set(DDE_SET_PARAMS p, void* callback_func);
+    //virtual int set(DDE_SET_PARAMS p, void* callback_func);
     virtual _dde_func_return_t direct_write(DDE_SET_PARAMS_DATA& p);
     virtual _dde_func_return_t direct_read(DDE_GET_PARAMS_DATA& get_params);
 
@@ -46,6 +46,8 @@ protected:
     //void proceed_request_list();
     //void proceed_response_queue();
     uint32_t overflow = 0;
+protected:
+    _dde_func_return_t update_data_descr(uint16_t device_id, GLIO_ELEMENT_DESCR& el);
 
 private:
     void addTestDevice();
@@ -63,7 +65,7 @@ private:
 
     //int thread_proc();
     inline time_t systemTime();
-    std::string create_name(const uint8_t device_id);
+    std::string create_device_name(const uint8_t device_id);
 
     //DEVICE_PARAMS device[DEVICE_ID_MAX]; //not more than 127 DDE_PARAMS_DEVICES_MAX devices
     uint32_t devices_count;

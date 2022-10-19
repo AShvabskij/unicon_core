@@ -72,17 +72,19 @@ DDE_PARAMS::~DDE_PARAMS()
 _dde_func_return_t DDE_PARAMS::init(const char* sys_type)
 {
     //	std::thread*thr_params = new std::thread(&DDE_PARAMS::thread_proc, this);
-    PARAMS_DATA_init(const_cast<char*>(sys_type));
+    int res = _return_OK;
+    if (string(sys_type) != "") {
+        res = PARAMS_DATA_init(const_cast<char*>(sys_type));
+    }
 
-    addTestDevice();
-    addTestLinks();
-    addTestData();
+    /*
+        addTestDevice();
+        addTestLinks();
+        addTestData();
+        checkTestData();
+    */
 
-    checkTestData();
-
-    //PARAMS_DESCR_init("UAVCAN"); // from SQLite3_lib
-    //thr_params.join();
-    return 0;
+    return res;
 }
 
 void DDE_PARAMS::addTestDevice()
@@ -186,7 +188,7 @@ void DDE_PARAMS::checkTestData()
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
-std::string DDE_PARAMS::create_name(const uint8_t device_id)//0x6D766370
+std::string DDE_PARAMS::create_device_name(const uint16_t device_id)//0x6D766370
 {
     std::string res;
     std::string sub_name;
@@ -195,7 +197,7 @@ std::string DDE_PARAMS::create_name(const uint8_t device_id)//0x6D766370
     dat.device_id = device_id;
     dat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
 
-    for (int i = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME; i < DDE_DEV0_MODULE0_PARAM4_SPARE_REV; i++)
+    for (int i = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME; i <= DDE_DEV0_MODULE0_PARAM4_SPARE_REV; i++)
     {
         dat.param_id = i;
         PARAMS_DATA_direct_read(dat); // read one of name part for the given device from ipc
@@ -219,18 +221,15 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
     assert(p.module_id < MODULES_ID_MAX);
     assert(p.param_id < PARAMS_ID_MAX);
 
-    string table_name = create_name(p.device_id);
+    string dev_name = create_device_name(p.device_id);
 
-    ParamDescr hdr;
-    int res = hdr.init(table_name.c_str(), "NONE", db_type::usual); // we need to look in db for correct table according device_name and device_revision
+    ParamDescr descr;
+    int res = descr.init(table_name.c_str(), "NONE", db_type::usual); // we need to look in db for correct table according device_name and device_revision
     if (res) {
-        res = hdr.get(&p, db_type::usual);
-    }
-    if (res < 0) {
-        _return_FAIL;
+        res = descr.get(&p, db_type::usual);
     }
 
-    return _return_OK;
+    return res;
 }
 
 //------------------------------------------------------------------------------
@@ -241,10 +240,10 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
     assert(p.module_id < MODULES_ID_MAX);
     assert(p.param_id < PARAMS_ID_MAX);
 
-    string table_name = create_name(p.device_id);
+    string dev_name = create_device_name(p.device_id);
 
     ParamDescr hdr;
-    int res = hdr.init(table_name.c_str(), "NONE", db_type::usual);
+    int res = hdr.init(dev_name.c_str(), "NONE", db_type::usual);
     if (res) {
         res = hdr.set(&p, db_type::usual);
     }
@@ -307,6 +306,8 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
         return -1;
     }
 
+    //2) temporaly write params immediatly, todo: remove later
+    direct_write(p);
 
     return 0;
 }
@@ -364,10 +365,12 @@ _dde_func_return_t DDE_PARAMS::direct_write(DDE_SET_PARAMS_DATA& set)
 //wrapper for IPCMEM
 _dde_func_return_t DDE_PARAMS::direct_read(DDE_GET_PARAMS_DATA& get_params)
 {
-
     time_t system_time = systemTime();
 
-    PARAMS_DATA_direct_read(get_params);
+    int res = PARAMS_DATA_direct_read(get_params);
+    if (res < 0) return _return_FAIL;
+
+    return _return_OK;
 
     //if (get_params.callback_func != NULL) get_params.callback_func();
 }
