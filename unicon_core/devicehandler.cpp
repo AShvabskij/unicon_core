@@ -121,7 +121,7 @@ long DeviceHandler::requestDeviceLinks(SysType sysType, QList<int>& links)
         }
     }
 
-    return 1;
+    return _return_OK;
 }
 
 void DeviceHandler::handleReqDevices(SysType sysType, int requestId)
@@ -188,6 +188,7 @@ long DeviceHandler::requestDevice(Device& device)
         header.device_id = static_cast<uint16_t>(device.ID.id);
         header.module_id = static_cast<uint16_t>(i);
         header.param_id = 0;
+        header.el_count = 0;
 
         _dde_func_return_t res = (*m_dde)(device.sysType)->get_params_header(header);
 

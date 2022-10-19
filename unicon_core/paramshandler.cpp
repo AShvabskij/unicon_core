@@ -179,6 +179,7 @@ long ParamsHandler::setParamValue(const ParamValue& value)
         m_data.ivalue = static_cast<uint32_t>(value.value.toInt());
         break;
     }
+    default: return _return_FAIL;
     }
 
     _dde_func_return_t res = (*m_dde)(value.paramID.devId.type)->set_params_data(m_data);
@@ -453,7 +454,7 @@ long ParamsHandler::getParamHeader(const ParamID& paramId, Param *out)
         }
     }
 
-    return _return_OK;
+    return _return_FAIL;
 }
 
 long ParamsHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamList *out)

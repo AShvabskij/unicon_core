@@ -91,7 +91,15 @@ void SocketServer::start()
 
     if (m_socketServer->listen(QHostAddress::Any, m_port))
     {
-        QTextStream(stdout) << "Socket Server listening on port " << m_port << '\n';
+        QString ip_adress;
+        const QHostAddress &localhost = QHostAddress(QHostAddress::LocalHost);
+        for (const QHostAddress &address: QNetworkInterface::allAddresses()) {
+            if (address.protocol() == QAbstractSocket::IPv4Protocol && address != localhost) {
+                 ip_adress = address.toString();
+            }
+        }
+
+        QTextStream(stdout) << "Socket Server " << ip_adress <<  " listening on port " << m_port << '\n';
         connect(m_socketServer, &QWebSocketServer::newConnection,
                 this, &SocketServer::onNewConnection);
     } else {

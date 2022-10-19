@@ -16,6 +16,7 @@
 
 #include <QtWebSockets>
 #include <QtCore>
+#include <QtConcurrent/QtConcurrent>
 
 Core::Core()
 {
@@ -38,6 +39,8 @@ void Core::start()
     IDDE* dde = new DDE_TOP();
     dde->init("UAVCAN"); // TODO: replace arg to const char*
     m_ddeDisp->registerDDE(SysType::UAVCAN, dde);
+//  QtConcurrent::run(dde, &IDDE::update);
+//  m_ddeDisp->registerDDE(SysType::UAVCAN, dde);
 #endif
 
     m_ddeDisp->setDefaultDDE(dde);
@@ -66,4 +69,22 @@ void Core::start()
     m_streamServer->setRequestManager(RequestManager::instance());
     m_streamServer->setResponseManager(StreamManager::instance());
     m_streamServer->start();
+
+//    IDDE* dde = m_ddeDisp->dde(SysType::DEFAULT);
+
+//  QtConcurrent::run(this, &Core::thread_proc, SysType::UAVCAN);
 }
+
+/*
+void Core::thread_proc(SysType sysType)
+{
+    QThread::msleep(1000);
+
+    while (1)
+    {
+        m_ddeDisp->dde(sysType)->update();
+        QThread::msleep(1000);
+    }
+
+}
+*/
