@@ -39,27 +39,25 @@ DDE_TOP::~DDE_TOP()
 
 _dde_func_return_t DDE_TOP::set_params_header(DDE_SET_PARAMS_HEADER& p)
 {
-    uint32_t res = m_params->set(p);
+    _dde_func_return_t res = m_params->set(p);
     return res;
 }
 _dde_func_return_t DDE_TOP::get_params_header(DDE_GET_PARAMS_HEADER& p)
 {
-    uint32_t res = m_params->get(p);
+    _dde_func_return_t res = m_params->get(p);
     return res;
 }
 
 _dde_func_return_t DDE_TOP::get_params_data(DDE_GET_PARAMS_DATA& p)
 {
-    int res;
-    res = m_params->get(p);
+    _dde_func_return_t res = m_params->get(p);
     return res;
 
 }
 
 _dde_func_return_t DDE_TOP::set_params_data(DDE_SET_PARAMS_DATA& p)
 {
-    int res;
-    res = m_params->set(p);
+    _dde_func_return_t res = m_params->set(p);
     return res;
 }
 
@@ -96,13 +94,15 @@ _dde_func_return_t DDE_TOP::set_evlog_data(DDE_SET_EVLOG_DATA& )
 
 _dde_func_return_t DDE_TOP::init(const char* system_type)
 {
+    m_sysType = system_type;
+
     m_params = new DDE_PARAMS();
     m_params->init(system_type);
 
     m_osc = new DDE_OSC();
     m_osc->init(system_type);
 
-    m_sysType = system_type;
+    m_updThread = new std::thread(&DDE_TOP::thread_proc, this);
 
     return 0;
 }
@@ -119,4 +119,17 @@ void DDE_TOP::update()
 
     //evlog->update();
     //trend->update();
+}
+
+int DDE_TOP::thread_proc()
+{
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    while (1)
+    {
+
+        update();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
 }
