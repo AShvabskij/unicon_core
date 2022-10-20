@@ -5,7 +5,7 @@
 
 #include "ipcmem.h"
 
-int PARAMS_DATA_init(char* device_description) 
+int PARAMS_DATA_init(char* device_description)
 {
     printf("hello from ipcmem_lib\n");
 
@@ -39,15 +39,20 @@ int PARAMS_DATA_direct_write(DDE_SET_PARAMS_DATA& set_params)
     uint8_t param_id = set_params.param_id;
 
     IPCMEM_set_element(device_id, module_id, param_id, set_params.ivalue);
-    
+
     return _return_OK;
+}
+
+int PARAMS_DATA_update_descr(uint8_t device_id, GLIO_ELEMENT_DESCR& el)
+{
+    return IPCMEM_set_element_descr(device_id, &el);
 }
 
 int PARAMS_DATA_write_cmd(uint8_t device_id, DDE_PARAMS_CMD& cmd)
 {
     int res;
     res = IPCMEM_write_cmd(device_id,&cmd);
-    
+
 
     return res;
 }
