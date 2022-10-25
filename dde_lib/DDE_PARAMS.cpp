@@ -223,12 +223,15 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
 //
 //------------------------------------------------------------------------------
 
-
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 {
-    int ii = 0;
-
-    //TODO - add check that requiest is not already in the queue. If it is do not push it.
+    // check that requiest is not already in the queue.If it is do not push it.
+    for (auto const& pp : list_read) {
+        if (pp.device_id == p.device_id && pp.module_id == pp.module_id && pp.param_id == p.param_id && pp.header_reset == p.header_reset) {
+            direct_read(p);
+            return _return_OK;
+        }
+    }
 
     //0) set timeout counter to 0
     p.timeout = 0;
@@ -237,7 +240,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
     if (list_read.size() < list_read_max) {
         list_read.push_back(p);
     } else {
-        perror("The read list is overflowed");
+        perror("The reading list is overflowed");
         return _return_Busy;
     }
 
@@ -253,10 +256,13 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 //------------------------------------------------------------------------------
 _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
 {
-
-    int ii = 0;
-
-    //TODO - add check that requiest is not already in the queue. If it is do not push it.
+    // check that requiest is not already in the queue.If it is do not push it.
+    for (auto const& pp : list_write) {
+        if (pp.device_id == p.device_id && pp.module_id == pp.module_id && pp.param_id == p.param_id && pp.ivalue == p.ivalue) {
+            direct_write(p);
+            return _return_OK;
+        }
+    }
 
     //0) set timeout counter to 0
     //p.timeout = 0;
@@ -265,7 +271,7 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
     if (list_write.size() < list_write_max) {
         list_write.push_back(p);
     } else {
-        perror("if (set_queue.size< get_queue_max_size)");
+        perror("The writing list is overflowed");
         return -1;
     }
 
