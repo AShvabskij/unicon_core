@@ -114,7 +114,7 @@ void ParamsHandler::handleGetValue(const QJsonObject &request)
     val.paramID = {{sysType,deviceId}, moduleId, paramId};
 
     long res = getParamValue(val.paramID, &val);
-    int error = (res <= 0) ? static_cast<int>(res): 0;
+    int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
 
     QJsonObject response = createValueObj(requestId, val, error);
     send(response);
@@ -147,7 +147,7 @@ void ParamsHandler::handleSetValue(const QJsonObject &request)
     val.timestamp = QDateTime::currentMSecsSinceEpoch();
 
     long res = setParamValue(val);
-    int error = (res <= 0) ? static_cast<int>(res): 0;
+    int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
 
     QJsonObject response = createValueObj(requestId, val, error);
     send(response);
@@ -351,7 +351,7 @@ void ParamsHandler::streamParamsValue()
     for (const Param &p : m_capturedParams) {
         ParamValue val(p);
         long res = getParamValue(p, &val);
-        int error = (res <= 0) ? static_cast<int>(res) : 0;
+        int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
         QJsonObject response = createStreamValueObj(val, error);
 
         emit stream(response);
@@ -417,7 +417,7 @@ long ParamsHandler::getParamValue(const ParamID& paramId, ParamValue* out)
 
     _dde_func_return_t res = (*m_dde)(paramId.devId.type)->get_params_data(*m_data);
 
-    if (res <= _return_FAIL) return res;
+    if (res != _return_OK) return res;
 
     *out = valueFrom(paramId, m_data->el[0]);
 

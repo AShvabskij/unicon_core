@@ -60,6 +60,7 @@ private:
     long requestDeviceLinks(SysType sysType, QList<int>& links);
     long requestDevice(Device& device);
     QString getDeviceName(const DevID &deviceId);
+    QString getDeviceDescr(const DevID& deviceId);
 
     QJsonObject createResponse(int requestId, const DeviceList& devices);
     QJsonObject createResponse(int requestId, const Module& module);
