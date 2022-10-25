@@ -23,12 +23,12 @@ DEVICE_ELEMENTS*pDev[MAX_DEV_SUPPORT] = {NULL};
     extern FILE *fd_log;
     extern void Report(uint8_t addTime, const char *fmt, ...);
 #endif
-    
+
 
 //-----------------------------------------------------------------------
 
 
-//-----------------------------------------------------------------------    
+//-----------------------------------------------------------------------
 //              Init shared memory block
 //
 int initBlk(int did, size_t sz, unsigned char with)
@@ -36,7 +36,7 @@ int initBlk(int did, size_t sz, unsigned char with)
 int ret = -1;
 unsigned char *adr = MAP_FAILED;
 int flg = O_RDWR;
-      
+
     if (with) flg |= O_CREAT;
 
     int key = shm_open(pathKey[did], flg, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);// | S_IROTH | S_IWOTH);
@@ -50,12 +50,12 @@ int flg = O_RDWR;
     }
 #ifdef SET_DEBUG_IPC
     Report(1, "[%s] shm_open()=%d mmap()=%p\n", __func__, key, adr);
-#endif     
+#endif
 
     return ret;
 }
 //----------------------------------------------------------------------
-//        Create in folder 'files' file's for get key to 
+//        Create in folder 'files' file's for get key to
 //                make shared memory blocks
 //
 int mkKeyFiles(unsigned char with)
@@ -68,7 +68,7 @@ char named[MAX_FNAME_LEN] = {0};
     strcat(named, nfPath);
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        int dl = sprintf(namef, "%s%02d", named, i); 
+        int dl = sprintf(namef, "%s%02d", named, i);
         if (dl > MAX_FNAME_LEN) dl = MAX_FNAME_LEN;
         memset(pathKey[i], 0, MAX_FNAME_LEN);
         memcpy(pathKey[i], namef, dl);
@@ -80,7 +80,7 @@ char named[MAX_FNAME_LEN] = {0};
     return ret;
 }
 //-----------------------------------------------------------------------
-//         Make shared memory blocks 
+//         Make shared memory blocks
 //         return : MAX_DEV_SUPPORT pointers in array pDev[]
 //
 int IPCMEM_init(char* dev_name)
@@ -133,7 +133,7 @@ uint16_t err = 0;
             if (!munmap(blkPtr[i], sizeof(DEVICE_ELEMENTS))) {
                 shmDev[i] = -1;
                 pDev[i] = NULL;
-                blkPtr[i] = NULL;    
+                blkPtr[i] = NULL;
                 if (dev_name) {
                     if (shm_unlink(pathKey[i]) != 0) {//error
                         err |= 2;
@@ -141,7 +141,7 @@ uint16_t err = 0;
                 }
             } else {
                 err |= 1;
-            }    
+            }
         }
     }
 
@@ -198,7 +198,7 @@ int putDataIPC(uint8_t id, DEVICE_ELEMENTS*rec)
 //
 int getDataIPC(uint8_t id, DEVICE_ELEMENTS*rec)
 {
-    if ((id >= MAX_DEV_SUPPORT) || !rec) return -1; 
+    if ((id >= MAX_DEV_SUPPORT) || !rec) return -1;
 
     memcpy((uint8_t *)rec, (uint8_t *)pDev[id], sizeof(DEVICE_ELEMENTS));
 
@@ -223,7 +223,7 @@ int IPCMEM_get_params(DDE_GET_PARAMS_DATA* get_params)
     uint8_t mod_ID = get_params->module_id;
     uint8_t par_ID = get_params->param_id;
     uint16_t addr = mod_ID * PARAMS_ID_MAX + par_ID; //for now 1 el
-    //copy 64 el 
+    //copy 64 el
     memcpy((uint8_t*)&get_params->el[0], (uint8_t*)&pDev[dev_ID]->el[addr], PARAMS_ID_MAX * sizeof(GLIO_ELEMENT_VALUE));
 
     return 0;
@@ -243,7 +243,7 @@ int IPCMEM_get_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, G
     return 0;
 }
 
-int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, uint32_t ivalue) // GLIO_ELEMENT_VALUE* el)
+int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, uint32_t ivalue, time_t time) // GLIO_ELEMENT_VALUE* el)
 {
     //if (!el) return -1;
 
@@ -252,6 +252,25 @@ int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, u
     if (device_id >= MAX_DEV_SUPPORT) return -4;
     uint16_t addr = module_id * PARAMS_ID_MAX + param_id;
     pDev[device_id]->el[addr].ivalue = ivalue;
+    pDev[device_id]->el[addr].timestamp = time;
+    //memcpy((uint8_t*)&pDev[device_id]->el[addr].ivalue, (uint8_t*)el, sizeof(GLIO_ELEMENT_VALUE));
+
+    return 0;
+}
+
+int IPCMEM_set_element_descr(uint8_t device_id, GLIO_ELEMENT_DESCR* el)
+{
+    //if (!el) return -1;
+
+    uint8_t module_id = el->mod;
+    uint8_t param_id = el->id;
+
+    if (param_id >= PARAMS_ID_MAX) return -2; // p->param_ID = PARAMS_ID_MAX;
+    if (module_id >= MODULES_ID_MAX) return -3;
+    if (device_id >= MAX_DEV_SUPPORT) return -4;
+    uint16_t addr = module_id * PARAMS_ID_MAX + param_id;
+    pDev[device_id]->el[addr].format = el->format;
+    pDev[device_id]->el[addr].scale = el->scale;
     //memcpy((uint8_t*)&pDev[device_id]->el[addr].ivalue, (uint8_t*)el, sizeof(GLIO_ELEMENT_VALUE));
 
     return 0;
