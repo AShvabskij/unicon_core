@@ -235,6 +235,7 @@ typedef struct
     uint16_t param_id;
     uint16_t module_id;
     uint32_t ivalue; //just value - no need for format and scale to be copied
+    time_t timestamp;
     //GLIO_ELEMENT_VALUE el; //just one
     //void (*callback_func)();
 } DDE_SET_PARAMS_DATA;

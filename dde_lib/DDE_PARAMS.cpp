@@ -18,47 +18,7 @@ using namespace std;
 //------------------------------------------------------------------------------
 DDE_PARAMS::DDE_PARAMS()
 {
-    //1) clear
-    //memset(device, 0, sizeof(device));
-
-
-
-    //2) fill with names devices
-    /*static uint16_t amplitude = 10;
-    static uint16_t frequency_hertz = 1;*/
-
-    //for (int ii = 1; ii < 33; ii=ii+11)
-    //{
-    //	devices_count++;
-    //	//device[ii].device_ID = ii; A&D exluded as duplication
-    //	sprintf(device[ii].name, "Device Power Unit Type %d", ii);
-    //
-    //
-    //	string s;
-
-    //	int param_count = 2;// (rand() / RAND_MAX) * 60 + 3;
-
-    //	//fill device with random params
-    //	for (int jj = 0; jj <=param_count; jj++)
-    //	{
-    //		s = "module_" + to_string(jj);
-    //		for (int subix = 0; subix < 4; subix++) {
-    //			int param_ID = (jj << 6) + subix;
-    //			device[ii].el_descr[param_ID].id = param_ID; // (jj << 6) + subix;
-
-    //			device[ii].el[param_ID].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT;
-    //			device[ii].el[param_ID].ivalue = -1;
-    //			device[ii].el[param_ID].fvalue = -1;
-    //			string s1;
-    //			s1 = s + "_param_"+ to_string(subix);
-    //			strcpy(device[ii].el_descr[param_ID].name, s1.c_str());
-    //			device[ii].el[param_ID].scale = 0;
-    //			device[ii].el[param_ID].timestamp = 0;
-    //		}
-    //	}
-    //}
-
-    //this->list_read_max = 10; // fifo_size;
+    _paramDescr = new ParamDescr();
 }
 
 //------------------------------------------------------------------------------
@@ -66,7 +26,7 @@ DDE_PARAMS::DDE_PARAMS()
 //------------------------------------------------------------------------------
 DDE_PARAMS::~DDE_PARAMS()
 {
-
+    delete _paramDescr;
 }
 
 _dde_func_return_t DDE_PARAMS::init(const char* sys_type)
@@ -197,7 +157,7 @@ std::string DDE_PARAMS::create_device_name(const uint8_t device_id)//0x6D766370
     dat.device_id = device_id;
     dat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
 
-    for (int i = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME; i < DDE_DEV0_MODULE0_PARAM4_SPARE_REV; i++)
+    for (int i = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME; i <= DDE_DEV0_MODULE0_PARAM4_SPARE_REV; i++)
     {
         dat.param_id = i;
         PARAMS_DATA_direct_read(dat); // read one of name part for the given device from ipc
@@ -223,10 +183,9 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
 
     string dev_name = create_device_name(p.device_id);
 
-    ParamDescr descr;
-    int res = descr.init(dev_name.c_str(), "NONE", db_type::usual); // we need to look in db for correct table according device_name and device_revision
-    if (res) {
-        res = descr.get(&p, db_type::usual);
+    int res = _paramDescr->init(dev_name.c_str(), "", db_type::usual); // we need to look in db for correct table according device_name and device_revision
+    if (res == _return_OK) {
+        res = _paramDescr->get(&p, db_type::usual);
     }
 
     return res;
@@ -242,10 +201,9 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
 
     string dev_name = create_device_name(p.device_id);
 
-    ParamDescr hdr;
-    int res = hdr.init(dev_name.c_str(), "NONE", db_type::usual);
+    int res = _paramDescr->init(dev_name.c_str(), "", db_type::usual);
     if (res == _return_OK) {
-        res = hdr.set(&p, db_type::usual);
+        res = _paramDescr->set(&p, db_type::usual);
     }
 
     if (res != _return_OK) return res;
@@ -279,8 +237,8 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
     if (list_read.size() < list_read_max) {
         list_read.push_back(p);
     } else {
-        perror("if (get_queue.size< get_queue_max_size)");
-        return -1;
+        perror("The read list is overflowed");
+        return _return_Busy;
     }
 
     //2) read params immediatly
@@ -306,15 +264,16 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
     //1) Add request to queue
     if (list_write.size() < list_write_max) {
         list_write.push_back(p);
-    }
-    else {
-
+    } else {
         perror("if (set_queue.size< get_queue_max_size)");
         return -1;
     }
 
 
-    return 0;
+    //Todo: remove later. Write params immediatly
+    direct_write(p);
+
+    return _return_OK;
 }
 
 _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
@@ -345,20 +304,10 @@ _dde_func_return_t DDE_PARAMS::pop_write_request(DDE_SET_PARAMS_DATA& p)
 // wrapper for IPCMEM
 _dde_func_return_t DDE_PARAMS::direct_write(DDE_SET_PARAMS_DATA& set)
 {
-    time_t time;
-    int el_id;
-
-
-
-                                                                    //el_id = set.param_ID;// (set.module_ID << 6) | set.param_ID;
-
-                                                                    /*device[set.device_ID].el->ivalue = set.el.ivalue;
-                                                                    if (set.el.timestamp == 0) {
-                                                                        localtime(&time);
-                                                                        device[set.device_ID].el->timestamp = time;
-                                                                    }
-                                                                    else
-                                                                    device[set.device_ID].el[el_id].timestamp = set.el.timestamp;*/
+    if (set.timestamp == 0) {
+        time_t time = systemTime();
+        set.timestamp = time;
+    }
 
     PARAMS_DATA_direct_write(set);
 
@@ -370,8 +319,6 @@ _dde_func_return_t DDE_PARAMS::direct_write(DDE_SET_PARAMS_DATA& set)
 //wrapper for IPCMEM
 _dde_func_return_t DDE_PARAMS::direct_read(DDE_GET_PARAMS_DATA& get_params)
 {
-    time_t system_time = systemTime();
-
     int res = PARAMS_DATA_direct_read(get_params);
     if (res < 0) return _return_FAIL;
 

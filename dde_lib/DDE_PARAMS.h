@@ -14,6 +14,7 @@
 #define PARAMS_REQUEST_TIMOUT_MS	1000
 #define DDE_PARAMS_NAME_LENGTH      64
 
+class ParamDescr;
 class DDE_PARAMS : public IDDE_PARAMS
 {
 public:
@@ -46,7 +47,7 @@ protected:
     //void proceed_request_list();
     //void proceed_response_queue();
     uint32_t overflow = 0;
-protected:
+
     _dde_func_return_t update_data_descr(uint16_t device_id, GLIO_ELEMENT_DESCR& el);
 
 private:
@@ -55,7 +56,8 @@ private:
     void addTestLinks();
     void checkTestData();
 
-    std::thread*thr_params;
+    std::thread *thr_params;
+    ParamDescr* _paramDescr;
 
     std::list <DDE_GET_PARAMS_DATA> list_read;
     std::list <DDE_SET_PARAMS_DATA> list_write;
@@ -67,6 +69,5 @@ private:
     inline time_t systemTime();
     std::string create_device_name(const uint8_t device_id);
 
-    //DEVICE_PARAMS device[DEVICE_ID_MAX]; //not more than 127 DDE_PARAMS_DEVICES_MAX devices
     uint32_t devices_count;
 };
