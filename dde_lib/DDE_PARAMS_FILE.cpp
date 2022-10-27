@@ -217,14 +217,16 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
     // request for module params
     if (p.param_id == 0) {
         p.el_count = 0;
+        int ind = 0;
         for (int ii = 0; ii < 64; ii++) {
             uint16_t elemId = (p.module_id << 6) + ii;
-            if (m_devDescr[p.device_id].el_descr[elemId].name[0] != 0)
-            {
-                memcpy(&p.el_descr[ii], &m_devDescr[p.device_id].el_descr[elemId], sizeof(GLIO_ELEMENT_DESCR));
-                p.el_descr[ii].id = ii;
-                p.el_descr[ii].mod = p.module_id;
-                p.el_count++;
+            memset(&p.el_descr[ii], 0, sizeof(GLIO_ELEMENT_DESCR));
+
+            if (m_devDescr[p.device_id].el_descr[elemId].name[0] != 0) {
+                memcpy(&p.el_descr[ind], &m_devDescr[p.device_id].el_descr[elemId], sizeof(GLIO_ELEMENT_DESCR));
+                p.el_descr[ind].id = ii;
+                p.el_descr[ind].mod = p.module_id;
+                p.el_count = ++ind;
             }
         }
     } else { // request for individual param descr
@@ -260,10 +262,14 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
         for (int ii = 0; ii < 64; ii++) {
             int paramId = ii;
             int elemId = (p.module_id << 6) + paramId;
+
             const auto& el_from = m_devData[p.device_id].el[elemId];
             auto& el_to = p.el[ii];
-
             memcpy(&el_to, &el_from, sizeof(GLIO_ELEMENT_VALUE));
+
+            const GLIO_ELEMENT_DESCR& param = m_devDescr[p.device_id].el_descr[elemId];
+            float fvalue = elemValueToFloat(param, el_to);
+            p.el[ii].ivalue = *(int*)&fvalue;
             p.el[ii].timestamp = systemTime();
         }
     } else {
@@ -273,36 +279,39 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
         auto& el_to = p.el[0];
 
         memcpy(&el_to, &el_from, sizeof(GLIO_ELEMENT_VALUE));
+        const GLIO_ELEMENT_DESCR& param = m_devDescr[p.device_id].el_descr[elemId];
+        float fvalue = elemValueToFloat(param, el_to);
+        p.el[0].ivalue = *(int*)&fvalue;
         p.el[0].timestamp = systemTime();
-
-        uint8_t format = el_from.format;
-        if (format == 3) {
-            float fvalue = 0.0;
-
-            const GLIO_ELEMENT_DESCR& param = m_devDescr[p.device_id].el_descr[elemId];
-            string unit = param.dim;
-
-            if (unit == "A") {
-                fvalue = generateValue(0.1, 10, 0, systemTime());
-            } else if (unit == "V") {
-                fvalue = generateValue(0.1, 4000, 0, systemTime());
-            } else if (unit == "") {
-                auto& el = m_devData[p.device_id].el[elemId];
-                float currValue = *(float*)&el.ivalue;
-
-                fvalue = generateValue(currValue, 0.01);
-                el.ivalue = *(int*)&fvalue;
-            } else {
-                auto& el = m_devData[p.device_id].el[elemId];
-                fvalue = *(float*)&el.ivalue;
-            }
-
-            p.el[0].ivalue = *(int*)&fvalue;
-
-        }
     }
 
     return _return_OK;
+}
+
+float DDE_PARAMS_FILE::elemValueToFloat(const GLIO_ELEMENT_DESCR& elDescr, GLIO_ELEMENT_VALUE elem)
+{
+    uint8_t format = elem.format;
+    float fvalue = 0.0;
+    if (format == 3) {
+
+        string unit = elDescr.dim;
+
+        if (unit == "A") {
+            fvalue = generateValue(0.1, 10, 0, systemTime());
+        } else if (unit == "V") {
+            fvalue = generateValue(0.1, 4000, 0, systemTime());
+        } else if (unit == "") {
+            float currValue = *(float*)&elem.ivalue;
+
+            fvalue = generateValue(currValue, 0.01);
+        } else {
+            fvalue = *(float*)&elem.ivalue;
+        }
+    } else {
+        fvalue = *(float*)&elem.ivalue;
+    }
+
+    return fvalue;
 }
 
 inline time_t DDE_PARAMS_FILE::systemTime()

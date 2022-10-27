@@ -38,6 +38,7 @@ public:
 
 private:
     inline time_t systemTime();
+    float elemValueToFloat(const GLIO_ELEMENT_DESCR& elDescr, GLIO_ELEMENT_VALUE elem);
     float generateValue(float frequency_hertz, int amplitude, float noise, time_t timeMsc);
     float generateValue(float value , float noise);
     StringList split(std::string inputStr, char delim);
