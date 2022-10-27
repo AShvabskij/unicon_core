@@ -272,7 +272,7 @@ void DeviceHandler::handleReqModuleHeader(SysType sysType, int deviceId, int mod
     if (res == _return_OK && header.el_count > 0) {
         module.name = header.el_descr->name;
         module.desc = header.el_descr->descr;
-        for (int i = 1; i < header.el_count; i++) {
+        for (int i = 0; i < header.el_count; i++) {
             if (header.el_descr[i].mod == moduleId) {
                 module.params << header.el_descr[i].id;
             }

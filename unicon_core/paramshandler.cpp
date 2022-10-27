@@ -348,13 +348,52 @@ void ParamsHandler::streamParamsValue()
         return;
     }
 
-    for (const Param &p : m_capturedParams) {
-        ParamValue val(p);
-        long res = getParamValue(p, &val);
-        int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
-        QJsonObject response = createStreamValueObj(val, error);
+    QList<ParamID> modules;
+    QList<ParamValue> sentValues;
 
-        emit stream(response);
+    if (m_capturedParams.size() > 2) {
+        // Optimized variant: getting all param values from param modules at once
+        for (const Param& p : m_capturedParams) {
+            ParamID modId = {p.ID.devId, p.ID.moduleId, 0};
+            if (modules.contains(modId)) continue;
+
+            modules << modId;
+        }
+
+        int error = 0;
+        int res = _return_OK;
+        ParamValueList allValues;
+        for (const ParamID& modId  : modules) {
+            ParamValueList values = getModuleValues(modId, res);
+            error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
+            if (error != 0) break;
+
+            allValues << values;
+        }
+
+        for (const ParamValue& val : allValues) {
+            for (const Param& p : m_capturedParams) {
+                if (p.ID == val.paramID) {
+                    sentValues << val;
+                    break;
+                }
+            }
+        }
+
+        for (const ParamValue& val : sentValues) {
+            QJsonObject response = createStreamValueObj(val, error);
+            emit stream(response);
+        }
+    } else {
+        // Simplified variant, getting all param values one by one
+        for (const Param &p : m_capturedParams) {
+            ParamValue val(p);
+            long res = getParamValue(p, &val);
+            int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
+            QJsonObject response = createStreamValueObj(val, error);
+
+            emit stream(response);
+        }
     }
 
     return;
@@ -405,6 +444,34 @@ void ParamsHandler::onStreamTimerAlarm()
 long ParamsHandler::getParamValue(const Param& p, ParamValue* out)
 {
     return getParamValue(p.ID, out);
+}
+
+ParamValueList ParamsHandler::getModuleValues(const ParamID& groupId, int& isOk)
+{
+    m_data->device_id = static_cast<uint16_t>(groupId.devId.id);
+    m_data->module_id = static_cast<uint16_t>(groupId.moduleId);
+    m_data->param_id = 0;
+
+    _dde_func_return_t res = (*m_dde)(groupId.devId.type)->get_params_data(*m_data);
+
+    if (res != _return_OK) {
+        isOk = res;
+        return ParamValueList();
+    }
+
+    ParamValueList resList;
+    resList.reserve(PARAMS_ID_MAX);
+
+    for (int i = 0; i < PARAMS_ID_MAX; i++ ) {
+        ParamValue val  = valueFrom(groupId, m_data->el[i]);
+        val.paramID.id = i;
+        if (val.isValid()) {
+            resList << val;
+        }
+    }
+
+    isOk = true;
+    return resList;
 }
 
 long ParamsHandler::getParamValue(const ParamID& paramId, ParamValue* out)
@@ -469,7 +536,7 @@ long ParamsHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamLi
 
     if (res <= _return_FAIL) return res;
 
-    for (int i = 1; i < m_header->el_count; ++i) {
+    for (int i = 0; i < m_header->el_count; ++i) {
 
         GLIO_ELEMENT_DESCR& elem = m_header->el_descr[i];
         if (elem.id == 0) {

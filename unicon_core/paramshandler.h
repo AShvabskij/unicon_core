@@ -65,6 +65,10 @@ struct ParamValue
         scale = p.valueScale;
     }
 
+    bool isValid() {
+        paramID.devId.isValid() && paramID.id >= 0 && format != GLIO_ELEMENT_FORMAT_ENUM::FORMAT_UNDEFINED;
+    }
+
 };
 typedef QVector<ParamValue> ParamValueList;
 
@@ -93,6 +97,8 @@ private:
 
     long getParamValue(const Param &p, ParamValue* out);
     long getParamValue(const ParamID &paramId, ParamValue* out);
+    ParamValueList getModuleValues(const ParamID& groupId, int &isOk);
+
     long getParamHeader(const ParamID& paramId, Param *out);
     long getParamHeaders(const DevID& deviceId, int moduleId, ParamList *out);
     long setParamValue(const ParamValue &value);
