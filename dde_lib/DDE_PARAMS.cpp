@@ -50,7 +50,7 @@ _dde_func_return_t DDE_PARAMS::init(const char* sys_type)
 void DDE_PARAMS::addTestDevice()
 {
     DDE_SET_PARAMS_DATA setDat;
-    for (int ii = 1; ii <= 4; ii++) {
+    for (uint16_t ii = 1; ii <= 4; ii++) {
         setDat.device_id = 2;
         setDat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
         setDat.param_id = ii;
@@ -77,7 +77,7 @@ void DDE_PARAMS::addTestDevice()
 void DDE_PARAMS::addTestLinks()
 {
     DDE_SET_PARAMS_DATA setDat;
-    for (int devNum = DDE_DEV0_MODULE1_PARAM1_dev1_link; devNum <= DDE_DEV0_MODULE1_PARAM63_dev63_link; devNum++) {
+    for (uint16_t devNum = DDE_DEV0_MODULE1_PARAM1_dev1_link; devNum <= DDE_DEV0_MODULE1_PARAM63_dev63_link; devNum++) {
         setDat.device_id = 0;
         setDat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
         setDat.param_id = devNum;
@@ -105,7 +105,7 @@ void DDE_PARAMS::addTestLinks()
 void DDE_PARAMS::addTestData()
 {
     DDE_SET_PARAMS_DATA setDat;
-    for (int ii = 1; ii <= 7; ii++) {
+    for (uint16_t ii = 1; ii <= 7; ii++) {
         setDat.device_id = 2;
         setDat.module_id = 1;
         setDat.param_id = ii;
@@ -333,7 +333,10 @@ _dde_func_return_t DDE_PARAMS::direct_read(DDE_GET_PARAMS_DATA& get_params)
 
 _dde_func_return_t DDE_PARAMS::update_data_descr(uint16_t device_id, GLIO_ELEMENT_DESCR& el)
 {
-    PARAMS_DATA_update_descr(device_id, el);
+    int res = PARAMS_DATA_update_descr(device_id, el);
+    if (res < 0) return _return_FAIL;
+
+    return _return_OK;    //if (get_params.callback_func != NULL) get_params.callback_func();
 }
 
 
