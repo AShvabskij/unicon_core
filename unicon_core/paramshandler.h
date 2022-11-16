@@ -66,7 +66,7 @@ struct ParamValue
     }
 
     bool isValid() {
-        paramID.devId.isValid() && paramID.id >= 0 && format != GLIO_ELEMENT_FORMAT_ENUM::FORMAT_UNDEFINED;
+        return paramID.devId.isValid() && paramID.id >= 0 && format != GLIO_ELEMENT_FORMAT_ENUM::FORMAT_UNDEFINED;
     }
 
 };

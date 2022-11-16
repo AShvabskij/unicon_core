@@ -51,7 +51,7 @@ void DeviceHandler::handleGetHeader(const QJsonObject& request)
 
     SysType sysType = sysTypeId(request);
 
-    if (deviceId == 0) {
+    if (deviceId == 0 && moduleId == 0) {
         handleReqDevices(sysType, requestId);
     } else if (moduleId == 0) {
         handleReqDeviceHeader(sysType, deviceId, requestId);
@@ -256,7 +256,7 @@ QString DeviceHandler::getDeviceDescr(const DevID& deviceId)
 
 void DeviceHandler::handleReqModuleHeader(SysType sysType, int deviceId, int moduleId, int requestId)
 {
-    if (moduleId == 0) return;
+//  if (moduleId == 0) return;
 
     Module module;
     module.id = moduleId;
