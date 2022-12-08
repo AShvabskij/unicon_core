@@ -226,19 +226,23 @@ int one_desc_recs(void *uk, int columns, char **aDat, char **aName)
 
     DDE_GET_PARAMS_HEADER* struc = ((DDE_GET_PARAMS_HEADER*)uk);
 
-    struc->module_id	= atoi(aDat[1]);
-    struc->param_id     = atoi(aDat[2]);
+    struc->module_id = atoi(aDat[1]);
+    if (glio_counter == 0) {
+        struc->param_id = atoi(aDat[2]);
+    }
+    else {
+        struc->param_id = 0;
+    }
 
-    memcpy(struc->el_descr[glio_counter].name,							   aDat[4], DDE_PARAMS_NAME_LENGTH - 1);
-    memcpy(struc->el_descr[glio_counter].descr,							   aDat[5], DDE_PARAMS_DESCR_LENGTH - 1);
-    struc->el_descr[glio_counter].format =  (GLIO_ELEMENT_FORMAT_ENUM)atoi(aDat[6]);
-    struc->el_descr[glio_counter].scale								= atof(aDat[7]);
-    memcpy(struc->el_descr[glio_counter].dim,							   aDat[8], DIM_SIZE);
-    struc->el_descr[glio_counter].writable							= atoi(aDat[9]);
-    struc->el_descr[glio_counter].id								= atoi(aDat[2]); // atoi(aDat[10]);
+    memcpy(struc->el_descr[glio_counter].name, aDat[4], DDE_PARAMS_NAME_LENGTH - 1);
+    memcpy(struc->el_descr[glio_counter].descr, aDat[5], DDE_PARAMS_DESCR_LENGTH - 1);
+    struc->el_descr[glio_counter].format = (GLIO_ELEMENT_FORMAT_ENUM)atoi(aDat[6]);
+    struc->el_descr[glio_counter].scale = atof(aDat[7]);
+    memcpy(struc->el_descr[glio_counter].dim, aDat[8], DIM_SIZE);
+    struc->el_descr[glio_counter].writable = atoi(aDat[9]);
+    struc->el_descr[glio_counter].id = atoi(aDat[2]);
 
     struc->el_descr[glio_counter].mod = struc->module_id;
-
     glio_counter++;
     return 0;
 }

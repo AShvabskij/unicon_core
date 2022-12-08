@@ -55,7 +55,7 @@ void DDE_PARAMS_FILE::setTestDevice()
             case DDE_DEV0_MODULE0_PARAM3_SW_REV:
                 setDat.ivalue = 0x32363030;
                 break;
-            case DDE_DEV0_MODULE0_PARAM4_SPARE_REV:
+            case DDE_DEV0_MODULE0_PARAM4_HASH:
                 setDat.ivalue = 0x37303130 + (i/devices_step);
                 break;
             }
