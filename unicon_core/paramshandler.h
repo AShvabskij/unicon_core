@@ -16,6 +16,10 @@ struct ParamID
     int uid() const {
         return (moduleId << 6) + id;
     }
+
+    QString logStr() const {
+        return QString("device id = %0, moduleId = %1, paramId = %2").arg(devId.id).arg(moduleId).arg(id);
+    }
 };
 
 bool operator==(const ParamID& a, const ParamID& b);

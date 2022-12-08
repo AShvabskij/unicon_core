@@ -1,5 +1,6 @@
 #include "paramshandler.h"
 #include <QTimer>
+#include <QTextStream>
 
 const QString CMD_PARAMS_HEADER = "param_header";
 const QString CMD_TYPE = "get";
@@ -318,6 +319,10 @@ ParamValue ParamsHandler::valueFrom(const ParamID& paramId, const GLIO_ELEMENT_V
         res.value = el.ivalue;
     }; break;
     default: {
+        if (el.ivalue > 0 && paramId.id > 0) {
+            QTextStream(stdout) << "The param value format is undefined, " << paramId.logStr() << "\n";
+        }
+
         res.value = el.ivalue;
     }
     }
@@ -477,6 +482,9 @@ ParamValueList ParamsHandler::getModuleValues(const ParamID& groupId, int& isOk)
 long ParamsHandler::getParamValue(const ParamID& paramId, ParamValue* out)
 {
     Q_ASSERT(out);
+    Q_ASSERT(m_data);
+
+    memset(m_data, 0, sizeof(*m_data));
 
     m_data->device_id = static_cast<uint16_t>(paramId.devId.id);
     m_data->module_id = static_cast<uint16_t>(paramId.moduleId);
@@ -493,6 +501,10 @@ long ParamsHandler::getParamValue(const ParamID& paramId, ParamValue* out)
 
 long ParamsHandler::getParamHeader(const ParamID& paramId, Param *out)
 {
+    Q_ASSERT(m_header);
+
+    memset(m_header, 0, sizeof(*m_header));
+
     m_header->device_id = static_cast<uint16_t>(paramId.devId.id);
     m_header->module_id = static_cast<uint16_t>(paramId.moduleId);
     m_header->param_id = static_cast<uint16_t>(paramId.id);
