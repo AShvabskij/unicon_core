@@ -12,7 +12,7 @@ const char *path_dbfile = "/projects";
 
 const char *all_tbl[] = { "_desc", "_txt", "" };
 const char *eoline = "\n";
-const char* eof_db = "-1";
+const char *eof_db = "-1";
 
 bool dbOpen = false;
 sqlite3 *dbc;
@@ -44,7 +44,7 @@ void prnDesc(DDE_GET_PARAMS_HEADER *r, int dev_id, int el_id, int counter)
     for (int i; i <= counter; i++)
     {
         sprintf(buf, "\tdev_id:%d\n\tel_id:%d\n\tmod_id:%d\n\tname:'%s'\n\tdesc:'%s'\n\tformat:%d\n\tscale:%.3f\n\tunits:'%s'\n\tr/w:%d\n\ttxt_id:%d%s",
-                        dev_id, el_id, r->el_descr[i].id, r->el_descr[i].name, r->el_descr[i].descr, r->el_descr[i].format, r->el_descr[i].scale, r->el_descr[i].dim, r->el_descr[i].writable, r->el_descr[i].txtSubIndexes[0], eoline);
+            dev_id, el_id, r->el_descr[i].id, r->el_descr[i].name, r->el_descr[i].descr, r->el_descr[i].format, r->el_descr[i].scale, r->el_descr[i].dim, r->el_descr[i].writable, r->el_descr[i].txtSubIndexes[0], eoline);
         print_msg_sql(buf, 0);
     }
 }
@@ -64,7 +64,7 @@ void prnTxt(DDE_GET_PARAMS_HEADER *r, int counter)
 //****************************************************************************************************
 int busy_or_fail(int rc)
 {
-    if ( rc == SQLITE_BUSY || rc == SQLITE_LOCKED)
+    if (rc == SQLITE_BUSY || rc == SQLITE_LOCKED)
     {
         return _return_Busy;
     }
@@ -80,7 +80,7 @@ int Total_rec(void/*int*/ *itogo, int argc, char **argv, char **column)
         return -1;
 
     int res = atoi(argv[0]);
-    *(int *)itogo = res;
+    *(int*)itogo = res;
 
     return 0;
 }
@@ -125,26 +125,26 @@ int init_tbl(const char* device_name, const char* device_description, uint8_t/*T
         dbOpen = true;
     }
     sprintf(tbl_name, "%s%s%s", device_name, all_tbl[type], device_description);
-    sprintf(line, "SELECT COUNT(*) FROM %s;" , tbl_name);
+    sprintf(line, "SELECT COUNT(*) FROM %s;", tbl_name);
     rc = sqlite3_exec(dbc, line, &Total_rec, &itogo, &err);// делаем запрос на количемтво записей в таблице
-    if (rc != SQLITE_OK ) {//SELECT ERROR
+    if (rc != SQLITE_OK) {//SELECT ERROR
         sprintf(stz, "[%s]: Select from table '%s' error #%d (%s)\n", __func__, tbl_name, rc, err);
-//	    if (err) sqlite3_free(err);
+        //	    if (err) sqlite3_free(err);
         ret = busy_or_fail(rc);
     } else {
         sprintf(stz, "[%s]: Table '%s' contains %d records\n", __func__, tbl_name, itogo);
         ret = _return_OK;
-/*
-        sprintf(line, "SELECT * FROM `%s` WHERE mod_id_s=%s;", tbl_name, eof_db);
-        rc = sqlite3_exec(dbc, line, &Find_end, &number_end_record, &err);
-        if (number_end_record == itogo)
-            ret = _return_OK;
-        else
-        {
-            ret = _return_FAIL;
-            sprintf(stz, "[%s]: Table '%s' !!! contains incorrect data:\n number of records (%d) does not match predeterminated.\n Update the description!\n", __func__, tbl_name, itogo);
-        }
-*/
+        /*
+                sprintf(line, "SELECT * FROM `%s` WHERE mod_id_s=%s;", tbl_name, eof_db);
+                rc = sqlite3_exec(dbc, line, &Find_end, &number_end_record, &err);
+                if (number_end_record == itogo)
+                    ret = _return_OK;
+                else
+                {
+                    ret = _return_FAIL;
+                    sprintf(stz, "[%s]: Table '%s' !!! contains incorrect data:\n number of records (%d) does not match predeterminated.\n Update the description!\n", __func__, tbl_name, itogo);
+                }
+        */
     }
     print_msg_sql(stz, 1);
 
@@ -161,12 +161,13 @@ int init_tbl(const char* device_name, const char* device_description, uint8_t/*T
         }
 
         rc = sqlite3_exec(dbc, line, NULL, 0, &err);//делаем запрос на создание таблицы (согласно параметра 'type') в базе данных
-        if (rc != SQLITE_OK ) {
+        if (rc != SQLITE_OK) {
             sprintf(stz,"[%s]: Create table '%s' error #%d (%s)\n", __func__, tbl_name, rc, err);
+            ret = busy_or_fail(rc);
             if (err) sqlite3_free(err);
         } else {
             sprintf(stz,"[%s]: Create table '%s' OK\n", __func__, tbl_name);
-            //ret = _return_OK; //honestly is_OK but for Aleksander is fail
+            ret = _return_OK;
         }
         print_msg_sql(stz, 1);
     }
@@ -229,9 +230,15 @@ int one_desc_recs(void *uk, int columns, char **aDat, char **aName)
     struc->module_id = atoi(aDat[1]);
     if (glio_counter == 0) {
         struc->param_id = atoi(aDat[2]);
-    }
-    else {
+    } else {
         struc->param_id = 0;
+    }
+
+    if (glio_counter >= DDE_PARAMS_NAME_LENGTH) {
+        char msg[256] = { 0 };
+        sprintf(msg, "Select error, glio counter is exceeded max value");
+        print_msg_sql(msg, 1);
+        return -1;
     }
 
     memcpy(struc->el_descr[glio_counter].name, aDat[4], DDE_PARAMS_NAME_LENGTH - 1);
@@ -246,6 +253,7 @@ int one_desc_recs(void *uk, int columns, char **aDat, char **aName)
     glio_counter++;
     return 0;
 }
+
 //****************************************************************************************************
 int txt_counter = 0;
 int one_txt_recs(void *uk, int columns, char **aDat, char **aName)
@@ -259,18 +267,18 @@ int one_txt_recs(void *uk, int columns, char **aDat, char **aName)
     {
         struc->el_descr[num_glio].txtValues[0] = (char*)malloc(sizeof(char[32]));
 
-        struc->el_descr[num_glio].id					= atoi(aDat[1]);
-        struc->el_descr[num_glio].txtSubIndexes[0]		= atoi(aDat[2]);
-        strcpy(struc->el_descr[num_glio].txtValues[0],		   aDat[3]);
+        struc->el_descr[num_glio].id = atoi(aDat[1]);
+        struc->el_descr[num_glio].txtSubIndexes[0] = atoi(aDat[2]);
+        strcpy(struc->el_descr[num_glio].txtValues[0], aDat[3]);
 
     }
     else
     {
         struc->el_descr[num_glio + offset + txt_counter].txtValues[0] = (char*)malloc(sizeof(char[32]));
 
-        struc->el_descr[num_glio + offset + txt_counter].id						= atoi(aDat[1]);
-        struc->el_descr[num_glio + offset + txt_counter].txtSubIndexes[0]		= atoi(aDat[2]);
-        strcpy(struc->el_descr[num_glio + offset + txt_counter].txtValues[0],		   aDat[3]);
+        struc->el_descr[num_glio + offset + txt_counter].id = atoi(aDat[1]);
+        struc->el_descr[num_glio + offset + txt_counter].txtSubIndexes[0] = atoi(aDat[2]);
+        strcpy(struc->el_descr[num_glio + offset + txt_counter].txtValues[0], aDat[3]);
 
         strncpy(struc->el_descr[num_glio + offset + txt_counter].name, struc->el_descr[num_glio].name, DDE_PARAMS_NAME_LENGTH - 1);
         strncpy(struc->el_descr[num_glio + offset + txt_counter].descr, struc->el_descr[num_glio].descr, DDE_PARAMS_NAME_LENGTH - 1);
@@ -328,8 +336,7 @@ int get_rec(const char* device_name, const char* device_description, int param_i
     if (buf->param_id == 0)
     {
         sprintf(tmp, "SELECT * FROM `%s` WHERE mod_id_s=%d;", desc_name, module_id);
-        rc = sqlite3_exec(dbc, tmp, &one_desc_recs, buf, &err);
-        buf->param_id = 0;
+        rc = sqlite3_exec(dbc, tmp, &one_desc_recs, buf, &err); //todo: change one_desc_recs to multiple_desc_recs. buf(DDE_GET_PARAMS_HEADER) to buf[](GLIO_ELEMENT_DESCR)
     }
     else
     {
@@ -388,7 +395,7 @@ int get_rec(const char* device_name, const char* device_description, int param_i
                     print_msg_sql(stz, 1);
 #endif // SET_DEBUG
                     return busy_or_fail(rc);
-            }
+                }
                 else
                 {
 #ifdef SET_DEBUG
@@ -398,10 +405,11 @@ int get_rec(const char* device_name, const char* device_description, int param_i
 #endif // SET_DEBUG
 
                     offset = offset + txt_counter - 2;
-                    if (txt_counter != 0)
-                    {el_s_counter += txt_counter;}
-                    else
-                    {el_s_counter++; offset += 1;}
+                    if (txt_counter != 0) {
+                        el_s_counter += txt_counter;
+                    } else {
+                        el_s_counter++; offset += 1;
+                    }
                 }
                 txt_counter = 0;
             }

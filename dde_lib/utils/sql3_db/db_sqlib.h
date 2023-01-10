@@ -25,6 +25,7 @@ public:
 	// Writes data to one database table usual, desc or txt. The *p structure must not be empty.
 	int set(DDE_SET_PARAMS_HEADER* p, db_type type);
 	int drop(db_type type);
+    int clear(db_type type);
 	//close database
 	void close();
 };

@@ -9,7 +9,7 @@ ParamDescr::~ParamDescr()
 {}
 
 int ParamDescr::init(string device_name, string device_description, db_type type)
-{   
+{
     if (device_name.empty())
     {
         _inited = false;
@@ -50,6 +50,22 @@ int ParamDescr::drop(db_type type)
 
     return tbl_delete(_dev_name.c_str(), _dev_description.c_str(), (uint8_t)type);
 }
+
+int ParamDescr::clear(db_type type)
+{
+    if (!_inited) return _return_FAIL;
+
+    _inited = false;
+
+    int res = tbl_delete(_dev_name.c_str(), _dev_description.c_str(), (uint8_t)type);
+    if (res <= 0) return res;
+
+    res = init_tbl(_dev_name.c_str(), _dev_description.c_str(), (uint8_t)type);
+    _inited = (res > 0);
+
+    return res;
+}
+
 void ParamDescr::close()
 {
     _inited = false;
