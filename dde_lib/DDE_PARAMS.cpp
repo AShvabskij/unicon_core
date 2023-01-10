@@ -158,7 +158,7 @@ std::string DDE_PARAMS::create_device_name(const uint8_t device_id)//0x6D766370
     dat.device_id = device_id;
     dat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
 
-    for (int i = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME; i <= DDE_DEV0_MODULE0_PARAM4_HASH; i++)
+    for (int i = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME; i <= DDE_DEV0_MODULE0_PARAM3_SW_REV; i++)
     {
         dat.param_id = i;
         PARAMS_DATA_direct_read(dat); // read one of name part for the given device from ipc
@@ -172,6 +172,12 @@ std::string DDE_PARAMS::create_device_name(const uint8_t device_id)//0x6D766370
 
         res += sub_name; // forming full device name as combination of all parts
     }
+
+    string strId = std::to_string(device_id);
+    string lastSection(4, '0');
+    lastSection.replace(4 - strId.length(), strId.length(), strId);
+
+    res += lastSection;
 
     return res;
 }
@@ -224,6 +230,23 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
 //
 //------------------------------------------------------------------------------
 
+_dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
+{
+    if (p.el_count > PARAMS_ID_MAX) return _return_FAIL;
+
+    if (p.param_id > PARAMS_ID_MAX) return _return_FAIL;
+
+    if (p.device_id > DEVICE_ID_MAX) return _return_FAIL;
+
+    if (p.module_id > MODULES_ID_MAX) return _return_FAIL;
+
+    if (p.header_reset > 1 ) return _return_FAIL;
+
+    if (p.header_reset < 0 ) return _return_FAIL;
+
+    return _return_OK;
+}
+
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 {
     // check that requiest is not already in the queue.If it is do not push it.
@@ -239,9 +262,12 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 
     //1) Add request to queue
     if (list_read.size() < list_read_max) {
-        list_read.push_back(p);
-    }
-    else {
+        if (isValidData(p)) {
+            list_read.push_back(p);
+        } else {
+            perror("Failed to add data into reading list. Invalid data \n");
+        }
+    } else {
         perror("The reading list is overflowed\n");
         return _return_Busy;
     }
@@ -250,7 +276,6 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
     direct_read(p);
 
     return _return_OK;
-
 }
 
 //------------------------------------------------------------------------------
@@ -387,6 +412,7 @@ void DDE_PARAMS::update()
             uint8_t device_id = get_params.device_id;
             cmd.module_id = get_params.module_id;
             cmd.param_id = get_params.param_id;
+            cmd.ivalue = get_params.el_count;
             cmd.nRW = 0;
             res = 0;
             attempts = 0;

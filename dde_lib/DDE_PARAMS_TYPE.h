@@ -186,6 +186,7 @@ typedef struct
     uint16_t device_id;
     uint16_t module_id;
     uint16_t param_id;
+    uint16_t el_count; //count of elements for responce
     GLIO_ELEMENT_VALUE el[64];	//not more then 64 params at a time
     uint16_t timeout; //each request has it own timeout counter
     uint16_t timeout_flg;//
