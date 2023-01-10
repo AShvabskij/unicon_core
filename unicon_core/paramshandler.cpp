@@ -1,6 +1,7 @@
 #include "paramshandler.h"
 #include <QTimer>
 #include <QTextStream>
+#include <iostream>
 
 const QString CMD_PARAMS_HEADER = "param_header";
 const QString CMD_TYPE = "get";
@@ -156,34 +157,35 @@ void ParamsHandler::handleSetValue(const QJsonObject &request)
 
 long ParamsHandler::setParamValue(const ParamValue& value)
 {
-    DDE_SET_PARAMS_DATA m_data;
+    DDE_SET_PARAMS_DATA setData;
+    memset(&setData, 0, sizeof(setData));
 
-    m_data.param_id = static_cast<uint16_t>(value.paramID.id);
-    m_data.device_id = static_cast<uint16_t>(value.paramID.devId.id);
-    m_data.module_id = static_cast<uint16_t>(value.paramID.moduleId);
-    m_data.ivalue = 0;
+    setData.param_id = static_cast<uint16_t>(value.paramID.id);
+    setData.device_id = static_cast<uint16_t>(value.paramID.devId.id);
+    setData.module_id = static_cast<uint16_t>(value.paramID.moduleId);
+    setData.ivalue = 0;
 
     switch (value.format) {
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT:
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_BIN:
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_HEX32: {
         int ivalue = value.value.toInt();
-        m_data.ivalue = *(uint32_t*)&ivalue;
+        setData.ivalue = *(uint32_t*)&ivalue;
         break;
     }
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT: {
         float fvalue = value.value.toFloat();
-        m_data.ivalue = *(uint32_t*)&fvalue;
+        setData.ivalue = *(uint32_t*)&fvalue;
         break;
     }
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_TEXT: {
-        m_data.ivalue = static_cast<uint32_t>(value.value.toInt());
+        setData.ivalue = static_cast<uint32_t>(value.value.toInt());
         break;
     }
     default: return _return_FAIL;
     }
 
-    _dde_func_return_t res = (*m_dde)(value.paramID.devId.type)->set_params_data(m_data);
+    _dde_func_return_t res = (*m_dde)(value.paramID.devId.type)->set_params_data(setData);
 
     return res;
 }
@@ -312,11 +314,22 @@ ParamValue ParamsHandler::valueFrom(const ParamID& paramId, const GLIO_ELEMENT_V
         res.value = el.ivalue;
     }; break;
     case FORMAT_FLOAT: {
-        float fvalue = *(float*)&el.ivalue;
-        res.value = fvalue;
+        uint32_t* pValue = const_cast<uint32_t*>(&el.ivalue);
+        float* fvalue = reinterpret_cast<float*>(pValue);
+        res.scale = (el.scale == 0.0f) ? 1.0f: el.scale;
+        res.value = *fvalue  * res.scale;
     }; break;
     case FORMAT_TEXT: {
         res.value = el.ivalue;
+    }; break;
+    case FORMAT_ASCII: {
+        //std::string_view str(reinterpret_cast<const char *>(&value), sizeof(value));
+
+        char ascii[sizeof(el.ivalue)+1];
+        memcpy(ascii, &el.ivalue, sizeof(ascii));
+        ascii[sizeof(el.ivalue)] = '\0';
+
+        res.value = ascii;
     }; break;
     default: {
         if (el.ivalue > 0 && paramId.id > 0) {
@@ -338,6 +351,8 @@ void ParamsHandler::startPooling(int intervalMsc)
     m_streamTimer->setInterval(intervalMsc);
     m_streamTimer->start();
 
+    memset(&m_lastModHeader, 0, sizeof(m_lastModHeader));
+
     // connect(this, SIGNAL(requestStreamValue()), this, SLOT(slotTimerAlarm()), Qt::QueuedConnection);
     //  emit requestStreamValue();
 }
@@ -345,6 +360,7 @@ void ParamsHandler::startPooling(int intervalMsc)
 void ParamsHandler::stopPooling()
 {
     m_streamTimer->stop();
+    memset(&m_lastModHeader, 0, sizeof(m_lastModHeader));
 }
 
 void ParamsHandler::streamParamsValue()
@@ -366,7 +382,7 @@ void ParamsHandler::streamParamsValue()
         }
 
         int error = 0;
-        int res = _return_OK;
+        _dde_func_return_t res = _return_OK;
         ParamValueList allValues;
         for (const ParamID& modId  : modules) {
             ParamValueList values = getModuleValues(modId, res);
@@ -451,10 +467,29 @@ long ParamsHandler::getParamValue(const Param& p, ParamValue* out)
     return getParamValue(p.ID, out);
 }
 
-ParamValueList ParamsHandler::getModuleValues(const ParamID& groupId, int& isOk)
+ParamValueList ParamsHandler::getModuleValues(const ParamID& groupId, _dde_func_return_t& isOk)
 {
+    if (m_lastModHeader.module_id != groupId.moduleId && m_lastModHeader.device_id != groupId.devId.id) {
+        memset(&m_lastModHeader, 0, sizeof(m_lastModHeader));
+
+        m_lastModHeader.device_id = static_cast<uint16_t>(groupId.devId.id);
+        m_lastModHeader.module_id = static_cast<uint16_t>(groupId.moduleId);
+        m_lastModHeader.param_id = 0;
+
+        _dde_func_return_t res = (*m_dde)(groupId.devId.type)->get_params_header(m_lastModHeader);
+
+        if (res != _return_OK) {
+            isOk = res;
+            return ParamValueList();
+        }
+    }
+
+    Q_ASSERT(m_data);
+    memset(m_data, 0, sizeof(*m_data));
+
     m_data->device_id = static_cast<uint16_t>(groupId.devId.id);
     m_data->module_id = static_cast<uint16_t>(groupId.moduleId);
+    m_data->el_count = m_lastModHeader.el_count;
     m_data->param_id = 0;
 
     _dde_func_return_t res = (*m_dde)(groupId.devId.type)->get_params_data(*m_data);

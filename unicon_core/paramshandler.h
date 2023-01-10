@@ -101,7 +101,7 @@ private:
 
     long getParamValue(const Param &p, ParamValue* out);
     long getParamValue(const ParamID &paramId, ParamValue* out);
-    ParamValueList getModuleValues(const ParamID& groupId, int &isOk);
+    ParamValueList getModuleValues(const ParamID& groupId, long &isOk);
 
     long getParamHeader(const ParamID& paramId, Param *out);
     long getParamHeaders(const DevID& deviceId, int moduleId, ParamList *out);
@@ -124,6 +124,7 @@ private:
     int m_streamValCount = 0;
     QTimer* m_streamTimer;
     mutable DDE_GET_PARAMS_HEADER* m_header = nullptr;
+    mutable DDE_GET_PARAMS_HEADER  m_lastModHeader;
     mutable DDE_GET_PARAMS_DATA *m_data = nullptr;
 
 };
