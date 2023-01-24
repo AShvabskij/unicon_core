@@ -93,7 +93,7 @@ void DeviceHandler::handleSystemStatus(const QJsonObject& request)
     if (requestId <= 0) return;
 
     SystemStatus status;
-    status.isChanged = true;
+    status.isChanged = false;
     status.statusList[sysType] = true;
 
     QJsonObject response = createResponse(requestId, status);
@@ -254,9 +254,9 @@ QString DeviceHandler::getDeviceName(const DevID& deviceId)
         retName.append(name);
     }
 
-    QString lastSection = QString("%0").arg(dat.device_id);
-    lastSection = lastSection.leftJustified(4, '0');
-    retName = retName.trimmed() + lastSection;
+    QString devIdSection = QString("%0").arg(dat.device_id);
+    devIdSection = devIdSection.leftJustified(2, '0');
+    retName = retName.trimmed() + devIdSection;
     return retName.trimmed();
 }
 
