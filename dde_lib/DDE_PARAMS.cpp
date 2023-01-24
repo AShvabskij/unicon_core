@@ -173,11 +173,13 @@ std::string DDE_PARAMS::create_device_name(const uint8_t device_id)//0x6D766370
         res += sub_name; // forming full device name as combination of all parts
     }
 
-    string strId = std::to_string(device_id);
-    string lastSection(4, '0');
-    lastSection.replace(4 - strId.length(), strId.length(), strId);
+    dat.param_id = DDE_DEV0_MODULE0_PARAM4_HASH;
+    PARAMS_DATA_direct_read(dat); // read one of name part for the given device from ipc
 
-    res += lastSection;
+    char hexCode[9] = "";
+    uint32_t hashValue = dat.el->ivalue;
+    sprintf(hexCode, "%X", hashValue);
+    res += "_" + string(hexCode);
 
     return res;
 }
