@@ -56,7 +56,6 @@ void DeviceHandler::handleDeviceHeader(const QJsonObject& request)
     }
 
     int deviceId = cmdBody.value("device_id").toInt();
-    int moduleId = cmdBody.value("module_id").toInt();
 
     SysType sysType = sysTypeId(request);
 
