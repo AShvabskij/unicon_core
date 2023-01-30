@@ -24,7 +24,7 @@
 #define     DDE_DEV0_MODULE0_PARAM2_HW_REV           2
 #define     DDE_DEV0_MODULE0_PARAM3_SW_REV           3
 #define     DDE_DEV0_MODULE0_PARAM4_HASH             4
-#define     DDE_DEV0_MODULE0_PARAM5_STATE            5
+#define     DDE_DEV0_MODULE0_PARAM5_NODE             5
 #define     DDE_DEV0_MODULE0_PARAM5_9_RESERVED       9
 
 #define     DDE_DEV0_MODULE0_PARAM10_LINK                 10
