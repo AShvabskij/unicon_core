@@ -311,13 +311,15 @@ ParamValue ParamsHandler::valueFrom(const ParamID& paramId, const GLIO_ELEMENT_V
     switch (res.format) {
     case FORMAT_INT:
     {
-        res.value = el.ivalue;
+        float scale = (el.scale == 0.0f) ? 1.0f: el.scale;
+        float scaledVal = el.ivalue  * scale;
+        res.value = static_cast<int>(std::round(scaledVal));
     }; break;
     case FORMAT_FLOAT: {
         uint32_t* pValue = const_cast<uint32_t*>(&el.ivalue);
         float* fvalue = reinterpret_cast<float*>(pValue);
-        res.scale = (el.scale == 0.0f) ? 1.0f: el.scale;
-        res.value = *fvalue  * res.scale;
+        float scale = (el.scale == 0.0f) ? 1.0f: el.scale;
+        res.value = *fvalue  * scale;
     }; break;
     case FORMAT_TEXT: {
         res.value = el.ivalue;
