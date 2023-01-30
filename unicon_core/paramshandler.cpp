@@ -307,13 +307,17 @@ ParamValue ParamsHandler::valueFrom(const ParamID& paramId, const GLIO_ELEMENT_V
 
     res.format = (GLIO_ELEMENT_FORMAT_ENUM)el.format;
     res.scale = el.scale;
+    const float NO_SCALE = 0.0f;
 
     switch (res.format) {
     case FORMAT_INT:
     {
-        float scale = (el.scale == 0.0f) ? 1.0f: el.scale;
-        float scaledVal = el.ivalue  * scale;
-        res.value = static_cast<int>(std::round(scaledVal));
+        if (el.scale == NO_SCALE) {
+            res.value = el.ivalue;
+        } else {
+            float scaledVal = el.ivalue  * el.scale;
+            res.value = static_cast<int>(std::round(scaledVal));
+        }
     }; break;
     case FORMAT_FLOAT: {
         uint32_t* pValue = const_cast<uint32_t*>(&el.ivalue);
