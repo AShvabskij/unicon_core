@@ -131,7 +131,7 @@ long DeviceHandler::requestDeviceLinks(SysType sysType, QList<int>& links)
     DDE_GET_PARAMS_DATA dat;
     memset(&dat, 0, sizeof(dat));
 
-    dat.device_id = DDE_DEV0_MODULE0_DESCRIPTION;
+    dat.device_id = DDE_DEV0_MASTER;
     dat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
     dat.param_id = 0;
 

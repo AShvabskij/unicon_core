@@ -57,6 +57,8 @@ private:
     void addTestLinks();
     void checkTestData();
 
+    void updateMasterLink();
+
     std::thread *thr_params;
     ParamDescr* _paramDescr;
 

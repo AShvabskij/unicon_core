@@ -484,6 +484,40 @@ void DDE_PARAMS::update()
         }
     }
 
+    updateMasterLink();
 
     if (timeout == true) perror("while ((get_empty && set_empty) || timeout) resulted with timeout");
+
+}
+
+void DDE_PARAMS::updateMasterLink()
+{
+    // every 100 msec reset master link if it is not working
+    static int check = 0;
+    const static int checkPeriod = 10;
+    if (++check > checkPeriod)
+    {
+        check = 0;
+
+        DDE_GET_PARAMS_DATA get_data;
+        get_data.device_id = DDE_DEV0_MASTER;
+        get_data.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
+        get_data.param_id = DDE_DEV0_MODULE1_PARAM0_devs_link;
+        direct_read(get_data);
+
+        time_t timeMs = systemTime();
+        time_t diffTime = timeMs - get_data.el[0].timestamp;
+
+        if (get_data.el[0].ivalue == 1 && diffTime > PARAMS_REQUEST_TIMOUT_MS) {
+            DDE_SET_PARAMS_DATA set_data;
+            set_data.device_id = DDE_DEV0_MASTER;
+            set_data.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
+
+            for (int ii = DDE_DEV0_MODULE1_PARAM0_devs_link; ii <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ii++) {
+                set_data.param_id = ii;
+                set_data.ivalue = 0;
+                direct_write(set_data);
+            }
+        }
+    }
 }
