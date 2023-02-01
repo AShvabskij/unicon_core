@@ -295,13 +295,15 @@ void ParamsHandler::sendActualParamValue(const Param &param, int requestId, int 
     send(response);
 }
 
-ParamValue ParamsHandler::valueFrom(const ParamID& paramId, const GLIO_ELEMENT_VALUE& el)
+long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALUE& el, ParamValue* out)
 {
+    Q_ASSERT(out);
+
     if (el.deprecated) {
-        return ParamValue();
+        return _return_FAIL;
     }
 
-    ParamValue res;
+    ParamValue& res = *out;
     res.paramID = paramId;
     res.timestamp = el.timestamp; //QDateTime::currentMSecsSinceEpoch();
 
@@ -346,7 +348,7 @@ ParamValue ParamsHandler::valueFrom(const ParamID& paramId, const GLIO_ELEMENT_V
     }
     }
 
-    return res;
+    return _return_OK;
 }
 
 void ParamsHandler::startPooling(int intervalMsc)
@@ -506,12 +508,13 @@ ParamValueList ParamsHandler::getModuleValues(const ParamID& groupId, _dde_func_
     }
 
     ParamValueList resList;
-    resList.reserve(PARAMS_ID_MAX);
+    resList.reserve(PARAMS_COUNT_MAX);
 
-    for (int i = 0; i < PARAMS_ID_MAX; i++ ) {
-        ParamValue val  = valueFrom(groupId, m_data->el[i]);
+    for (int i = 0; i <= PARAMS_ID_MAX; i++ ) {
+        ParamValue val;
+        res = convertValue(groupId, m_data->el[i], &val);
         val.paramID.id = i;
-        if (val.isValid()) {
+        if (res == _return_OK && val.isValid()) {
             resList << val;
         }
     }
@@ -535,9 +538,8 @@ long ParamsHandler::getParamValue(const ParamID& paramId, ParamValue* out)
 
     if (res != _return_OK) return res;
 
-    *out = valueFrom(paramId, m_data->el[0]);
-
-    return _return_OK;
+    res = convertValue(paramId, m_data->el[0], out);
+    return res;
 }
 
 long ParamsHandler::getParamHeader(const ParamID& paramId, Param *out)
@@ -687,6 +689,7 @@ QJsonObject ParamsHandler::createStreamValueObj(const ParamValue& value, int err
     res["u_id"] = value.paramID.uid();
 
     res["value"] = value.toJsonValue();
+
     if (error != 0) {
         res["error"] = error;
     }

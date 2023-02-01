@@ -107,7 +107,7 @@ private:
     long getParamHeaders(const DevID& deviceId, int moduleId, ParamList *out);
     long setParamValue(const ParamValue &value);
 
-    ParamValue valueFrom(const ParamID &paramId, const GLIO_ELEMENT_VALUE &el);
+    long convertValue(const ParamID &paramId, const GLIO_ELEMENT_VALUE &el, ParamValue *out);
     QJsonObject createHeaderObj(int requestId, const ParamList &params);
     QJsonObject createValueObj(int requestId, const ParamValue& value, int error = 0);
     QJsonObject createStreamValueObj(const ParamValue& value, int error = 0);
