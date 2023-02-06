@@ -688,7 +688,8 @@ QJsonObject ParamsHandler::createStreamValueObj(const ParamValue& value, int err
     res["p_id"] = value.paramID.id;
     res["u_id"] = value.paramID.uid();
 
-    res["value"] = value.toJsonValue();
+    res["val"] = value.value.toJsonValue();
+    res["time"] = value.timestamp;
 
     if (error != 0) {
         res["error"] = error;

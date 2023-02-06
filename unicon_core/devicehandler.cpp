@@ -273,14 +273,19 @@ QString DeviceHandler::getDeviceDescr(const DevID& deviceId)
     _dde_func_return_t res = (*m_dde)(deviceId.type)->get_params_data(dat);
     if (res <= _return_FAIL) return "";
 
-    int param_id = DDE_DEV0_MODULE0_PARAM0_DESCRIPTION;
+    for (int i = 0; i < 3; i++) {
+        int param_id = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME + i;
 
-    auto& val = dat.el[param_id].ivalue;
-    auto charArray = (const char*)&val;
+        auto& val = dat.el[param_id].ivalue;
+        auto charArray = (const char*)&val;
 
-    QString name = (val != 0) ? QString::fromLocal8Bit(charArray, 4) : "";
-    retName.append(name);
+        QString name = (val != 0) ? QString::fromLocal8Bit(charArray, 4) : "";
+        retName.append(name);
+    }
 
+    QString devIdSection = QString("%0").arg(dat.device_id);
+    devIdSection = devIdSection.leftJustified(2, '0');
+    retName = retName.trimmed() + devIdSection;
     return retName.trimmed();
 }
 
