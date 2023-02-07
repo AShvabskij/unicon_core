@@ -315,9 +315,9 @@ long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALU
     case FORMAT_INT:
     {
         if (el.scale == NO_SCALE) {
-            res.value = el.ivalue;
+            res.value = static_cast<int>(el.ivalue);
         } else {
-            float scaledVal = el.ivalue  * el.scale;
+            float scaledVal = static_cast<int>(el.ivalue)  * el.scale;
             res.value = static_cast<int>(std::round(scaledVal));
         }
     }; break;
@@ -409,20 +409,24 @@ void ParamsHandler::streamParamsValue()
             }
         }
 
+        QList<QJsonObject> responseList;
         for (const ParamValue& val : sentValues) {
             QJsonObject response = createStreamValueObj(val, error);
-            emit stream(response);
+            responseList << response;
         }
+        emit stream(responseList);
+
     } else {
         // Simplified variant, getting all param values one by one
+        QList<QJsonObject> responseList;
         for (const Param &p : m_capturedParams) {
             ParamValue val(p);
             long res = getParamValue(p, &val);
             int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
             QJsonObject response = createStreamValueObj(val, error);
-
-            emit stream(response);
+            responseList << response;
         }
+        emit stream(responseList);
     }
 
     return;
@@ -450,7 +454,7 @@ void ParamsHandler::stopStreamParamValue(const Param &param)
     val.value = -1;
 
     QJsonObject response = createStreamValueObj(val);
-    emit stream(response);
+    emit stream(QList<QJsonObject>() << response);
 
     return;
 }
@@ -694,6 +698,10 @@ QJsonObject ParamsHandler::createStreamValueObj(const ParamValue& value, int err
     if (error != 0) {
         res["error"] = error;
     }
-
+/*
+    if (value.paramID.id == 1) {
+        QTextStream(stdout) << "stream value, val =  " << value.value.toString()  << ", time = " << value.timestamp << "\n";
+    }
+*/
     return res;
 }

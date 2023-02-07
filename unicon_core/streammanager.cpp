@@ -13,21 +13,23 @@ StreamManager::~StreamManager()
     QTextStream(stdout) << " Total bytes sended = " << m_totalBytes << "\n" ;
 }
 
-int StreamManager::stream(QJsonObject value)
+int StreamManager::stream(const QList<QJsonObject>& valueList)
 {
-//  QJsonDocument doc(value);
-//  QString strJson(doc.toJson(QJsonDocument::Compact));
+    //  QJsonDocument doc(value);
+    //  QString strJson(doc.toJson(QJsonDocument::Compact));
 
-    QCborValue v = QCborValue::fromJsonValue(value);
-    QByteArray dataToSend = v.toCbor(QCborValue::UseFloat);
 
     for (QWebSocket *client : m_clients) {
+        for (const QJsonObject& value : valueList) {
+            QCborValue v = QCborValue::fromJsonValue(value);
+            QByteArray dataToSend = v.toCbor(QCborValue::UseFloat);
 
-//      client->sendTextMessage(strJson);
-        client->sendBinaryMessage(dataToSend);
-        qint64 bytes = client->bytesToWrite();
-        QTextStream(stdout) << " bytes to write = " << bytes << "\n" ;
-        m_totalBytes += bytes;
+            //      client->sendTextMessage(strJson);
+            client->sendBinaryMessage(dataToSend);
+            qint64 bytes = client->bytesToWrite();
+            QTextStream(stdout) << " bytes to write = " << bytes << "\n" ;
+            m_totalBytes += bytes;
+        }
 
         client->flush();
     }
