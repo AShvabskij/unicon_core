@@ -11,6 +11,9 @@ const QString CMD_SYSTEM_INIT = "system_init";
 const int DATA_YELD_INTERVAL_MSC = 100;
 const int STREAM_OBJECT_LIMIT = 6000;//*100;
 
+#define INT_MAX		2147483647
+#define INT_MIN		(-INT_MAX-1)
+
 bool operator==(const ParamID& a, const ParamID& b) {
     return a.devId == b.devId &&
             a.moduleId == b.moduleId &&
@@ -439,7 +442,7 @@ void ParamsHandler::stopStreamParamValue(const Param &param)
     }
 
     ParamValue val(param);
-    val.value = -1;
+    val.value = INT_MIN;
 
     QJsonObject response = createStreamValueObj(val);
     emit stream(response);

@@ -92,7 +92,7 @@ void DeviceHandler::handleSystemStatus(const QJsonObject& request)
     if (requestId <= 0) return;
 
     SystemStatus status;
-    status.isChanged = true;
+    status.isChanged = false;
     status.statusList[sysType] = true;
 
     QJsonObject response = createResponse(requestId, status);

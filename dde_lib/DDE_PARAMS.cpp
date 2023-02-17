@@ -300,7 +300,7 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
     }
     else {
         perror("The writing list is overflowed\n");
-        return -1;
+        return _return_Busy;
     }
 
 
