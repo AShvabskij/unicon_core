@@ -173,20 +173,22 @@ std::string DDE_PARAMS::create_device_name(const uint8_t device_id)//0x6D766370
         res += sub_name; // forming full device name as combination of all parts
     }
 
-    string strId = std::to_string(device_id);
-    string lastSection(4, '0');
-    lastSection.replace(4 - strId.length(), strId.length(), strId);
+    dat.param_id = DDE_DEV0_MODULE0_PARAM4_HASH;
+    PARAMS_DATA_direct_read(dat); // read one of name part for the given device from ipc
 
-    res += lastSection;
+    char hexCode[9] = "";
+    uint32_t hashValue = dat.el->ivalue;
+    sprintf(hexCode, "%X", hashValue);
+    res += "_" + string(hexCode);
 
     return res;
 }
 
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
 {
-    assert(p.device_id < DEVICE_ID_MAX);
-    assert(p.module_id < MODULES_ID_MAX);
-    assert(p.param_id < PARAMS_ID_MAX);
+    assert(p.device_id <= DEVICE_ID_MAX);
+    assert(p.module_id <= MODULES_ID_MAX);
+    assert(p.param_id <= PARAMS_ID_MAX);
 
     string dev_name = create_device_name(p.device_id);
 
@@ -203,8 +205,8 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
 _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
 {
     //assert(p.el.device_id < DEVICE_ID_MAX);
-    assert(p.module_id < MODULES_ID_MAX);
-    assert(p.param_id < PARAMS_ID_MAX);
+    assert(p.module_id <= MODULES_ID_MAX);
+    assert(p.param_id <= PARAMS_ID_MAX);
 
     string dev_name = create_device_name(p.device_id);
 
@@ -229,10 +231,9 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
 
 //
 //------------------------------------------------------------------------------
-
 _dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
 {
-    if (p.el_count > PARAMS_ID_MAX) return _return_FAIL;
+    if (p.el_count > PARAMS_COUNT_MAX) return _return_FAIL;
 
     if (p.param_id > PARAMS_ID_MAX) return _return_FAIL;
 
@@ -240,9 +241,9 @@ _dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
 
     if (p.module_id > MODULES_ID_MAX) return _return_FAIL;
 
-    if (p.header_reset > 1 ) return _return_FAIL;
+    if (p.header_reset > 1) return _return_FAIL;
 
-    if (p.header_reset < 0 ) return _return_FAIL;
+    if (p.header_reset < 0) return _return_FAIL;
 
     return _return_OK;
 }
@@ -264,10 +265,12 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
     if (list_read.size() < list_read_max) {
         if (isValidData(p)) {
             list_read.push_back(p);
-        } else {
+        }
+        else {
             perror("Failed to add data into reading list. Invalid data \n");
         }
-    } else {
+    }
+    else {
         perror("The reading list is overflowed\n");
         return _return_Busy;
     }
@@ -374,8 +377,8 @@ _dde_func_return_t DDE_PARAMS::update_data_descr(uint16_t device_id, GLIO_ELEMEN
 inline time_t DDE_PARAMS::systemTime()
 {
     time_t timeMsc = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now().time_since_epoch()
-                ).count();
+        std::chrono::system_clock::now().time_since_epoch()
+        ).count();
 
     // std::time(&system_time);
     // std::cout << "time = " << timeMsc << "\n";
@@ -482,6 +485,39 @@ void DDE_PARAMS::update()
         }
     }
 
+    updateMasterLink();
 
     if (timeout == true) perror("while ((get_empty && set_empty) || timeout) resulted with timeout");
+}
+
+void DDE_PARAMS::updateMasterLink()
+{
+    // every 100 msec reset master link if it is not working
+    static int check = 0;
+    const static int checkPeriod = 10;
+    if (++check > checkPeriod)
+    {
+        check = 0;
+
+        DDE_GET_PARAMS_DATA get_data;
+        get_data.device_id = DDE_DEV0_MASTER;
+        get_data.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
+        get_data.param_id = DDE_DEV0_MODULE1_PARAM0_devs_link;
+        direct_read(get_data);
+
+        time_t timeMs = systemTime();
+        time_t diffTime = timeMs - get_data.el[0].timestamp;
+
+        if (get_data.el[0].ivalue == 1 && diffTime > PARAMS_REQUEST_TIMOUT_MS) {
+            DDE_SET_PARAMS_DATA set_data;
+            set_data.device_id = DDE_DEV0_MASTER;
+            set_data.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
+
+            for (int ii = DDE_DEV0_MODULE1_PARAM0_devs_link; ii <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ii++) {
+                set_data.param_id = ii;
+                set_data.ivalue = 0;
+                direct_write(set_data);
+            }
+        }
+    }
 }

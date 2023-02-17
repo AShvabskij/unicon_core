@@ -298,29 +298,37 @@ void ParamsHandler::sendActualParamValue(const Param &param, int requestId, int 
     send(response);
 }
 
-ParamValue ParamsHandler::valueFrom(const ParamID& paramId, const GLIO_ELEMENT_VALUE& el)
+long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALUE& el, ParamValue* out)
 {
+    Q_ASSERT(out);
+
     if (el.deprecated) {
-        return ParamValue();
+        return _return_FAIL;
     }
 
-    ParamValue res;
+    ParamValue& res = *out;
     res.paramID = paramId;
     res.timestamp = el.timestamp; //QDateTime::currentMSecsSinceEpoch();
 
     res.format = (GLIO_ELEMENT_FORMAT_ENUM)el.format;
     res.scale = el.scale;
+    const float NO_SCALE = 0.0f;
 
     switch (res.format) {
     case FORMAT_INT:
     {
-        res.value = el.ivalue;
+        if (el.scale == NO_SCALE) {
+            res.value = static_cast<int>(el.ivalue);
+        } else {
+            float scaledVal = static_cast<int>(el.ivalue)  * el.scale;
+            res.value = static_cast<int>(std::round(scaledVal));
+        }
     }; break;
     case FORMAT_FLOAT: {
         uint32_t* pValue = const_cast<uint32_t*>(&el.ivalue);
         float* fvalue = reinterpret_cast<float*>(pValue);
-        res.scale = (el.scale == 0.0f) ? 1.0f: el.scale;
-        res.value = *fvalue  * res.scale;
+        float scale = (el.scale == 0.0f) ? 1.0f: el.scale;
+        res.value = *fvalue  * scale;
     }; break;
     case FORMAT_TEXT: {
         res.value = el.ivalue;
@@ -343,7 +351,7 @@ ParamValue ParamsHandler::valueFrom(const ParamID& paramId, const GLIO_ELEMENT_V
     }
     }
 
-    return res;
+    return _return_OK;
 }
 
 void ParamsHandler::startPooling(int intervalMsc)
@@ -404,20 +412,24 @@ void ParamsHandler::streamParamsValue()
             }
         }
 
+        QList<QJsonObject> responseList;
         for (const ParamValue& val : sentValues) {
             QJsonObject response = createStreamValueObj(val, error);
-            emit stream(response);
+            responseList << response;
         }
+        emit stream(responseList);
+
     } else {
         // Simplified variant, getting all param values one by one
+        QList<QJsonObject> responseList;
         for (const Param &p : m_capturedParams) {
             ParamValue val(p);
             long res = getParamValue(p, &val);
             int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
             QJsonObject response = createStreamValueObj(val, error);
-
-            emit stream(response);
+            responseList << response;
         }
+        emit stream(responseList);
     }
 
     return;
@@ -445,7 +457,7 @@ void ParamsHandler::stopStreamParamValue(const Param &param)
     val.value = INT_MIN;
 
     QJsonObject response = createStreamValueObj(val);
-    emit stream(response);
+    emit stream(QList<QJsonObject>() << response);
 
     return;
 }
@@ -503,12 +515,13 @@ ParamValueList ParamsHandler::getModuleValues(const ParamID& groupId, _dde_func_
     }
 
     ParamValueList resList;
-    resList.reserve(PARAMS_ID_MAX);
+    resList.reserve(PARAMS_COUNT_MAX);
 
-    for (int i = 0; i < PARAMS_ID_MAX; i++ ) {
-        ParamValue val  = valueFrom(groupId, m_data->el[i]);
+    for (int i = 0; i <= PARAMS_ID_MAX; i++ ) {
+        ParamValue val;
+        res = convertValue(groupId, m_data->el[i], &val);
         val.paramID.id = i;
-        if (val.isValid()) {
+        if (res == _return_OK && val.isValid()) {
             resList << val;
         }
     }
@@ -532,9 +545,8 @@ long ParamsHandler::getParamValue(const ParamID& paramId, ParamValue* out)
 
     if (res != _return_OK) return res;
 
-    *out = valueFrom(paramId, m_data->el[0]);
-
-    return _return_OK;
+    res = convertValue(paramId, m_data->el[0], out);
+    return res;
 }
 
 long ParamsHandler::getParamHeader(const ParamID& paramId, Param *out)
@@ -683,10 +695,16 @@ QJsonObject ParamsHandler::createStreamValueObj(const ParamValue& value, int err
     res["p_id"] = value.paramID.id;
     res["u_id"] = value.paramID.uid();
 
-    res["value"] = value.toJsonValue();
+    res["val"] = value.value.toJsonValue();
+    res["time"] = value.timestamp;
+
     if (error != 0) {
         res["error"] = error;
     }
-
+/*
+    if (value.paramID.id == 1) {
+        QTextStream(stdout) << "stream value, val =  " << value.value.toString()  << ", time = " << value.timestamp << "\n";
+    }
+*/
     return res;
 }

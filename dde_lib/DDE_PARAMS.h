@@ -41,8 +41,8 @@ public:
 
 protected:
 
-    uint32_t list_read_max = 10;
-    uint32_t list_write_max = 10;
+    uint32_t list_read_max = 64;
+    uint32_t list_write_max = 64;
 
     //void proceed_request_list();
     //void proceed_response_queue();
@@ -56,6 +56,8 @@ private:
     void addTestData();
     void addTestLinks();
     void checkTestData();
+
+    void updateMasterLink();
 
     std::thread *thr_params;
     ParamDescr* _paramDescr;

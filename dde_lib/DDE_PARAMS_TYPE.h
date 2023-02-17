@@ -11,9 +11,10 @@
 
 #define PARAMS_REQUEST_TIMOUT_MS	1000
 
-#define PARAMS_ID_MAX		64
-#define MODULES_ID_MAX		64
-#define ELEMENTS_ID_MAX		(PARAMS_ID_MAX*MODULES_ID_MAX)
+#define PARAMS_ID_MAX		0x3F
+#define MODULES_ID_MAX		0x3F
+#define ELEMENTS_ID_MAX		0xFFF
+#define PARAMS_COUNT_MAX	(0x3F + 1)
 
 #define DEVICE_ID_MAX		(32+1)
 
@@ -24,7 +25,7 @@
 #define     DDE_DEV0_MODULE0_PARAM2_HW_REV           2
 #define     DDE_DEV0_MODULE0_PARAM3_SW_REV           3
 #define     DDE_DEV0_MODULE0_PARAM4_HASH             4
-#define     DDE_DEV0_MODULE0_PARAM5_STATE            5
+#define     DDE_DEV0_MODULE0_PARAM5_NODE             5
 #define     DDE_DEV0_MODULE0_PARAM5_9_RESERVED       9
 
 #define     DDE_DEV0_MODULE0_PARAM10_LINK                 10
