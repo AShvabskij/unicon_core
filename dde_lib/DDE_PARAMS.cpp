@@ -233,19 +233,22 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
 //------------------------------------------------------------------------------
 _dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
 {
-    if (p.el_count > PARAMS_COUNT_MAX) return _return_FAIL;
+    _dde_func_return_t res = _return_OK;
+    if (p.el_count > PARAMS_COUNT_MAX) res = _return_FAIL;
+    if (p.param_id > PARAMS_ID_MAX) res = _return_FAIL;
+    if (p.device_id > DEVICE_ID_MAX) res = _return_FAIL;
+    if (p.module_id > MODULES_ID_MAX) res = _return_FAIL;
 
-    if (p.param_id > PARAMS_ID_MAX) return _return_FAIL;
+    if (p.header_reset > 1) res = _return_FAIL;
+    if (p.header_reset < 0) res = _return_FAIL;
 
-    if (p.device_id > DEVICE_ID_MAX) return _return_FAIL;
+    if (res == _return_FAIL) {
+        string err = "The data is not valid: id = " + std::to_string(p.module_id) + "."
+                + std::to_string(p.param_id) + ", el count = " + std::to_string(p.el_count);
+        perror(err.c_str());
+    }
 
-    if (p.module_id > MODULES_ID_MAX) return _return_FAIL;
-
-    if (p.header_reset > 1) return _return_FAIL;
-
-    if (p.header_reset < 0) return _return_FAIL;
-
-    return _return_OK;
+    return res;
 }
 
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)

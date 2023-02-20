@@ -243,9 +243,8 @@ QString DeviceHandler::getDeviceName(const DevID& deviceId)
     _dde_func_return_t res = (*m_dde)(deviceId.type)->get_params_data(dat);
     if (res <= _return_FAIL) return "";
 
-    for (int i = 0; i < 3; i++) {
-        int param_id = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME + i;
-
+    for (int i = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME; i <= DDE_DEV0_MODULE0_PARAM3_SW_REV; i++) {
+        int param_id = i;
         auto& val = dat.el[param_id].ivalue;
         auto charArray = (const char*)&val;
 
@@ -261,32 +260,7 @@ QString DeviceHandler::getDeviceName(const DevID& deviceId)
 
 QString DeviceHandler::getDeviceDescr(const DevID& deviceId)
 {
-    QString retName = "";
-
-    DDE_GET_PARAMS_DATA dat;
-    memset(&dat, 0, sizeof(dat));
-
-    dat.device_id = static_cast<uint16_t>(deviceId.id);
-    dat.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
-    dat.param_id = 0;
-
-    _dde_func_return_t res = (*m_dde)(deviceId.type)->get_params_data(dat);
-    if (res <= _return_FAIL) return "";
-
-    for (int i = 0; i < 3; i++) {
-        int param_id = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME + i;
-
-        auto& val = dat.el[param_id].ivalue;
-        auto charArray = (const char*)&val;
-
-        QString name = (val != 0) ? QString::fromLocal8Bit(charArray, 4) : "";
-        retName.append(name);
-    }
-
-    QString devIdSection = QString("%0").arg(dat.device_id);
-    devIdSection = devIdSection.leftJustified(2, '0');
-    retName = retName.trimmed() + devIdSection;
-    return retName.trimmed();
+    return getDeviceName(deviceId);
 }
 
 void DeviceHandler::handleReqModuleHeader(SysType sysType, int deviceId, int moduleId, int requestId)
