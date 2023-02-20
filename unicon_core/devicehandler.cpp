@@ -138,8 +138,16 @@ long DeviceHandler::requestDeviceLinks(SysType sysType, QList<int>& links)
     _dde_func_return_t res = (*m_dde)(sysType)->get_params_data(dat);
     if (res <= _return_FAIL) return res;
 
+    time_t timeMs = QDateTime::currentMSecsSinceEpoch();
+    const int LINK_TIME_OUT = 1000; // only for master device
+
     for (int i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ++i) {
-        if (dat.el[i].ivalue == 1) {
+        time_t diffTime = (dat.el[i].timestamp != 0) ? timeMs - dat.el[i].timestamp : 0;
+        if (dat.el[i].ivalue == 1 ) {
+            if (i == DDE_DEV0_MASTER && diffTime > LINK_TIME_OUT) {
+                break;
+            }
+
             links << i;
         }
     }
