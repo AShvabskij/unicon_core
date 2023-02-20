@@ -13,7 +13,7 @@ public:
     virtual void setNext(IReqHandler* next) = 0;
 
     Q_SIGNAL void send(const QJsonObject& response);
-    Q_SIGNAL void stream(const QJsonObject& value);
+    Q_SIGNAL void stream(const QList<QJsonObject>& valueList);
 };
 
 #endif // ICMDHANDLER_H

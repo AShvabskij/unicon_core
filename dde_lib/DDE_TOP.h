@@ -5,6 +5,7 @@
 #include "DDE_INTERFACES.h"
 
 #include <string>
+#include <thread>
 
 //---------------------------------------------------------------------------
 
@@ -32,6 +33,10 @@ public:
     virtual _dde_func_return_t set_evlog_data(DDE_SET_EVLOG_DATA& p);
 
     virtual void update();
+
+private:
+    int thread_proc();
+    std::thread* m_updThread = nullptr;
 
 protected: // Protected members are accessible in the class that defines them and in classes that inherit from that class.
     IDDE_PARAMS* m_params;

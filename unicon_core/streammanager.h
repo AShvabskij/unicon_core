@@ -24,7 +24,7 @@ public:
     int registerHandler(IReqHandler* handler) override;
 
 public slots:
-    int stream(QJsonObject value);
+    int stream(const QList<QJsonObject> &valueList);
 
 private:
     void threadProcess();

@@ -5,7 +5,7 @@
 
 #include "ipcmem.h"
 
-int PARAMS_DATA_init(char* device_description) 
+int PARAMS_DATA_init(char* device_description)
 {
     printf("hello from ipcmem_lib\n");
 
@@ -21,13 +21,16 @@ int PARAMS_DATA_init(char* device_description)
 int PARAMS_DATA_direct_read(DDE_GET_PARAMS_DATA& get_params)
 {
     //if (!get_params) return _return_FAIL;
-    if (get_params.param_id >= PARAMS_ID_MAX) return _return_FAIL; // p->param_ID = PARAMS_ID_MAX;
+    if (get_params.device_id >= DEVICE_ID_MAX) return _return_FAIL; //todo: change to asserts
     if (get_params.module_id >= MODULES_ID_MAX) return _return_FAIL;
-    if (get_params.device_id >= DEVICE_ID_MAX) return _return_FAIL;
+    if (get_params.param_id >= PARAMS_ID_MAX) return _return_FAIL; // p->param_ID = PARAMS_ID_MAX;
 
-    IPCMEM_get_params(&get_params);
+    GLIO_ELEMENT_VALUE el;
 
-        //get_params.el[0].format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT;
+    if (get_params.param_id==0)
+        IPCMEM_get_params(&get_params);
+    else
+        IPCMEM_get_element(get_params.device_id, get_params.module_id, get_params.param_id, &get_params.el[0]);
 
     return _return_OK;
 }
@@ -38,16 +41,21 @@ int PARAMS_DATA_direct_write(DDE_SET_PARAMS_DATA& set_params)
     uint8_t module_id = set_params.module_id;
     uint8_t param_id = set_params.param_id;
 
-    IPCMEM_set_element(device_id, module_id, param_id, set_params.ivalue);
-    
+    IPCMEM_set_element(device_id, module_id, param_id, set_params.ivalue, set_params.timestamp);
+
     return _return_OK;
+}
+
+int PARAMS_DATA_update_descr(uint8_t device_id, GLIO_ELEMENT_DESCR& el)
+{
+    return IPCMEM_set_element_descr(device_id, &el);
 }
 
 int PARAMS_DATA_write_cmd(uint8_t device_id, DDE_PARAMS_CMD& cmd)
 {
     int res;
     res = IPCMEM_write_cmd(device_id,&cmd);
-    
+
 
     return res;
 }

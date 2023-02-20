@@ -16,6 +16,10 @@ struct ParamID
     int uid() const {
         return (moduleId << 6) + id;
     }
+
+    QString logStr() const {
+        return QString("device id = %0, moduleId = %1, paramId = %2").arg(devId.id).arg(moduleId).arg(id);
+    }
 };
 
 bool operator==(const ParamID& a, const ParamID& b);
@@ -65,6 +69,10 @@ struct ParamValue
         scale = p.valueScale;
     }
 
+    bool isValid() {
+        return paramID.devId.isValid() && paramID.id >= 0 && format != GLIO_ELEMENT_FORMAT_ENUM::FORMAT_UNDEFINED;
+    }
+
 };
 typedef QVector<ParamValue> ParamValueList;
 
@@ -93,11 +101,13 @@ private:
 
     long getParamValue(const Param &p, ParamValue* out);
     long getParamValue(const ParamID &paramId, ParamValue* out);
+    ParamValueList getModuleValues(const ParamID& groupId, long &isOk);
+
     long getParamHeader(const ParamID& paramId, Param *out);
     long getParamHeaders(const DevID& deviceId, int moduleId, ParamList *out);
     long setParamValue(const ParamValue &value);
 
-    ParamValue valueFrom(const ParamID &paramId, const GLIO_ELEMENT_VALUE &el);
+    long convertValue(const ParamID &paramId, const GLIO_ELEMENT_VALUE &el, ParamValue *out);
     QJsonObject createHeaderObj(int requestId, const ParamList &params);
     QJsonObject createValueObj(int requestId, const ParamValue& value, int error = 0);
     QJsonObject createStreamValueObj(const ParamValue& value, int error = 0);
@@ -114,6 +124,7 @@ private:
     int m_streamValCount = 0;
     QTimer* m_streamTimer;
     mutable DDE_GET_PARAMS_HEADER* m_header = nullptr;
+    mutable DDE_GET_PARAMS_HEADER  m_lastModHeader;
     mutable DDE_GET_PARAMS_DATA *m_data = nullptr;
 
 };

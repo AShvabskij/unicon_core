@@ -64,7 +64,6 @@ private:
     int loadOscFile(uint16_t device_id, std::string* outBuff);
     void waitForLoad();
     std::ifstream openOscFile(int fileNumber);
-    std::stringstream* createFileStream();
     int parseHeader(const std::ifstream& fileStream, OSC_FILE::FILE_HEADER &header);
     std::string readLine(std::istream &stream);
     std::vector<std::uint16_t> parseValues(std::string line);
