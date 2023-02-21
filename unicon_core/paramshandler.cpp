@@ -1,3 +1,5 @@
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+
 #include "paramshandler.h"
 #include <QTimer>
 #include <QTextStream>
@@ -10,9 +12,6 @@ const QString CMD_SYSTEM_INIT = "system_init";
 
 const int DATA_YELD_INTERVAL_MSC = 100;
 const int STREAM_OBJECT_LIMIT = 6000;//*100;
-
-#define INT_MAX		2147483647
-#define INT_MIN		(-INT_MAX-1)
 
 bool operator==(const ParamID& a, const ParamID& b) {
     return a.devId == b.devId &&
@@ -173,12 +172,12 @@ long ParamsHandler::setParamValue(const ParamValue& value)
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_BIN:
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_HEX32: {
         int ivalue = value.value.toInt();
-        setData.ivalue = *(uint32_t*)&ivalue;
+        setData.ivalue = *(reinterpret_cast<uint32_t*>(&ivalue));
         break;
     }
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT: {
         float fvalue = value.value.toFloat();
-        setData.ivalue = *(uint32_t*)&fvalue;
+        setData.ivalue = *(reinterpret_cast<uint32_t*>(&fvalue));
         break;
     }
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_TEXT: {
@@ -310,7 +309,7 @@ long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALU
     res.paramID = paramId;
     res.timestamp = el.timestamp; //QDateTime::currentMSecsSinceEpoch();
 
-    res.format = (GLIO_ELEMENT_FORMAT_ENUM)el.format;
+    res.format = static_cast<GLIO_ELEMENT_FORMAT_ENUM>(el.format);
     res.scale = el.scale;
     const float NO_SCALE = 0.0f;
 
