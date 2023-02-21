@@ -139,7 +139,7 @@ long DeviceHandler::requestDeviceLinks(SysType sysType, QList<int>& links)
     if (res <= _return_FAIL) return res;
 
     time_t timeMs = QDateTime::currentMSecsSinceEpoch();
-    const int LINK_TIME_OUT = 1000; // only for master device
+    const int LINK_TIME_OUT = 2000; // only for master device
 
     for (int i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ++i) {
         time_t diffTime = (dat.el[i].timestamp != 0) ? timeMs - dat.el[i].timestamp : 0;
