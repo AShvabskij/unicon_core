@@ -324,10 +324,10 @@ long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALU
         }
     }; break;
     case FORMAT_FLOAT: {
-        uint32_t* pValue = const_cast<uint32_t*>(&el.ivalue);
-        float* fvalue = reinterpret_cast<float*>(pValue);
+//        uint32_t* pValue = const_cast<uint32_t*>(&el.ivalue);
+//        float* fvalue = reinterpret_cast<float*>(pValue);
         float scale = (el.scale == 0.0f) ? 1.0f: el.scale;
-        res.value = *fvalue  * scale;
+        res.value = static_cast<float>(el.ivalue) * scale;
     }; break;
     case FORMAT_TEXT: {
         res.value = el.ivalue;
