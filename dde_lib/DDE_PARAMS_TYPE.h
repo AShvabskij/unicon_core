@@ -3,7 +3,7 @@
 
 //---------------------------------------------------------------------
 
-#include <time.h> 
+#include <time.h>
 #include <stdint.h>
 
 #define MAX_DEV_SUPPORT  (32+1)
@@ -11,19 +11,21 @@
 
 #define PARAMS_REQUEST_TIMOUT_MS	1000
 
-#define PARAMS_ID_MAX		64
-#define MODULES_ID_MAX		64
-#define ELEMENTS_ID_MAX		(PARAMS_ID_MAX*MODULES_ID_MAX)
+#define PARAMS_ID_MAX		0x3F
+#define MODULES_ID_MAX		0x3F
+#define ELEMENTS_ID_MAX		0xFFF
+#define PARAMS_COUNT_MAX	(0x3F + 1)
 
 #define DEVICE_ID_MAX		(32+1)
 
+#define DDE_DEV0_MASTER                              0
 #define DDE_DEV0_MODULE0_DESCRIPTION                 0
 #define     DDE_DEV0_MODULE0_PARAM0_DESCRIPTION      0
 #define     DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME      1
 #define     DDE_DEV0_MODULE0_PARAM2_HW_REV           2
 #define     DDE_DEV0_MODULE0_PARAM3_SW_REV           3
-#define     DDE_DEV0_MODULE0_PARAM4_SPARE_REV        4
-#define     DDE_DEV0_MODULE0_PARAM5_STATE            5
+#define     DDE_DEV0_MODULE0_PARAM4_HASH             4
+#define     DDE_DEV0_MODULE0_PARAM5_NODE             5
 #define     DDE_DEV0_MODULE0_PARAM5_9_RESERVED       9
 
 #define     DDE_DEV0_MODULE0_PARAM10_LINK                 10
@@ -96,7 +98,7 @@ typedef struct
     GLIO_ELEMENT_FORMAT_ENUM format;  // 0 - not defined 1-int 2-float 3-bit, 4-hex, 5-text
 #else
     int format;
-#endif    
+#endif
     float scale;
     char dim[DIM_SIZE]; // unit of measurement
     char* txtValues[DDE_PARAMS_TXTVALUES_MAX_COUNT]; // array of pointer's to 'text values'
@@ -172,7 +174,7 @@ typedef struct
     GLIO_ELEMENT_DESCR el_descr[64]; //not more then 64 params at a time
     uint16_t timeout; //each request has it own timeout counter
     uint16_t timeout_flg;//
-} DDE_GET_PARAMS_HEADER; 
+} DDE_GET_PARAMS_HEADER;
 //#pragma pack(pop)
 
 
@@ -185,6 +187,7 @@ typedef struct
     uint16_t device_id;
     uint16_t module_id;
     uint16_t param_id;
+    uint16_t el_count; //count of elements for responce
     GLIO_ELEMENT_VALUE el[64];	//not more then 64 params at a time
     uint16_t timeout; //each request has it own timeout counter
     uint16_t timeout_flg;//
@@ -198,7 +201,7 @@ typedef struct
 //---------------------------------------------------------------------
 
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 
 #pragma pack(push,1)
 typedef struct
@@ -215,7 +218,7 @@ typedef struct
     GLIO_ELEMENT_FORMAT_ENUM format;  // 0 - not defined 1-int 2-float 3-bit, 4-hex, 5-text
 #else
     int format;
-#endif    
+#endif
 
     float scale;
     char dim[DIM_SIZE]; // unit of measurement
@@ -234,10 +237,10 @@ typedef struct
     uint16_t param_id;
     uint16_t module_id;
     uint32_t ivalue; //just value - no need for format and scale to be copied
+    time_t timestamp;
     //GLIO_ELEMENT_VALUE el; //just one
     //void (*callback_func)();
 } DDE_SET_PARAMS_DATA;
 #pragma pack(pop)
 
 #endif
-

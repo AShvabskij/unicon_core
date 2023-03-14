@@ -288,7 +288,7 @@ int OscHandler::streamData()
     long res = getData(m_capturedOsc, m_oscDataBuff);
     int error = (res <= 0) ? static_cast<int>(res) : 0;
     QJsonObject response = createStreamDataObj(*m_oscDataBuff, error);
-    emit stream(response);
+    emit stream(QList<QJsonObject>() << response);
 
     return res;
 }
@@ -304,7 +304,7 @@ void OscHandler::stopStreamData(const OscHeader &osc)
     val.deviceID = osc.deviceID;
 
     QJsonObject response = createStreamDataObj(val, STOP_STREAM_CODE);
-    emit stream(response);
+    emit stream(QList<QJsonObject>() << response);
 
     return;
 }

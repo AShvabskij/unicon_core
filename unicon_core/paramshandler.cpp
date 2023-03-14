@@ -1,5 +1,9 @@
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+
 #include "paramshandler.h"
 #include <QTimer>
+#include <QTextStream>
+#include <iostream>
 
 const QString CMD_PARAMS_HEADER = "param_header";
 const QString CMD_TYPE = "get";
@@ -114,7 +118,7 @@ void ParamsHandler::handleGetValue(const QJsonObject &request)
     val.paramID = {{sysType,deviceId}, moduleId, paramId};
 
     long res = getParamValue(val.paramID, &val);
-    int error = (res <= 0) ? static_cast<int>(res): 0;
+    int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
 
     QJsonObject response = createValueObj(requestId, val, error);
     send(response);
@@ -147,7 +151,7 @@ void ParamsHandler::handleSetValue(const QJsonObject &request)
     val.timestamp = QDateTime::currentMSecsSinceEpoch();
 
     long res = setParamValue(val);
-    int error = (res <= 0) ? static_cast<int>(res): 0;
+    int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
 
     QJsonObject response = createValueObj(requestId, val, error);
     send(response);
@@ -155,33 +159,35 @@ void ParamsHandler::handleSetValue(const QJsonObject &request)
 
 long ParamsHandler::setParamValue(const ParamValue& value)
 {
-    DDE_SET_PARAMS_DATA m_data;
+    DDE_SET_PARAMS_DATA setData;
+    memset(&setData, 0, sizeof(setData));
 
-    m_data.param_id = static_cast<uint16_t>(value.paramID.id);
-    m_data.device_id = static_cast<uint16_t>(value.paramID.devId.id);
-    m_data.module_id = static_cast<uint16_t>(value.paramID.moduleId);
-    m_data.ivalue = 0;
+    setData.param_id = static_cast<uint16_t>(value.paramID.id);
+    setData.device_id = static_cast<uint16_t>(value.paramID.devId.id);
+    setData.module_id = static_cast<uint16_t>(value.paramID.moduleId);
+    setData.ivalue = 0;
 
     switch (value.format) {
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT:
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_BIN:
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_HEX32: {
         int ivalue = value.value.toInt();
-        m_data.ivalue = *(uint32_t*)&ivalue;
+        setData.ivalue = *(reinterpret_cast<uint32_t*>(&ivalue));
         break;
     }
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT: {
         float fvalue = value.value.toFloat();
-        m_data.ivalue = *(uint32_t*)&fvalue;
+        setData.ivalue = *(reinterpret_cast<uint32_t*>(&fvalue));
         break;
     }
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_TEXT: {
-        m_data.ivalue = static_cast<uint32_t>(value.value.toInt());
+        setData.ivalue = static_cast<uint32_t>(value.value.toInt());
         break;
     }
+    default: return _return_FAIL;
     }
 
-    _dde_func_return_t res = (*m_dde)(value.paramID.devId.type)->set_params_data(m_data);
+    _dde_func_return_t res = (*m_dde)(value.paramID.devId.type)->set_params_data(setData);
 
     return res;
 }
@@ -291,37 +297,60 @@ void ParamsHandler::sendActualParamValue(const Param &param, int requestId, int 
     send(response);
 }
 
-ParamValue ParamsHandler::valueFrom(const ParamID& paramId, const GLIO_ELEMENT_VALUE& el)
+long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALUE& el, ParamValue* out)
 {
+    Q_ASSERT(out);
+
     if (el.deprecated) {
-        return ParamValue();
+        return _return_FAIL;
     }
 
-    ParamValue res;
+    ParamValue& res = *out;
     res.paramID = paramId;
     res.timestamp = el.timestamp; //QDateTime::currentMSecsSinceEpoch();
 
-    res.format = (GLIO_ELEMENT_FORMAT_ENUM)el.format;
+    res.format = static_cast<GLIO_ELEMENT_FORMAT_ENUM>(el.format);
     res.scale = el.scale;
+    const float NO_SCALE = 0.0f;
 
     switch (res.format) {
     case FORMAT_INT:
     {
-        res.value = el.ivalue;
+        if (el.scale == NO_SCALE) {
+            res.value = static_cast<int>(el.ivalue);
+        } else {
+            float scaledVal = static_cast<int>(el.ivalue)  * el.scale;
+            res.value = static_cast<int>(std::round(scaledVal));
+        }
     }; break;
     case FORMAT_FLOAT: {
-        float fvalue = *(float*)&el.ivalue;
-        res.value = fvalue;
+//        uint32_t* pValue = const_cast<uint32_t*>(&el.ivalue);
+//        float* fvalue = reinterpret_cast<float*>(pValue);
+        float scale = (el.scale == 0.0f) ? 1.0f: el.scale;
+        res.value = static_cast<float>(el.ivalue) * scale;
     }; break;
     case FORMAT_TEXT: {
         res.value = el.ivalue;
     }; break;
+    case FORMAT_ASCII: {
+        //std::string_view str(reinterpret_cast<const char *>(&value), sizeof(value));
+
+        char ascii[sizeof(el.ivalue)+1];
+        memcpy(ascii, &el.ivalue, sizeof(ascii));
+        ascii[sizeof(el.ivalue)] = '\0';
+
+        res.value = ascii;
+    }; break;
     default: {
+        if (el.ivalue > 0 && paramId.id > 0) {
+            QTextStream(stdout) << "The param value format is undefined, " << paramId.logStr() << "\n";
+        }
+
         res.value = el.ivalue;
     }
     }
 
-    return res;
+    return _return_OK;
 }
 
 void ParamsHandler::startPooling(int intervalMsc)
@@ -332,6 +361,8 @@ void ParamsHandler::startPooling(int intervalMsc)
     m_streamTimer->setInterval(intervalMsc);
     m_streamTimer->start();
 
+    memset(&m_lastModHeader, 0, sizeof(m_lastModHeader));
+
     // connect(this, SIGNAL(requestStreamValue()), this, SLOT(slotTimerAlarm()), Qt::QueuedConnection);
     //  emit requestStreamValue();
 }
@@ -339,6 +370,7 @@ void ParamsHandler::startPooling(int intervalMsc)
 void ParamsHandler::stopPooling()
 {
     m_streamTimer->stop();
+    memset(&m_lastModHeader, 0, sizeof(m_lastModHeader));
 }
 
 void ParamsHandler::streamParamsValue()
@@ -347,13 +379,56 @@ void ParamsHandler::streamParamsValue()
         return;
     }
 
-    for (const Param &p : m_capturedParams) {
-        ParamValue val(p);
-        long res = getParamValue(p, &val);
-        int error = (res <= 0) ? static_cast<int>(res) : 0;
-        QJsonObject response = createStreamValueObj(val, error);
+    QList<ParamID> modules;
+    QList<ParamValue> sentValues;
 
-        emit stream(response);
+    if (m_capturedParams.size() > 2) {
+        // Optimized variant: getting all param values from param modules at once
+        for (const Param& p : m_capturedParams) {
+            ParamID modId = {p.ID.devId, p.ID.moduleId, 0};
+            if (modules.contains(modId)) continue;
+
+            modules << modId;
+        }
+
+        int error = 0;
+        _dde_func_return_t res = _return_OK;
+        ParamValueList allValues;
+        for (const ParamID& modId  : modules) {
+            ParamValueList values = getModuleValues(modId, res);
+            error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
+            if (error != 0) break;
+
+            allValues << values;
+        }
+
+        for (const ParamValue& val : allValues) {
+            for (const Param& p : m_capturedParams) {
+                if (p.ID == val.paramID) {
+                    sentValues << val;
+                    break;
+                }
+            }
+        }
+
+        QList<QJsonObject> responseList;
+        for (const ParamValue& val : sentValues) {
+            QJsonObject response = createStreamValueObj(val, error);
+            responseList << response;
+        }
+        emit stream(responseList);
+
+    } else {
+        // Simplified variant, getting all param values one by one
+        QList<QJsonObject> responseList;
+        for (const Param &p : m_capturedParams) {
+            ParamValue val(p);
+            long res = getParamValue(p, &val);
+            int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
+            QJsonObject response = createStreamValueObj(val, error);
+            responseList << response;
+        }
+        emit stream(responseList);
     }
 
     return;
@@ -378,10 +453,10 @@ void ParamsHandler::stopStreamParamValue(const Param &param)
     }
 
     ParamValue val(param);
-    val.value = -1;
+    val.value = INT_MIN;
 
     QJsonObject response = createStreamValueObj(val);
-    emit stream(response);
+    emit stream(QList<QJsonObject>() << response);
 
     return;
 }
@@ -406,9 +481,60 @@ long ParamsHandler::getParamValue(const Param& p, ParamValue* out)
     return getParamValue(p.ID, out);
 }
 
+ParamValueList ParamsHandler::getModuleValues(const ParamID& groupId, _dde_func_return_t& isOk)
+{
+    if (m_lastModHeader.module_id != groupId.moduleId && m_lastModHeader.device_id != groupId.devId.id) {
+        memset(&m_lastModHeader, 0, sizeof(m_lastModHeader));
+
+        m_lastModHeader.device_id = static_cast<uint16_t>(groupId.devId.id);
+        m_lastModHeader.module_id = static_cast<uint16_t>(groupId.moduleId);
+        m_lastModHeader.param_id = 0;
+
+        _dde_func_return_t res = (*m_dde)(groupId.devId.type)->get_params_header(m_lastModHeader);
+
+        if (res != _return_OK) {
+            isOk = res;
+            return ParamValueList();
+        }
+    }
+
+    Q_ASSERT(m_data);
+    memset(m_data, 0, sizeof(*m_data));
+
+    m_data->device_id = static_cast<uint16_t>(groupId.devId.id);
+    m_data->module_id = static_cast<uint16_t>(groupId.moduleId);
+    m_data->el_count = m_lastModHeader.el_count;
+    m_data->param_id = 0;
+
+    _dde_func_return_t res = (*m_dde)(groupId.devId.type)->get_params_data(*m_data);
+
+    if (res != _return_OK) {
+        isOk = res;
+        return ParamValueList();
+    }
+
+    ParamValueList resList;
+    resList.reserve(PARAMS_COUNT_MAX);
+
+    for (int i = 0; i <= PARAMS_ID_MAX; i++ ) {
+        ParamValue val;
+        res = convertValue(groupId, m_data->el[i], &val);
+        val.paramID.id = i;
+        if (res == _return_OK && val.isValid()) {
+            resList << val;
+        }
+    }
+
+    isOk = true;
+    return resList;
+}
+
 long ParamsHandler::getParamValue(const ParamID& paramId, ParamValue* out)
 {
     Q_ASSERT(out);
+    Q_ASSERT(m_data);
+
+    memset(m_data, 0, sizeof(*m_data));
 
     m_data->device_id = static_cast<uint16_t>(paramId.devId.id);
     m_data->module_id = static_cast<uint16_t>(paramId.moduleId);
@@ -416,15 +542,18 @@ long ParamsHandler::getParamValue(const ParamID& paramId, ParamValue* out)
 
     _dde_func_return_t res = (*m_dde)(paramId.devId.type)->get_params_data(*m_data);
 
-    if (res <= _return_FAIL) return res;
+    if (res != _return_OK) return res;
 
-    *out = valueFrom(paramId, m_data->el[0]);
-
-    return _return_OK;
+    res = convertValue(paramId, m_data->el[0], out);
+    return res;
 }
 
 long ParamsHandler::getParamHeader(const ParamID& paramId, Param *out)
 {
+    Q_ASSERT(m_header);
+
+    memset(m_header, 0, sizeof(*m_header));
+
     m_header->device_id = static_cast<uint16_t>(paramId.devId.id);
     m_header->module_id = static_cast<uint16_t>(paramId.moduleId);
     m_header->param_id = static_cast<uint16_t>(paramId.id);
@@ -453,7 +582,7 @@ long ParamsHandler::getParamHeader(const ParamID& paramId, Param *out)
         }
     }
 
-    return _return_OK;
+    return _return_FAIL;
 }
 
 long ParamsHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamList *out)
@@ -468,7 +597,7 @@ long ParamsHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamLi
 
     if (res <= _return_FAIL) return res;
 
-    for (int i = 1; i < m_header->el_count; ++i) {
+    for (int i = 0; i < m_header->el_count; ++i) {
 
         GLIO_ELEMENT_DESCR& elem = m_header->el_descr[i];
         if (elem.id == 0) {
@@ -565,10 +694,16 @@ QJsonObject ParamsHandler::createStreamValueObj(const ParamValue& value, int err
     res["p_id"] = value.paramID.id;
     res["u_id"] = value.paramID.uid();
 
-    res["value"] = value.toJsonValue();
+    res["val"] = value.value.toJsonValue();
+    res["time"] = value.timestamp;
+
     if (error != 0) {
         res["error"] = error;
     }
-
+/*
+    if (value.paramID.id == 1) {
+        QTextStream(stdout) << "stream value, val =  " << value.value.toString()  << ", time = " << value.timestamp << "\n";
+    }
+*/
     return res;
 }

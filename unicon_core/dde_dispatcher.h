@@ -6,6 +6,7 @@
 enum SysType
 {
     Undefined = 0,
+    DEFAULT = 0,
     FILE_IO = 1,
     UAVCAN = 2,
     CANOPEN = 3,
@@ -20,7 +21,7 @@ struct DevID
     int id;
 
     bool isValid() const {
-        return id != 0;
+        return id >= 0 && type != SysType::Undefined;
     }
 
 };
@@ -37,7 +38,7 @@ public:
 
     virtual void setDefaultDDE(IDDE* dde) = 0;
     virtual IDDE* dde(SysType sysInterface) = 0;
-    virtual IDDE* operator() (SysType sysInterface) = 0;
+    virtual IDDE* operator() (SysType sysInterface = SysType::Undefined) = 0;
 };
 
 class DDE_Dispatcher : public IDDE_Dispatcher
@@ -52,7 +53,7 @@ public:
         m_defDDE = dde;
     }
 
-    IDDE* operator() (SysType sysType) {
+    IDDE* operator() (SysType sysType = SysType::Undefined) {
         if (m_ddeList.contains(sysType)) {
             return m_ddeList.value(sysType);
         } else {

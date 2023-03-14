@@ -1,5 +1,5 @@
 #ifndef OSCHANDLER_H
-#define OSCSHANDLER_H
+#define OSCHANDLER_H
 
 #include "basereqhandler.h"
 #include "DDE_TOP.h"

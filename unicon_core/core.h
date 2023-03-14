@@ -4,6 +4,7 @@
 #include "socketserver.h"
 
 #include "DDE_PARAMS_TYPE.h"
+#include "dde_dispatcher.h"
 
 class IDDE;
 class IDDE_Dispatcher;
@@ -15,8 +16,11 @@ public:
     ~Core();
 
     void start();
+//  [[ noreturn ]] void thread_proc(SysType sysType);
 
 private:
+
+
     SocketServer* m_cmdServer;
     SocketServer* m_streamServer;
 

@@ -49,7 +49,8 @@ public:
     virtual int handle(const QJsonObject &request);
 
 private:
-    void handleGetHeader(const QJsonObject &request);
+    void handleDeviceHeader(const QJsonObject &request);
+    void handleModuleHeader(const QJsonObject& request);
     void handleSystemStatus(const QJsonObject& request);
     void handleSystemInit(const QJsonObject& request);
     void handleDeviceLinks(const QJsonObject &request);
@@ -60,6 +61,7 @@ private:
     long requestDeviceLinks(SysType sysType, QList<int>& links);
     long requestDevice(Device& device);
     QString getDeviceName(const DevID &deviceId);
+    QString getDeviceDescr(const DevID& deviceId);
 
     QJsonObject createResponse(int requestId, const DeviceList& devices);
     QJsonObject createResponse(int requestId, const Module& module);
