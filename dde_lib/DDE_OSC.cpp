@@ -1,61 +1,231 @@
 #include "DDE_OSC.h"
 
+#include <cmath>
+#include <chrono>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+
 #include "cpp_inc.h"
+#include "oscdataservice.h"
+#include "oscipcservice.h"
 
-#include "DDE_OSC_FILE.h"
-// #include "DDE_OSC_EMUL.h"
-
-DDE_OSC::DDE_OSC()
-{}
+using namespace std;
 
 DDE_OSC::~DDE_OSC()
-{}
-
-_dde_func_return_t DDE_OSC::init(const char* sys_type )
 {
-    if (strcmp(sys_type, "FILE_IO") == 0) {
-        m_osc = new DDE_OSC_FILE();
-    } else if (strcmp(sys_type, "MVCP") == 0) {
-//      m_osc = new DDE_OSC_MVCP();
-    } else {
-        std::cout << "Osc error! This system type is not recognised , sys_type = " << sys_type << "\n";
-        m_osc = new DDE_OSC_STUB();
+    if (m_sysName != "") {
+        m_headerSrv->deInit(m_sysName.c_str());
     }
 
-    return m_osc->init(sys_type);
+    delete m_dataSrv;
+    delete m_headerSrv;
 }
 
-_dde_func_return_t DDE_OSC::open(uint16_t deviceId)
+_dde_func_return_t DDE_OSC::init(const char * sysName)
 {
-    assert(m_osc);
-    return m_osc->open(deviceId);
+    m_dataSrv = new OscDataService();
+    m_headerSrv = new OscIPCHeaderService();
+    m_sysName = sysName;
+
+    _dde_func_return_t res = m_headerSrv->init(sysName);
+
+    //---- A&S for tests only-------------------------------------
+
+    DDE_OSC_HEADER hdr;
+    int oscId = 11;
+    hdr.device_id = 12;
+    hdr.settings.channel_count = 1;
+
+    OSC_CHANNEL ch;
+    ch.chNum = 1;
+    strcpy(ch.var.name, "test");
+    ch.var.type = OSC_VAR_TYPE::ANALOG;
+
+    hdr.channels[0] = ch;
+
+    m_headerSrv->set_header(oscId, hdr);
+
+    strcpy(ch.var.name, "test2");
+    ch.var.type = OSC_VAR_TYPE::DIGITAL;
+
+    OSC_SETTING cfg;
+    cfg.channel_count = 2;
+    cfg.triger_mode = 2;
+    cfg.reason = 1;
+    cfg.time_resolution_ns = 1000;
+
+    m_headerSrv->set_settings(oscId, cfg);
+
+    m_headerSrv->get_header(oscId, hdr);
+
+    m_headerSrv->set_page_ready(oscId, 4);
+    m_headerSrv->set_page_ready(oscId, 5);
+    m_headerSrv->set_page_ready(oscId, 6);
+
+    m_headerSrv->get_header(oscId, hdr);
+
+    int pageNum = m_headerSrv->get_page_ready(oscId);
+
+    while (pageNum != 0) {
+        m_headerSrv->set_page_ready(oscId, pageNum, false);
+        pageNum = m_headerSrv->get_page_ready(oscId);
+    }
+    //-----------------------------------------------------------
+
+    return _return_OK;
 }
 
-_dde_func_return_t DDE_OSC::close(uint16_t deviceId)
+_dde_func_return_t DDE_OSC::open(uint16_t osc_id)
 {
-    assert(m_osc);
-    return m_osc->close(deviceId);
+    load_header(osc_id);
+    assert(m_header);
+    assert(m_header->device_id == osc_id);
+
+    int pageNum = m_headerSrv->get_page_ready(osc_id);
+
+    if (pageNum < 0) return _return_FAIL;
+    if (pageNum == 0) return _return_OK;
+
+    _dde_func_return_t res = m_dataSrv->open(pageNum, false);
+    return res;
 }
 
-_dde_func_return_t DDE_OSC::get(DDE_GET_OSC_HEADER& p)
+_dde_func_return_t DDE_OSC::load_header(uint16_t osc_id)
 {
-    assert(m_osc);
-    return m_osc->get(p);
+    if (m_header == nullptr);
+
+    m_header = new DDE_OSC_HEADER();
+    m_header->device_id = osc_id;
+    _dde_func_return_t res = m_headerSrv->get_header(osc_id, *m_header);
+    if (res != _return_OK) {
+        delete m_header;
+        m_header = nullptr;
+    }
+
+    return res;
 }
 
-_dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& p)
+_dde_func_return_t DDE_OSC::close(uint16_t osc_id)
 {
-    assert(m_osc);
-    return m_osc->get(p);
+    delete m_header;
+    m_header = nullptr;
+
+    _dde_func_return_t res = m_dataSrv->close();
+    return res;
 }
 
-_dde_func_return_t DDE_OSC::set(DDE_GET_OSC_HEADER& p)
+_dde_func_return_t DDE_OSC::get(DDE_OSC_HEADER& h)
 {
-    assert(m_osc);
-    return m_osc->set(p);
+    _dde_func_return_t res = m_headerSrv->get_header(h.device_id, h);
+
+    return res;
+}
+
+_dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
+{
+    _dde_func_return_t res = _return_OK;
+    uint16_t osc_id = dat.device_id;
+
+    if (m_header && m_header->device_id != dat.device_id) {
+        close(m_header->device_id);
+    }
+
+    if (!m_header) {
+        load_header(osc_id);
+    }
+
+    assert(m_header);
+    assert(m_header->device_id == osc_id);
+
+    int pageNum = open_ready_page(osc_id);
+    if (pageNum == -1) return _return_FAIL;
+
+    OSC_STATE state;
+    m_headerSrv->get_state(osc_id, state);
+    dat.eof = (pageNum == 0) && !state.enabled;
+
+    if (dat.eof) return res;
+
+    if (pageNum == 0) {
+        perror("There is not available pages to read data yet");
+        _return_Busy;
+    }
+
+    res = m_dataSrv->readNextData(*m_header, dat);
+
+    if (dat.eof) {
+        m_headerSrv->set_page_ready(osc_id, pageNum, false);
+        pageNum = open_ready_page(osc_id); // open the page in advance, cause it's time consuming
+        dat.eof = (pageNum == 0) && !state.enabled;
+        dat.next_ready = (pageNum > 0);
+        pageNum = m_headerSrv->get_page_free(osc_id);
+        dat.overflow = (pageNum == 0);
+    }
+
+    return res;
+}
+
+int DDE_OSC::open_ready_page(uint16_t osc_id)
+{
+    int pageNum = m_headerSrv->get_page_ready(osc_id);
+    if (pageNum <= 0) {
+        return pageNum;
+    }
+
+    _dde_func_return_t res = m_dataSrv->open(pageNum, false);
+    if (res != _return_OK) return -1;
+
+    return pageNum;
+}
+
+_dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
+{
+    uint16_t osc_id = dat.device_id;
+
+    if (m_header && m_header->device_id != dat.device_id) {
+        close(m_header->device_id);
+    }
+
+    if (!m_header) {
+        load_header(osc_id);
+    }
+
+    assert(m_header);
+    assert(m_header->device_id == osc_id);
+
+    int pageNum = m_headerSrv->get_page_free(osc_id);
+    if (pageNum == 0) { // there is not free pages
+        OSC_STATE state;
+        _dde_func_return_t res = m_headerSrv->get_state(osc_id, state);
+        state.overflowed = true;
+        m_headerSrv->set_state(osc_id, state);
+    }
+
+    if (pageNum <= 0) return _return_FAIL;
+
+    _dde_func_return_t res = m_dataSrv->open(pageNum, true);
+    if (res != _return_OK) return res;
+
+    bool overflowed = false;
+    res = m_dataSrv->addData(dat, m_header->settings.channel_count, overflowed);
+    if (res != _return_OK) return res;
+
+    if (overflowed || dat.eof) {
+        m_dataSrv->close();
+        m_headerSrv->set_page_ready(osc_id, pageNum, true);
+    }
+
+    return res;
+}
+
+_dde_func_return_t DDE_OSC::set(const DDE_OSC_HEADER& h)
+{
+    _dde_func_return_t res = m_headerSrv->set_header(h.device_id, h);
+    return res;
 }
 
 void DDE_OSC::update()
 {
-    m_osc->update();
+
 }

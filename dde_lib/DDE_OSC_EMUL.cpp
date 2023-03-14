@@ -8,13 +8,12 @@ const int BUFFER_MAX = 500;
 const int DATA_YELD_INTERVAL_MSC = 50;
 const int RESOLUTION_NS = (DATA_YELD_INTERVAL_MSC * 1000) / BUFFER_MAX;
 
-_dde_func_return_t DDE_OSC_EMUL::get(DDE_GET_OSC_HEADER& p)
+_dde_func_return_t DDE_OSC_EMUL::get(DDE_OSC_HEADER& p)
 {
     p.settings.reason = 0;
     p.settings.time_resolution_ns = RESOLUTION_NS;
 
-    std::time_t result = std::time(nullptr);
-    p.settings.trig_time = *std::localtime(&result);
+    p.settings.trig_time = std::time(nullptr);
     m_lastDataTimeNs = systemTimeNs();
     m_startDataTimeNs = systemTimeNs();
 
@@ -50,6 +49,11 @@ _dde_func_return_t DDE_OSC_EMUL::get(DDE_GET_OSC_DATA& p)
 
     m_lastDataTimeNs = t;
 
+    return _return_OK;
+}
+
+long DDE_OSC_EMUL::set(const DDE_SET_OSC_DATA &)
+{
     return _return_OK;
 }
 
@@ -90,12 +94,22 @@ float DDE_OSC_EMUL::generateValue(int chNum, time_t timeMcs)
     return res;
 }
 
-_dde_func_return_t DDE_OSC_EMUL::set(DDE_GET_OSC_HEADER& /*p*/)
+_dde_func_return_t DDE_OSC_EMUL::set(const DDE_OSC_HEADER& /*p*/)
 {
     return _return_OK;
 }
 
 long DDE_OSC_EMUL::init(const char* )
+{
+    return _return_OK;
+}
+
+long DDE_OSC_EMUL::open(uint16_t oscId)
+{
+    return _return_OK;
+}
+
+long DDE_OSC_EMUL::close(uint16_t oscId)
 {
     return _return_OK;
 }

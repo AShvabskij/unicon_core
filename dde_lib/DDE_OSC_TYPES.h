@@ -4,10 +4,16 @@
 #include <time.h>
 
 #define OSC_VAR_NAME_LENGTH 64
+#define OSC_VAR_USER_NAME_LENGTH 64
 #define OSC_MAX_CHANNELS 48
 #define OSC_MAX_ANALOG_VARS 48
 #define OSC_MAX_DISCRETE_VARS 128
 #define OSC_MAX_VARS 128
+#define OSC_PAGE_MAX 4
+#define OSC_DATA_BUFFER_MAX 0x10000
+
+#define OSC_MODE_BUFFERING
+#define SOC_MODE_SINGLE
 
 struct RGB {
     uint8_t Red;
@@ -18,9 +24,9 @@ struct RGB {
 enum OSC_VAR_TYPE
 {
      UNDEFINED = 0,
-     ANALOG,
-     DIGITAL,
-     DISCRETE
+     ANALOG = 1,
+     DIGITAL = 2,
+     DISCRETE = 3
 };
 
 struct OSC_VAR
@@ -30,6 +36,7 @@ struct OSC_VAR
 
     OSC_VAR_TYPE type;
     char name[OSC_VAR_NAME_LENGTH];
+    char user_name[OSC_VAR_NAME_LENGTH];
     char dim[6];
     float min = 0.0;
     float max = 0.0;
@@ -52,8 +59,8 @@ struct OSC_CHANNEL
 
 union OSC_DATA
 {
-    float f_buff[0x10000];
-    uint32_t i_buff[0x10000];
+    float f_buff[OSC_DATA_BUFFER_MAX];
+    uint32_t i_buff[OSC_DATA_BUFFER_MAX];
 };
 
 struct OSC_SETTING
@@ -61,23 +68,25 @@ struct OSC_SETTING
     uint32_t time_resolution_ns; // 1000 = 1us
     uint32_t triger_mode; //single, continues, stream
     uint32_t reason;
-    tm trig_time; // osc starting time
+    time_t trig_time; // osc starting time
+    uint8_t channel_count;
 };
 
-#define OSC_MODE_BUFFERING
-#define SOC_MODE_SINGLE
+typedef struct
+{
+    uint32_t pageMask; // 1000 = 1us
+    bool enabled;
+    bool overflowed;
 
-struct DDE_GET_OSC_HEADER
+} OSC_STATE;
+
+struct DDE_OSC_HEADER
 {
     uint16_t device_id; // todo rename to osc_id
 
     OSC_CHANNEL channels[OSC_MAX_VARS + 1];
 
     OSC_SETTING settings;
-
-    uint16_t page_size;		//
-    uint16_t page_number;	// bytes
-    uint32_t ready;			//
 };
 
 struct DDE_GET_OSC_DATA
@@ -86,15 +95,46 @@ struct DDE_GET_OSC_DATA
 
     uint32_t header_updated;    //if flag is set update the header, clear screen and draw data
     uint16_t data_length;   // The length of a data in OSC_CH_DATA
+    uint16_t ch_count; // TODO Remove, take from header //  it The channels count starting from zero  
     uint16_t overflow;  // flag if  buffer is overflowed (for debugging only)
-    bool next_ready;    // flag if next data frame is ready
-    bool eof;    // flag if it is the last frame
+    bool next_ready = false;    // flag if next data frame is ready
+    bool eof = false;    // flag if it is the last frame
 
     OSC_DATA data[OSC_MAX_CHANNELS + 1];
 };
 
 struct DDE_SET_OSC_DATA
 {
-    uint32_t addr_start;
+    uint16_t device_id;
+    uint16_t data_length;   // The length of a data in OSC_CH_DATA
+    uint16_t ch_count; // TODO Remove it, take from header. // The channels count starting from zero 
+    bool eof = false;
+    OSC_DATA data[OSC_MAX_CHANNELS + 1];
 };
 
+struct GLIO_OSC_CHANNEL
+{
+    uint16_t chNum;
+
+    OSC_VAR_TYPE type;
+    char name[OSC_VAR_NAME_LENGTH];
+    char userName[OSC_VAR_USER_NAME_LENGTH];
+    char dim[6];
+    float min = 0.0;
+    float max = 0.0;
+    float gain = 0;
+    float offset = 0;
+
+    // for discrete values only
+    uint8_t firstBit;
+    uint8_t lastBit;
+};
+
+typedef struct
+{
+    uint8_t id;
+    OSC_STATE state;
+    OSC_SETTING settings;
+    GLIO_OSC_CHANNEL channel[OSC_MAX_CHANNELS + 1];
+
+} GLIO_OSC_HEADER;

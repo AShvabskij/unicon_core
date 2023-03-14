@@ -1,5 +1,5 @@
 #include "oscdatafile.h"
-
+#include <ctime>
 #include <cmath>
 #include <chrono>
 #include <iostream>
@@ -207,16 +207,18 @@ _dde_func_return_t OscDataFile::readNextData(DDE_GET_OSC_DATA& p, int datYeldInt
 
         const auto& values = parseValues(line);
 
-        for (int chInd = 1; chInd <= OSC_MAX_VARS; chInd++) {
+        for (int chInd = 1; chInd <= OSC_MAX_CHANNELS; chInd++) {
             auto& var = m_header->vars[chInd];
             uint16_t elemInd = var.colIndex;
+            uint8_t chNum = var.chNum;
+
             if (elemInd == 0) continue;
+
             if (elemInd >= values.size() ) {
                 cout << OSC_FILE_PARSE_ERROR;
                 continue;
             }
 
-            uint8_t chNum = var.chNum;
             uint16_t rawValue = values[elemInd];
             if (var.isDigital) {
                 uint16_t val = rawValue;
@@ -224,9 +226,11 @@ _dde_func_return_t OscDataFile::readNextData(DDE_GET_OSC_DATA& p, int datYeldInt
                     val = normalizeValue(rawValue, var.gain, var.offset);
                 }
                 p.data[chNum].i_buff[buffInd] = val;
-            } else if (var.isDiscrete) {
+            } else if(var.isDiscrete) {
+                uint16_t rawValue = values[elemInd];
                 p.data[chNum].i_buff[buffInd] = rawValue;
-            } else { // if analog var
+            }
+            else {
                 float val = normalizeValue(rawValue, var.gain, var.offset);
                 p.data[chNum].f_buff[buffInd] = val;
             }
@@ -240,7 +244,7 @@ _dde_func_return_t OscDataFile::readNextData(DDE_GET_OSC_DATA& p, int datYeldInt
     return _return_OK;
 }
 
-_dde_func_return_t OscDataFile::getHeader(DDE_GET_OSC_HEADER &p)
+_dde_func_return_t OscDataFile::getHeader(DDE_OSC_HEADER &p)
 {
     OSC_FILE::FILE_HEADER header;
     int res = getHeader(p.device_id, header);
@@ -264,7 +268,7 @@ _dde_func_return_t OscDataFile::getHeader(DDE_GET_OSC_HEADER &p)
     return _return_OK;
 }
 
-_dde_func_return_t OscDataFile::setHeader(DDE_GET_OSC_HEADER&)
+_dde_func_return_t OscDataFile::setHeader(const DDE_OSC_HEADER&)
 {
     return _return_OK;
 }
@@ -348,7 +352,7 @@ int OscDataFile::parseHeader(const std::ifstream& fileStream, FILE_HEADER& heade
     }
 
     int varId = 0;
-    int chIndex = 0;
+    int chInd = 0;
     int res = _return_OK;
 
     for (std::string line; std::getline(stream, line); ) {
@@ -371,7 +375,7 @@ int OscDataFile::parseHeader(const std::ifstream& fileStream, FILE_HEADER& heade
 
                 ss >> get_time(t, "%H:%M:%S");
 
-                header.settings.trig_time = *t;
+                header.settings.trig_time = std::time(0); // *t; TODO A&D correction
             }
 
             if (elems[0] == ".Ts") {
@@ -388,11 +392,7 @@ int OscDataFile::parseHeader(const std::ifstream& fileStream, FILE_HEADER& heade
         bool isDigital = (line[0] == '&');
 
         const VAR_DESCR& var = createVarDescr(elems, ++varId, isDigital);
-        if (++chIndex > OSC_MAX_VARS) {
-            break;
-        }
-
-        header.vars[chIndex] = var;
+        header.vars[++chInd] = var;
     }
 
     return res;

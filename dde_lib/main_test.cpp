@@ -1,17 +1,19 @@
 
-#include "DDE.h"
+#include "DDE_TOP.h"
 
 #include <iostream>
 #include <unistd.h>
-
-
+#include <thread>
+#include <string.h>
 
 //#include "func.h"
 //#include "ipcmem.h"
 //#include "sql3lib.h"
-DDE* dde;
+DDE_TOP* dde;
 static void thread_proc_test_app_call();
 static void thread_update_app_call();
+
+using namespace std;
 
 int main()
 {
@@ -24,7 +26,7 @@ int main()
     DDE_SET_PARAMS_DATA set_params;
 
 
-    dde = new DDE();
+    dde = new DDE_TOP();
 
 
     dde->init("ANDREI");
@@ -62,10 +64,6 @@ int main()
 
 
     printf("hello from %s!\n", "main_test");
-
-
-    uint16_t _addr = 0;
-
 
     std::thread thread_test_app(thread_proc_test_app_call);
     std::thread thread_update(thread_update_app_call);

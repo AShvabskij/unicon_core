@@ -3,22 +3,19 @@
 
 //---------------------------------------------------------------------
 
-#include <time.h>
+#include <time.h> 
 #include <stdint.h>
-
-#define MAX_DEV_SUPPORT  (32+1)
 
 
 #define PARAMS_REQUEST_TIMOUT_MS	1000
 
 #define PARAMS_ID_MAX		0x3F
 #define MODULES_ID_MAX		0x3F
-#define ELEMENTS_ID_MAX		0xFFF
 #define PARAMS_COUNT_MAX	(0x3F + 1)
 
+// 32 device on CAN bus + 1 connex master with ID=0
 #define DEVICE_ID_MAX		(32+1)
 
-#define DDE_DEV0_MASTER                              0
 #define DDE_DEV0_MODULE0_DESCRIPTION                 0
 #define     DDE_DEV0_MODULE0_PARAM0_DESCRIPTION      0
 #define     DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME      1
@@ -31,10 +28,9 @@
 #define     DDE_DEV0_MODULE0_PARAM10_LINK                 10
 #define     DDE_DEV0_MODULE0_PARAM11_RX_ERR_COUNTER       11
 #define     DDE_DEV0_MODULE0_PARAM12_TX_ERR_COUNTER       12
-#define     DDE_DEV0_MODULE0_PARAM13_LINK                 13
+#define     DDE_DEV0_MODULE0_PARAM13_RESERVED             13
 #define     DDE_DEV0_MODULE0_PARAM14_READ_CMD_ERR_COUNTER 14
 #define     DDE_DEV0_MODULE0_PARAM15_WRIT_CMD_ERR_COUNTER 15
-
 
 #define	DDE_DEV0_MODULE1_DEVS_LINK                   1
 #define	    DDE_DEV0_MODULE1_PARAM0_devs_link	     0
@@ -52,6 +48,8 @@
 #define DDE_DEVICE_NAME_LENGTH          4
 #define DDE_DEVICE_HW_REV_LENGTH        4
 #define DDE_DEVICE_SW_REV_LENGTH        4
+#define DDE_DEVICE_HASH_CODE_LENGTH     4
+#define DDE_DEVICE_NODE_ID_LENGTH       1
 #define DDE_DEVICE_SPARE_REV_LENGTH     4
 #define DDE_DEVICE_DESCRIPTION_LENGTH  16
 
@@ -67,22 +65,13 @@
 enum GLIO_ELEMENT_FORMAT_ENUM
 {
     FORMAT_UNDEFINED = 0,
-    FORMAT_BIN,
-    FORMAT_INT,
-    FORMAT_FLOAT,
-    FORMAT_HEX32,
-    FORMAT_TEXT,
-    FORMAT_ASCII
-};
-
-enum GLIO_ELEMENT_UNIT_ENUM
-{
-    UNIT_UNDEFINED = 0,
-    UNIT_AMPERE,
-    INT_VOLTS,
-    UNIT_WATT,
-    UNIT_CELSIUS,
-    UNIT_SEC
+    FORMAT_BIN = 1,
+    FORMAT_INT = 2,
+    FORMAT_FLOAT = 3,
+    FORMAT_HEX32 = 4,
+    FORMAT_TEXT = 5,
+    FORMAT_ASCII = 6,
+    FORMAT_UNKNOWN
 };
 
 //---------------------------------------------------------------------
@@ -97,8 +86,8 @@ typedef struct
 #ifdef SET_CPP
     GLIO_ELEMENT_FORMAT_ENUM format;  // 0 - not defined 1-int 2-float 3-bit, 4-hex, 5-text
 #else
-    int format;
-#endif
+    int format; //// 0 - not defined 1-int 2-float 3-bit, 4-hex, 5-text
+#endif    
     float scale;
     char dim[DIM_SIZE]; // unit of measurement
     char* txtValues[DDE_PARAMS_TXTVALUES_MAX_COUNT]; // array of pointer's to 'text values'
@@ -106,7 +95,6 @@ typedef struct
     bool writable;
 } GLIO_ELEMENT_DESCR;
 #pragma pack(pop)
-
 
 #pragma pack(push,1)
 typedef struct {
@@ -120,49 +108,6 @@ typedef struct {
 } GLIO_ELEMENT_VALUE;
 #pragma pack(pop)
 
-
-
-#pragma pack(push,1)
-typedef struct {
-    uint8_t cmd_flag : 1;     //0 - IDLE, 1 - BUSY
-    uint8_t nRW : 1;          //1 to write , 0 to read
-    uint8_t none : 6;
-    //uint8_t device_id; A&D this struct is a part of DEVICE_ELEMENT array in IPCMEM, no need to pass device_id
-    uint8_t module_id;
-    uint8_t param_id;
-    uint32_t ivalue;
-} DDE_PARAMS_CMD;
-#pragma pack(pop)
-
-
-
-
-// all parameters of the device !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#pragma pack(push,1)
-typedef struct
-{
-    uint8_t device_id;
-    uint16_t el_count;
-    uint8_t none;
-
-    DDE_PARAMS_CMD cmd;
-    GLIO_ELEMENT_VALUE el[ELEMENTS_ID_MAX];
-
-} DEVICE_ELEMENTS;
-#pragma pack(pop)
-
-
-
-#pragma pack(push,1)
-typedef struct
-{
-    char name[DDE_PARAMS_NAME_LENGTH];
-    char descr[DDE_PARAMS_DESCR_LENGTH];
-} DDE_GET_SUBSYSTEM;
-#pragma pack(pop)
-
-
-
 //#pragma pack(push,1)
 typedef struct
 {
@@ -174,10 +119,8 @@ typedef struct
     GLIO_ELEMENT_DESCR el_descr[64]; //not more then 64 params at a time
     uint16_t timeout; //each request has it own timeout counter
     uint16_t timeout_flg;//
-} DDE_GET_PARAMS_HEADER;
+} DDE_GET_PARAMS_HEADER; 
 //#pragma pack(pop)
-
-
 
 //#pragma pack(push,1)
 typedef struct
@@ -201,7 +144,7 @@ typedef struct
 //---------------------------------------------------------------------
 
 
-#ifdef __cplusplus
+#ifdef __cplusplus 
 
 #pragma pack(push,1)
 typedef struct
@@ -218,7 +161,7 @@ typedef struct
     GLIO_ELEMENT_FORMAT_ENUM format;  // 0 - not defined 1-int 2-float 3-bit, 4-hex, 5-text
 #else
     int format;
-#endif
+#endif    
 
     float scale;
     char dim[DIM_SIZE]; // unit of measurement
@@ -244,3 +187,4 @@ typedef struct
 #pragma pack(pop)
 
 #endif
+

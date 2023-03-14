@@ -131,7 +131,7 @@ long DeviceHandler::requestDeviceLinks(SysType sysType, QList<int>& links)
     DDE_GET_PARAMS_DATA dat;
     memset(&dat, 0, sizeof(dat));
 
-    dat.device_id = DDE_DEV0_MASTER;
+    dat.device_id = DDE_DEV0_MASTER_IND;
     dat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
     dat.param_id = 0;
 
@@ -144,7 +144,7 @@ long DeviceHandler::requestDeviceLinks(SysType sysType, QList<int>& links)
     for (int i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ++i) {
         time_t diffTime = (dat.el[i].timestamp != 0) ? timeMs - dat.el[i].timestamp : 0;
         if (dat.el[i].ivalue == 1 ) {
-            if (i == DDE_DEV0_MASTER && diffTime > LINK_TIME_OUT) {
+            if (i == DDE_DEV0_MASTER_IND && diffTime > LINK_TIME_OUT) {
                 break;
             }
 

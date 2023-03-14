@@ -311,7 +311,7 @@ void OscHandler::stopStreamData(const OscHeader &osc)
 
 long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
 {
-    DDE_GET_OSC_HEADER header;
+    DDE_OSC_HEADER header;
     header.device_id = deviceID.id;
 
     _dde_func_return_t res = (*m_dde)(deviceID.type)->get_osc_header(header);
@@ -351,8 +351,7 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     settings.oscId = oscId;
     settings.reason = (ReasonEnum)header.settings.reason;
     settings.timeResolutionNs = header.settings.time_resolution_ns;
-    tm t = header.settings.trig_time;
-    std::time_t time = std::mktime(&t);
+    std::time_t time = header.settings.trig_time;
     settings.trigDTime = QDateTime::fromTime_t(time);
     if (!settings.trigDTime.isValid()) {
         settings.trigDTime = QDateTime();

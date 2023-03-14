@@ -52,8 +52,8 @@ public:
     virtual _dde_func_return_t addData(DDE_GET_OSC_DATA& p);
     virtual _dde_func_return_t  readNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc);
 
-    virtual _dde_func_return_t getHeader(DDE_GET_OSC_HEADER& p);
-    virtual _dde_func_return_t setHeader(DDE_GET_OSC_HEADER& p);
+    virtual _dde_func_return_t getHeader(DDE_OSC_HEADER& p);
+    virtual _dde_func_return_t setHeader(const DDE_OSC_HEADER& p);
 
 private:
     int loadHeader(uint16_t device_id);
