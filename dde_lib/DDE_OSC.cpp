@@ -30,6 +30,10 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
 
     _dde_func_return_t res = m_headerSrv->init(sysName);
 
+    m_currWritePage = 1;
+    m_currReadPage = 1;
+
+
     //---- A&S for tests only-------------------------------------
 
     DDE_OSC_HEADER hdr;
@@ -84,7 +88,8 @@ _dde_func_return_t DDE_OSC::open(uint16_t osc_id)
     assert(m_header);
     assert(m_header->device_id == osc_id);
 
-    m_currReadPage = 0;
+    m_currReadPage = 1;
+    m_currWritePage = 1;
     int pageState = m_headerSrv->get_page_state(osc_id, m_currReadPage);
 
     if (pageState < 0) return _return_FAIL;
@@ -193,7 +198,7 @@ int DDE_OSC::get_ready_page(uint16_t osc_id, int currPage)
     int state = m_headerSrv->get_page_state(osc_id, pageNum);
 
     if (state == 0) {
-        pageNum++;
+        pageNum = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 1;
         state = m_headerSrv->get_page_state(osc_id, pageNum);
     }
 
@@ -211,7 +216,7 @@ int DDE_OSC::get_free_page(uint16_t osc_id, int currPage)
     int state = m_headerSrv->get_page_state(osc_id, pageNum);
 
     if (state == 1) {
-        pageNum++;
+        pageNum = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 1;
         state = m_headerSrv->get_page_state(osc_id, pageNum);
     }
 
