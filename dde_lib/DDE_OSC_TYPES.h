@@ -74,7 +74,8 @@ struct OSC_SETTING
 
 typedef struct
 {
-    uint32_t pageMask; // 1000 = 1us
+    uint32_t pageMask; // pages ready to be read or written
+
     bool enabled;
     bool overflowed;
 

@@ -325,7 +325,7 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     out->desc = "osc desc";
     out->analogChannels.clear();
 
-    for (int chInd = 1; chInd <= OSC_MAX_VARS; chInd++) {
+    for (int chInd = 0; chInd < header.settings.channel_count; chInd++) {
         const OSC_CHANNEL& channel = header.channels[chInd];
         if (channel.var.id <= 0) {
             continue;
@@ -333,16 +333,7 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
 
         if (channel.var.type == OSC_VAR_TYPE::ANALOG || channel.var.type == OSC_VAR_TYPE::DIGITAL) {
             out->analogChannels[chInd] = createChannelDescr(channel);
-        }
-    }
-
-    for (int chInd = 1; chInd <= OSC_MAX_VARS; chInd++) {
-        const OSC_CHANNEL& channel = header.channels[chInd];
-        if (channel.var.id <= 0 ) {
-            continue;
-        }
-
-        if (channel.var.type == OSC_VAR_TYPE::DISCRETE) {
+        } else if (channel.var.type == OSC_VAR_TYPE::DISCRETE) {
             out->discreteChannels[chInd] = createChannelDescr(channel);
         }
     }

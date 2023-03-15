@@ -25,10 +25,15 @@ public:
 private:
 
     _dde_func_return_t load_header(uint16_t osc_id);
-    int open_ready_page(uint16_t osc_id);
+    _dde_func_return_t open_page(uint16_t osc_id, int pageNum);
+    int get_ready_page(uint16_t osc_id, int currPage);
+    int get_free_page(uint16_t osc_id, int currPage);
 
     IOscDataService* m_dataSrv = nullptr;
     IOscHeaderService* m_headerSrv = nullptr;
     DDE_OSC_HEADER* m_header = nullptr;
     std::string m_sysName = "";
+    int m_currReadPage = 0;
+    int m_currWritePage = 0;
+
 };

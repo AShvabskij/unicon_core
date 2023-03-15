@@ -59,17 +59,19 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
 
     m_headerSrv->get_header(oscId, hdr);
 
-    m_headerSrv->set_page_ready(oscId, 4);
-    m_headerSrv->set_page_ready(oscId, 5);
-    m_headerSrv->set_page_ready(oscId, 6);
+    m_headerSrv->set_page_state(oscId, 4, 1);
+    m_headerSrv->set_page_state(oscId, 5, 1);
+    m_headerSrv->set_page_state(oscId, 6, 1);
 
     m_headerSrv->get_header(oscId, hdr);
 
-    int pageNum = m_headerSrv->get_page_ready(oscId);
+    int state = m_headerSrv->get_page_state(oscId, 4);
 
-    while (pageNum != 0) {
-        m_headerSrv->set_page_ready(oscId, pageNum, false);
-        pageNum = m_headerSrv->get_page_ready(oscId);
+    int pageNum = 0;
+    while (state != -1) {
+        pageNum++;
+        m_headerSrv->set_page_state(oscId, pageNum, 0);
+        state = m_headerSrv->get_page_state(oscId, pageNum);
     }
     //-----------------------------------------------------------
 
@@ -82,12 +84,13 @@ _dde_func_return_t DDE_OSC::open(uint16_t osc_id)
     assert(m_header);
     assert(m_header->device_id == osc_id);
 
-    int pageNum = m_headerSrv->get_page_ready(osc_id);
+    m_currReadPage = 0;
+    int pageState = m_headerSrv->get_page_state(osc_id, m_currReadPage);
 
-    if (pageNum < 0) return _return_FAIL;
-    if (pageNum == 0) return _return_OK;
+    if (pageState < 0) return _return_FAIL;
+    if (pageState == 0) return _return_OK;
 
-    _dde_func_return_t res = m_dataSrv->open(pageNum, false);
+    _dde_func_return_t res = m_dataSrv->open(m_currReadPage, false);
     return res;
 }
 
@@ -138,43 +141,84 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     assert(m_header);
     assert(m_header->device_id == osc_id);
 
-    int pageNum = open_ready_page(osc_id);
-    if (pageNum == -1) return _return_FAIL;
-
     OSC_STATE state;
     m_headerSrv->get_state(osc_id, state);
+
+    int pageNum = get_ready_page(osc_id, m_currReadPage);
     dat.eof = (pageNum == 0) && !state.enabled;
+    dat.data_length = 0;
+    dat.next_ready = pageNum > 0;
 
-    if (dat.eof) return res;
+    if (pageNum <= 0) return res;
 
-    if (pageNum == 0) {
-        perror("There is not available pages to read data yet");
-        _return_Busy;
-    }
+    res = m_dataSrv->open(pageNum, false);
+    if (res != _return_OK) return res;
+
+    m_currReadPage = pageNum;
 
     res = m_dataSrv->readNextData(*m_header, dat);
+    dat.next_ready = !dat.eof;
 
     if (dat.eof) {
-        m_headerSrv->set_page_ready(osc_id, pageNum, false);
-        pageNum = open_ready_page(osc_id); // open the page in advance, cause it's time consuming
+        m_dataSrv->close();
+        m_headerSrv->set_page_state(osc_id, pageNum, 0);
+
+        pageNum = get_ready_page(osc_id, m_currReadPage);
+        if (pageNum > 0) {
+            res = m_dataSrv->open(pageNum, false);
+            m_currReadPage = pageNum;
+            dat.next_ready = true;
+        }
+
         dat.eof = (pageNum == 0) && !state.enabled;
-        dat.next_ready = (pageNum > 0);
-        pageNum = m_headerSrv->get_page_free(osc_id);
-        dat.overflow = (pageNum == 0);
     }
 
     return res;
 }
 
-int DDE_OSC::open_ready_page(uint16_t osc_id)
+_dde_func_return_t DDE_OSC::open_page(uint16_t osc_id, int pageNum)
 {
-    int pageNum = m_headerSrv->get_page_ready(osc_id);
-    if (pageNum <= 0) {
-        return pageNum;
-    }
+    if (m_currReadPage == pageNum) return _return_OK;
 
     _dde_func_return_t res = m_dataSrv->open(pageNum, false);
     if (res != _return_OK) return -1;
+
+    m_currReadPage = pageNum;
+    return pageNum;
+}
+
+int DDE_OSC::get_ready_page(uint16_t osc_id, int currPage)
+{
+    int pageNum = currPage;
+    int state = m_headerSrv->get_page_state(osc_id, pageNum);
+
+    if (state == 0) {
+        pageNum++;
+        state = m_headerSrv->get_page_state(osc_id, pageNum);
+    }
+
+    if (state != 1) {
+        perror("There is not available pages to read data yet");
+        pageNum = 0;
+    }
+
+    return pageNum;
+}
+
+int DDE_OSC::get_free_page(uint16_t osc_id, int currPage)
+{
+    int pageNum = currPage;
+    int state = m_headerSrv->get_page_state(osc_id, pageNum);
+
+    if (state == 1) {
+        pageNum++;
+        state = m_headerSrv->get_page_state(osc_id, pageNum);
+    }
+
+    if (state != 0) {
+        perror("There is not available pages to write data yet");
+        pageNum = 0;
+    }
 
     return pageNum;
 }
@@ -194,18 +238,20 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
     assert(m_header);
     assert(m_header->device_id == osc_id);
 
-    int pageNum = m_headerSrv->get_page_free(osc_id);
+    int pageNum = get_free_page(osc_id, m_currWritePage);
     if (pageNum == 0) { // there is not free pages
         OSC_STATE state;
         _dde_func_return_t res = m_headerSrv->get_state(osc_id, state);
         state.overflowed = true;
         m_headerSrv->set_state(osc_id, state);
+        return _return_FAIL;
     }
 
     if (pageNum <= 0) return _return_FAIL;
 
     _dde_func_return_t res = m_dataSrv->open(pageNum, true);
     if (res != _return_OK) return res;
+    m_currWritePage = pageNum;
 
     bool overflowed = false;
     res = m_dataSrv->addData(dat, m_header->settings.channel_count, overflowed);
@@ -213,7 +259,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 
     if (overflowed || dat.eof) {
         m_dataSrv->close();
-        m_headerSrv->set_page_ready(osc_id, pageNum, true);
+        m_headerSrv->set_page_state(osc_id, pageNum, 1);
     }
 
     return res;

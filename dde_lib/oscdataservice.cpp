@@ -135,8 +135,8 @@ _dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DD
         return _return_FAIL;
     }
 
-    uint16_t buff_length = getDat.data_length;
-    assert(buff_length > 0 && buff_length <= OSC_DATA_BUFFER_MAX);
+    int buff_length = OSC_DATA_BUFFER_MAX;
+//  assert(buff_length > 0 && buff_length <= OSC_DATA_BUFFER_MAX);
 
     auto resolution_ns = header.settings.time_resolution_ns;
     getDat.overflow = 0;
@@ -149,6 +149,8 @@ _dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DD
         if (m_oscFileStream->eof()) {
             break;
         }
+
+        getDat.data_length = static_cast<uint16_t>(buffInd + 1);
 
         const auto& values = parseValues(line);
         size_t ch_count = values.size();
@@ -166,13 +168,9 @@ _dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DD
             uint8_t chNum = ch.chNum;
             assert(chNum <= OSC_MAX_CHANNELS);
 
-            uint16_t rawValue = values[elemInd];
+            uint32_t rawValue = values[elemInd];
             if (ch.var.type == OSC_VAR_TYPE::DIGITAL) {
-                uint16_t val = rawValue;
-                if (ch.firstBit == 0 && ch.lastBit == 15) {
-                    val = normalizeValue(rawValue, ch.gain, ch.offset);
-                }
-                getDat.data[chNum].i_buff[buffInd] = val;
+                getDat.data[chNum].i_buff[buffInd] = rawValue;
             } else if (ch.var.type == OSC_VAR_TYPE::DISCRETE) {
                 getDat.data[chNum].i_buff[buffInd] = rawValue;
             } else {
@@ -181,6 +179,7 @@ _dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DD
             }
         }
     }
+
 
     if (m_oscFileStream->eof()) {
         getDat.eof = true;
@@ -206,31 +205,32 @@ std::string OscDataService::readLine(std::istream &stream)
     return line;
 }
 
-float OscDataService::normalizeValue(uint16_t rawValue, float gain, float offset)
+float OscDataService::normalizeValue(uint32_t rawValue, float gain, float offset)
 {
     if (rawValue == 0) {
         return rawValue;
     }
 
-    uint16_t zeroLevel = 0x7FFF;
+    uint32_t zeroLevel = 0; //0x7FFF;
     float normValue = rawValue - zeroLevel;
     normValue =  normValue * gain + offset;
     return normValue;
 }
 
-std::vector<std::uint16_t> OscDataService::parseValues(std::string line)
+std::vector<uint32_t> OscDataService::parseValues(std::string line)
 {
-    auto elems = split(line, ',');
+    std::vector<std::string> elems = split(line, ',');
     if (elems.empty()) {
         cout << osc_data::OSC_FILE_PARSE_ERROR;
-        return std::vector<std::uint16_t>();
+        return std::vector<uint32_t>();
     }
 
-    std::vector<std::uint16_t> ret;
+    std::vector<uint32_t> ret;
     ret.reserve(elems.size());
 
     for (uint32_t ind = 0; ind < elems.size(); ind++) {
-        uint16_t rawValue = std::atoi(elems[ind].c_str());
+        const char* elem = elems[ind].c_str();
+        uint32_t rawValue = std::stol(elem,nullptr,10); //std::atoi(elem);
         ret.push_back(rawValue);
     }
 
@@ -259,7 +259,8 @@ _dde_func_return_t OscDataService::addData(const DDE_SET_OSC_DATA& dat, int ch_c
 
     for (int i = 0; i < dat.data_length; i++) {
         for (int num = 0; num < ch_count; num++) {
-            line << dat.data[i].i_buff << delim;
+            uint32_t elem = dat.data[num].i_buff[i];
+            line << elem << delim;
         }
         line << "\n";
     }

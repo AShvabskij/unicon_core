@@ -26,8 +26,8 @@ private:
     std::fstream openOscFile(int fileNumber, bool writeMode = false);
     void th_loadData();
     std::string readLine(std::istream &stream);
-    std::vector<std::uint16_t> parseValues(std::string line);
-    float normalizeValue(uint16_t rawValue, float gain, float offset);
+    std::vector<uint32_t> parseValues(std::string line);
+    float normalizeValue(uint32_t rawValue, float gain, float offset);
     std::vector<std::string> split(std::string inputStr, char delim);
 
     void waitForLoad();

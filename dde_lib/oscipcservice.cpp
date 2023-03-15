@@ -40,7 +40,8 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint8_t id, DDE_OSC_HEADER& h
 		channel.firstBit = glio_ch.firstBit;
 		channel.lastBit = glio_ch.lastBit;
 
-		strcpy(channel.var.name, glio_ch.name);
+        channel.var.id = glio_ch.chNum + 1;
+        strcpy(channel.var.name, glio_ch.name);
 		strcpy(channel.var.user_name, glio_ch.userName);
 		strcpy(channel.var.dim, glio_ch.dim);
 		channel.var.min = glio_ch.min;
@@ -126,7 +127,19 @@ _dde_func_return_t OscIPCHeaderService::set_settings(uint8_t id, const OSC_SETTI
 	return _return_OK;
 }
 
-_dde_func_return_t OscIPCHeaderService::set_page_ready(uint8_t id, int pageNum, bool isReady)
+int OscIPCHeaderService::get_page_state(uint8_t id, int pageNum)
+{
+    auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    if (!dat) return -1;
+
+    if (pageNum <= 0 || pageNum > OSC_PAGE_MAX) return -1;
+    uint32_t mask = dat->state.pageMask;
+    int n = pageNum - 1;
+    int bit = (mask >> n & 1U);
+    return bit;
+}
+
+_dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, int pageNum, bool state)
 {
 	if (pageNum <= 0 || pageNum > OSC_PAGE_MAX) return _return_FAIL;
 
@@ -135,43 +148,8 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready(uint8_t id, int pageNum, 
 
 	uint32_t mask = dat->state.pageMask;
 	int n = pageNum - 1;
-	uint32_t newbit = isReady ? 1 : 0;
+    uint32_t newbit = state ? 1 : 0;
 	dat->state.pageMask = (mask & ~(1UL << n)) | (newbit << n); // ^=(-1 ^ mask) & (1UL << n);
 
 	return _return_OK;
-}
-
-int OscIPCHeaderService::get_page_ready(uint8_t id)
-{
-	auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
-	if (!dat) return -1;
-
-	uint32_t mask = dat->state.pageMask;
-	for (int pageNum = 1; pageNum <= OSC_PAGE_MAX; pageNum++) {
-		int n = pageNum - 1;
-		int bit = (mask >> n & 1U);
-		if (bit == 1) {
-			return pageNum;
-		}
-	}
-
-	return 0;
-}
-
-int OscIPCHeaderService::get_page_free(uint8_t id)
-{
-	auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
-	if (!dat) return -1;
-
-	uint32_t mask = dat->state.pageMask;
-
-	for (int pageNum = 1; pageNum <= OSC_PAGE_MAX; pageNum++) {
-		int n = pageNum - 1;
-		int bit = (mask >> n & 1U);
-		if (bit == 0) {
-			return pageNum;
-		}
-	}
-
-	return 0;
 }
