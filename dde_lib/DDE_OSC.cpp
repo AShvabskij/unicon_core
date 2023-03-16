@@ -70,6 +70,9 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
     m_headerSrv->get_header(oscId, hdr);
 
     int state = m_headerSrv->get_page_state(oscId, 4);
+    state = 0;
+    m_headerSrv->set_page_state(oscId, 4, state);
+    state = m_headerSrv->get_page_state(oscId, 4);
 
     int pageNum = 0;
     while (state != -1) {
@@ -166,7 +169,7 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 
     if (dat.eof) {
         m_dataSrv->close();
-        m_headerSrv->set_page_state(osc_id, pageNum, 0);
+        m_headerSrv->set_page_state(osc_id, pageNum, false);
 
         pageNum = get_ready_page(osc_id, m_currReadPage);
         if (pageNum > 0) {
@@ -264,7 +267,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 
     if (overflowed || dat.eof) {
         m_dataSrv->close();
-        m_headerSrv->set_page_state(osc_id, pageNum, 1);
+        m_headerSrv->set_page_state(osc_id, pageNum, true);
     }
 
     return res;

@@ -139,7 +139,7 @@ int OscIPCHeaderService::get_page_state(uint8_t id, int pageNum)
     return bit;
 }
 
-_dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, int pageNum, bool state)
+_dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, int pageNum, int state)
 {
 	if (pageNum <= 0 || pageNum > OSC_PAGE_MAX) return _return_FAIL;
 
@@ -148,7 +148,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, int pageNum, 
 
 	uint32_t mask = dat->state.pageMask;
 	int n = pageNum - 1;
-    uint32_t newbit = state ? 1 : 0;
+    uint32_t newbit = state == 1 ? 1 : 0;
 	dat->state.pageMask = (mask & ~(1UL << n)) | (newbit << n); // ^=(-1 ^ mask) & (1UL << n);
 
 	return _return_OK;
