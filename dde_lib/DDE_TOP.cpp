@@ -64,6 +64,7 @@ _dde_func_return_t DDE_TOP::set_params_data(DDE_SET_PARAMS_DATA& p)
 
 _dde_func_return_t DDE_TOP::get_osc_header(DDE_OSC_HEADER& p)
 {
+    m_osc->open(p.device_id);
     return m_osc->get(p);
 }
 

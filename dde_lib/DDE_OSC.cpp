@@ -91,14 +91,20 @@ _dde_func_return_t DDE_OSC::open(uint16_t osc_id)
     assert(m_header);
     assert(m_header->device_id == osc_id);
 
-    m_currReadPage = 1;
-    m_currWritePage = 1;
-    int pageState = m_headerSrv->get_page_state(osc_id, m_currReadPage);
+    m_currReadPage = 0;
+    m_currWritePage = 0;
+//  int pageState = m_headerSrv->get_page_state(osc_id, m_currReadPage);
 
-    if (pageState < 0) return _return_FAIL;
-    if (pageState == 0) return _return_OK;
+//  if (pageState < 0) return _return_FAIL;
+//  if (pageState == 0) return _return_OK;
 
-    _dde_func_return_t res = m_dataSrv->open(m_currReadPage, false);
+//  _dde_func_return_t res = m_dataSrv->open(m_currReadPage, false);
+
+    OSC_STATE state;
+    _dde_func_return_t res = m_headerSrv->get_state(osc_id, state);
+    state.enabled = true;
+    m_headerSrv->set_state(osc_id, state);
+
     return res;
 }
 
@@ -159,26 +165,31 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 
     if (pageNum <= 0) return res;
 
-    res = m_dataSrv->open(pageNum, false);
-    if (res != _return_OK) return res;
+    if (m_currReadPage != pageNum) {
+        res = m_dataSrv->open(pageNum, false);
+        if (res != _return_OK) return res;
 
-    m_currReadPage = pageNum;
+        m_currReadPage = pageNum;
+    }
 
     res = m_dataSrv->readNextData(*m_header, dat);
-    dat.next_ready = !dat.eof;
+    dat.next_ready = (res == _return_OK) && !dat.eof;
 
-    if (dat.eof) {
+    if (res != _return_OK || dat.eof ) {
         m_dataSrv->close();
-        m_headerSrv->set_page_state(osc_id, pageNum, false);
+        m_headerSrv->set_page_state(osc_id, pageNum, 0);
 
-        pageNum = get_ready_page(osc_id, m_currReadPage);
-        if (pageNum > 0) {
-            res = m_dataSrv->open(pageNum, false);
-            m_currReadPage = pageNum;
+        int nextPageNum = get_ready_page(osc_id, m_currReadPage);
+        if (nextPageNum > 0) {
+            m_dataSrv->open(nextPageNum, false);
+            m_currReadPage = nextPageNum;
             dat.next_ready = true;
         }
 
-        dat.eof = (pageNum == 0) && !state.enabled;
+        if (!dat.next_ready) {
+            cout << "next ready page = false, waiting...";
+        }
+        dat.eof = (nextPageNum == 0) && !state.enabled;
     }
 
     return res;
@@ -197,7 +208,7 @@ _dde_func_return_t DDE_OSC::open_page(uint16_t osc_id, int pageNum)
 
 int DDE_OSC::get_ready_page(uint16_t osc_id, int currPage)
 {
-    int pageNum = currPage;
+    int pageNum = currPage > 0 ? currPage : 1;
     int state = m_headerSrv->get_page_state(osc_id, pageNum);
 
     if (state == 0) {
@@ -215,7 +226,7 @@ int DDE_OSC::get_ready_page(uint16_t osc_id, int currPage)
 
 int DDE_OSC::get_free_page(uint16_t osc_id, int currPage)
 {
-    int pageNum = currPage;
+    int pageNum = currPage > 0 ? currPage : 1;
     int state = m_headerSrv->get_page_state(osc_id, pageNum);
 
     if (state == 1) {
@@ -257,17 +268,19 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 
     if (pageNum <= 0) return _return_FAIL;
 
-    _dde_func_return_t res = m_dataSrv->open(pageNum, true);
-    if (res != _return_OK) return res;
-    m_currWritePage = pageNum;
+    if (m_currWritePage != pageNum) {
+        _dde_func_return_t res = m_dataSrv->open(pageNum, true);
+        if (res != _return_OK) return res;
+        m_currWritePage = pageNum;
+    }
 
     bool overflowed = false;
-    res = m_dataSrv->addData(dat, m_header->settings.channel_count, overflowed);
+    _dde_func_return_t res = m_dataSrv->addData(dat, m_header->settings.channel_count, overflowed);
     if (res != _return_OK) return res;
 
     if (overflowed || dat.eof) {
         m_dataSrv->close();
-        m_headerSrv->set_page_state(osc_id, pageNum, true);
+        m_headerSrv->set_page_state(osc_id, pageNum, 1);
     }
 
     return res;

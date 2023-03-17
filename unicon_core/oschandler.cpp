@@ -286,7 +286,7 @@ int OscHandler::streamData()
     }
 
     long res = getData(m_capturedOsc, m_oscDataBuff);
-    int error = (res <= 0) ? static_cast<int>(res) : 0;
+    int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
     QJsonObject response = createStreamDataObj(*m_oscDataBuff, error);
     emit stream(QList<QJsonObject>() << response);
 
@@ -428,6 +428,7 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
         valuesObj << arr;
     }
 
+    res["type"] = "osc";
     res["d_id"] = data.deviceID.id;
     res["values"] = valuesObj;
     res["vars"] = varIdListObj;
@@ -438,7 +439,7 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
         res["error"] = error;
     }
 
-//  QTextStream(stdout) << oscParamValueObjToString(res) << "!!! \n" ;
+//  QTextStream(stdout) << res["d_id"].toString() << "=" << res["values"].toString() <<  "\n" ;
     return res;
 }
 

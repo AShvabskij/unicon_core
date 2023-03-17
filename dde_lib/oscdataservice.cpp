@@ -132,6 +132,7 @@ _dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DD
     waitForLoad();
 
     if (!m_oscFileStream) {
+        cout << osc_data::OSC_FILE_ERROR;
         return _return_FAIL;
     }
 
@@ -159,11 +160,9 @@ _dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DD
             continue;
         }
 
-        for (int chInd = 1; chInd <= ch_count; chInd++) {
+        for (int chInd = 0; chInd < ch_count; chInd++) {
             auto& ch = header.channels[chInd];
             uint16_t elemInd = chInd;
-
-            if (elemInd == 0) continue;
 
             uint8_t chNum = ch.chNum;
             assert(chNum <= OSC_MAX_CHANNELS);
