@@ -137,8 +137,8 @@ public:
     virtual _dde_func_return_t get_settings(uint8_t id, OSC_SETTING&) = 0;
     virtual _dde_func_return_t set_settings(uint8_t id, const OSC_SETTING&) = 0;
 
-    virtual int get_page_state(uint8_t id, int pageNum) = 0;
-    virtual _dde_func_return_t set_page_state(uint8_t id, int pageNum, int state) = 0;
+    virtual int8_t get_page_state(uint8_t id, int pageNum) = 0;
+    virtual _dde_func_return_t set_page_state(uint8_t id, int pageNum, int8_t state) = 0;
 
 };
 

@@ -16,7 +16,7 @@ public:
 	_dde_func_return_t set_state(uint8_t id, const OSC_STATE& setDat);
 	_dde_func_return_t get_settings(uint8_t id, OSC_SETTING& getDat);
 	_dde_func_return_t set_settings(uint8_t id, const OSC_SETTING& setDat);
-    int get_page_state(uint8_t id, int pageNum);
-    _dde_func_return_t set_page_state(uint8_t id, int pageNum, int state);
+    int8_t get_page_state(uint8_t id, int pageNum);
+    _dde_func_return_t set_page_state(uint8_t id, int pageNum, int8_t state);
 };
 

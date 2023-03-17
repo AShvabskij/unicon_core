@@ -1,11 +1,7 @@
 #include "oscipcservice.h"
 
 #include "osc_ipcmemlib.h"
-
-#include <string>
-#include <cmath>
-#include <chrono>
-#include <unistd.h>
+#include "cpp_inc.h"
 
 _dde_func_return_t OscIPCHeaderService::init(const char* sysName)
 {
@@ -127,29 +123,23 @@ _dde_func_return_t OscIPCHeaderService::set_settings(uint8_t id, const OSC_SETTI
 	return _return_OK;
 }
 
-int OscIPCHeaderService::get_page_state(uint8_t id, int pageNum)
+int8_t OscIPCHeaderService::get_page_state(uint8_t id, int pageNum)
 {
+    assert(pageNum >= 0 && pageNum <= OSC_PAGE_MAX);
+
     auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
     if (!dat) return -1;
 
-    if (pageNum <= 0 || pageNum > OSC_PAGE_MAX) return -1;
-    uint32_t mask = dat->state.pageMask;
-    int n = pageNum - 1;
-    int bit = (mask >> n & 1U);
-    return bit;
+    return dat->state.pageMask[pageNum];
 }
 
-_dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, int pageNum, int state)
+_dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, int pageNum, int8_t state)
 {
-	if (pageNum <= 0 || pageNum > OSC_PAGE_MAX) return _return_FAIL;
+    assert(pageNum >= 0 && pageNum <= OSC_PAGE_MAX);
 
 	auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
 	if (!dat) return _return_FAIL;
 
-	uint32_t mask = dat->state.pageMask;
-	int n = pageNum - 1;
-    uint32_t newbit = state == 1 ? 1 : 0;
-	dat->state.pageMask = (mask & ~(1UL << n)) | (newbit << n); // ^=(-1 ^ mask) & (1UL << n);
-
+    dat->state.pageMask[pageNum] = state;
 	return _return_OK;
 }
