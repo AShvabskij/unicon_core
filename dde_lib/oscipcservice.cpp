@@ -83,14 +83,15 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint8_t id, const DDE_OSC_HEA
 	return (res > 0) ? _return_OK : _return_FAIL;
 }
 
-_dde_func_return_t OscIPCHeaderService::get_state(uint8_t id, OSC_STATE& getDat)
+const OSC_STATE OscIPCHeaderService::get_state(uint8_t id)
 {
+    OSC_STATE state;
 	auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
-	if (!dat) return _return_FAIL;
+    if (!dat) return state;
 
-	memcpy(&getDat, &dat->state, sizeof(OSC_STATE));
+    memcpy(&state, &dat->state, sizeof(OSC_STATE));
 
-	return _return_OK;
+    return state;
 }
 
 _dde_func_return_t OscIPCHeaderService::set_state(uint8_t id, const OSC_STATE& setDat)
@@ -142,4 +143,54 @@ _dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, int pageNum, 
 
     dat->state.pageMask[pageNum] = state;
 	return _return_OK;
+}
+
+int OscIPCHeaderService::get_page_read(uint16_t id)
+{
+    auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    if (!dat) return -1;
+
+    int pageNum = dat->state.lastPageRead;
+    int state = dat->state.pageMask[pageNum];
+
+    if (state == 0) {
+        pageNum = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
+        if (pageNum != dat->state.lastPageWrite) {
+            state = dat->state.pageMask[pageNum];
+        }
+    }
+
+    if (state == 1) {
+        dat->state.lastPageRead = pageNum;
+    } else {
+        perror("There is not available pages to read data yet");
+        pageNum = -1;
+    }
+
+    return pageNum;
+}
+
+int OscIPCHeaderService::get_page_write(uint16_t id)
+{
+    auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    if (!dat) return -1;
+
+    int pageNum = dat->state.lastPageWrite;
+    int state = dat->state.pageMask[pageNum];
+
+    if (state == 1) {
+        pageNum = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
+        if (pageNum != dat->state.lastPageRead) {
+            state = dat->state.pageMask[pageNum];
+        }
+    }
+
+    if (state == 0) {
+        dat->state.lastPageWrite = pageNum;
+    } else {
+        perror("There is not available pages to write data yet");
+        pageNum = -1;
+    }
+
+    return pageNum;
 }

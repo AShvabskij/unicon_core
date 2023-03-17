@@ -14,7 +14,6 @@ using namespace std;
 namespace osc_data {
     const char* OSC_FILE_ERROR = "Osc data file error!\n";
     const char* OSC_FILE_PARSE_ERROR = "Error while parsing th osc file!\n";
-    const int SET_SIZE = 16;
     const int MAX_PAGE_SIZE = 65000;
 }
 
@@ -127,7 +126,7 @@ std::fstream OscDataService::openOscFile(int fileNumber, bool writeMode)
     return file;
 }
 
-_dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DDE_GET_OSC_DATA& getDat)
+_dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DDE_GET_OSC_DATA& getDat, bool& eof)
 {
     waitForLoad();
 
@@ -143,7 +142,7 @@ _dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DD
     getDat.overflow = 0;
     getDat.header_updated = 0;
     getDat.next_ready = true;
-    getDat.eof = false;
+    eof = false;
 
     for (int buffInd = 0; buffInd < buff_length; buffInd++) {
         string line = readLine(*m_oscFileStream);
@@ -181,7 +180,7 @@ _dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DD
 
 
     if (m_oscFileStream->eof()) {
-        getDat.eof = true;
+        eof = true;
     }
 
     return _return_OK;
@@ -251,7 +250,7 @@ std::vector<std::string> OscDataService::split(string inputStr, char delim)
     return res;
 }
 
-_dde_func_return_t OscDataService::addData(const DDE_SET_OSC_DATA& dat, int ch_count, bool& overflowed)
+_dde_func_return_t OscDataService::addData(const DDE_SET_OSC_DATA& dat, int ch_count, bool& eof)
 {
     char delim{ ',' };
     ostringstream line;
@@ -269,7 +268,7 @@ _dde_func_return_t OscDataService::addData(const DDE_SET_OSC_DATA& dat, int ch_c
     std::streampos pos = m_outf.tellp();
     std::cout << "osc file = " << m_currFileNum << "written size = " << pos;
     if (pos >= osc_data::MAX_PAGE_SIZE) {
-        overflowed = true;
+        eof = true;
     }
 
     return _return_OK;

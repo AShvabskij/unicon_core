@@ -75,8 +75,10 @@ struct OSC_SETTING
 typedef struct
 {
     uint8_t pageMask[OSC_PAGE_MAX+1]; // pages ready to be read or written
+    uint8_t lastPageRead; // pages ready to read
+    uint8_t lastPageWrite; // pages ready to write
 
-    bool enabled;
+    bool user_enabled;
     bool overflowed;
 
 } OSC_STATE;

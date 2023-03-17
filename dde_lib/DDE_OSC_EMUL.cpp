@@ -104,12 +104,12 @@ long DDE_OSC_EMUL::init(const char* )
     return _return_OK;
 }
 
-long DDE_OSC_EMUL::open(uint16_t oscId)
+long DDE_OSC_EMUL::open(uint16_t id)
 {
     return _return_OK;
 }
 
-long DDE_OSC_EMUL::close(uint16_t oscId)
+long DDE_OSC_EMUL::close(uint16_t id)
 {
     return _return_OK;
 }
