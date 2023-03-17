@@ -63,8 +63,8 @@ public:
     virtual ~IDDE_OSC() {};
 
     virtual _dde_func_return_t init(const char* system_type) = 0;
-    virtual _dde_func_return_t open(uint16_t oscId) = 0;
-    virtual _dde_func_return_t close(uint16_t oscId) = 0;
+    virtual _dde_func_return_t open(uint16_t id) = 0;
+    virtual _dde_func_return_t close(uint16_t id) = 0;
 
     virtual _dde_func_return_t get(DDE_OSC_HEADER&) = 0;
     virtual _dde_func_return_t set(const DDE_OSC_HEADER&) = 0;
@@ -117,8 +117,8 @@ public:
     virtual _dde_func_return_t open(int fileNum, bool writeMode) = 0;
     virtual _dde_func_return_t close() = 0;
 
-    virtual _dde_func_return_t addData(const DDE_SET_OSC_DATA& dat, int ch_count, bool& overflowed) = 0;
-    virtual _dde_func_return_t readNextData(const DDE_OSC_HEADER& header, DDE_GET_OSC_DATA& getDat) = 0;
+    virtual _dde_func_return_t addData(const DDE_SET_OSC_DATA& dat, int ch_count, bool& eof) = 0;
+    virtual _dde_func_return_t readNextData(const DDE_OSC_HEADER& header, DDE_GET_OSC_DATA& getDat, bool& eof) = 0;
 };
 
 class IOscHeaderService // Interface for working with the oscilloscope data file
@@ -132,13 +132,17 @@ public:
     virtual _dde_func_return_t get_header(uint8_t id, DDE_OSC_HEADER&) = 0;
     virtual _dde_func_return_t set_header(uint8_t id, const DDE_OSC_HEADER&) = 0;
 
-    virtual _dde_func_return_t get_state(uint8_t id, OSC_STATE&) = 0;
+    virtual const OSC_STATE get_state(uint8_t id) = 0;
     virtual _dde_func_return_t set_state(uint8_t id, const OSC_STATE&) = 0;
     virtual _dde_func_return_t get_settings(uint8_t id, OSC_SETTING&) = 0;
     virtual _dde_func_return_t set_settings(uint8_t id, const OSC_SETTING&) = 0;
 
     virtual int8_t get_page_state(uint8_t id, int pageNum) = 0;
     virtual _dde_func_return_t set_page_state(uint8_t id, int pageNum, int8_t state) = 0;
+
+    virtual int get_page_read(uint16_t id) = 0;
+    virtual int get_page_write(uint16_t id) = 0;
+
 
 };
 
