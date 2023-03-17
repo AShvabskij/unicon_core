@@ -154,7 +154,7 @@ int OscIPCHeaderService::get_page_read(uint16_t id)
     int state = dat->state.pageMask[pageNum];
 
     if (state == 0) {
-        pageNum = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
+        pageNum = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 1;
         if (pageNum != dat->state.lastPageWrite) {
             state = dat->state.pageMask[pageNum];
         }
@@ -179,7 +179,7 @@ int OscIPCHeaderService::get_page_write(uint16_t id)
     int state = dat->state.pageMask[pageNum];
 
     if (state == 1) {
-        pageNum = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
+        pageNum = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 1;
         if (pageNum != dat->state.lastPageRead) {
             state = dat->state.pageMask[pageNum];
         }

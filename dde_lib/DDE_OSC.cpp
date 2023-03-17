@@ -178,12 +178,13 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     if (res != _return_OK || eof) {
         m_dataSrv->close();
         m_headerSrv->set_page_state(osc_id, pageNum, 0);
-
+/*
         int nextPageNum = m_headerSrv->get_page_read(osc_id);
         if (nextPageNum >= 0) {
             m_dataSrv->open(nextPageNum, false);
             dat.next_ready = true;
         }
+*/
     }
 
     return res;
@@ -205,7 +206,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
     assert(m_header->device_id == osc_id);
 
     int pageNum = m_headerSrv->get_page_write(osc_id);
-    if (pageNum == -1) { // there is not free pages
+    if (pageNum < 0) { // there is not free pages
         OSC_STATE state =  m_headerSrv->get_state(osc_id);
         state.overflowed = true;
         m_headerSrv->set_state(osc_id, state);
