@@ -63,19 +63,18 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
 
     m_headerSrv->get_header(oscId, hdr);
 
-    m_headerSrv->set_page_state(oscId, 4, 1);
-    m_headerSrv->set_page_state(oscId, 5, 1);
-    m_headerSrv->set_page_state(oscId, 6, 1);
+    m_headerSrv->set_page_state(oscId, 1, 1);
+    m_headerSrv->set_page_state(oscId, 2, 1);
+    m_headerSrv->set_page_state(oscId, 3, 1);
 
     m_headerSrv->get_header(oscId, hdr);
 
-    int state = m_headerSrv->get_page_state(oscId, 4);
-    state = 0;
-    m_headerSrv->set_page_state(oscId, 4, state);
-    state = m_headerSrv->get_page_state(oscId, 4);
+    int state = m_headerSrv->get_page_state(oscId, 1);
+    m_headerSrv->set_page_state(oscId, 1, 0);
+    state = m_headerSrv->get_page_state(oscId, 1);
 
     int pageNum = 0;
-    while (state != -1) {
+    while (pageNum < OSC_PAGE_MAX) {
         pageNum++;
         m_headerSrv->set_page_state(oscId, pageNum, 0);
         state = m_headerSrv->get_page_state(oscId, pageNum);
@@ -105,6 +104,12 @@ _dde_func_return_t DDE_OSC::open(uint16_t osc_id)
     state.enabled = true;
     m_headerSrv->set_state(osc_id, state);
 
+    if (m_header->settings.reason == 0) {
+        m_header->settings.reason = 1;
+        _dde_func_return_t res = m_headerSrv->set_header(osc_id, *m_header);
+        assert(res == _return_OK);
+    }
+
     return res;
 }
 
@@ -125,6 +130,13 @@ _dde_func_return_t DDE_OSC::load_header(uint16_t osc_id)
 
 _dde_func_return_t DDE_OSC::close(uint16_t osc_id)
 {
+    assert(m_header);
+    if (m_header->settings.reason == 1) {
+        m_header->settings.reason = 0;
+        _dde_func_return_t res = m_headerSrv->set_header(osc_id, *m_header);
+        assert(res == _return_OK);
+    }
+
     delete m_header;
     m_header = nullptr;
 
