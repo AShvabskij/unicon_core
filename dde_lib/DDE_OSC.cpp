@@ -105,6 +105,12 @@ _dde_func_return_t DDE_OSC::open(uint16_t osc_id)
     state.enabled = true;
     m_headerSrv->set_state(osc_id, state);
 
+    if (m_header->settings.reason == 0) {
+        m_header->settings.reason = 1;
+        _dde_func_return_t res = m_headerSrv->set_header(osc_id, *m_header);
+        assert(res == _return_OK);
+    }
+
     return res;
 }
 
@@ -125,6 +131,13 @@ _dde_func_return_t DDE_OSC::load_header(uint16_t osc_id)
 
 _dde_func_return_t DDE_OSC::close(uint16_t osc_id)
 {
+    assert(m_header);
+    if (m_header->settings.reason == 1) {
+        m_header->settings.reason = 0;
+        _dde_func_return_t res = m_headerSrv->set_header(osc_id, *m_header);
+        assert(res == _return_OK);
+    }
+
     delete m_header;
     m_header = nullptr;
 
