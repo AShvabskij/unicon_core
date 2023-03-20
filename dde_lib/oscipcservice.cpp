@@ -151,7 +151,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, int pageNum, 
     }
 
     if (state == 1 && dat->state.currPageWrite == pageNum) {
-        int nextPage = get_next_page_read(id);
+        int nextPage = get_next_page_write(id);
         if (nextPage >= 0) {
             dat->state.currPageWrite = nextPage;
         }
@@ -235,7 +235,7 @@ int OscIPCHeaderService::get_next_page_write(uint16_t id)
     }
 
     int state = dat->state.pageMask[nextPageNum];
-    if (state == 0) {
+    if (state == 1) {
         perror("There is not available pages to write data yet");
         return -1;
     }
