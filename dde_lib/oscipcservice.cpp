@@ -206,14 +206,9 @@ int OscIPCHeaderService::get_next_page_read(uint16_t id)
 
     int currPage = dat->state.currPageRead;
     int nextPageNum = (currPage < OSC_PAGE_MAX) ? currPage + 1 : 1;
-
-    if (nextPageNum == dat->state.currPageWrite) {
-        perror("There is not available pages to read data yet");
-        return -1;
-    }
-
     int state = dat->state.pageMask[nextPageNum];
-    if (state == 0) {
+
+    if (nextPageNum == dat->state.currPageWrite || state == 0) {
         perror("There is not available pages to read data yet");
         return -1;
     }
@@ -228,14 +223,9 @@ int OscIPCHeaderService::get_next_page_write(uint16_t id)
 
     int currPage = dat->state.currPageWrite;
     int nextPageNum = (currPage < OSC_PAGE_MAX) ? currPage + 1 : 1;
-
-    if (nextPageNum == dat->state.currPageRead) {
-        perror("There is not available pages to write data yet");
-        return -1;
-    }
-
     int state = dat->state.pageMask[nextPageNum];
-    if (state == 1) {
+
+    if (nextPageNum == dat->state.currPageRead || state == 1) {
         perror("There is not available pages to write data yet");
         return -1;
     }
