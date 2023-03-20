@@ -66,7 +66,7 @@ _dde_func_return_t OscDataService::close()
     delete m_oscFileStream;
     m_oscFileStream = nullptr;
     m_oscFileBuff = "";
-    m_currFileNum = 0;
+    m_currFileNum = -1;
 
     return _return_OK;
 }

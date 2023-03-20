@@ -32,7 +32,7 @@ private:
 
     void waitForLoad();
 
-    int m_currFileNum;
+    int m_currFileNum = -1;
     std::stringstream* m_oscFileStream = nullptr;
     std::string m_oscFileBuff = "";
 
