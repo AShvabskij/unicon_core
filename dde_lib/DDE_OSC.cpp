@@ -33,8 +33,8 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
     for (int id = 0; id < MAX_DEV_SUPPORT; id ++) {
         OSC_STATE state = m_headerSrv->get_state(id);
         state.user_enabled = false;
-        state.lastPageRead = 0;
-        state.lastPageWrite = 0;
+        state.currPageRead = 0;
+        state.currPageWrite = 0;
         res = m_headerSrv->set_state(id, state);
         assert(res == _return_OK);
     }
@@ -104,7 +104,7 @@ _dde_func_return_t DDE_OSC::open(uint16_t osc_id)
 
     OSC_STATE state = m_headerSrv->get_state(osc_id);
     state.user_enabled = true;
-    state.lastPageRead = 0;
+    state.currPageRead = 0;
     _dde_func_return_t res = m_headerSrv->set_state(osc_id, state);
 
     return res;
@@ -132,7 +132,7 @@ _dde_func_return_t DDE_OSC::close(uint16_t osc_id)
 
     OSC_STATE state = m_headerSrv->get_state(osc_id);
     state.user_enabled = false;
-    state.lastPageRead = 0;
+    state.currPageRead = 0;
     m_headerSrv->set_state(osc_id, state);
 
     _dde_func_return_t res = m_dataSrv->close();
@@ -178,13 +178,13 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     if (res != _return_OK || eof) {
         m_dataSrv->close();
         m_headerSrv->set_page_state(osc_id, pageNum, 0);
-/*
+
         int nextPageNum = m_headerSrv->get_page_read(osc_id);
         if (nextPageNum >= 0) {
             m_dataSrv->open(nextPageNum, false);
             dat.next_ready = true;
         }
-*/
+
     }
 
     return res;

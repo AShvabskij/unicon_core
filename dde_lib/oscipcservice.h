@@ -21,5 +21,9 @@ public:
 
     int get_page_read(uint16_t id);
     int get_page_write(uint16_t id);
+
+private:
+    int get_next_page_read(uint16_t id);
+    int get_next_page_write(uint16_t id);
 };
 

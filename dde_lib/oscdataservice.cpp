@@ -159,7 +159,7 @@ _dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DD
             continue;
         }
 
-        for (int chInd = 0; chInd < ch_count; chInd++) {
+        for (unsigned int chInd = 0; chInd < ch_count; chInd++) {
             auto& ch = header.channels[chInd];
             uint16_t elemInd = chInd;
 
