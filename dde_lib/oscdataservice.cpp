@@ -112,6 +112,13 @@ std::fstream OscDataService::openOscFile(int fileNumber, bool writeMode)
         path += "/" + fileName;
     }
 
+    if (writeMode) {
+        std::ofstream ofile(path);
+        auto mode = std::ios::trunc;
+        ofile.open(path, mode);
+        ofile.close();
+    }
+
     std::fstream file(path);
     if (!file.is_open()) {
         auto mode = writeMode ? (std::ios::out | std::ios::trunc) : std::ios::in;
@@ -264,10 +271,11 @@ _dde_func_return_t OscDataService::addData(const DDE_SET_OSC_DATA& dat, int ch_c
     }
 
     m_outf.write(line.str().c_str(), line.str().length());
+    m_outf.flush();
 
     std::streampos pos = m_outf.tellp();
-    std::cout << "osc file = " << m_currFileNum << "written size = " << pos;
     if (pos >= osc_data::MAX_PAGE_SIZE) {
+        std::cout << "\nosc file num = " << m_currFileNum << ", written size = " << pos << "\n";
         eof = true;
     }
 
