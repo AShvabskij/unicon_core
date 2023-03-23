@@ -235,7 +235,8 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
     }
 
     qlonglong trigTimeNs = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
-    out->timestamp = trigTimeNs  + ++m_dataCounter * m_oscRawDataBuff->data_length * osc.settings.timeResolutionNs;
+
+    out->timestamp = QDateTime::currentMSecsSinceEpoch()*1000; //trigTimeNs  + ++m_dataCounter * m_oscRawDataBuff->data_length * (osc.settings.timeResolutionNs/1000);
 
     if (m_oscRawDataBuff->eof) return STOP_STREAM_CODE;
 
@@ -439,7 +440,7 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
         res["error"] = error;
     }
 
-//  QTextStream(stdout) << res["d_id"].toString() << "=" << res["values"].toString() <<  "\n" ;
+    QTextStream(stdout) << "values count" << "=" << valuesObj.count() <<  ", time = " << data.timestamp << "\n" ;
     return res;
 }
 

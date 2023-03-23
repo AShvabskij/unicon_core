@@ -175,6 +175,9 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 
     if (pageNum < 0) return res;
 
+    string err = "Read data from page = " + std::to_string(pageNum) + "\n";
+    perror(err.c_str());
+
     res = m_dataSrv->open(pageNum, false);
     if (res != _return_OK) return res;
 

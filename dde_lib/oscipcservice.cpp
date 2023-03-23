@@ -204,9 +204,15 @@ int OscIPCHeaderService::get_next_page_read(uint16_t id)
     auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
     if (!dat) return -1;
 
-    int currPage = dat->state.currPageRead;
-    int nextPageNum = (currPage < OSC_PAGE_MAX) ? currPage + 1 : 1;
-    int state = dat->state.pageMask[nextPageNum];
+    int nextPageNum = dat->state.currPageRead;
+    int state = 0;
+    while (true) {
+        nextPageNum = (nextPageNum < OSC_PAGE_MAX) ? nextPageNum + 1 : 0;
+        if (nextPageNum == dat->state.currPageWrite) break;
+
+        state = dat->state.pageMask[nextPageNum];
+        if (state == 1) break;
+    }
 
     if (nextPageNum == dat->state.currPageWrite || state == 0) {
         perror("There is not available pages to read data yet");
@@ -222,10 +228,10 @@ int OscIPCHeaderService::get_next_page_write(uint16_t id)
     if (!dat) return -1;
 
     int currPage = dat->state.currPageWrite;
-    int nextPageNum = (currPage < OSC_PAGE_MAX) ? currPage + 1 : 1;
-    int state = dat->state.pageMask[nextPageNum];
+    int nextPageNum = (currPage < OSC_PAGE_MAX) ? currPage + 1 : 0;
+//  int state = dat->state.pageMask[nextPageNum];
 
-    if (nextPageNum == dat->state.currPageRead || state == 1) {
+    if (nextPageNum == dat->state.currPageRead /*|| state == 1*/) {
         perror("There is not available pages to write data yet");
         return -1;
     }

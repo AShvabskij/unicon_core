@@ -173,7 +173,7 @@ _dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DD
             uint8_t chNum = ch.chNum;
             assert(chNum <= OSC_MAX_CHANNELS);
 
-            uint32_t rawValue = values[elemInd];
+            int32_t rawValue = values[elemInd];
             if (ch.var.type == OSC_VAR_TYPE::DIGITAL) {
                 getDat.data[chNum].i_buff[buffInd] = rawValue;
             } else if (ch.var.type == OSC_VAR_TYPE::DISCRETE) {
@@ -222,20 +222,20 @@ float OscDataService::normalizeValue(uint32_t rawValue, float gain, float offset
     return normValue;
 }
 
-std::vector<uint32_t> OscDataService::parseValues(std::string line)
+std::vector<int32_t> OscDataService::parseValues(std::string line)
 {
+    std::vector<int32_t> ret;
     std::vector<std::string> elems = split(line, ',');
     if (elems.empty()) {
         cout << osc_data::OSC_FILE_PARSE_ERROR;
-        return std::vector<uint32_t>();
+        return ret;
     }
 
-    std::vector<uint32_t> ret;
     ret.reserve(elems.size());
 
     for (uint32_t ind = 0; ind < elems.size(); ind++) {
         const char* elem = elems[ind].c_str();
-        uint32_t rawValue = std::stol(elem,nullptr,10); //std::atoi(elem);
+        int32_t rawValue = std::stol(elem,nullptr,10); //std::atoi(elem);
         ret.push_back(rawValue);
     }
 
@@ -264,7 +264,7 @@ _dde_func_return_t OscDataService::addData(const DDE_SET_OSC_DATA& dat, int ch_c
 
     for (int i = 0; i < dat.data_length; i++) {
         for (int num = 0; num < ch_count; num++) {
-            uint32_t elem = dat.data[num].i_buff[i];
+            int32_t elem = dat.data[num].i_buff[i];
             line << elem << delim;
         }
         line << "\n";
