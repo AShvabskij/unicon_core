@@ -43,7 +43,7 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint8_t id, DDE_OSC_HEADER& h
 		channel.var.min = glio_ch.min;
 		channel.var.max = glio_ch.max;
 		channel.var.type = glio_ch.type;
-        channel.var.color = 0xFFFF00;// glio_ch.color;
+        channel.var.color = glio_ch.color;
 	}
 
 	return _return_OK;

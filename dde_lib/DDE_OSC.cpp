@@ -104,9 +104,9 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
 
     static int colors[4];
     colors[0] = 0xffff00;
-    colors[1] = 0x00ff00;
+    colors[1] = 0x01ff00;
     colors[2] = 0xff0000;
-    colors[3] = 0x00ffff;
+    colors[3] = 0x01ffff;
 
     for (int i = 0; i < OSC_MAX_VARS; i++) {
         if (m_header->channels[i].var.type == OSC_VAR_TYPE::DISCRETE) {
