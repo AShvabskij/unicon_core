@@ -65,7 +65,7 @@ union OSC_DATA
 
 struct OSC_SETTING
 {
-    uint32_t time_resolution_ns; // 1000 = 1us
+    uint32_t time_resolution_us; // 1000 = 1ms
     uint32_t triger_mode; //single, continues, stream
     uint32_t reason;
     time_t trig_time; // osc starting time

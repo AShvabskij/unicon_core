@@ -6,12 +6,12 @@
 const int CHANNELS_MAX = 16;
 const int BUFFER_MAX = 500;
 const int DATA_YELD_INTERVAL_MSC = 50;
-const int RESOLUTION_NS = (DATA_YELD_INTERVAL_MSC * 1000) / BUFFER_MAX;
+const int RESOLUTION_MKS = (DATA_YELD_INTERVAL_MSC * 1000) / BUFFER_MAX;
 
 _dde_func_return_t DDE_OSC_EMUL::get(DDE_OSC_HEADER& p)
 {
     p.settings.reason = 0;
-    p.settings.time_resolution_ns = RESOLUTION_NS;
+    p.settings.time_resolution_us = RESOLUTION_MKS;
 
     p.settings.trig_time = std::time(nullptr);
     m_lastDataTimeNs = systemTimeNs();
@@ -43,7 +43,7 @@ _dde_func_return_t DDE_OSC_EMUL::get(DDE_GET_OSC_DATA& p)
         for (int jj = 0; jj < p.data_length; jj++)
         {
             p.data[ii].f_buff[jj] = generateValue(ii, t);
-            t += RESOLUTION_NS;
+            t += RESOLUTION_MKS;
         }
     }
 

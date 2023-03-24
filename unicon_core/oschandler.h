@@ -57,7 +57,7 @@ struct OscSettings
 {
     uint16_t oscId;
 
-    int timeResolutionNs; // 1000 = 1us, time to calculate value times, decresing data timestamp
+    int timeResolution_us; // 1000 = 1us, time to calculate value times, decresing data timestamp
     TriggerModeEnum trigerMode;
     ReasonEnum reason;
     QDateTime trigDTime; // osc starting time
@@ -106,7 +106,7 @@ struct OscHeader
         res["desc"] = desc;
         res["name"] = name;
         res["trig_time"] = settings.trigDTime.toMSecsSinceEpoch();
-        res["resolution_ns"] = settings.timeResolutionNs;
+        res["resolution_us"] = settings.timeResolution_us;
 
         QJsonArray channelsObj;
         for (quint8 chInd : analogChannels.keys()) {

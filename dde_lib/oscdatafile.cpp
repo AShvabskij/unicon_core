@@ -192,8 +192,8 @@ _dde_func_return_t OscDataFile::readNextData(DDE_GET_OSC_DATA& p, int datYeldInt
         return _return_FAIL;
     }
 
-    auto resolution_ns = m_header->settings.time_resolution_ns;
-    p.data_length = (resolution_ns != 0) ? (datYeldIntervalMsc * 1000) / resolution_ns : 0;
+    auto resolution_us = m_header->settings.time_resolution_us;
+    p.data_length = (resolution_us != 0) ? (datYeldIntervalMsc * 1000) / resolution_us : 0;
     p.overflow = 0;
     p.header_updated = 0;
     p.next_ready = true;
@@ -382,7 +382,7 @@ int OscDataFile::parseHeader(const std::ifstream& fileStream, FILE_HEADER& heade
             }
 
             if (elems[0] == ".Ts") {
-                header.settings.time_resolution_ns = stof(elems[1].c_str()) * 1000 * 1000;
+                header.settings.time_resolution_us = stof(elems[1].c_str()) * 1000 * 1000;
             }
 
             continue;

@@ -342,7 +342,7 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     OscSettings settings;
     settings.oscId = oscId;
     settings.reason = (ReasonEnum)header.settings.reason;
-    settings.timeResolutionNs = header.settings.time_resolution_ns;
+    settings.timeResolution_us = header.settings.time_resolution_us;
     std::time_t time = header.settings.trig_time;
     settings.trigDTime = QDateTime::fromTime_t(time);
     if (!settings.trigDTime.isValid()) {
