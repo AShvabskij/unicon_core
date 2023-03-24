@@ -42,7 +42,7 @@ struct OscChannelDescr
     qint8 firstBit = 0;
     qint8 lastBit = 0;
 
-    RGB color;
+    int color;
 };
 
 enum TriggerModeEnum {
@@ -57,13 +57,13 @@ struct OscSettings
 {
     uint16_t oscId;
 
-    int timeResolution_us; // 1000 = 1us, time to calculate value times, decresing data timestamp
+    int timeResolution_us; // 1000 = 1ms, time to calculate value times, decresing data timestamp
     TriggerModeEnum trigerMode;
     ReasonEnum reason;
     QDateTime trigDTime; // osc starting time
 };
 
-QString colorToString(const RGB& c);
+QString colorToString(const int &c);
 
 struct OscHeader
 {
@@ -174,7 +174,7 @@ private:
     QJsonObject createStreamDataObj(const OscData& data, int error = 0);
     QString oscDataToString(const QJsonObject &obj);
     OscChannelDescr createChannelDescr(const OSC_CHANNEL &channel);
-    qint32 discreteValue(qint16 rawValue, qint8 firstBit, qint8 lastBit);
+    qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
 
     void startPooling();
     void stopPooling();

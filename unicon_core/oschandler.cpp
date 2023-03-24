@@ -1,5 +1,6 @@
 #include "oschandler.h"
 #include <QTimer>
+#include <sstream>
 
 const QString CMD_OSC_HEADER = "osc_header";
 const QString CMD_OSC_CHANNEL = "osc_channel";
@@ -204,7 +205,7 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
 
         for (int i = 0; i < m_oscRawDataBuff->data_length; i++) {
             if (chDescr.isDigital) {
-                uint32_t rawValue = chData.i_buff[i];
+                int32_t rawValue = chData.i_buff[i];
                 chValues.values << discreteValue(rawValue, chDescr.firstBit, chDescr.lastBit);
             } else {
                 chValues.values << chData.f_buff[i];
@@ -229,23 +230,24 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
 
         const OSC_DATA& chData = m_oscRawDataBuff->data[chDescr.channelNum];
         for (int i = 0; i < m_oscRawDataBuff->data_length; i++) {
-            uint32_t rawValue = chData.i_buff[i];
+            int32_t rawValue = chData.i_buff[i];
             chValues.values << discreteValue(rawValue, chDescr.firstBit, chDescr.lastBit);
         }
     }
 
-    qlonglong trigTimeNs = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
+//  qlonglong trigTime_us = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
 
-    out->timestamp = QDateTime::currentMSecsSinceEpoch()*1000; //trigTimeNs  + ++m_dataCounter * m_oscRawDataBuff->data_length * (osc.settings.timeResolutionNs/1000);
+    m_dataCounter++;
+    out->timestamp = m_dataCounter * m_oscRawDataBuff->data_length * (osc.settings.timeResolution_us);
 
     if (m_oscRawDataBuff->eof) return STOP_STREAM_CODE;
 
     return res;
 }
 
-qint32 OscHandler::discreteValue(qint16 rawValue, qint8 firstBit, qint8 lastBit)
+qint32 OscHandler::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit)
 {
-    uint16_t mask = 0x0001;
+    uint32_t mask = 0x0001;
     uint32_t ret = rawValue >> firstBit;
 
     bool isBit = (firstBit == lastBit);
@@ -394,7 +396,7 @@ QJsonObject OscHandler::createChannelObj(int requestId, const OscChannelDescr& c
     obj["scale"] = ch.scale;
     obj["min"] = ch.min;
     obj["max"] = ch.max;
-    obj["color"] = colorToString(ch.color);
+    obj["color"] =  colorToString(ch.color);
     obj["isDiscrete"] = ch.isDiscrete;
 
     res["body"] = obj;
@@ -460,10 +462,17 @@ QString OscHandler::oscDataToString(const QJsonObject &obj)
     return res;
 }
 
-QString colorToString(const RGB &c)
+QString colorToString(const int &c)
 {
+    std::ostringstream ss;
+    ss << "#" << std::hex <<  c;
+    QString ret = ss.str().c_str();
+    return ret;
+
+/*
     return QString("#%1%2%3")
             .arg(QString::number( c.Red, 16).rightJustified(2, '0'))
             .arg(QString::number( c.Green, 16).rightJustified(2, '0'))
             .arg(QString::number( c.Blue, 16).rightJustified(2, '0'));
+*/
 }
