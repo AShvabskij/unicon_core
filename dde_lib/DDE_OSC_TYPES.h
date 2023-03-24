@@ -61,6 +61,7 @@ union OSC_DATA
 {
     float f_buff[OSC_DATA_BUFFER_MAX];
     int32_t i_buff[OSC_DATA_BUFFER_MAX];
+    uint32_t u_buff[OSC_DATA_BUFFER_MAX];
 };
 
 struct OSC_SETTING

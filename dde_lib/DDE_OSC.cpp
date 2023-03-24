@@ -96,32 +96,42 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
     return _return_OK;
 }
 
-_dde_func_return_t DDE_OSC::open(uint16_t osc_id)
+_dde_func_return_t DDE_OSC::open(uint16_t device_id)
 {
-    load_header(osc_id);
+    load_header(device_id);
     assert(m_header);
-    assert(m_header->device_id == osc_id);
+    assert(m_header->device_id == device_id);
 
-//  int pageState = m_headerSrv->get_page_state(osc_id, m_currReadPage);
+    static int colors[4];
+    colors[0] = 0xffff00;
+    colors[1] = 0x00ff00;
+    colors[2] = 0xff0000;
+    colors[3] = 0x00ffff;
 
-//  if (pageState < 0) return _return_FAIL;
-//  if (pageState == 0) return _return_OK;
+    for (int i = 0; i < OSC_MAX_VARS; i++) {
+        if (m_header->channels[i].var.type == OSC_VAR_TYPE::DISCRETE) {
+            m_header->channels[i].var.color = colors[0];
+        } else {
+            m_header->channels[i].var.color = colors[i % 4];
+        }
+    }
 
-//  _dde_func_return_t res = m_dataSrv->open(m_currReadPage, false);
+    _dde_func_return_t res = m_headerSrv->set_header(device_id, *m_header);
+    if (res != _return_OK) return res;
 
-    OSC_STATE state = m_headerSrv->get_state(osc_id);
+    OSC_STATE state = m_headerSrv->get_state(device_id);
     state.user_enabled = true;
-    state.currPageRead = 0;
-    _dde_func_return_t res = m_headerSrv->set_state(osc_id, state);
+    state.currPageRead = state.currPageWrite;
+    res = m_headerSrv->set_state(device_id, state);
 
     return res;
 }
 
-_dde_func_return_t DDE_OSC::load_header(uint16_t osc_id)
+_dde_func_return_t DDE_OSC::load_header(uint16_t id)
 {
     m_header = new DDE_OSC_HEADER();
-    m_header->device_id = osc_id;
-    _dde_func_return_t res = m_headerSrv->get_header(osc_id, *m_header);
+    m_header->device_id = id;
+    _dde_func_return_t res = m_headerSrv->get_header(id, *m_header);
     if (res != _return_OK) {
         delete m_header;
         m_header = nullptr;
@@ -130,17 +140,17 @@ _dde_func_return_t DDE_OSC::load_header(uint16_t osc_id)
     return res;
 }
 
-_dde_func_return_t DDE_OSC::close(uint16_t osc_id)
+_dde_func_return_t DDE_OSC::close(uint16_t id)
 {
     assert(m_header);
 
     delete m_header;
     m_header = nullptr;
 
-    OSC_STATE state = m_headerSrv->get_state(osc_id);
+    OSC_STATE state = m_headerSrv->get_state(id);
     state.user_enabled = false;
     state.currPageRead = 0;
-    m_headerSrv->set_state(osc_id, state);
+    m_headerSrv->set_state(id, state);
 
     _dde_func_return_t res = m_dataSrv->close();
     return res;
@@ -156,20 +166,20 @@ _dde_func_return_t DDE_OSC::get(DDE_OSC_HEADER& h)
 _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 {
     _dde_func_return_t res = _return_OK;
-    uint16_t osc_id = dat.device_id;
+    uint16_t id = dat.device_id;
 
     if (m_header && m_header->device_id != dat.device_id) {
         close(m_header->device_id);
     }
 
     if (!m_header) {
-        load_header(osc_id);
+        load_header(id);
     }
 
     assert(m_header);
-    assert(m_header->device_id == osc_id);
+    assert(m_header->device_id == id);
 
-    int pageNum = m_headerSrv->get_page_read(osc_id);
+    int pageNum = m_headerSrv->get_page_read(id);
     dat.data_length = 0;
     dat.next_ready = (pageNum >= 0);
 
@@ -187,9 +197,9 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 
     if (res != _return_OK || eof) {
         m_dataSrv->close();
-        m_headerSrv->set_page_state(osc_id, pageNum, 0);
+        m_headerSrv->set_page_state(id, pageNum, 0);
 
-        int nextPageNum = m_headerSrv->get_page_read(osc_id);
+        int nextPageNum = m_headerSrv->get_page_read(id);
         if (nextPageNum >= 0) {
             m_dataSrv->open(nextPageNum, false);
             dat.next_ready = true;
@@ -202,24 +212,24 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 
 _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 {
-    uint16_t osc_id = dat.device_id;
+    uint16_t id = dat.device_id;
 
     if (m_header && m_header->device_id != dat.device_id) {
         close(m_header->device_id);
     }
 
     if (!m_header) {
-        load_header(osc_id);
+        load_header(id);
     }
 
     assert(m_header);
-    assert(m_header->device_id == osc_id);
+    assert(m_header->device_id == id);
 
-    int pageNum = m_headerSrv->get_page_write(osc_id);
+    int pageNum = m_headerSrv->get_page_write(id);
     if (pageNum < 0) { // there is not free pages
-        OSC_STATE state =  m_headerSrv->get_state(osc_id);
+        OSC_STATE state =  m_headerSrv->get_state(id);
         state.overflowed = true;
-        m_headerSrv->set_state(osc_id, state);
+        m_headerSrv->set_state(id, state);
         return _return_FAIL;
     }
 
@@ -232,7 +242,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 
     if (eof || dat.eof) {
         m_dataSrv->close();
-        m_headerSrv->set_page_state(osc_id, pageNum, 1);
+        m_headerSrv->set_page_state(id, pageNum, 1);
     }
 
     return res;

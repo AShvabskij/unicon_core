@@ -15,7 +15,7 @@ const int STOP_STREAM_CODE = 2; //*100;
 
 OscHandler::OscHandler(IDDE_Dispatcher* dde): BaseReqHandler(dde)
 {
-    m_oscRawDataBuff = new DDE_GET_OSC_DATA();
+    m_ddeData = new DDE_GET_OSC_DATA();
     m_oscDataBuff = new OscData();
 
     m_streamTimer = new QTimer(this);
@@ -175,14 +175,14 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
 long OscHandler::getData(const OscHeader& osc, OscData* out)
 {
     Q_ASSERT(out);
-    Q_ASSERT(m_oscRawDataBuff);
+    Q_ASSERT(m_ddeData);
 
     out->oscId = osc.id;
     out->deviceID = osc.deviceID;
 
-    m_oscRawDataBuff->device_id = osc.deviceID.id;
+    m_ddeData->device_id = osc.deviceID.id;
 
-    _dde_func_return_t res = (*m_dde)(osc.deviceID.type)->get_osc_data(*m_oscRawDataBuff);
+    _dde_func_return_t res = (*m_dde)(osc.deviceID.type)->get_osc_data(*m_ddeData);
 
     if (res != _return_OK) return res;
 
@@ -194,16 +194,16 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
             continue;
         }
 
-        const OSC_DATA& chData = m_oscRawDataBuff->data[chDescr.channelNum];
+        const OSC_DATA& chData = m_ddeData->data[chDescr.channelNum];
         OscChannelValues& chValues = out->analogValues[chInd];
         chValues.channelNum = chDescr.channelNum;
         chValues.varId = chDescr.varId;
-        chValues.valuesize = m_oscRawDataBuff->data_length;
+        chValues.valuesize = m_ddeData->data_length;
         chValues.valueDensity = chValues.valuesize / DATA_YELD_INTERVAL_MSC;
         chValues.scale = chDescr.scale;
         chValues.values.clear();
 
-        for (int i = 0; i < m_oscRawDataBuff->data_length; i++) {
+        for (int i = 0; i < m_ddeData->data_length; i++) {
             if (chDescr.isDigital) {
                 int32_t rawValue = chData.i_buff[i];
                 chValues.values << discreteValue(rawValue, chDescr.firstBit, chDescr.lastBit);
@@ -224,12 +224,12 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         OscChannelValues& chValues = out->discreteValues[chInd];
         chValues.channelNum = chDescr.channelNum;
         chValues.varId = chDescr.varId;
-        chValues.valuesize = m_oscRawDataBuff->data_length;
+        chValues.valuesize = m_ddeData->data_length;
         chValues.valueDensity = chValues.valuesize / DATA_YELD_INTERVAL_MSC;
         chValues.values.clear();
 
-        const OSC_DATA& chData = m_oscRawDataBuff->data[chDescr.channelNum];
-        for (int i = 0; i < m_oscRawDataBuff->data_length; i++) {
+        const OSC_DATA& chData = m_ddeData->data[chDescr.channelNum];
+        for (int i = 0; i < m_ddeData->data_length; i++) {
             int32_t rawValue = chData.i_buff[i];
             chValues.values << discreteValue(rawValue, chDescr.firstBit, chDescr.lastBit);
         }
@@ -238,9 +238,9 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
 //  qlonglong trigTime_us = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
 
     m_dataCounter++;
-    out->timestamp = m_dataCounter * m_oscRawDataBuff->data_length * (osc.settings.timeResolution_us);
+    out->timestamp = m_dataCounter * m_ddeData->data_length * (osc.settings.timeResolution_us);
 
-    if (m_oscRawDataBuff->eof) return STOP_STREAM_CODE;
+    if (m_ddeData->eof) return STOP_STREAM_CODE;
 
     return res;
 }

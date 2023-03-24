@@ -225,10 +225,10 @@ _dde_func_return_t OscDataFile::readNextData(DDE_GET_OSC_DATA& p, int datYeldInt
                 if (var.firstBit == 0 && var.lastBit == 15) {
                     val = normalizeValue(rawValue, var.gain, var.offset);
                 }
-                p.data[chNum].i_buff[buffInd] = val;
+                p.data[chNum].u_buff[buffInd] = val;
             } else if(var.isDiscrete) {
                 uint16_t rawValue = values[elemInd];
-                p.data[chNum].i_buff[buffInd] = rawValue;
+                p.data[chNum].u_buff[buffInd] = rawValue;
             }
             else {
                 float val = normalizeValue(rawValue, var.gain, var.offset);

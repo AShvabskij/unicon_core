@@ -24,8 +24,8 @@ public:
     virtual void update();
 private:
 
-    _dde_func_return_t load_header(uint16_t osc_id);
-    _dde_func_return_t open_page(uint16_t osc_id, int pageNum);
+    _dde_func_return_t load_header(uint16_t id);
+    _dde_func_return_t open_page(uint16_t id, int pageNum);
 
     IOscDataService* m_dataSrv = nullptr;
     IOscHeaderService* m_headerSrv = nullptr;

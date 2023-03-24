@@ -186,7 +186,7 @@ private:
     QVector<int> m_capturedVars;
     int m_streamValCount = 0;
     QTimer* m_streamTimer;
-    DDE_GET_OSC_DATA* m_oscRawDataBuff; // buffer to receive data from osc
+    DDE_GET_OSC_DATA* m_ddeData; // buffer to receive data from osc
     OscData* m_oscDataBuff; // buffer to keep data from osc
     int m_dataCounter = 0;
 };
