@@ -41,7 +41,7 @@ struct OSC_VAR
     float min = 0.0;
     float max = 0.0;
     float scale;
-    RGB color;
+    int color;
 };
 
 struct OSC_CHANNEL
@@ -129,6 +129,7 @@ struct GLIO_OSC_CHANNEL
     float max = 0.0;
     float gain = 0;
     float offset = 0;
+    int color = 0;
 
     // for discrete values only
     uint8_t firstBit;

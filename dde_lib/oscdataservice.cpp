@@ -145,7 +145,6 @@ _dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DD
     int buff_length = OSC_DATA_BUFFER_MAX;
 //  assert(buff_length > 0 && buff_length <= OSC_DATA_BUFFER_MAX);
 
-    auto resolution_ns = header.settings.time_resolution_ns;
     getDat.overflow = 0;
     getDat.header_updated = 0;
     getDat.next_ready = true;
@@ -210,13 +209,13 @@ std::string OscDataService::readLine(std::istream &stream)
     return line;
 }
 
-float OscDataService::normalizeValue(uint32_t rawValue, float gain, float offset)
+float OscDataService::normalizeValue(int32_t rawValue, float gain, float offset)
 {
     if (rawValue == 0) {
         return rawValue;
     }
 
-    uint32_t zeroLevel = 0; //0x7FFF;
+    int32_t zeroLevel = 0; //0x7FFF;
     float normValue = rawValue - zeroLevel;
     normValue =  normValue * gain + offset;
     return normValue;

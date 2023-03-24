@@ -43,6 +43,7 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint8_t id, DDE_OSC_HEADER& h
 		channel.var.min = glio_ch.min;
 		channel.var.max = glio_ch.max;
 		channel.var.type = glio_ch.type;
+        channel.var.color = 0xFFFF00;// glio_ch.color;
 	}
 
 	return _return_OK;
@@ -76,6 +77,7 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint8_t id, const DDE_OSC_HEA
 		glio_ch.min = channel.var.min;
 		glio_ch.max = channel.var.max;
 		glio_ch.type = channel.var.type;
+        glio_ch.color = channel.var.color;
 	}
 
 	int res = osc_mem_setData(id, (unsigned char*)&rec, sizeof(GLIO_OSC_HEADER));

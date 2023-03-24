@@ -279,11 +279,14 @@ OSC_VAR OscDataFile::createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t dev
     ret.id = descr.var_id;
     ret.device_id = deviceId;
     strcpy(ret.name, descr.name);
-    ret.color = descr.color;
     ret.min = descr.min;
     ret.max = descr.max;
     ret.scale = descr.gain;
     ret.type = descr.isDiscrete ? OSC_VAR_TYPE::DISCRETE : (descr.isDigital ? OSC_VAR_TYPE::DIGITAL : OSC_VAR_TYPE::ANALOG);
+
+    std::stringstream ss;
+    ss << "0x" << std::hex << descr.color.Red << descr.color.Blue << descr.color.Green;
+    ss >> ret.color;
 
     return ret;
 }
