@@ -20,7 +20,7 @@ struct OscChannelValues
 
 struct OscData
 {
-    uint16_t oscId;
+    uint16_t id;
     DevID deviceID;
     OscChannelValues analogValues[OSC_CHANNELS_MAX + 1];
     OscChannelValues discreteValues[OSC_DISCRETES_MAX + 1];
@@ -172,6 +172,7 @@ private:
     QJsonObject createHeaderObj(int requestId, const OscHeader& header);
     QJsonObject createChannelObj(int requestId, const OscChannelDescr& ch);
     QJsonObject createStreamDataObj(const OscData& data, int error = 0);
+    QJsonObject createAnswerObj(int requestId, DevID deviceID, const QJsonObject &body = QJsonObject(), int error = 0);
     QString oscDataToString(const QJsonObject &obj);
     OscChannelDescr createChannelDescr(const OSC_CHANNEL &channel);
     qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);

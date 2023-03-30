@@ -29,12 +29,12 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
     m_sysName = sysName;
 
     _dde_func_return_t res = m_headerSrv->init(sysName);
-
+/*
     for (int id = 0; id < MAX_DEV_SUPPORT; id ++) {
         OSC_STATE state = m_headerSrv->get_state(id);
 
         for (int pageNum = 0; pageNum < OSC_PAGE_MAX; pageNum++) {
-            m_headerSrv->set_page_state(id, pageNum, 0);
+            state.pageMask[pageNum] = 0;
         }
 
         state.user_enabled = false;
@@ -44,7 +44,7 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
 
         assert(res == _return_OK);
     }
-
+*/
     //---- A&S for tests only-------------------------------------
 /*
     DDE_OSC_HEADER hdr;
@@ -121,7 +121,16 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
 
     OSC_STATE state = m_headerSrv->get_state(device_id);
     state.user_enabled = true;
-    state.currPageRead = state.currPageWrite;
+/*
+    for (int pageNum = 0; pageNum < OSC_PAGE_MAX; pageNum++) {
+        if (pageNum != state.currPageWrite) {
+            state.pageMask[pageNum] = 0;
+        }
+    }
+*/
+// todo: start reading from curr pos, from current writing pos o from zero page?
+    state.currPageRead = state.currPageWrite > 0 ? state.currPageWrite - 1 : OSC_PAGE_MAX;
+
     res = m_headerSrv->set_state(device_id, state);
 
     return res;
@@ -183,7 +192,9 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     dat.data_length = 0;
     dat.next_ready = (pageNum >= 0);
 
-    if (pageNum < 0) return res;
+    if (pageNum < 0) {
+        return res;
+    }
 
     string err = "Read data from page = " + std::to_string(pageNum) + "\n";
     perror(err.c_str());
@@ -198,15 +209,19 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     if (res != _return_OK || eof) {
         m_dataSrv->close();
         m_headerSrv->set_page_state(id, pageNum, 0);
-
+/*
         int nextPageNum = m_headerSrv->get_page_read(id);
         if (nextPageNum >= 0) {
             m_dataSrv->open(nextPageNum, false);
             dat.next_ready = true;
         }
+*/
 
     }
 
+//  dat.eof = true;
+    static int cnt = 0;
+    dat.eof = (++cnt % 7) == 0 ? 1 : 0; //everytime eof
     return res;
 }
 
@@ -250,7 +265,22 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 
 _dde_func_return_t DDE_OSC::set(const DDE_OSC_HEADER& h)
 {
+    uint16_t id = h.device_id;
+
     _dde_func_return_t res = m_headerSrv->set_header(h.device_id, h);
+    if (res != _return_OK) return res;
+
+    OSC_STATE state = m_headerSrv->get_state(id);
+
+    for (int pageNum = 0; pageNum < OSC_PAGE_MAX; pageNum++) {
+        state.pageMask[pageNum] = 0;
+    }
+
+    state.currPageWrite = 0;
+    state.overflowed = false;
+
+    res = m_headerSrv->set_state(id, state);
+
     return res;
 }
 

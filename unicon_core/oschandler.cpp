@@ -8,7 +8,7 @@ const QString CMD_TYPE_OPEN_STREAM = "open_stream";
 const QString CMD_TYPE_CLOSE_STREAM = "close_stream";
 const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
-const int DATA_YELD_INTERVAL_MSC = 5000;
+const int DATA_YELD_INTERVAL_MSC = 250;
 const int STREAM_OBJECT_LIMIT = 10000;
 
 const int STOP_STREAM_CODE = 2; //*100;
@@ -135,22 +135,25 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
     OscHeader header;
     DevID devId = {sysType, deviceId};
     long ret = getHeader(devId, oscId, &header);
-    if (ret < 0) {
-        return ret;
+
+    if (ret == _return_OK) {
+        m_capturedOsc = header;
+        m_dataCounter = 0;
+
+        m_capturedVars.clear();
+        for (const QJsonValue& val : oscVars) {
+            m_capturedVars << val.toInt();
+        }
+        m_capturedVars.removeAll(0);
+
+        startPooling();
     }
 
-    m_capturedOsc = header;
-    m_dataCounter = 0;
+    int error = (ret != _return_OK) ? static_cast<int>(ret != 0 ? ret : -1): 0;
+    QJsonObject response = createAnswerObj(requestId, devId, QJsonObject(), error);
+    send(response);
 
-    m_capturedVars.clear();
-    for (const QJsonValue& val : oscVars) {
-        m_capturedVars << val.toInt();
-    }
-    m_capturedVars.removeAll(0);
-
-    startPooling();
-
-    return ret;
+    return error;
 }
 
 int OscHandler::handleCloseStream(const QJsonObject &request)
@@ -169,6 +172,10 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
         stopPooling();
     }
 
+    DevID devId = {sysType, deviceId};
+    QJsonObject response = createAnswerObj(requestId, devId);
+    send(response);
+
     return 0;
 }
 
@@ -177,14 +184,21 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
     Q_ASSERT(out);
     Q_ASSERT(m_ddeData);
 
-    out->oscId = osc.id;
+    out->id = osc.id;
     out->deviceID = osc.deviceID;
+    out->analogValues->valuesize = 0;
+    out->discreteValues->valuesize = 0;
+    out->analogValues->values.clear();
+    out->discreteValues->values.clear();
 
+    memset(m_ddeData, 0, sizeof(DDE_GET_OSC_DATA));
     m_ddeData->device_id = osc.deviceID.id;
 
     _dde_func_return_t res = (*m_dde)(osc.deviceID.type)->get_osc_data(*m_ddeData);
 
     if (res != _return_OK) return res;
+
+    if (m_ddeData->data_length == 0) return res;
 
     for (int chInd : osc.analogChannels.keys()) {
 
@@ -202,6 +216,9 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         chValues.valueDensity = chValues.valuesize / DATA_YELD_INTERVAL_MSC;
         chValues.scale = chDescr.scale;
         chValues.values.clear();
+        if (m_ddeData->data_length > 0) {
+            chValues.values.reserve(m_ddeData->data_length + 1);
+        }
 
         for (int i = 0; i < m_ddeData->data_length; i++) {
             if (chDescr.isDigital) {
@@ -227,6 +244,9 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         chValues.valuesize = m_ddeData->data_length;
         chValues.valueDensity = chValues.valuesize / DATA_YELD_INTERVAL_MSC;
         chValues.values.clear();
+        if (m_ddeData->data_length > 0) {
+            chValues.values.reserve(m_ddeData->data_length + 1);
+        }
 
         const OSC_DATA& chData = m_ddeData->data[chDescr.channelNum];
         for (int i = 0; i < m_ddeData->data_length; i++) {
@@ -237,8 +257,11 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
 
 //  qlonglong trigTime_us = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
 
-    m_dataCounter++;
-    out->timestamp = m_dataCounter * m_ddeData->data_length * (osc.settings.timeResolution_us);
+//    m_dataCounter++;
+//    out->timestamp = m_dataCounter * m_ddeData->data_length * (osc.settings.timeResolution_us);
+
+    m_dataCounter = m_dataCounter + m_ddeData->data_length;
+    out->timestamp = m_dataCounter  * (osc.settings.timeResolution_us);
 
     if (m_ddeData->eof) return STOP_STREAM_CODE;
 
@@ -303,7 +326,7 @@ void OscHandler::stopStreamData(const OscHeader &osc)
     }
 
     OscData val;
-    val.oscId = osc.id;
+    val.id = osc.id;
     val.deviceID = osc.deviceID;
 
     QJsonObject response = createStreamDataObj(val, STOP_STREAM_CODE);
@@ -410,6 +433,7 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
     QJsonArray valuesObj;
     QJsonArray varIdListObj;
 
+
     for (const OscChannelValues& chVal : data.analogValues) {
         if (chVal.varId == 0) continue;
         if (!m_capturedVars.empty() && !m_capturedVars.contains(chVal.varId)) {
@@ -438,8 +462,12 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
     res["time"] = data.timestamp;
     res["error"] = 0;
 
-    if (error != 0) {
+    if (error != 0 && error != STOP_STREAM_CODE) {
         res["error"] = error;
+    }
+
+    if (error == STOP_STREAM_CODE) {
+        res["eof"] = "1";
     }
 
     QTextStream(stdout) << "values count" << "=" << valuesObj.count() <<  ", time = " << data.timestamp << "\n" ;
@@ -464,15 +492,27 @@ QString OscHandler::oscDataToString(const QJsonObject &obj)
 
 QString colorToString(const int &c)
 {
-    std::ostringstream ss;
-    ss << "#" << std::hex <<  c;
-    QString ret = ss.str().c_str();
+    QString ret = QString("#%1")
+            .arg(QString::number(c, 16).rightJustified(6, '0'));
+
     return ret;
 
-/*
-    return QString("#%1%2%3")
-            .arg(QString::number( c.Red, 16).rightJustified(2, '0'))
-            .arg(QString::number( c.Green, 16).rightJustified(2, '0'))
-            .arg(QString::number( c.Blue, 16).rightJustified(2, '0'));
-*/
+}
+
+QJsonObject OscHandler::createAnswerObj(int requestId, DevID deviceID, const QJsonObject &body, int error)
+{
+    QJsonObject res;
+    QJsonObject obj;
+
+    res["request_id"] = requestId;
+    res["type"] = "osc";
+    res["d_id"] = deviceID.id;
+    res["body"] = body;
+    res["error"] = 0;
+
+    if (error != 0) {
+        res["error"] = error;
+    }
+
+    return res;
 }

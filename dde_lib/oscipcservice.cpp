@@ -126,7 +126,7 @@ _dde_func_return_t OscIPCHeaderService::set_settings(uint8_t id, const OSC_SETTI
 	return _return_OK;
 }
 
-int8_t OscIPCHeaderService::get_page_state(uint8_t id, int pageNum)
+uint8_t OscIPCHeaderService::get_page_state(uint8_t id, int pageNum)
 {
     assert(pageNum >= 0 && pageNum <= OSC_PAGE_MAX);
 
@@ -136,7 +136,7 @@ int8_t OscIPCHeaderService::get_page_state(uint8_t id, int pageNum)
     return dat->state.pageMask[pageNum];
 }
 
-_dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, int pageNum, int8_t state)
+_dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, int pageNum, uint8_t state)
 {
     assert(pageNum >= 0 && pageNum <= OSC_PAGE_MAX);
 
@@ -207,16 +207,18 @@ int OscIPCHeaderService::get_next_page_read(uint16_t id)
     if (!dat) return -1;
 
     int nextPageNum = dat->state.currPageRead;
+    int pgWrite = dat->state.currPageWrite;
     int state = 0;
-    while (true) {
+//  while (true)
+    {
         nextPageNum = (nextPageNum < OSC_PAGE_MAX) ? nextPageNum + 1 : 0;
-        if (nextPageNum == dat->state.currPageWrite) break;
+        if (nextPageNum == pgWrite) return -1;
 
         state = dat->state.pageMask[nextPageNum];
-        if (state == 1) break;
+        if (state == 0) return -1;
     }
 
-    if (nextPageNum == dat->state.currPageWrite || state == 0) {
+    if (nextPageNum == pgWrite || state == 0) {
         perror("There is not available pages to read data yet");
         return -1;
     }
@@ -234,9 +236,15 @@ int OscIPCHeaderService::get_next_page_write(uint16_t id)
 //  int state = dat->state.pageMask[nextPageNum];
 
     if (nextPageNum == dat->state.currPageRead /*|| state == 1*/) {
-        perror("There is not available pages to write data yet");
+        perror("There is not available pages to write data yet\n");
         return -1;
     }
+
+    int state = dat->state.pageMask[nextPageNum];
+    if (state == 1) {
+        perror("Warning/ There is a page to write when state = 1 (expected state = 0)\n");
+    }
+
 
     return nextPageNum;
 }
