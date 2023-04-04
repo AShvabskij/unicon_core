@@ -16,14 +16,15 @@ public:
 	_dde_func_return_t set_state(uint8_t id, const OSC_STATE& setDat);
 	_dde_func_return_t get_settings(uint8_t id, OSC_SETTING& getDat);
 	_dde_func_return_t set_settings(uint8_t id, const OSC_SETTING& setDat);
+
+    int get_page_ready_to_read(uint16_t id);
+    _dde_func_return_t set_page_ready_to_write(uint8_t id, int pageNum);
+    int get_page_ready_to_write(uint16_t id);
+    _dde_func_return_t set_page_ready_to_read(uint8_t id, int pageNum);
+
+private:
     uint8_t get_page_state(uint8_t id, int pageNum);
     _dde_func_return_t set_page_state(uint8_t id, int pageNum, uint8_t state);
 
-    int get_page_read(uint16_t id);
-    int get_page_write(uint16_t id);
-
-private:
-    int get_next_page_read(uint16_t id);
-    int get_next_page_write(uint16_t id);
 };
 

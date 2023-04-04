@@ -129,7 +129,7 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
     }
 */
 // todo: start reading from curr pos, from current writing pos o from zero page?
-    state.currPageRead = state.currPageWrite > 0 ? state.currPageWrite - 1 : OSC_PAGE_MAX;
+//    state.currPageRead = 0;//state.currPageWrite > 0 ? state.currPageWrite - 1 : OSC_PAGE_MAX;
 
     res = m_headerSrv->set_state(device_id, state);
 
@@ -188,12 +188,12 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     assert(m_header);
     assert(m_header->device_id == id);
 
-    int pageNum = m_headerSrv->get_page_read(id);
+    int pageNum = m_headerSrv->get_page_ready_to_read(id);
     dat.data_length = 0;
     dat.next_ready = (pageNum >= 0);
 
     if (pageNum < 0) {
-        return res;
+        return _return_Busy;
     }
 
     string err = "Read data from page = " + std::to_string(pageNum) + "\n";
@@ -208,7 +208,7 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 
     if (res != _return_OK || eof) {
         m_dataSrv->close();
-        m_headerSrv->set_page_state(id, pageNum, 0);
+        m_headerSrv->set_page_ready_to_write(id, pageNum);
 /*
         int nextPageNum = m_headerSrv->get_page_read(id);
         if (nextPageNum >= 0) {
@@ -216,7 +216,6 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
             dat.next_ready = true;
         }
 */
-
     }
 
 //  dat.eof = true;
@@ -240,7 +239,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
     assert(m_header);
     assert(m_header->device_id == id);
 
-    int pageNum = m_headerSrv->get_page_write(id);
+    int pageNum = m_headerSrv->get_page_ready_to_write(id);
     if (pageNum < 0) { // there is not free pages
         OSC_STATE state =  m_headerSrv->get_state(id);
         state.overflowed = true;
@@ -257,7 +256,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 
     if (eof || dat.eof) {
         m_dataSrv->close();
-        m_headerSrv->set_page_state(id, pageNum, 1);
+        m_headerSrv->set_page_ready_to_read(id, pageNum);
     }
 
     return res;
