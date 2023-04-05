@@ -93,7 +93,7 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
 */
     //-----------------------------------------------------------
 
-    return _return_OK;
+    return res;
 }
 
 _dde_func_return_t DDE_OSC::open(uint16_t device_id)
@@ -121,15 +121,9 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
 
     OSC_STATE state = m_headerSrv->get_state(device_id);
     state.user_enabled = true;
-/*
-    for (int pageNum = 0; pageNum < OSC_PAGE_MAX; pageNum++) {
-        if (pageNum != state.currPageWrite) {
-            state.pageMask[pageNum] = 0;
-        }
-    }
-*/
+
 // todo: start reading from curr pos, from current writing pos o from zero page?
-//    state.currPageRead = 0;//state.currPageWrite > 0 ? state.currPageWrite - 1 : OSC_PAGE_MAX;
+// state.currPageRead = 0;//state.currPageWrite > 0 ? state.currPageWrite - 1 : OSC_PAGE_MAX;
 
     res = m_headerSrv->set_state(device_id, state);
 
@@ -208,7 +202,7 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 
     if (res != _return_OK || eof) {
         m_dataSrv->close();
-        m_headerSrv->set_page_ready_to_write(id, pageNum);
+        m_headerSrv->set_page_ready_to_write(id, static_cast<uint8_t>(pageNum));
 /*
         int nextPageNum = m_headerSrv->get_page_read(id);
         if (nextPageNum >= 0) {
@@ -218,9 +212,8 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 */
     }
 
-//  dat.eof = true;
-    static int cnt = 0;
-    dat.eof = (++cnt % 7) == 0 ? 1 : 0; //everytime eof
+//    static int cnt = 0;
+//    dat.eof = (++cnt % 7) == 0 ? 1 : 0; //everytime eof
     return res;
 }
 
@@ -256,7 +249,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 
     if (eof || dat.eof) {
         m_dataSrv->close();
-        m_headerSrv->set_page_ready_to_read(id, pageNum);
+        m_headerSrv->set_page_ready_to_read(id, static_cast<uint8_t>(pageNum));
     }
 
     return res;
@@ -276,6 +269,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_OSC_HEADER& h)
     }
 
     state.currPageWrite = 0;
+    state.currPageRead = 0;
     state.overflowed = false;
 
     res = m_headerSrv->set_state(id, state);

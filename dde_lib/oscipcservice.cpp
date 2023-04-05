@@ -20,7 +20,7 @@ _dde_func_return_t OscIPCHeaderService::deInit(const char* sysName)
 
 _dde_func_return_t OscIPCHeaderService::get_header(uint8_t id, DDE_OSC_HEADER& hdr)
 {
-	GLIO_OSC_HEADER* rec = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    GLIO_OSC_HEADER* rec = reinterpret_cast<GLIO_OSC_HEADER*> (osc_mem_getData(id));
 	
 	if (!rec) return _return_FAIL;
 
@@ -54,7 +54,7 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint8_t id, const DDE_OSC_HEA
 	GLIO_OSC_HEADER rec;
 	rec.id = hdr.device_id;
 
-	auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(rec.id);
+    auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(rec.id));
 	if (dat) {
 		rec.state = dat->state;
 	}
@@ -80,7 +80,7 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint8_t id, const DDE_OSC_HEA
         glio_ch.color = channel.var.color;
 	}
 
-	int res = osc_mem_setData(id, (unsigned char*)&rec, sizeof(GLIO_OSC_HEADER));
+    int res = osc_mem_setData(id, reinterpret_cast<unsigned char*>(&rec), sizeof(GLIO_OSC_HEADER));
 
 	return (res > 0) ? _return_OK : _return_FAIL;
 }
@@ -88,7 +88,7 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint8_t id, const DDE_OSC_HEA
 const OSC_STATE OscIPCHeaderService::get_state(uint8_t id)
 {
     OSC_STATE state;
-	auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return state;
 
     memcpy(&state, &dat->state, sizeof(OSC_STATE));
@@ -98,7 +98,7 @@ const OSC_STATE OscIPCHeaderService::get_state(uint8_t id)
 
 _dde_func_return_t OscIPCHeaderService::set_state(uint8_t id, const OSC_STATE& setDat)
 {
-	auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
 	if (!dat) return _return_FAIL;
 
 	memcpy(&dat->state, &setDat, sizeof(OSC_STATE));
@@ -108,7 +108,7 @@ _dde_func_return_t OscIPCHeaderService::set_state(uint8_t id, const OSC_STATE& s
 
 _dde_func_return_t OscIPCHeaderService::get_settings(uint8_t id, OSC_SETTING& getDat)
 {
-	auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
 	if (!dat) return _return_FAIL;
 
 	memcpy(&getDat, &dat->settings, sizeof(OSC_SETTING));
@@ -118,7 +118,7 @@ _dde_func_return_t OscIPCHeaderService::get_settings(uint8_t id, OSC_SETTING& ge
 
 _dde_func_return_t OscIPCHeaderService::set_settings(uint8_t id, const OSC_SETTING& setDat)
 {
-	auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
 	if (!dat) return _return_FAIL;
 
 	memcpy(&dat->settings, &setDat, sizeof(OSC_SETTING));
@@ -126,21 +126,21 @@ _dde_func_return_t OscIPCHeaderService::set_settings(uint8_t id, const OSC_SETTI
 	return _return_OK;
 }
 
-uint8_t OscIPCHeaderService::get_page_state(uint8_t id, int pageNum)
+int OscIPCHeaderService::get_page_state(uint8_t id, uint8_t pageNum)
 {
     assert(pageNum >= 0 && pageNum <= OSC_PAGE_MAX);
 
-    auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return -1;
 
     return dat->state.pageMask[pageNum];
 }
 
-_dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, int pageNum, uint8_t state)
+_dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, uint8_t pageNum, uint8_t state)
 {
     assert(pageNum >= 0 && pageNum <= OSC_PAGE_MAX);
 
-    auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
 
     dat->state.pageMask[pageNum] = state;
@@ -150,37 +150,37 @@ _dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, int pageNum, 
     return _return_OK;
 }
 
-_dde_func_return_t OscIPCHeaderService::set_page_ready_to_write(uint8_t id, int pageNum)
+_dde_func_return_t OscIPCHeaderService::set_page_ready_to_write(uint8_t id, uint8_t pageNum)
 {
     assert(pageNum >= 0 && pageNum <= OSC_PAGE_MAX);
 
-    auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
 
     dat->state.pageMask[pageNum] = 0;
-    std::string err = "page is ready to be written, page = " + std::to_string(pageNum) + "\n";
+    std::string err = "Read page = " + std::to_string(pageNum) + "\n";
     perror(err.c_str());
 
     // move_next_page_read()
-    int nextPage = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
+    uint8_t nextPage = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
     dat->state.currPageRead = nextPage;
 
     return _return_OK;
 }
 
-_dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint8_t id, int pageNum)
+_dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint8_t id, uint8_t pageNum)
 {
     assert(pageNum >= 0 && pageNum <= OSC_PAGE_MAX);
 
-    auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
 
     dat->state.pageMask[pageNum] = 1;
-    std::string err = "Page is ready to be read, page = " + std::to_string(pageNum) + "\n";
+    std::string err = "Written page = " + std::to_string(pageNum) + "\n";
     perror(err.c_str());
 
     // move_next_page_write()
-    int nextPage = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
+    uint8_t nextPage = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
     dat->state.currPageWrite = nextPage;
 
     return _return_OK;
@@ -188,16 +188,16 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint8_t id, int p
 
 int OscIPCHeaderService::get_page_ready_to_read(uint16_t id)
 {
-    auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
 
-    int currPage = dat->state.currPageRead;
-    int8_t currState = dat->state.pageMask[currPage];
+    uint8_t currPage = dat->state.currPageRead;
+    int currState = dat->state.pageMask[currPage];
     if (currState == 1) { // The page is ready to be read
         return currPage;
     }
 
-    int nextPageNum = (currPage < OSC_PAGE_MAX) ? currPage + 1 : 0;
+    uint8_t nextPageNum = (currPage < OSC_PAGE_MAX) ? currPage + 1 : 0;
 
     int state = dat->state.pageMask[nextPageNum];
 
@@ -213,16 +213,16 @@ int OscIPCHeaderService::get_page_ready_to_read(uint16_t id)
 
 int OscIPCHeaderService::get_page_ready_to_write(uint16_t id)
 {
-    auto dat = (GLIO_OSC_HEADER*)osc_mem_getData(id);
+    auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return -1;
 
-    int currPage = dat->state.currPageWrite;
-    int8_t currState = dat->state.pageMask[currPage];
+    uint8_t currPage = dat->state.currPageWrite;
+    int currState = dat->state.pageMask[currPage];
     if (currState == 0) { // The page is ready to be written
         return currPage;
     }
 
-    int nextPageNum = (currPage < OSC_PAGE_MAX) ? currPage + 1 : 0;
+    uint8_t nextPageNum = (currPage < OSC_PAGE_MAX) ? currPage + 1 : 0;
     int state = dat->state.pageMask[nextPageNum];
 
     if (state == 1) {

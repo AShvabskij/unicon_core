@@ -138,9 +138,9 @@ public:
     virtual _dde_func_return_t set_settings(uint8_t id, const OSC_SETTING&) = 0;
 
     virtual int get_page_ready_to_read(uint16_t id) = 0;
-    virtual _dde_func_return_t set_page_ready_to_write(uint8_t id, int pageNum) = 0;
+    virtual _dde_func_return_t set_page_ready_to_write(uint8_t id, uint8_t pageNum) = 0;
     virtual int get_page_ready_to_write(uint16_t id) = 0;
-    virtual _dde_func_return_t set_page_ready_to_read(uint8_t id, int pageNum) = 0;
+    virtual _dde_func_return_t set_page_ready_to_read(uint8_t id, uint8_t pageNum) = 0;
 };
 
 #endif // DDE_INTERFACES_H
