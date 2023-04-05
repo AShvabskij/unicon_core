@@ -198,7 +198,7 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
 
     if (res != _return_OK) return res;
 
-    if (m_ddeData->data_length == 0) return res;
+    // if (m_ddeData->data_length == 0) return res;
 
     for (int chInd : osc.analogChannels.keys()) {
 
@@ -312,6 +312,8 @@ int OscHandler::streamData()
     }
 
     long res = getData(m_capturedOsc, m_oscDataBuff);
+    if (res == _return_Busy) return 1;
+
     int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
     QJsonObject response = createStreamDataObj(*m_oscDataBuff, error);
     emit stream(QList<QJsonObject>() << response);
@@ -432,7 +434,6 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
     QJsonObject res;
     QJsonArray valuesObj;
     QJsonArray varIdListObj;
-
 
     for (const OscChannelValues& chVal : data.analogValues) {
         if (chVal.varId == 0) continue;

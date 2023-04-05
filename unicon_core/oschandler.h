@@ -25,6 +25,7 @@ struct OscData
     OscChannelValues analogValues[OSC_CHANNELS_MAX + 1];
     OscChannelValues discreteValues[OSC_DISCRETES_MAX + 1];
     qlonglong timestamp = 0;
+
 };
 
 struct OscChannelDescr
