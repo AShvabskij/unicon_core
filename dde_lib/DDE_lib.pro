@@ -20,6 +20,7 @@ SOURCES += \
     DDE_PARAMS_FILE.cpp \
     DDE_EMUL.cpp \
     csvfile.cpp \
+    oscdatabinservice.cpp \
     oscdatafile.cpp \
     oscdataservice.cpp \
     oscipcservice.cpp
@@ -45,6 +46,7 @@ HEADERS += \
     DDE_PARAMS_TYPE.h \
     DDE_TYPES.h \
     DDE_EMUL.h \
+    oscdatabinservice.h \
     oscdatafile.h \
     oscdataservice.h \
     oscipcservice.h

@@ -270,7 +270,7 @@ _dde_func_return_t OscDataService::addData(const DDE_SET_OSC_DATA& dat, int ch_c
     }
 
     m_outf.write(line.str().c_str(), line.str().length());
-    m_outf.flush();
+//  m_outf.flush();
 
     std::streampos pos = m_outf.tellp();
     if (pos >= osc_data::MAX_PAGE_SIZE) {
