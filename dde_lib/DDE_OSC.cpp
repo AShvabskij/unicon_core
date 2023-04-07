@@ -203,17 +203,17 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     if (res != _return_OK || eof) {
         m_dataSrv->close();
         m_headerSrv->set_page_ready_to_write(id, static_cast<uint8_t>(pageNum));
-/*
-        int nextPageNum = m_headerSrv->get_page_read(id);
+
+        int nextPageNum = m_headerSrv->get_page_ready_to_read(id);
         if (nextPageNum >= 0) {
-            m_dataSrv->open(nextPageNum, false);
+//          m_dataSrv->open(nextPageNum, false);
             dat.next_ready = true;
         }
-*/
+
     }
 
-//    static int cnt = 0;
-//    dat.eof = (++cnt % 7) == 0 ? 1 : 0; //everytime eof
+      static int cnt = 0;
+      dat.eof = (++cnt % 10) == 0 ? 1 : 0; //everytime eof
     return res;
 }
 
@@ -232,22 +232,26 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
     assert(m_header);
     assert(m_header->device_id == id);
 
+    if(dat.data_length == 0) return _return_OK; // there is nothing to save
+
     int pageNum = m_headerSrv->get_page_ready_to_write(id);
     if (pageNum < 0) { // there is not free pages
         OSC_STATE state =  m_headerSrv->get_state(id);
-        state.overflowed = true;
-        m_headerSrv->set_state(id, state);
+        if (!state.overflowed) {
+            state.overflowed = true;
+            m_headerSrv->set_state(id, state);
+        }
         return _return_FAIL;
     }
 
     _dde_func_return_t res = m_dataSrv->open(pageNum, true);
     if (res != _return_OK) return res;
 
-    bool eof = false;
-    res = m_dataSrv->addData(dat, m_header->settings.channel_count, eof);
+    bool get_eof = false;
+    res = m_dataSrv->addData(dat, m_header->settings.channel_count, get_eof);
     if (res != _return_OK) return res;
 
-    if (eof || dat.eof) {
+    if (get_eof || dat.eof) {
         m_dataSrv->close();
         m_headerSrv->set_page_ready_to_read(id, static_cast<uint8_t>(pageNum));
     }

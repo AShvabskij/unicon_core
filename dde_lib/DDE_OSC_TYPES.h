@@ -49,8 +49,8 @@ struct OSC_CHANNEL
     uint16_t chNum;
     OSC_VAR var;
 
-    float gain = 0;
-    float offset = 0;
+    float gain = 0.0;
+    float offset = 0.0;
 
     // for discrete values only
     uint8_t firstBit;
@@ -99,7 +99,6 @@ struct DDE_GET_OSC_DATA
 
     uint32_t header_updated;    //if flag is set update the header, clear screen and draw data
     uint16_t data_length;   // The length of a data in OSC_CH_DATA
-    uint16_t ch_count; // TODO Remove, take from header //  it The channels count starting from zero  
     uint16_t overflow;  // flag if  buffer is overflowed (for debugging only)
     bool next_ready = false;    // flag if next data frame is ready
     bool eof = false;    // flag if it is the last frame
@@ -113,7 +112,6 @@ struct DDE_SET_OSC_DATA
 
     uint16_t device_id;
     uint16_t data_length;   // The length of a data in OSC_CH_DATA
-    uint16_t ch_count; // TODO Remove it, take from header. // The channels count starting from zero 
     bool eof = false;
     OSC_DATA data[OSC_MAX_CHANNELS + 1];
 };

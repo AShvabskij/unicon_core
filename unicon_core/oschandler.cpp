@@ -8,7 +8,7 @@ const QString CMD_TYPE_OPEN_STREAM = "open_stream";
 const QString CMD_TYPE_CLOSE_STREAM = "close_stream";
 const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
-const int DATA_YELD_INTERVAL_MSC = 250;
+const int DATA_YELD_INTERVAL_MSC = 100;
 const int STREAM_OBJECT_LIMIT = 10000;
 
 const int STOP_STREAM_CODE = 2; //*100;
@@ -262,8 +262,9 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
 
     m_dataCounter = m_dataCounter + m_ddeData->data_length;
     out->timestamp = m_dataCounter  * (osc.settings.timeResolution_us);
+    out->eof = m_ddeData->eof;
 
-    if (m_ddeData->eof) return STOP_STREAM_CODE;
+//  if (m_ddeData->eof) return STOP_STREAM_CODE;
 
     return res;
 }
@@ -462,6 +463,7 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
     res["vars"] = varIdListObj;
     res["time"] = data.timestamp;
     res["error"] = 0;
+    res["eof"] = data.eof ? "1" : "0";
 
     if (error != 0 && error != STOP_STREAM_CODE) {
         res["error"] = error;

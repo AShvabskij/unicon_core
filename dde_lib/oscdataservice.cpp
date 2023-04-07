@@ -199,7 +199,7 @@ std::string OscDataService::readLine(std::istream &stream)
     }
 
     std::string line;
-    while (line.empty() || !isdigit(line[0])) {
+    while (line.empty()) {
         std::getline(stream, line);
         if (stream.eof()) {
             return "";
@@ -215,9 +215,9 @@ float OscDataService::normalizeValue(int32_t rawValue, float gain, float offset)
         return rawValue;
     }
 
-    int32_t zeroLevel = 0; //0x7FFF;
-    float normValue = rawValue - zeroLevel;
-    normValue =  normValue * gain + offset;
+//    float zeroLevel = 0x7FFF;
+//    float normValue = rawValue - zeroLevel;
+    float normValue =  rawValue * gain + offset;
     return normValue;
 }
 
