@@ -11,7 +11,7 @@
 
 using namespace std;
 
-namespace osc_data {
+namespace osc_bin_data {
     const char* OSC_FILE_ERROR = "Osc data file error!\n";
     const char* OSC_FILE_PARSE_ERROR = "Error while parsing th osc file!\n";
     const int MAX_PAGE_SIZE = 65000;
@@ -58,7 +58,7 @@ _dde_func_return_t OscDataBinService::open(int fileNum, bool writeMode)
 
     int res = m_file.is_open() ? 0 : -1;
     if (res != 0) {
-        cout << osc_data::OSC_FILE_ERROR;
+        cout << osc_bin_data::OSC_FILE_ERROR;
     }
 
     return _return_OK;
@@ -75,19 +75,25 @@ _dde_func_return_t OscDataBinService::close()
 _dde_func_return_t OscDataBinService::readNextData(const DDE_OSC_HEADER& header, DDE_GET_OSC_DATA& getDat, bool& eof)
 {
     if (!m_file) {
-        cout << osc_data::OSC_FILE_ERROR;
+        cout << osc_bin_data::OSC_FILE_ERROR;
         return _return_FAIL;
     }
 
-    int buff_length = sizeof(char) * sizeof(getDat);
+    DDE_OSC_DATA_HEADER dh;
+
+    m_file.read((char*)&dh, sizeof(char) * sizeof(dh));
 
     getDat.overflow = 0;
-    getDat.header_updated = 0;
-    getDat.next_ready = true;
+    getDat.header_updated = dh.header_updated;
+    getDat.eof = dh.eof;
     eof = false;
-    char* buff = (char*)&getDat;
 
-    m_file.read(buff, buff_length);
+    for(int ch = 0; ch < header.settings.channel_count; ch++) {
+        char* buff = (char*)&getDat.data[ch];
+        int buff_length = sizeof(char) * sizeof(int32_t) * getDat.data_length;
+        m_file.read(buff, buff_length);
+    }
+
 
     if (m_file.eof()) {
         eof = true;
@@ -98,14 +104,22 @@ _dde_func_return_t OscDataBinService::readNextData(const DDE_OSC_HEADER& header,
 
 _dde_func_return_t OscDataBinService::addData(const DDE_SET_OSC_DATA& setDat, int ch_count, bool& eof)
 {
-    char* buff = (char*)&setDat;
-    int buff_length = sizeof(char) * sizeof(setDat);
+    DDE_OSC_DATA_HEADER dh;
+    dh.device_id = setDat.device_id;
+    dh.data_length = setDat.data_length;
+    dh.header_updated = setDat.header_updated;
+    dh.eof = setDat.eof;
+    m_file.write((char*)&dh,  sizeof(char) * sizeof(dh));
 
-    m_file.write(buff, buff_length);
+    for(int ch = 0; ch < ch_count; ch++) {
+        char* buff = (char*)&setDat.data[ch];
+        int buff_length = sizeof(char) * sizeof(int32_t) * setDat.data_length;
+        m_file.write(buff, buff_length);
+    }
 //  m_file.flush();
 
     std::streampos pos = m_file.tellp();
-    if (pos >= osc_data::MAX_PAGE_SIZE) {
+    if (pos >= osc_bin_data::MAX_PAGE_SIZE) {
         std::cout << "\nosc file num = " << m_currFileNum << ", written size = " << pos << "\n";
         eof = true;
     }
