@@ -128,7 +128,7 @@ _dde_func_return_t OscIPCHeaderService::set_settings(uint8_t id, const OSC_SETTI
 
 int OscIPCHeaderService::get_page_state(uint8_t id, uint8_t pageNum)
 {
-    assert(pageNum >= 0 && pageNum <= OSC_PAGE_MAX);
+    assert(pageNum <= OSC_PAGE_MAX);
 
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return -1;
@@ -138,7 +138,7 @@ int OscIPCHeaderService::get_page_state(uint8_t id, uint8_t pageNum)
 
 _dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, uint8_t pageNum, uint8_t state)
 {
-    assert(pageNum >= 0 && pageNum <= OSC_PAGE_MAX);
+    assert(pageNum <= OSC_PAGE_MAX);
 
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
@@ -152,7 +152,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, uint8_t pageN
 
 _dde_func_return_t OscIPCHeaderService::set_page_ready_to_write(uint8_t id, uint8_t pageNum)
 {
-    assert(pageNum >= 0 && pageNum <= OSC_PAGE_MAX);
+    assert(pageNum <= OSC_PAGE_MAX);
 
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
@@ -170,7 +170,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_write(uint8_t id, uint
 
 _dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint8_t id, uint8_t pageNum)
 {
-    assert(pageNum >= 0 && pageNum <= OSC_PAGE_MAX);
+    assert(pageNum <= OSC_PAGE_MAX);
 
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;

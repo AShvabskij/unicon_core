@@ -146,6 +146,7 @@ _dde_func_return_t DDE_OSC::load_header(uint16_t id)
 _dde_func_return_t DDE_OSC::close(uint16_t id)
 {
     assert(m_header);
+    assert (m_header->device_id == id);
 
     delete m_header;
     m_header = nullptr;

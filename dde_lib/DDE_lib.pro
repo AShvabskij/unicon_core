@@ -20,10 +20,10 @@ SOURCES += \
     DDE_PARAMS_FILE.cpp \
     DDE_EMUL.cpp \
     csvfile.cpp \
-    oscdatabinservice.cpp \
-    oscdatafile.cpp \
-    oscdataservice.cpp \
-    oscipcservice.cpp
+    services/oscdatabinservice.cpp \
+    services/oscdatafile.cpp \
+    services/oscdataservice.cpp \
+    services/oscipcservice.cpp
 
 unix: SOURCES += \
     DDE_PARAMS.cpp
@@ -46,16 +46,16 @@ HEADERS += \
     DDE_PARAMS_TYPE.h \
     DDE_TYPES.h \
     DDE_EMUL.h \
-    oscdatabinservice.h \
-    oscdatafile.h \
-    oscdataservice.h \
-    oscipcservice.h
+    services/oscdatabinservice.h \
+    services/oscdatafile.h \
+    services/oscdataservice.h \
+    services/oscipcservice.h
 
 INCLUDEPATH += $$PWD/utils/csvfile
-
-
 INCLUDEPATH += $$PWD/utils/IPCmemLib
 DEPENDPATH += $$PWD/utils/IPCmemLib
+
+INCLUDEPATH += $$PWD/services
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/utils/IPCmemLib/bin/x64/release/ -lipcmem_lib
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/utils/IPCmemLib/bin/x64/debug/ -lipcmem_lib

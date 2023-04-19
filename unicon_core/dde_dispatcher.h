@@ -21,7 +21,7 @@ struct DevID
     quint16 id;
 
     bool isValid() const {
-        return id >= 0 && type != SysType::Undefined;
+        return /*id >= 0 && */ type != SysType::Undefined;
     }
 
 };
