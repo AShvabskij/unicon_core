@@ -18,7 +18,7 @@ enum SysType
 struct DevID
 {
     SysType type;
-    int id;
+    quint16 id;
 
     bool isValid() const {
         return id >= 0 && type != SysType::Undefined;

@@ -58,7 +58,7 @@ private:
     void handleReqDeviceHeader(SysType sysType, int deviceId, int requestId);
     void handleReqModuleHeader(SysType sysType, int deviceId, int moduleId, int requestId);
 
-    long requestDeviceLinks(SysType sysType, QList<int>& links);
+    long requestDeviceLinks(SysType sysType, QList<quint16> &links);
     long requestDevice(Device& device);
     QString getDeviceName(const DevID &deviceId);
     QString getDeviceDescr(const DevID& deviceId);
@@ -66,7 +66,7 @@ private:
     QJsonObject createResponse(int requestId, const DeviceList& devices);
     QJsonObject createResponse(int requestId, const Module& module);
     QJsonObject createResponse(int requestId, const SystemStatus& status);
-    QJsonObject createResponse(int requestId, const QList<int>& links);
+    QJsonObject createResponse(int requestId, const QList<quint16>& links);
     QJsonObject createEmptyResponse(int requestId);
 };
 

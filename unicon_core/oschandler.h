@@ -32,7 +32,7 @@ struct OscData
 struct OscChannelDescr
 {
     int channelNum = 0;
-    qint16 varId = 0;
+    quint16 varId = 0;
     QString varName = "";
     float scale = 0.0;
     float min = 0.0;
@@ -69,7 +69,7 @@ QString colorToString(const int &c);
 
 struct OscHeader
 {
-    int id = 0;
+    quint16 id = 0;
     DevID deviceID = {SysType::Undefined, 0};
     QString name = "";
     QString desc = "";
@@ -82,7 +82,7 @@ struct OscHeader
         return this->id == o.id && this->deviceID == o.deviceID;
     }
 
-    OscChannelDescr channel(quint8 chNum)
+    OscChannelDescr channel(int chNum)
     {
         for (quint8 chInd : analogChannels.keys()) {
             const OscChannelDescr& ch = analogChannels.value(chInd);

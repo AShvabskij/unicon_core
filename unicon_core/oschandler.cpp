@@ -82,9 +82,10 @@ int OscHandler::handleGetHeader(const QJsonObject &request)
 
     int deviceId = cmdBody.value("device_id").toInt();
     int oscId = cmdBody.value("osc_id").toInt();
+    Q_ASSERT(deviceId >= 0);
     
     OscHeader header;
-    DevID devId = {sysType, deviceId};
+    DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
     long ret = getHeader(devId, oscId, &header);
 
     QJsonObject response = createHeaderObj(requestId, header);
@@ -106,9 +107,10 @@ int OscHandler::handleGetChannel(const QJsonObject &request)
     int deviceId = cmdBody.value("device_id").toInt();
     int oscId = cmdBody.value("osc_id").toInt();
     int chNum = cmdBody.value("channel_num").toInt();
+    Q_ASSERT(deviceId >= 0);
 
     OscHeader header;
-    DevID devId = {sysType, deviceId};
+    DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
     long ret = getHeader(devId, oscId, &header);
 
     OscChannelDescr chDescr = header.channel(chNum);
@@ -133,7 +135,7 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
     QJsonArray oscVars = cmdBody.value("osc_vars").toArray();
 
     OscHeader header;
-    DevID devId = {sysType, deviceId};
+    DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
     long ret = getHeader(devId, oscId, &header);
 
     if (ret == _return_OK) {
@@ -172,7 +174,7 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
         stopPooling();
     }
 
-    DevID devId = {sysType, deviceId};
+    DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
     QJsonObject response = createAnswerObj(requestId, devId);
     send(response);
 
@@ -223,14 +225,14 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         for (int i = 0; i < m_ddeData->data_length; i++) {
             if (chDescr.isDigital) {
                 int32_t rawValue = chData.i_buff[i];
-                chValues.values << discreteValue(rawValue, chDescr.firstBit, chDescr.lastBit);
+                chValues.values << rawValue;
             } else {
                 chValues.values << chData.f_buff[i];
             }
         }
     }
 
-    for (int chInd : osc.discreteChannels.keys()) {
+    for (auto chInd : osc.discreteChannels.keys()) {
 
         const OscChannelDescr& chDescr = osc.discreteChannels[chInd];
 
@@ -308,10 +310,14 @@ void OscHandler::stopPooling()
 
 int OscHandler::streamData()
 {
-    if (!m_capturedOsc.deviceID.isValid()) {
-        return -1;
+
+    if (m_oscDataBuff->eof) {
+        m_dataCounter = 0; // start from begining
     }
 
+    Q_ASSERT(m_capturedOsc.deviceID.isValid());
+
+    m_oscDataBuff->eof = false;
     long res = getData(m_capturedOsc, m_oscDataBuff);
     if (res == _return_Busy) return 1;
 
@@ -319,7 +325,7 @@ int OscHandler::streamData()
     QJsonObject response = createStreamDataObj(*m_oscDataBuff, error);
     emit stream(QList<QJsonObject>() << response);
 
-    return res;
+    return 0;
 }
 
 void OscHandler::stopStreamData(const OscHeader &osc)

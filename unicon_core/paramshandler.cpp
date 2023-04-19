@@ -84,7 +84,7 @@ void ParamsHandler::handleGetHeader(const QJsonObject &request)
     ParamList params;
     long ret = true;
 
-    DevID devID = {sysType, deviceId};
+    DevID devID = {sysType, static_cast<quint16>(deviceId)};
     if (paramId == 0) {
         ret = getParamHeaders(devID, moduleId, &params);
     } else {
@@ -115,7 +115,7 @@ void ParamsHandler::handleGetValue(const QJsonObject &request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     ParamValue val;
-    val.paramID = {{sysType,deviceId}, moduleId, paramId};
+    val.paramID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
 
     long res = getParamValue(val.paramID, &val);
     int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
@@ -140,7 +140,7 @@ void ParamsHandler::handleSetValue(const QJsonObject &request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     Param p;
-    p.ID = {{sysType,deviceId}, moduleId, paramId};
+    p.ID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
     _dde_func_return_t ret = getParamHeader(p.ID, &p);
     if (ret <= _return_FAIL) {
         return;
@@ -207,7 +207,7 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     Param p;
-    p.ID = {{sysType,deviceId}, moduleId, paramId};
+    p.ID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
     long ret = getParamHeader(p.ID, &p);
     if (ret <= _return_FAIL) {
         return;
@@ -238,7 +238,7 @@ void ParamsHandler::handleCloseStream(const QJsonObject &request)
     int moduleId = cmdBody.value("module_id").toInt();
     int paramId  = cmdBody.value("param_id").toInt();
 
-    ParamID pID = {{sysType,deviceId}, moduleId, paramId};
+    ParamID pID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
 
     for (const Param &p: m_capturedParams) {
         if (p.ID == pID) {
