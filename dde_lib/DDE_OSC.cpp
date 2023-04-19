@@ -123,7 +123,7 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
     state.user_enabled = true;
 
 // todo: start reading from curr pos, from current writing pos o from zero page?
-// state.currPageRead = 0;//state.currPageWrite > 0 ? state.currPageWrite - 1 : OSC_PAGE_MAX;
+//  state.currPageRead = state.currPageWrite;
 
     res = m_headerSrv->set_state(device_id, state);
 
@@ -150,11 +150,12 @@ _dde_func_return_t DDE_OSC::close(uint16_t id)
     delete m_header;
     m_header = nullptr;
 
+/*
     OSC_STATE state = m_headerSrv->get_state(id);
     state.user_enabled = false;
     state.currPageRead = 0;
     m_headerSrv->set_state(id, state);
-
+*/
     _dde_func_return_t res = m_dataSrv->close();
     return res;
 }
@@ -206,14 +207,12 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 
         int nextPageNum = m_headerSrv->get_page_ready_to_read(id);
         if (nextPageNum >= 0) {
-//          m_dataSrv->open(nextPageNum, false);
+            m_dataSrv->open(nextPageNum, false);
             dat.next_ready = true;
         }
 
     }
 
-      static int cnt = 0;
-      dat.eof = (++cnt % 10) == 0 ? 1 : 0; //everytime eof
     return res;
 }
 

@@ -84,6 +84,7 @@ _dde_func_return_t OscDataBinService::readNextData(const DDE_OSC_HEADER& header,
     m_file.read((char*)&dh, sizeof(char) * sizeof(dh));
 
     getDat.overflow = 0;
+    getDat.data_length = dh.data_length;
     getDat.header_updated = dh.header_updated;
     getDat.eof = dh.eof;
     eof = false;
@@ -94,8 +95,13 @@ _dde_func_return_t OscDataBinService::readNextData(const DDE_OSC_HEADER& header,
         m_file.read(buff, buff_length);
     }
 
+    long curr_pos = m_file.tellg();
+    m_file.seekg(0, std::ios::end);
+    long end_pos = m_file.tellg();
+    m_file.seekg(curr_pos, std::ios::beg);
 
-    if (m_file.eof()) {
+    long diff = end_pos - curr_pos;
+    if (m_file.eof() || diff == 0) {
         eof = true;
     }
 
