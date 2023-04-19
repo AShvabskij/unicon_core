@@ -226,7 +226,7 @@ int OscIPCHeaderService::get_page_ready_to_write(uint16_t id)
     int state = dat->state.pageMask[nextPageNum];
 
     if (state == 1) {
-        perror("There is not available pages to write data yet\n");
+        perror("Overflowed! There is not available pages to write data yet\n");
         return -1;
     }
 

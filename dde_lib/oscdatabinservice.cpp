@@ -34,7 +34,7 @@ _dde_func_return_t OscDataBinService::open(int fileNum, bool writeMode)
 
     m_currFileNum = fileNum;
 
-    string fileName = "osc_data_" + to_string(fileNum);
+    string fileName = "osc_bin_" + to_string(fileNum);
 //  const char* home = getenv("HOME");
     const char* home = "/dev/shm";
     std::string path(home);
