@@ -115,6 +115,7 @@ _dde_func_return_t OscDataBinService::addData(const DDE_SET_OSC_DATA& setDat, in
     dh.data_length = setDat.data_length;
     dh.header_updated = setDat.header_updated;
     dh.eof = setDat.eof;
+
     m_file.write((char*)&dh,  sizeof(char) * sizeof(dh));
 
     for(int ch = 0; ch < ch_count; ch++) {
