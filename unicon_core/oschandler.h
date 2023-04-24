@@ -26,7 +26,7 @@ struct OscData
     OscChannelValues discreteValues[OSC_DISCRETES_MAX + 1];
     qlonglong timestamp = 0;
     bool eof = false;
-
+    bool sof = false;
 };
 
 struct OscChannelDescr
@@ -173,7 +173,7 @@ private:
 
     QJsonObject createHeaderObj(int requestId, const OscHeader& header);
     QJsonObject createChannelObj(int requestId, const OscChannelDescr& ch);
-    QJsonObject createStreamDataObj(const OscData& data, int error = 0);
+    QJsonObject createStreamDataObj(const OscData& data, int valueLength, qlonglong timestamp, int error = 0);
     QJsonObject createAnswerObj(int requestId, DevID deviceID, const QJsonObject &body = QJsonObject(), int error = 0);
     QString oscDataToString(const QJsonObject &obj);
     OscChannelDescr createChannelDescr(const OSC_CHANNEL &channel);
@@ -191,7 +191,7 @@ private:
     QTimer* m_streamTimer;
     DDE_GET_OSC_DATA* m_ddeData; // buffer to receive data from osc
     OscData* m_oscDataBuff; // buffer to keep data from osc
-    int m_dataCounter = 0;
+    int m_dataLength = 0;
 };
 
 #endif // OSCHANDLER_H

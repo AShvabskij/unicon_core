@@ -102,6 +102,7 @@ struct DDE_GET_OSC_DATA
     uint16_t overflow;  // flag if  buffer is overflowed (for debugging only)
     bool next_ready = false;    // flag if next data frame is ready
     bool eof = false;    // flag if it is the last frame
+    bool sof = false;    // save-of-file - flag if it is the first frame
 
     OSC_DATA data[OSC_MAX_CHANNELS + 1];
 };

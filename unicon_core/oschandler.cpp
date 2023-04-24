@@ -140,7 +140,7 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
 
     if (ret == _return_OK) {
         m_capturedOsc = header;
-        m_dataCounter = 0;
+        m_dataLength = 0;
 
         m_capturedVars.clear();
         for (const QJsonValue& val : oscVars) {
@@ -188,10 +188,6 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
 
     out->id = osc.id;
     out->deviceID = osc.deviceID;
-    out->analogValues->valuesize = 0;
-    out->discreteValues->valuesize = 0;
-    out->analogValues->values.clear();
-    out->discreteValues->values.clear();
 
     memset(m_ddeData, 0, sizeof(DDE_GET_OSC_DATA));
     m_ddeData->device_id = osc.deviceID.id;
@@ -219,7 +215,8 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         chValues.scale = chDescr.scale;
         chValues.values.clear();
         if (m_ddeData->data_length > 0) {
-            chValues.values.reserve(m_ddeData->data_length + 1);
+            out->analogValues->valuesize += m_ddeData->data_length;
+            chValues.values.reserve(out->analogValues->valuesize + 1);
         }
 
         for (int i = 0; i < m_ddeData->data_length; i++) {
@@ -247,7 +244,8 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         chValues.valueDensity = chValues.valuesize / DATA_YELD_INTERVAL_MSC;
         chValues.values.clear();
         if (m_ddeData->data_length > 0) {
-            chValues.values.reserve(m_ddeData->data_length + 1);
+            out->discreteValues->valuesize += m_ddeData->data_length;
+            chValues.values.reserve(out->discreteValues->valuesize + 1);
         }
 
         const OSC_DATA& chData = m_ddeData->data[chDescr.channelNum];
@@ -257,16 +255,8 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         }
     }
 
-//  qlonglong trigTime_us = osc.settings.trigDTime.toMSecsSinceEpoch() * 1000;
-
-//    m_dataCounter++;
-//    out->timestamp = m_dataCounter * m_ddeData->data_length * (osc.settings.timeResolution_us);
-
-    m_dataCounter = m_dataCounter + m_ddeData->data_length;
-    out->timestamp = m_dataCounter  * (osc.settings.timeResolution_us);
     out->eof = m_ddeData->eof;
-
-//  if (m_ddeData->eof) return STOP_STREAM_CODE;
+    out->sof = m_ddeData->sof;
 
     return res;
 }
@@ -311,19 +301,42 @@ void OscHandler::stopPooling()
 int OscHandler::streamData()
 {
 
-    if (m_oscDataBuff->eof) {
-        m_dataCounter = 0; // start from begining
-    }
-
     Q_ASSERT(m_capturedOsc.deviceID.isValid());
 
-    m_oscDataBuff->eof = false;
     long res = getData(m_capturedOsc, m_oscDataBuff);
     if (res == _return_Busy) return 1;
 
     int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
-    QJsonObject response = createStreamDataObj(*m_oscDataBuff, error);
+
+    qlonglong dataTimestamp = m_dataLength  * (m_capturedOsc.settings.timeResolution_us);
+    int dataLength = m_oscDataBuff->analogValues->valuesize;
+
+    QJsonObject response = createStreamDataObj(*m_oscDataBuff, m_dataLength, dataTimestamp, error);
     emit stream(QList<QJsonObject>() << response);
+
+    m_dataLength += dataLength;
+
+    if (m_oscDataBuff->sof && m_oscDataBuff->eof) {
+        // saveBuffer(m_oscDataBuff);
+    }
+
+    if (m_oscDataBuff->eof) {
+        m_dataLength = 0; // start from begining
+        m_oscDataBuff->eof = false;
+        m_oscDataBuff->analogValues->valuesize = 0;
+        m_oscDataBuff->discreteValues->valuesize = 0;
+        m_oscDataBuff->analogValues->values.clear();
+        m_oscDataBuff->discreteValues->values.clear();
+        m_oscDataBuff->timestamp = 0;
+    }
+
+    if (!m_oscDataBuff->sof) {
+        m_oscDataBuff->analogValues->valuesize = 0;
+        m_oscDataBuff->discreteValues->valuesize = 0;
+        m_oscDataBuff->analogValues->values.clear();
+        m_oscDataBuff->discreteValues->values.clear();
+        m_oscDataBuff->timestamp = 0;
+    }
 
     return 0;
 }
@@ -338,7 +351,7 @@ void OscHandler::stopStreamData(const OscHeader &osc)
     val.id = osc.id;
     val.deviceID = osc.deviceID;
 
-    QJsonObject response = createStreamDataObj(val, STOP_STREAM_CODE);
+    QJsonObject response = createStreamDataObj(val, 0, STOP_STREAM_CODE);
     emit stream(QList<QJsonObject>() << response);
 
     return;
@@ -436,7 +449,7 @@ QJsonObject OscHandler::createChannelObj(int requestId, const OscChannelDescr& c
     return res;
 }
 
-QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
+QJsonObject OscHandler::createStreamDataObj(const OscData &data, int startPos, qlonglong timestamp, int error)
 {
     QJsonObject res;
     QJsonArray valuesObj;
@@ -449,7 +462,7 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
         }
 
         varIdListObj << chVal.varId;
-        valuesObj << QJsonArray::fromVariantList(chVal.values);
+        valuesObj << QJsonArray::fromVariantList(chVal.values.mid(startPos,  data.analogValues->valuesize));
     }
 
     for (const OscChannelValues& chVal : data.discreteValues) {
@@ -459,7 +472,7 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
         }
 
         varIdListObj << chVal.varId;
-        QJsonArray arr = QJsonArray::fromVariantList(chVal.values);
+        QJsonArray arr = QJsonArray::fromVariantList(chVal.values.mid(startPos,  data.discreteValues->valuesize));
         valuesObj << arr;
     }
 
@@ -467,7 +480,7 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int error)
     res["d_id"] = data.deviceID.id;
     res["values"] = valuesObj;
     res["vars"] = varIdListObj;
-    res["time"] = data.timestamp;
+    res["time"] = timestamp;
     res["error"] = 0;
     res["eof"] = data.eof ? "1" : "0";
 
