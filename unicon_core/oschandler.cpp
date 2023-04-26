@@ -147,6 +147,7 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
             m_capturedVars << val.toInt();
         }
         m_capturedVars.removeAll(0);
+        m_sof = false;
 
         startPooling();
     }
@@ -210,13 +211,16 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         OscChannelValues& chValues = out->analogValues[chInd];
         chValues.channelNum = chDescr.channelNum;
         chValues.varId = chDescr.varId;
-        chValues.valuesize = m_ddeData->data_length;
-        chValues.valueDensity = chValues.valuesize / DATA_YELD_INTERVAL_MSC;
+        chValues.valueDensity = chValues.valueCount / DATA_YELD_INTERVAL_MSC;
         chValues.scale = chDescr.scale;
-        chValues.values.clear();
+        if (m_ddeData->sof) {
+            chValues.values.clear();
+            chValues.valueCount = 0;
+        }
+
         if (m_ddeData->data_length > 0) {
-            out->analogValues->valuesize += m_ddeData->data_length;
-            chValues.values.reserve(out->analogValues->valuesize + 1);
+            chValues.valueCount += m_ddeData->data_length;
+            chValues.values.reserve(chValues.valueCount + 1);
         }
 
         for (int i = 0; i < m_ddeData->data_length; i++) {
@@ -240,12 +244,16 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         OscChannelValues& chValues = out->discreteValues[chInd];
         chValues.channelNum = chDescr.channelNum;
         chValues.varId = chDescr.varId;
-        chValues.valuesize = m_ddeData->data_length;
-        chValues.valueDensity = chValues.valuesize / DATA_YELD_INTERVAL_MSC;
-        chValues.values.clear();
+        chValues.valueDensity = chValues.valueCount / DATA_YELD_INTERVAL_MSC;
+
+        if (m_ddeData->sof) {
+            chValues.values.clear();
+            chValues.valueCount = 0;
+        }
+
         if (m_ddeData->data_length > 0) {
-            out->discreteValues->valuesize += m_ddeData->data_length;
-            chValues.values.reserve(out->discreteValues->valuesize + 1);
+            chValues.valueCount += m_ddeData->data_length;
+            chValues.values.reserve(chValues.valueCount + 1);
         }
 
         const OSC_DATA& chData = m_ddeData->data[chDescr.channelNum];
@@ -303,38 +311,43 @@ int OscHandler::streamData()
 
     Q_ASSERT(m_capturedOsc.deviceID.isValid());
 
+    int lastValueCount = m_oscDataBuff->analogValues->valueCount;
+
     long res = getData(m_capturedOsc, m_oscDataBuff);
     if (res == _return_Busy) return 1;
 
     int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
 
-    qlonglong dataTimestamp = m_dataLength  * (m_capturedOsc.settings.timeResolution_us);
-    int dataLength = m_oscDataBuff->analogValues->valuesize;
+    int currValueCount = m_oscDataBuff->analogValues->valueCount;
+    m_oscDataBuff->timestamp = currValueCount  * (m_capturedOsc.settings.timeResolution_us);
 
-    QJsonObject response = createStreamDataObj(*m_oscDataBuff, m_dataLength, dataTimestamp, error);
+    QJsonObject response = createStreamDataObj(*m_oscDataBuff, lastValueCount, error);
     emit stream(QList<QJsonObject>() << response);
 
-    m_dataLength += dataLength;
-
-    if (m_oscDataBuff->sof && m_oscDataBuff->eof) {
-        // saveBuffer(m_oscDataBuff);
+    if (m_oscDataBuff->sof) {
+        m_sof = true;
     }
 
     if (m_oscDataBuff->eof) {
+        if (m_sof) {
+            m_sof = false;
+            // saveBuffer(m_oscDataBuff);
+        }
+
         m_dataLength = 0; // start from begining
         m_oscDataBuff->eof = false;
-        m_oscDataBuff->analogValues->valuesize = 0;
-        m_oscDataBuff->discreteValues->valuesize = 0;
-        m_oscDataBuff->analogValues->values.clear();
-        m_oscDataBuff->discreteValues->values.clear();
-        m_oscDataBuff->timestamp = 0;
-    }
+        m_oscDataBuff->sof = false;
 
-    if (!m_oscDataBuff->sof) {
-        m_oscDataBuff->analogValues->valuesize = 0;
-        m_oscDataBuff->discreteValues->valuesize = 0;
-        m_oscDataBuff->analogValues->values.clear();
-        m_oscDataBuff->discreteValues->values.clear();
+        for (OscChannelValues& chVal : m_oscDataBuff->analogValues) {
+            chVal.values.clear();
+            chVal.valueCount= 0;
+        }
+
+        for (OscChannelValues& chVal : m_oscDataBuff->discreteValues) {
+            chVal.values.clear();
+            chVal.valueCount= 0;
+        }
+
         m_oscDataBuff->timestamp = 0;
     }
 
@@ -449,7 +462,7 @@ QJsonObject OscHandler::createChannelObj(int requestId, const OscChannelDescr& c
     return res;
 }
 
-QJsonObject OscHandler::createStreamDataObj(const OscData &data, int startPos, qlonglong timestamp, int error)
+QJsonObject OscHandler::createStreamDataObj(const OscData &data, int startPos, int error)
 {
     QJsonObject res;
     QJsonArray valuesObj;
@@ -462,7 +475,7 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int startPos, q
         }
 
         varIdListObj << chVal.varId;
-        valuesObj << QJsonArray::fromVariantList(chVal.values.mid(startPos,  data.analogValues->valuesize));
+        valuesObj << QJsonArray::fromVariantList(chVal.values.mid(startPos,  chVal.valueCount));
     }
 
     for (const OscChannelValues& chVal : data.discreteValues) {
@@ -472,7 +485,7 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int startPos, q
         }
 
         varIdListObj << chVal.varId;
-        QJsonArray arr = QJsonArray::fromVariantList(chVal.values.mid(startPos,  data.discreteValues->valuesize));
+        QJsonArray arr = QJsonArray::fromVariantList(chVal.values.mid(startPos,  chVal.valueCount));
         valuesObj << arr;
     }
 
@@ -480,9 +493,10 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int startPos, q
     res["d_id"] = data.deviceID.id;
     res["values"] = valuesObj;
     res["vars"] = varIdListObj;
-    res["time"] = timestamp;
+    res["time"] = data.timestamp;
     res["error"] = 0;
     res["eof"] = data.eof ? "1" : "0";
+    res["sof"] = data.sof ? "1" : "0";
 
     if (error != 0 && error != STOP_STREAM_CODE) {
         res["error"] = error;

@@ -13,7 +13,7 @@ struct OscChannelValues
     int channelNum = 0;
     uint16_t varId = 0;
     float scale = 0.0;
-    int valuesize = 0; // // number of points in values buffer
+    int valueCount = 0; // // number of points in values buffer
     int valueDensity = 0; // number of points per millisec
     QVariantList values;
 };
@@ -173,7 +173,7 @@ private:
 
     QJsonObject createHeaderObj(int requestId, const OscHeader& header);
     QJsonObject createChannelObj(int requestId, const OscChannelDescr& ch);
-    QJsonObject createStreamDataObj(const OscData& data, int valueLength, qlonglong timestamp, int error = 0);
+    QJsonObject createStreamDataObj(const OscData& data, int valueLength, int error = 0);
     QJsonObject createAnswerObj(int requestId, DevID deviceID, const QJsonObject &body = QJsonObject(), int error = 0);
     QString oscDataToString(const QJsonObject &obj);
     OscChannelDescr createChannelDescr(const OSC_CHANNEL &channel);
@@ -191,6 +191,7 @@ private:
     QTimer* m_streamTimer;
     DDE_GET_OSC_DATA* m_ddeData; // buffer to receive data from osc
     OscData* m_oscDataBuff; // buffer to keep data from osc
+    bool m_sof = false;
     int m_dataLength = 0;
 };
 
