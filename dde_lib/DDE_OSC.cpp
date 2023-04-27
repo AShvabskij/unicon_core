@@ -232,6 +232,10 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
     assert(m_header);
     assert(m_header->device_id == id);
 
+    if (dat.sof) {
+        clear_pages(id);
+    }
+
     if(dat.data_length == 0) return _return_OK; // there is nothing to save
 
     int pageNum = m_headerSrv->get_page_ready_to_write(id);
@@ -261,11 +265,15 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 
 _dde_func_return_t DDE_OSC::set(const DDE_OSC_HEADER& h)
 {
-    uint16_t id = h.device_id;
-
     _dde_func_return_t res = m_headerSrv->set_header(h.device_id, h);
     if (res != _return_OK) return res;
 
+    clear_pages(h.device_id);
+    return res;
+}
+
+_dde_func_return_t DDE_OSC::clear_pages(uint16_t id)
+{
     OSC_STATE state = m_headerSrv->get_state(id);
 
     for (int pageNum = 0; pageNum < OSC_PAGE_MAX; pageNum++) {
@@ -276,7 +284,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_OSC_HEADER& h)
     state.currPageRead = 0;
     state.overflowed = false;
 
-    res = m_headerSrv->set_state(id, state);
+    _dde_func_return_t res = m_headerSrv->set_state(id, state);
 
     return res;
 }
