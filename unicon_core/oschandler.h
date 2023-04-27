@@ -13,8 +13,6 @@ struct OscChannelValues
     int channelNum = 0;
     uint16_t varId = 0;
     float scale = 0.0;
-    int valueCount = 0; // // number of points in values buffer
-    int valueDensity = 0; // number of points per millisec
     QVariantList values;
 };
 
@@ -22,8 +20,9 @@ struct OscData
 {
     uint16_t id;
     DevID deviceID;
-    OscChannelValues analogValues[OSC_CHANNELS_MAX + 1];
-    OscChannelValues discreteValues[OSC_DISCRETES_MAX + 1];
+    int valueCount = 0; // // number of points in values buffer
+    int valueDensity = 0; // number of points per millisec
+    OscChannelValues ch[OSC_CHANNELS_MAX + 1];
     qlonglong timestamp = 0;
     bool eof = false;
     bool sof = false;

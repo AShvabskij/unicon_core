@@ -208,58 +208,31 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         }
 
         const OSC_DATA& chData = m_ddeData->data[chDescr.channelNum];
-        OscChannelValues& chValues = out->analogValues[chInd];
+        OscChannelValues& chValues = out->ch[chInd];
         chValues.channelNum = chDescr.channelNum;
         chValues.varId = chDescr.varId;
-        chValues.valueDensity = chValues.valueCount / DATA_YELD_INTERVAL_MSC;
+        out->valueDensity = out->valueCount / DATA_YELD_INTERVAL_MSC;
         chValues.scale = chDescr.scale;
         if (m_ddeData->sof) {
             chValues.values.clear();
-            chValues.valueCount = 0;
+            out->valueCount = 0;
         }
 
         if (m_ddeData->data_length > 0) {
-            chValues.valueCount += m_ddeData->data_length;
-            chValues.values.reserve(chValues.valueCount + 1);
+            out->valueCount += m_ddeData->data_length;
+            chValues.values.reserve(out->valueCount + 1);
         }
 
         for (int i = 0; i < m_ddeData->data_length; i++) {
             if (chDescr.isDigital) {
                 int32_t rawValue = chData.i_buff[i];
                 chValues.values << rawValue;
+            } else if (chDescr.isDiscrete) {
+                int32_t rawValue = chData.i_buff[i];
+                chValues.values << discreteValue(rawValue, chDescr.firstBit, chDescr.lastBit);
             } else {
                 chValues.values << chData.f_buff[i];
             }
-        }
-    }
-
-    for (auto chInd : osc.discreteChannels.keys()) {
-
-        const OscChannelDescr& chDescr = osc.discreteChannels[chInd];
-
-        if (chDescr.varId == 0 && chDescr.varName.isEmpty()) {
-            continue;
-        }
-
-        OscChannelValues& chValues = out->discreteValues[chInd];
-        chValues.channelNum = chDescr.channelNum;
-        chValues.varId = chDescr.varId;
-        chValues.valueDensity = chValues.valueCount / DATA_YELD_INTERVAL_MSC;
-
-        if (m_ddeData->sof) {
-            chValues.values.clear();
-            chValues.valueCount = 0;
-        }
-
-        if (m_ddeData->data_length > 0) {
-            chValues.valueCount += m_ddeData->data_length;
-            chValues.values.reserve(chValues.valueCount + 1);
-        }
-
-        const OSC_DATA& chData = m_ddeData->data[chDescr.channelNum];
-        for (int i = 0; i < m_ddeData->data_length; i++) {
-            int32_t rawValue = chData.i_buff[i];
-            chValues.values << discreteValue(rawValue, chDescr.firstBit, chDescr.lastBit);
         }
     }
 
@@ -308,18 +281,16 @@ void OscHandler::stopPooling()
 
 int OscHandler::streamData()
 {
-
     Q_ASSERT(m_capturedOsc.deviceID.isValid());
 
-    int lastValueCount = m_oscDataBuff->analogValues->valueCount;
+    int lastValueCount = m_oscDataBuff->valueCount;
 
     long res = getData(m_capturedOsc, m_oscDataBuff);
     if (res == _return_Busy) return 1;
 
     int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
 
-    int currValueCount = m_oscDataBuff->analogValues->valueCount;
-    m_oscDataBuff->timestamp = currValueCount  * (m_capturedOsc.settings.timeResolution_us);
+    m_oscDataBuff->timestamp = m_oscDataBuff->valueCount  * (m_capturedOsc.settings.timeResolution_us);
 
     QJsonObject response = createStreamDataObj(*m_oscDataBuff, lastValueCount, error);
     emit stream(QList<QJsonObject>() << response);
@@ -337,18 +308,12 @@ int OscHandler::streamData()
         m_dataLength = 0; // start from begining
         m_oscDataBuff->eof = false;
         m_oscDataBuff->sof = false;
-
-        for (OscChannelValues& chVal : m_oscDataBuff->analogValues) {
-            chVal.values.clear();
-            chVal.valueCount= 0;
-        }
-
-        for (OscChannelValues& chVal : m_oscDataBuff->discreteValues) {
-            chVal.values.clear();
-            chVal.valueCount= 0;
-        }
-
+        m_oscDataBuff->valueCount= 0;
         m_oscDataBuff->timestamp = 0;
+
+        for (OscChannelValues& chVal : m_oscDataBuff->ch) {
+            chVal.values.clear();
+        }
     }
 
     return 0;
@@ -468,25 +433,14 @@ QJsonObject OscHandler::createStreamDataObj(const OscData &data, int startPos, i
     QJsonArray valuesObj;
     QJsonArray varIdListObj;
 
-    for (const OscChannelValues& chVal : data.analogValues) {
+    for (const OscChannelValues& chVal : data.ch) {
         if (chVal.varId == 0) continue;
         if (!m_capturedVars.empty() && !m_capturedVars.contains(chVal.varId)) {
             continue;
         }
 
         varIdListObj << chVal.varId;
-        valuesObj << QJsonArray::fromVariantList(chVal.values.mid(startPos,  chVal.valueCount));
-    }
-
-    for (const OscChannelValues& chVal : data.discreteValues) {
-        if (chVal.varId == 0) continue;
-        if (!m_capturedVars.empty() && !m_capturedVars.contains(chVal.varId)) {
-            continue;
-        }
-
-        varIdListObj << chVal.varId;
-        QJsonArray arr = QJsonArray::fromVariantList(chVal.values.mid(startPos,  chVal.valueCount));
-        valuesObj << arr;
+        valuesObj << QJsonArray::fromVariantList(chVal.values.mid(startPos,  chVal.values.size()));
     }
 
     res["type"] = "osc";
