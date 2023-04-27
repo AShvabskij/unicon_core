@@ -16,7 +16,7 @@ const int STOP_STREAM_CODE = 2; //*100;
 OscHandler::OscHandler(IDDE_Dispatcher* dde): BaseReqHandler(dde)
 {
     m_ddeData = new DDE_GET_OSC_DATA();
-    m_oscDataBuff = new OscData();
+    m_oscDataBuff = new OscDataBuffer();
 
     m_streamTimer = new QTimer(this);
     m_streamTimer->setTimerType(Qt::PreciseTimer);
@@ -113,7 +113,7 @@ int OscHandler::handleGetChannel(const QJsonObject &request)
     DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
     long ret = getHeader(devId, oscId, &header);
 
-    OscChannelDescr chDescr = header.channel(chNum);
+    const OscChannelDescr& chDescr = header.channel(chNum);
     QJsonObject response = createChannelObj(requestId, chDescr);
     send(response);
 
@@ -149,6 +149,10 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
         m_capturedVars.removeAll(0);
         m_sof = false;
 
+        if (m_oscDataBuff) {
+            delete m_oscDataBuff;
+        }
+        m_oscDataBuff = createDataBuffer(m_capturedOsc);
         startPooling();
     }
 
@@ -179,25 +183,22 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
     QJsonObject response = createAnswerObj(requestId, devId);
     send(response);
 
+    if (m_oscDataBuff) {
+        delete m_oscDataBuff;
+        m_oscDataBuff = nullptr;
+    }
+
     return 0;
 }
 
-long OscHandler::getData(const OscHeader& osc, OscData* out)
+OscDataBuffer* OscHandler::createDataBuffer(const OscHeader& osc)
 {
-    Q_ASSERT(out);
-    Q_ASSERT(m_ddeData);
+     OscDataBuffer* buff = new OscDataBuffer();
 
-    out->id = osc.id;
-    out->deviceID = osc.deviceID;
-
-    memset(m_ddeData, 0, sizeof(DDE_GET_OSC_DATA));
-    m_ddeData->device_id = osc.deviceID.id;
-
-    _dde_func_return_t res = (*m_dde)(osc.deviceID.type)->get_osc_data(*m_ddeData);
-
-    if (res != _return_OK) return res;
-
-    // if (m_ddeData->data_length == 0) return res;
+    buff->id = osc.id;
+    buff->deviceID = osc.deviceID;
+    buff->eof = false;
+    buff->sof = false;
 
     for (int chInd : osc.analogChannels.keys()) {
 
@@ -207,21 +208,52 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
             continue;
         }
 
-        const OSC_DATA& chData = m_ddeData->data[chDescr.channelNum];
-        OscChannelValues& chValues = out->ch[chInd];
+        OscChannelValues& chValues = buff->ch[chInd];
         chValues.channelNum = chDescr.channelNum;
         chValues.varId = chDescr.varId;
-        out->valueDensity = out->valueCount / DATA_YELD_INTERVAL_MSC;
         chValues.scale = chDescr.scale;
+    }
+
+    return buff;
+}
+
+long OscHandler::getData(const OscHeader& osc, OscDataBuffer* buff)
+{
+    Q_ASSERT(buff);
+    Q_ASSERT(m_ddeData);
+    Q_ASSERT(buff->deviceID.isValid());
+
+    memset(m_ddeData, 0, sizeof(DDE_GET_OSC_DATA));
+    m_ddeData->device_id = buff->deviceID.id;
+
+    _dde_func_return_t res = (*m_dde)(osc.deviceID.type)->get_osc_data(*m_ddeData);
+
+    if (res != _return_OK) return res;
+
+    // if (m_ddeData->data_length == 0) return res;
+
+    for (int chInd : osc.chIndexes()) {
+
+        const OscChannelDescr& chDescr = osc.analogChannels.contains(chInd) ? osc.analogChannels[chInd] : osc.discreteChannels[chInd];
+
+        if (chDescr.varId == 0 && chDescr.varName.isEmpty()) {
+            continue;
+        }
+
+        OscChannelValues& chValues = buff->ch[chInd];
+        const OSC_DATA& chData = m_ddeData->data[chDescr.channelNum];
+
         if (m_ddeData->sof) {
             chValues.values.clear();
-            out->valueCount = 0;
+            buff->valueCount = 0;
         }
 
         if (m_ddeData->data_length > 0) {
-            out->valueCount += m_ddeData->data_length;
-            chValues.values.reserve(out->valueCount + 1);
+            buff->valueCount += m_ddeData->data_length;
+            chValues.values.reserve(buff->valueCount + 1);
         }
+
+        buff->valueDensity = buff->valueCount / DATA_YELD_INTERVAL_MSC;
 
         for (int i = 0; i < m_ddeData->data_length; i++) {
             if (chDescr.isDigital) {
@@ -236,8 +268,8 @@ long OscHandler::getData(const OscHeader& osc, OscData* out)
         }
     }
 
-    out->eof = m_ddeData->eof;
-    out->sof = m_ddeData->sof;
+    buff->eof = m_ddeData->eof;
+    buff->sof = m_ddeData->sof;
 
     return res;
 }
@@ -325,7 +357,7 @@ void OscHandler::stopStreamData(const OscHeader &osc)
         return;
     }
 
-    OscData val;
+    OscDataBuffer val;
     val.id = osc.id;
     val.deviceID = osc.deviceID;
 
@@ -427,7 +459,7 @@ QJsonObject OscHandler::createChannelObj(int requestId, const OscChannelDescr& c
     return res;
 }
 
-QJsonObject OscHandler::createStreamDataObj(const OscData &data, int startPos, int error)
+QJsonObject OscHandler::createStreamDataObj(const OscDataBuffer &data, int startPos, int error)
 {
     QJsonObject res;
     QJsonArray valuesObj;

@@ -16,7 +16,7 @@ struct OscChannelValues
     QVariantList values;
 };
 
-struct OscData
+struct OscDataBuffer
 {
     uint16_t id;
     DevID deviceID;
@@ -81,7 +81,7 @@ struct OscHeader
         return this->id == o.id && this->deviceID == o.deviceID;
     }
 
-    OscChannelDescr channel(int chNum)
+    OscChannelDescr channel(int chNum) const
     {
         for (quint8 chInd : analogChannels.keys()) {
             const OscChannelDescr& ch = analogChannels.value(chInd);
@@ -97,6 +97,15 @@ struct OscHeader
         }
 
         return OscChannelDescr();
+    }
+
+
+    QList<quint8> chIndexes() const
+    {
+        QList<quint8> res;
+        res << analogChannels.keys();
+        res << discreteChannels.keys();
+        return res;
     }
 
     QJsonObject toJson() const {
@@ -167,12 +176,13 @@ private:
     int handleOpenStream(const QJsonObject &request);
     int handleCloseStream(const QJsonObject &request);
 
-    long getData(const OscHeader &osc, OscData* out);
+    OscDataBuffer* createDataBuffer(const OscHeader& osc);
+    long getData(const OscHeader& osc, OscDataBuffer* data);
     long getHeader(const DevID& deviceID, int oscId, OscHeader *out);
 
     QJsonObject createHeaderObj(int requestId, const OscHeader& header);
     QJsonObject createChannelObj(int requestId, const OscChannelDescr& ch);
-    QJsonObject createStreamDataObj(const OscData& data, int valueLength, int error = 0);
+    QJsonObject createStreamDataObj(const OscDataBuffer& data, int valueLength, int error = 0);
     QJsonObject createAnswerObj(int requestId, DevID deviceID, const QJsonObject &body = QJsonObject(), int error = 0);
     QString oscDataToString(const QJsonObject &obj);
     OscChannelDescr createChannelDescr(const OSC_CHANNEL &channel);
@@ -189,7 +199,7 @@ private:
     int m_streamValCount = 0;
     QTimer* m_streamTimer;
     DDE_GET_OSC_DATA* m_ddeData; // buffer to receive data from osc
-    OscData* m_oscDataBuff; // buffer to keep data from osc
+    OscDataBuffer* m_oscDataBuff; // buffer to keep data from osc
     bool m_sof = false;
     int m_dataLength = 0;
 };
