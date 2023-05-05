@@ -362,12 +362,11 @@ void OscHandler::stopStreamData(const OscHeader &header)
     }
 
     stopPooling();
+    OscDataBuffer emptyBuff;
+    emptyBuff.id = osc.id;
+    emptyBuff.deviceID = osc.deviceID;
 
-    OscDataBuffer val;
-    val.id = header.id;
-    val.deviceID = header.deviceID;
-
-    QJsonObject response = createStreamDataObj(val, 0, STOP_STREAM_CODE);
+    QJsonObject response = createStreamDataObj(emptyBuff, 0, STOP_STREAM_CODE);
     emit stream(QList<QJsonObject>() << response);
 
     return;
