@@ -53,7 +53,6 @@ void OscHandler::onStreamTimerAlarm()
 
     if (m_streamValCount > STREAM_OBJECT_LIMIT ) {
         stopStreamData(m_capturedOsc);
-        stopPooling();
         return;
     }
 
@@ -65,7 +64,6 @@ void OscHandler::onStreamTimerAlarm()
     int res = streamData();
     if (res < 0 || res == STOP_STREAM_CODE) {
         stopStreamData(m_capturedOsc);
-        stopPooling();
         return;
     }
 }
@@ -134,26 +132,19 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
     int oscId = cmdBody.value("osc_id").toInt();
     QJsonArray oscVars = cmdBody.value("osc_vars").toArray();
 
+    stopPooling(); // stopStreamData()
+
     OscHeader header;
     DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
     long ret = getHeader(devId, oscId, &header);
 
     if (ret == _return_OK) {
-        m_capturedOsc = header;
-        m_dataLength = 0;
-
-        m_capturedVars.clear();
-        for (const QJsonValue& val : oscVars) {
-            m_capturedVars << val.toInt();
+        QVector<int> capturedVars;
+        for (const QJsonValue val : oscVars) {
+            capturedVars << val.toInt();
         }
-        m_capturedVars.removeAll(0);
-        m_sof = false;
 
-        if (m_oscDataBuff) {
-            delete m_oscDataBuff;
-        }
-        m_oscDataBuff = createDataBuffer(m_capturedOsc);
-        startPooling();
+        startStreamData(header, capturedVars);
     }
 
     int error = (ret != _return_OK) ? static_cast<int>(ret != 0 ? ret : -1): 0;
@@ -182,11 +173,6 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
     DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
     QJsonObject response = createAnswerObj(requestId, devId);
     send(response);
-
-    if (m_oscDataBuff) {
-        delete m_oscDataBuff;
-        m_oscDataBuff = nullptr;
-    }
 
     return 0;
 }
@@ -351,15 +337,35 @@ int OscHandler::streamData()
     return 0;
 }
 
-void OscHandler::stopStreamData(const OscHeader &osc)
+void OscHandler::startStreamData(const OscHeader &header, QVector<int> oscVars)
 {
-    if (osc.id == 0) {
+    Q_ASSERT(header.id != 0);
+
+    m_capturedOsc = header;
+    m_dataLength = 0;
+    m_capturedVars = oscVars;
+
+    m_sof = false;
+    if (m_oscDataBuff) {
+        delete m_oscDataBuff;
+    }
+
+    m_oscDataBuff = createDataBuffer(m_capturedOsc);
+
+    startPooling();
+}
+
+void OscHandler::stopStreamData(const OscHeader &header)
+{
+    if (header.id == 0) {
         return;
     }
 
+    stopPooling();
+
     OscDataBuffer val;
-    val.id = osc.id;
-    val.deviceID = osc.deviceID;
+    val.id = header.id;
+    val.deviceID = header.deviceID;
 
     QJsonObject response = createStreamDataObj(val, 0, STOP_STREAM_CODE);
     emit stream(QList<QJsonObject>() << response);

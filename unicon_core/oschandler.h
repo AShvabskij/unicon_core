@@ -192,7 +192,8 @@ private:
     void stopPooling();
 
     int streamData();
-    void stopStreamData(const OscHeader& osc);
+    void startStreamData(const OscHeader& header, QVector<int> oscVars);
+    void stopStreamData(const OscHeader& header);
 
     OscHeader m_capturedOsc;
     QVector<int> m_capturedVars;
