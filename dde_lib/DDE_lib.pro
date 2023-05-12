@@ -21,8 +21,8 @@ SOURCES += \
     DDE_EMUL.cpp \
     csvfile.cpp \
     services/oscdatabinservice.cpp \
-    services/oscdatafile.cpp \
     services/oscdataservice.cpp \
+    services/oscfileservice.cpp \
     services/oscipcservice.cpp
 
 unix: SOURCES += \
@@ -47,8 +47,8 @@ HEADERS += \
     DDE_TYPES.h \
     DDE_EMUL.h \
     services/oscdatabinservice.h \
-    services/oscdatafile.h \
     services/oscdataservice.h \
+    services/oscfileservice.h \
     services/oscipcservice.h
 
 INCLUDEPATH += $$PWD/utils/csvfile

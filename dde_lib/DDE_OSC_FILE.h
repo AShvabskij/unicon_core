@@ -26,6 +26,6 @@ public:
     virtual void update();
 private:
 
-    IDDE_OSC_DATA* m_oscData = nullptr;
+    IOscFileService* m_oscFileSrv = nullptr;
     
 };

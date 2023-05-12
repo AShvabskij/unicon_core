@@ -7,7 +7,7 @@
 #include <iomanip>
 
 #include "cpp_inc.h"
-#include "oscdatafile.h"
+#include "oscfileservice.h"
 
 using namespace std;
 
@@ -15,42 +15,44 @@ const int DATA_YELD_INTERVAL_MSC = 50;
 
 DDE_OSC_FILE::DDE_OSC_FILE()
 {
-    delete m_oscData;
+    delete m_oscFileSrv;
 }
 
 _dde_func_return_t DDE_OSC_FILE::init(const char *)
 {
-    m_oscData = new OscDataFile();
+    m_oscFileSrv = new OscFileService();
 
     return _return_OK;
 }
 
 _dde_func_return_t DDE_OSC_FILE::open(uint16_t oscId)
 {
-    _dde_func_return_t res = m_oscData->open(oscId, false);
+    string fileName = "osc_data_" + to_string(oscId);
+    _dde_func_return_t res = m_oscFileSrv->open(fileName.c_str(), false);
     return res;
 }
 
 _dde_func_return_t DDE_OSC_FILE::close(uint16_t oscId)
 {
-    _dde_func_return_t res = m_oscData->close(oscId);
+    _dde_func_return_t res = m_oscFileSrv->close();
     return res;
 }
 
 _dde_func_return_t DDE_OSC_FILE::get(DDE_OSC_HEADER& h)
 {
-    _dde_func_return_t res = m_oscData->open(h.device_id, false);
+    string fileName = "osc_data_" + to_string(h.device_id);
+    _dde_func_return_t res = m_oscFileSrv->open(fileName.c_str(), false);
     if (!res) return res;
 
-    res = m_oscData->getHeader(h);
+    res = m_oscFileSrv->getHeader(h);
     return res;
 }
 
 _dde_func_return_t DDE_OSC_FILE::get(DDE_GET_OSC_DATA& d)
 {
-    _dde_func_return_t res = m_oscData->readNextData(d, DATA_YELD_INTERVAL_MSC);
+    _dde_func_return_t res = m_oscFileSrv->readNextData(d, DATA_YELD_INTERVAL_MSC);
     if (d.eof) {
-        m_oscData->close(d.device_id);
+        m_oscFileSrv->close();
     }
 
     return res;
@@ -64,7 +66,7 @@ _dde_func_return_t DDE_OSC_FILE::set(const DDE_SET_OSC_DATA &)
 
 _dde_func_return_t DDE_OSC_FILE::set(const DDE_OSC_HEADER& h)
 {
-    _dde_func_return_t res = m_oscData->setHeader(h);
+    _dde_func_return_t res = m_oscFileSrv->setHeader(h);
     return res;
 }
 

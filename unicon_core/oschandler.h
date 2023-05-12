@@ -179,6 +179,7 @@ private:
     OscDataBuffer* createDataBuffer(const OscHeader& osc);
     long getData(const OscHeader& osc, OscDataBuffer* data);
     long getHeader(const DevID& deviceID, int oscId, OscHeader *out);
+    long saveData(const OscHeader &header, const OscDataBuffer& data);
 
     QJsonObject createHeaderObj(int requestId, const OscHeader& header);
     QJsonObject createChannelObj(int requestId, const OscChannelDescr& ch);

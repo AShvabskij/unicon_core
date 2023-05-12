@@ -93,23 +93,22 @@ public:
     virtual void update() {};
 };
 
-class IDDE_OSC_DATA // Obsoleted. Use IOscDataService
+class IOscFileService // Interface for working with the oscilloscope data file
 {
 public:
-    virtual ~IDDE_OSC_DATA() {};
+    virtual ~IOscFileService() {};
 
-    virtual _dde_func_return_t open(uint16_t deviceId, bool needSaved) = 0;
-    virtual _dde_func_return_t close(uint16_t deviceId) = 0;
+    virtual _dde_func_return_t open(const char* fileName, bool saveMode) = 0;
+    virtual _dde_func_return_t close() = 0;
 
     virtual _dde_func_return_t addData(DDE_GET_OSC_DATA& p) = 0;
     virtual _dde_func_return_t readNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc) = 0;
     
-    // todo: remove it later
     virtual _dde_func_return_t getHeader(DDE_OSC_HEADER& p) = 0;
     virtual _dde_func_return_t setHeader(const DDE_OSC_HEADER& p) = 0;
 };
 
-class IOscDataService // Interface for working with the oscilloscope data file
+class IOscDataService // Interface for working with the oscilloscope stream data
 {
 public:
     virtual ~IOscDataService() {}

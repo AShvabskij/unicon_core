@@ -40,14 +40,14 @@ struct FILE_HEADER
 };
 }
 
-class OscDataFile : public IDDE_OSC_DATA
+class OscFileService : public IOscFileService
 {
 public:
-    OscDataFile();
-    ~OscDataFile();
+    OscFileService();
+    ~OscFileService();
 
-    _dde_func_return_t open(uint16_t device_id, bool needSaved);
-    virtual _dde_func_return_t close(uint16_t deviceId);
+    _dde_func_return_t open(const char* fileName, bool saveMode);
+    virtual _dde_func_return_t close();
 
     virtual _dde_func_return_t addData(DDE_GET_OSC_DATA& p);
     virtual _dde_func_return_t  readNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc);
@@ -56,14 +56,14 @@ public:
     virtual _dde_func_return_t setHeader(const DDE_OSC_HEADER& p);
 
 private:
-    int loadHeader(uint16_t device_id);
-    int loadData(uint16_t device_id);
+    int loadHeader(const char *fileName);
+    int loadData();
     int getHeader(uint16_t device_id, OSC_FILE::FILE_HEADER& header);
     int saveHeader(OSC_FILE::FILE_HEADER& header);
 
-    int loadOscFile(uint16_t device_id, std::string* outBuff);
+    int loadOscFile(const char *fileName, std::string* outBuff);
     void waitForLoad();
-    std::ifstream openOscFile(int fileNumber);
+    std::ifstream openOscFile(const char *fileName);
     int parseHeader(const std::ifstream& fileStream, OSC_FILE::FILE_HEADER &header);
     std::string readLine(std::istream &stream);
     std::vector<std::uint16_t> parseValues(std::string line);
@@ -73,10 +73,10 @@ private:
     OSC_VAR createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId);
     int th_loadData();
 
-    int m_currDeviceId;
     OSC_FILE::FILE_HEADER* m_header = nullptr;
     std::stringstream* m_oscFileStream = nullptr;
     std::string m_oscFileBuff = "";
+    std::string m_fileName = "";
 
     std::thread* m_loadThread = nullptr;
 };

@@ -320,7 +320,7 @@ int OscHandler::streamData()
     if (m_oscDataBuff->eof) {
         if (m_sof) {
             m_sof = false;
-            // saveBuffer(m_oscDataBuff);
+            saveData(m_capturedOsc, *m_oscDataBuff);
         }
 
         m_dataLength = 0; // start from begining
@@ -350,7 +350,7 @@ void OscHandler::startStreamData(const OscHeader &header, QVector<int> oscVars)
         delete m_oscDataBuff;
     }
 
-    m_oscDataBuff = createDataBuffer(m_capturedOsc);
+    m_oscDataBuff = createDataBuffer(header);
 
     startPooling();
 }
@@ -362,9 +362,10 @@ void OscHandler::stopStreamData(const OscHeader &header)
     }
 
     stopPooling();
+
     OscDataBuffer emptyBuff;
-    emptyBuff.id = osc.id;
-    emptyBuff.deviceID = osc.deviceID;
+    emptyBuff.id = header.id;
+    emptyBuff.deviceID = header.deviceID;
 
     QJsonObject response = createStreamDataObj(emptyBuff, 0, STOP_STREAM_CODE);
     emit stream(QList<QJsonObject>() << response);
@@ -387,6 +388,7 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     out->name = "osc";
     out->desc = "osc desc";
     out->analogChannels.clear();
+    out->discreteChannels.clear();
 
     for (int chInd = 0; chInd < header.settings.channel_count; chInd++) {
         const OSC_CHANNEL& channel = header.channels[chInd];
@@ -414,6 +416,53 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     out->settings = settings;
 
     return _return_OK;
+}
+
+long OscHandler::saveData(const OscHeader &header, const OscDataBuffer& data)
+{
+    _dde_func_return_t res = _return_OK;
+    QJsonObject jsonObj = header.toJson();
+
+    QJsonDocument doc(jsonObj);
+    QByteArray bytes = doc.toJson(QJsonDocument::Compact);
+
+    QString fileName = QString("%1_%2.hdr").arg(header.deviceID.id).arg(header.settings.reason);
+    QFile file( fileName );
+
+    if( file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
+    {
+        QTextStream iStream( &file );
+        iStream.setCodec( "utf-8" );
+        iStream << bytes;
+        file.close();
+    }
+    else
+    {
+         QTextStream(stdout) << "file open failed: " << fileName << endl;
+         return _return_FAIL;
+    }
+
+    QJsonObject datjsonObj = createStreamDataObj(data, 0);
+    QString datFileName = QString("%1_%2.dat").arg(header.deviceID.id).arg(header.settings.reason);
+    QFile datFile(datFileName);
+
+    QJsonDocument datDoc(datjsonObj);
+    QCborValue v = QCborValue::fromJsonValue(datjsonObj);
+    QByteArray datBytes = v.toCbor(QCborValue::UseFloat);
+
+    if( datFile.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
+    {
+        QTextStream iStream( &file );
+        iStream << datBytes;
+        file.close();
+    }
+    else
+    {
+         QTextStream(stdout) << "file open failed: " << fileName << endl;
+         return _return_FAIL;
+    }
+
+    return res;
 }
 
 OscChannelDescr OscHandler::createChannelDescr(const OSC_CHANNEL& channel)
