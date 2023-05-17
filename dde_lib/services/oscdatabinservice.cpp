@@ -87,6 +87,8 @@ _dde_func_return_t OscDataBinService::readNextData(const DDE_OSC_HEADER& header,
     getDat.data_length = dh.data_length;
     getDat.header_updated = dh.header_updated;
     getDat.eof = dh.eof;
+    getDat.sof = dh.sof;
+
     eof = false;
 
     for(int ch = 0; ch < header.settings.channel_count; ch++) {
@@ -115,6 +117,7 @@ _dde_func_return_t OscDataBinService::addData(const DDE_SET_OSC_DATA& setDat, in
     dh.data_length = setDat.data_length;
     dh.header_updated = setDat.header_updated;
     dh.eof = setDat.eof;
+    dh.sof = setDat.sof;
 
     m_file.write((char*)&dh,  sizeof(char) * sizeof(dh));
 

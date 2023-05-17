@@ -124,6 +124,7 @@ struct DDE_OSC_DATA_HEADER
     uint32_t header_updated;    //if flag is set update the header, clear screen and draw data
     uint16_t data_length;   // The length of a data in OSC_CH_DATA
     bool eof = false;
+    bool sof = false;
 };
 
 struct GLIO_OSC_CHANNEL
