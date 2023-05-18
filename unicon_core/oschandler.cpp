@@ -452,9 +452,9 @@ long OscHandler::saveData(const OscHeader &header, const OscDataBuffer& data)
 
     if( datFile.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
     {
-        QTextStream iStream( &file );
+        QTextStream iStream( &datFile );
         iStream << datBytes;
-        file.close();
+        datFile.close();
     }
     else
     {

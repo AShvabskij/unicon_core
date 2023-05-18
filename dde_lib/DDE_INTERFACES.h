@@ -113,7 +113,7 @@ class IOscDataService // Interface for working with the oscilloscope stream data
 public:
     virtual ~IOscDataService() {}
 
-    virtual _dde_func_return_t open(int fileNum, bool writeMode) = 0;
+    virtual _dde_func_return_t open(uint16_t deviceId, int pageNum, bool writeMode) = 0;
     virtual _dde_func_return_t close() = 0;
 
     virtual _dde_func_return_t addData(const DDE_SET_OSC_DATA& dat, int ch_count, bool& eof) = 0;

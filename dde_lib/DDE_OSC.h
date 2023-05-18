@@ -30,6 +30,6 @@ private:
 
     IOscDataService* m_dataSrv = nullptr;
     IOscHeaderService* m_headerSrv = nullptr;
-    DDE_OSC_HEADER* m_header = nullptr;
+    DDE_OSC_HEADER* m_header = nullptr; // todo: get rid of it
     std::string m_sysName = "";
 };

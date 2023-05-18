@@ -24,17 +24,19 @@ OscDataService::~OscDataService()
 {
 }
 
-_dde_func_return_t OscDataService::open(int fileNum, bool writeMode)
+_dde_func_return_t OscDataService::open(uint16_t deviceId, int fileNum, bool writeMode)
 {
     if (fileNum < 0) return _return_FAIL;
 
-    if (m_currFileNum == fileNum) {
+    if (m_currFileNum == fileNum && m_deviceId == deviceId) {
         return _return_OK;
     }
 
     m_currFileNum = fileNum;
+    m_deviceId = deviceId;
+
     if (writeMode) {
-        m_outf = openOscFile(fileNum, writeMode);
+        m_outf = openOscFile(deviceId, fileNum, writeMode);
     }
     else {
         m_loadThread = new std::thread(&OscDataService::th_loadData, this);
@@ -77,7 +79,7 @@ void OscDataService::th_loadData()
 
     m_oscFileBuff.clear();
 
-    fstream file = openOscFile(m_currFileNum);
+    fstream file = openOscFile(m_deviceId, m_currFileNum);
     if (!file.is_open()) {
         return;
     }
@@ -100,10 +102,10 @@ void OscDataService::th_loadData()
     return;
 }
 
-std::fstream OscDataService::openOscFile(int fileNumber, bool writeMode)
+std::fstream OscDataService::openOscFile(uint16_t deviceId, int pageNum, bool writeMode)
 {
 
-    string fileName = "osc_data_" + to_string(fileNumber);
+    string fileName = "osc_txt_" + to_string(deviceId) + "_" + to_string(pageNum);
 //  const char* home = getenv("HOME");
     const char* home = "/dev/shm";
     std::string path(home);

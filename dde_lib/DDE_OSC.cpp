@@ -195,7 +195,7 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     string err = "Read data from page = " + std::to_string(pageNum) + "\n";
     perror(err.c_str());
 
-    res = m_dataSrv->open(pageNum, false);
+    res = m_dataSrv->open(id, pageNum, false);
     if (res != _return_OK) return res;
 
     bool eof = false;
@@ -208,10 +208,9 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 
         int nextPageNum = m_headerSrv->get_page_ready_to_read(id);
         if (nextPageNum >= 0) {
-            m_dataSrv->open(nextPageNum, false);
+            m_dataSrv->open(id, nextPageNum, false);
             dat.next_ready = true;
         }
-
     }
 
     return res;
@@ -248,7 +247,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
         return _return_FAIL;
     }
 
-    _dde_func_return_t res = m_dataSrv->open(pageNum, true);
+    _dde_func_return_t res = m_dataSrv->open(id, pageNum, true);
     if (res != _return_OK) return res;
 
     bool get_eof = false;

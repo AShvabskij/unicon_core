@@ -24,17 +24,18 @@ OscDataBinService::~OscDataBinService()
 {
 }
 
-_dde_func_return_t OscDataBinService::open(int fileNum, bool writeMode)
+_dde_func_return_t OscDataBinService::open(uint16_t deviceId, int pageNum, bool writeMode)
 {
-    if (fileNum < 0) return _return_FAIL;
+    if (pageNum < 0) return _return_FAIL;
 
-    if (m_currFileNum == fileNum) {
+    if (m_deviceId == deviceId && m_currFileNum == pageNum) {
         return _return_OK;
     }
 
-    m_currFileNum = fileNum;
+    m_deviceId = deviceId;
+    m_currFileNum = pageNum;
 
-    string fileName = "osc_bin_" + to_string(fileNum);
+    string fileName = "osc_" + to_string(deviceId) + "_" + to_string(pageNum);
 //  const char* home = getenv("HOME");
     const char* home = "/dev/shm";
     std::string path(home);
