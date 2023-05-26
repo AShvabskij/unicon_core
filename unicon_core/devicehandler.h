@@ -47,6 +47,7 @@ class DeviceHandler : public BaseReqHandler
 public:
     DeviceHandler(IDDE_Dispatcher*);
     virtual int handle(const QJsonObject &request);
+    long requestDeviceLinks(SysType sysType, QList<quint16> &links);
 
 private:
     void handleDeviceHeader(const QJsonObject &request);
@@ -58,7 +59,6 @@ private:
     void handleReqDeviceHeader(SysType sysType, int deviceId, int requestId);
     void handleReqModuleHeader(SysType sysType, int deviceId, int moduleId, int requestId);
 
-    long requestDeviceLinks(SysType sysType, QList<quint16> &links);
     long requestDevice(Device& device);
     QString getDeviceName(const DevID &deviceId);
     QString getDeviceDescr(const DevID& deviceId);

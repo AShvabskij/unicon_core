@@ -7,7 +7,7 @@
 #include <iomanip>
 
 #include "cpp_inc.h"
-#include "oscdatabinservice.h"
+#include "oscpagebinservice.h"
 #include "oscipcservice.h"
 
 using namespace std;
@@ -24,7 +24,7 @@ DDE_OSC::~DDE_OSC()
 
 _dde_func_return_t DDE_OSC::init(const char * sysName)
 {
-    m_dataSrv = new OscDataBinService();
+    m_dataSrv = new OscPageBinService();
     m_headerSrv = new OscIPCHeaderService();
     m_sysName = sysName;
 

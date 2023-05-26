@@ -58,7 +58,7 @@ public:
 private:
     int loadHeader(const char *fileName);
     int loadData();
-    int getHeader(uint16_t device_id, OSC_FILE::FILE_HEADER& header);
+    // int getHeader(uint16_t device_id, OSC_FILE::FILE_HEADER& header);
     int saveHeader(OSC_FILE::FILE_HEADER& header);
 
     int loadOscFile(const char *fileName, std::string* outBuff);

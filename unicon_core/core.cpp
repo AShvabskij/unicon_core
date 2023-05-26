@@ -48,8 +48,7 @@ void Core::start()
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp);
     DeviceHandler* device = new DeviceHandler(m_ddeDisp);
-    OscHandler* osc = new OscHandler(m_ddeDisp);
-
+    OscHandler* osc = new OscHandler(m_ddeDisp, m_oscService);
 
     RequestManager::instance()->registerHandler(device);
     RequestManager::instance()->registerHandler(params);
@@ -72,19 +71,35 @@ void Core::start()
 
 //    IDDE* dde = m_ddeDisp->dde(SysType::DEFAULT);
 
-//  QtConcurrent::run(this, &Core::thread_proc, SysType::UAVCAN);
+    m_oscService = new OscDataService(m_ddeDisp->dde(SysType::UAVCAN));
+
+    QtConcurrent::run(this, &Core::thread_proc, SysType::UAVCAN);
 }
 
-/*
 void Core::thread_proc(SysType sysType)
 {
     QThread::msleep(1000);
 
+    DeviceHandler* device = new DeviceHandler(m_ddeDisp);
+
+    QList<quint16> links;
+    static int cnt = 0;
     while (1)
     {
-        m_ddeDisp->dde(sysType)->update();
-        QThread::msleep(1000);
-    }
+        if (++cnt == INT32_MAX) cnt = 0;
 
+        if (cnt % 3) {
+            m_ddeDisp->dde(sysType)->update();
+        }
+
+        if (cnt % 10) {
+            links.clear();
+            device->requestDeviceLinks(sysType, links);
+            m_oscService->init(links);
+        }
+
+        m_oscService->update();
+
+        QThread::msleep(250);
+    }
 }
-*/

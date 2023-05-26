@@ -1,4 +1,4 @@
-#include "oscdatabinservice.h"
+#include "oscpagebinservice.h"
 
 #include <cmath>
 #include <chrono>
@@ -17,14 +17,14 @@ namespace osc_bin_data {
     const int MAX_PAGE_SIZE = 65000;
 }
 
-OscDataBinService::OscDataBinService()
+OscPageBinService::OscPageBinService()
 {}
 
-OscDataBinService::~OscDataBinService()
+OscPageBinService::~OscPageBinService()
 {
 }
 
-_dde_func_return_t OscDataBinService::open(uint16_t deviceId, int pageNum, bool writeMode)
+_dde_func_return_t OscPageBinService::open(uint16_t deviceId, int pageNum, bool writeMode)
 {
     if (pageNum < 0) return _return_FAIL;
 
@@ -65,7 +65,7 @@ _dde_func_return_t OscDataBinService::open(uint16_t deviceId, int pageNum, bool 
     return _return_OK;
 }
 
-_dde_func_return_t OscDataBinService::close()
+_dde_func_return_t OscPageBinService::close()
 {
     m_file.close();
     m_currFileNum = -1;
@@ -73,7 +73,7 @@ _dde_func_return_t OscDataBinService::close()
     return _return_OK;
 }
 
-_dde_func_return_t OscDataBinService::readNextData(const DDE_OSC_HEADER& header, DDE_GET_OSC_DATA& getDat, bool& eof)
+_dde_func_return_t OscPageBinService::readNextData(const DDE_OSC_HEADER& header, DDE_GET_OSC_DATA& getDat, bool& eof)
 {
     if (!m_file) {
         cout << osc_bin_data::OSC_FILE_ERROR;
@@ -111,7 +111,7 @@ _dde_func_return_t OscDataBinService::readNextData(const DDE_OSC_HEADER& header,
     return _return_OK;
 }
 
-_dde_func_return_t OscDataBinService::addData(const DDE_SET_OSC_DATA& setDat, int ch_count, bool& eof)
+_dde_func_return_t OscPageBinService::addData(const DDE_SET_OSC_DATA& setDat, int ch_count, bool& eof)
 {
     DDE_OSC_DATA_HEADER dh;
     dh.device_id = setDat.device_id;

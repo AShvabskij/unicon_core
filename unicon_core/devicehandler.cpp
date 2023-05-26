@@ -1,4 +1,5 @@
 #include "devicehandler.h"
+#include <QDateTime>
 
 const QString CMD_DEVICE_HEADER = "device_header";
 const QString CMD_DEVICE_HEADERS = "device_headers";

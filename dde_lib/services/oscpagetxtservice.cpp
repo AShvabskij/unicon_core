@@ -1,4 +1,4 @@
-#include "oscdataservice.h"
+#include "oscpagetxtservice.h"
 
 #include <cmath>
 #include <chrono>
@@ -17,35 +17,35 @@ namespace osc_data {
     const int MAX_PAGE_SIZE = 65000;
 }
 
-OscDataService::OscDataService()
+OscPageTxtService::OscPageTxtService()
 {}
 
-OscDataService::~OscDataService()
+OscPageTxtService::~OscPageTxtService()
 {
 }
 
-_dde_func_return_t OscDataService::open(uint16_t deviceId, int fileNum, bool writeMode)
+_dde_func_return_t OscPageTxtService::open(uint16_t deviceId, int pageNum, bool writeMode)
 {
-    if (fileNum < 0) return _return_FAIL;
+    if (pageNum < 0) return _return_FAIL;
 
-    if (m_currFileNum == fileNum && m_deviceId == deviceId) {
+    if (m_currPageNum == pageNum && m_deviceId == deviceId) {
         return _return_OK;
     }
 
-    m_currFileNum = fileNum;
+    m_currPageNum = pageNum;
     m_deviceId = deviceId;
 
     if (writeMode) {
-        m_outf = openOscFile(deviceId, fileNum, writeMode);
+        m_outf = openOscFile(deviceId, pageNum, writeMode);
     }
     else {
-        m_loadThread = new std::thread(&OscDataService::th_loadData, this);
+        m_loadThread = new std::thread(&OscPageTxtService::th_loadData, this);
     }
 
     return _return_OK;
 }
 
-void OscDataService::waitForLoad()
+void OscPageTxtService::waitForLoad()
 {
     if (m_loadThread && m_loadThread->joinable()) {
         m_loadThread->join();
@@ -54,7 +54,7 @@ void OscDataService::waitForLoad()
     return;
 }
 
-_dde_func_return_t OscDataService::close()
+_dde_func_return_t OscPageTxtService::close()
 {
 
     if (m_loadThread && m_loadThread->joinable()) {
@@ -68,18 +68,18 @@ _dde_func_return_t OscDataService::close()
     delete m_oscFileStream;
     m_oscFileStream = nullptr;
     m_oscFileBuff = "";
-    m_currFileNum = -1;
+    m_currPageNum = -1;
 
     return _return_OK;
 }
 
-void OscDataService::th_loadData()
+void OscPageTxtService::th_loadData()
 {
     if (m_oscFileStream) return;
 
     m_oscFileBuff.clear();
 
-    fstream file = openOscFile(m_deviceId, m_currFileNum);
+    fstream file = openOscFile(m_deviceId, m_currPageNum);
     if (!file.is_open()) {
         return;
     }
@@ -102,7 +102,7 @@ void OscDataService::th_loadData()
     return;
 }
 
-std::fstream OscDataService::openOscFile(uint16_t deviceId, int pageNum, bool writeMode)
+std::fstream OscPageTxtService::openOscFile(uint16_t deviceId, int pageNum, bool writeMode)
 {
 
     string fileName = "osc_txt_" + to_string(deviceId) + "_" + to_string(pageNum);
@@ -135,7 +135,7 @@ std::fstream OscDataService::openOscFile(uint16_t deviceId, int pageNum, bool wr
     return file;
 }
 
-_dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DDE_GET_OSC_DATA& getDat, bool& eof)
+_dde_func_return_t OscPageTxtService::readNextData(const DDE_OSC_HEADER& header, DDE_GET_OSC_DATA& getDat, bool& eof)
 {
     waitForLoad();
 
@@ -194,7 +194,7 @@ _dde_func_return_t OscDataService::readNextData(const DDE_OSC_HEADER& header, DD
     return _return_OK;
 }
 
-std::string OscDataService::readLine(std::istream &stream)
+std::string OscPageTxtService::readLine(std::istream &stream)
 {
     if (stream.eof()) {
         return "";
@@ -211,7 +211,7 @@ std::string OscDataService::readLine(std::istream &stream)
     return line;
 }
 
-float OscDataService::normalizeValue(int32_t rawValue, float gain, float offset)
+float OscPageTxtService::normalizeValue(int32_t rawValue, float gain, float offset)
 {
     if (rawValue == 0) {
         return rawValue;
@@ -223,7 +223,7 @@ float OscDataService::normalizeValue(int32_t rawValue, float gain, float offset)
     return normValue;
 }
 
-std::vector<int32_t> OscDataService::parseValues(std::string line)
+std::vector<int32_t> OscPageTxtService::parseValues(std::string line)
 {
     std::vector<int32_t> ret;
     std::vector<std::string> elems = split(line, ',');
@@ -243,7 +243,7 @@ std::vector<int32_t> OscDataService::parseValues(std::string line)
     return ret;
 }
 
-std::vector<std::string> OscDataService::split(string inputStr, char delim)
+std::vector<std::string> OscPageTxtService::split(string inputStr, char delim)
 {
     std::vector<std::string> res;
     std::string item;
@@ -258,7 +258,7 @@ std::vector<std::string> OscDataService::split(string inputStr, char delim)
     return res;
 }
 
-_dde_func_return_t OscDataService::addData(const DDE_SET_OSC_DATA& dat, int ch_count, bool& eof)
+_dde_func_return_t OscPageTxtService::addData(const DDE_SET_OSC_DATA& dat, int ch_count, bool& eof)
 {
     char delim{ ',' };
     ostringstream line;
@@ -276,7 +276,7 @@ _dde_func_return_t OscDataService::addData(const DDE_SET_OSC_DATA& dat, int ch_c
 
     std::streampos pos = m_outf.tellp();
     if (pos >= osc_data::MAX_PAGE_SIZE) {
-        std::cout << "\nosc file num = " << m_currFileNum << ", written size = " << pos << "\n";
+        std::cout << "\nosc file num = " << m_currPageNum << ", written size = " << pos << "\n";
         eof = true;
     }
 

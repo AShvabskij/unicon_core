@@ -108,10 +108,10 @@ public:
     virtual _dde_func_return_t setHeader(const DDE_OSC_HEADER& p) = 0;
 };
 
-class IOscDataService // Interface for working with the oscilloscope stream data
+class IOscPageService // Interface for working with the oscilloscope stream data
 {
 public:
-    virtual ~IOscDataService() {}
+    virtual ~IOscPageService() {}
 
     virtual _dde_func_return_t open(uint16_t deviceId, int pageNum, bool writeMode) = 0;
     virtual _dde_func_return_t close() = 0;

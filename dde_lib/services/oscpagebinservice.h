@@ -10,11 +10,11 @@
 #include "DDE_OSC_TYPES.h"
 #include "DDE_INTERFACES.h"
 
-class OscDataBinService : public IOscDataService
+class OscPageBinService : public IOscPageService
 {
 public:
-    OscDataBinService();
-    ~OscDataBinService();
+    OscPageBinService();
+    ~OscPageBinService();
 
     _dde_func_return_t open(uint16_t deviceId, int pageNum, bool writeMode);
     _dde_func_return_t close();

@@ -20,10 +20,10 @@ SOURCES += \
     DDE_PARAMS_FILE.cpp \
     DDE_EMUL.cpp \
     csvfile.cpp \
-    services/oscdatabinservice.cpp \
-    services/oscdataservice.cpp \
     services/oscfileservice.cpp \
-    services/oscipcservice.cpp
+    services/oscipcservice.cpp \
+    services/oscpagebinservice.cpp \
+    services/oscpagetxtservice.cpp
 
 unix: SOURCES += \
     DDE_PARAMS.cpp
@@ -46,10 +46,10 @@ HEADERS += \
     DDE_PARAMS_TYPE.h \
     DDE_TYPES.h \
     DDE_EMUL.h \
-    services/oscdatabinservice.h \
-    services/oscdataservice.h \
     services/oscfileservice.h \
-    services/oscipcservice.h
+    services/oscipcservice.h \
+    services/oscpagebinservice.h \
+    services/oscpagetxtservice.h
 
 INCLUDEPATH += $$PWD/utils/csvfile
 INCLUDEPATH += $$PWD/utils/IPCmemLib

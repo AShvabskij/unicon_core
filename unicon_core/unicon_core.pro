@@ -18,12 +18,14 @@ SOURCES += \
         core.cpp \
         basereqhandler.cpp \
         devicehandler.cpp \
+        oscdataservice.cpp \
         oschandler.cpp \
         paramshandler.cpp \
         requestmanager.cpp \
         responsemanager.cpp \
         socketserver.cpp \
-        streammanager.cpp
+        streammanager.cpp \
+        systemservice.cpp
 
 
 HEADERS += \
@@ -32,12 +34,14 @@ HEADERS += \
     dde_dispatcher.h \
     devicehandler.h \
     ireqhandler.h \
+    oscdataservice.h \
     oschandler.h \
     paramshandler.h \
     requestmanager.h \
     responsemanager.h \
     socketserver.h \
-    streammanager.h
+    streammanager.h \
+    systemservice.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -28,7 +28,7 @@ private:
     _dde_func_return_t open_page(uint16_t id, int pageNum);
     _dde_func_return_t clear_pages(uint16_t id);
 
-    IOscDataService* m_dataSrv = nullptr;
+    IOscPageService* m_dataSrv = nullptr;
     IOscHeaderService* m_headerSrv = nullptr;
     DDE_OSC_HEADER* m_header = nullptr; // todo: get rid of it
     std::string m_sysName = "";

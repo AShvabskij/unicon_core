@@ -8,19 +8,14 @@ const QString CMD_TYPE_OPEN_STREAM = "open_stream";
 const QString CMD_TYPE_CLOSE_STREAM = "close_stream";
 const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
-const int DATA_YELD_INTERVAL_MSC = 100;
-const int STREAM_OBJECT_LIMIT = 1000000;
+const int DATA_YELD_INTERVAL_MSC = 250;
 
-const int STOP_STREAM_CODE = 2; //*100;
-
-OscHandler::OscHandler(IDDE_Dispatcher* dde): BaseReqHandler(dde)
+OscHandler::OscHandler(IDDE_Dispatcher* dde, OscDataService *oscService): BaseReqHandler(dde)
 {
-    m_ddeData = new DDE_GET_OSC_DATA();
-    m_oscDataBuff = new OscDataBuffer();
-
     m_streamTimer = new QTimer(this);
     m_streamTimer->setTimerType(Qt::PreciseTimer);
     connect(m_streamTimer, &QTimer::timeout, this, &OscHandler::onStreamTimerAlarm);
+    m_oscService = oscService;
 }
 
 int OscHandler::handle(const QJsonObject &request)
@@ -51,21 +46,12 @@ void OscHandler::onStreamTimerAlarm()
 {
     m_streamValCount++;
 
-    if (m_streamValCount > STREAM_OBJECT_LIMIT ) {
-        stopStreamData(m_capturedOsc);
-        return;
-    }
-
     if (m_capturedOsc.id == 0) {
         m_streamTimer->stop();
         return;
     }
 
-    int res = streamData();
-    if (res < 0 || res == STOP_STREAM_CODE) {
-        stopStreamData(m_capturedOsc);
-        return;
-    }
+    streamData();
 }
 
 int OscHandler::handleGetHeader(const QJsonObject &request)
@@ -177,111 +163,6 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
     return 0;
 }
 
-OscDataBuffer* OscHandler::createDataBuffer(const OscHeader& osc)
-{
-     OscDataBuffer* buff = new OscDataBuffer();
-
-    buff->id = osc.id;
-    buff->deviceID = osc.deviceID;
-    buff->eof = false;
-    buff->sof = false;
-
-    for (int chInd : osc.analogChannels.keys()) {
-
-        const OscChannelDescr& chDescr = osc.analogChannels[chInd];
-
-        if (chDescr.varId == 0 && chDescr.varName.isEmpty()) {
-            continue;
-        }
-
-        OscChannelValues& chValues = buff->ch[chInd];
-        chValues.channelNum = chDescr.channelNum;
-        chValues.varId = chDescr.varId;
-        chValues.scale = chDescr.scale;
-    }
-
-    return buff;
-}
-
-long OscHandler::getData(const OscHeader& osc, OscDataBuffer* buff)
-{
-    Q_ASSERT(buff);
-    Q_ASSERT(m_ddeData);
-    Q_ASSERT(buff->deviceID.isValid());
-
-    memset(m_ddeData, 0, sizeof(DDE_GET_OSC_DATA));
-    m_ddeData->device_id = buff->deviceID.id;
-
-    _dde_func_return_t res = (*m_dde)(osc.deviceID.type)->get_osc_data(*m_ddeData);
-
-    if (res != _return_OK) return res;
-
-    // if (m_ddeData->data_length == 0) return res;
-
-    for (int chInd : osc.chIndexes()) {
-
-        const OscChannelDescr& chDescr = osc.analogChannels.contains(chInd) ? osc.analogChannels[chInd] : osc.discreteChannels[chInd];
-
-        if (chDescr.varId == 0 && chDescr.varName.isEmpty()) {
-            continue;
-        }
-
-        OscChannelValues& chValues = buff->ch[chInd];
-        const OSC_DATA& chData = m_ddeData->data[chDescr.channelNum];
-
-        if (m_ddeData->sof) {
-            chValues.values.clear();
-            buff->valueCount = 0;
-        }
-
-        if (m_ddeData->data_length > 0) {
-            buff->valueCount += m_ddeData->data_length;
-            chValues.values.reserve(buff->valueCount + 1);
-        }
-
-        buff->valueDensity = buff->valueCount / DATA_YELD_INTERVAL_MSC;
-
-        for (int i = 0; i < m_ddeData->data_length; i++) {
-            if (chDescr.isDigital) {
-                int32_t rawValue = chData.i_buff[i];
-                chValues.values << rawValue;
-            } else if (chDescr.isDiscrete) {
-                int32_t rawValue = chData.i_buff[i];
-                chValues.values << discreteValue(rawValue, chDescr.firstBit, chDescr.lastBit);
-            } else {
-                chValues.values << chData.f_buff[i];
-            }
-        }
-    }
-
-    buff->eof = m_ddeData->eof;
-    buff->sof = m_ddeData->sof;
-
-    return res;
-}
-
-qint32 OscHandler::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit)
-{
-    uint32_t mask = 0x0001;
-    uint32_t ret = rawValue >> firstBit;
-
-    bool isBit = (firstBit == lastBit);
-    if (isBit) {
-        ret &= mask;
-        return ret;
-    }
-
-    uint16_t tmpVal = 0x000;
-    for (int i = 0; i <= lastBit - firstBit; i++) {
-        tmpVal |= mask;
-        mask = mask << 1;
-    }
-
-    ret &= tmpVal;
-
-    return ret;
-}
-
 void OscHandler::startPooling()
 {
     m_streamValCount = 0;
@@ -297,60 +178,24 @@ void OscHandler::stopPooling()
     m_streamTimer->stop();
 }
 
-int OscHandler::streamData()
+void OscHandler::streamData()
 {
     Q_ASSERT(m_capturedOsc.deviceID.isValid());
 
-    int lastValueCount = m_oscDataBuff->valueCount;
+    int objCountResult = 0;
+    QJsonObject response = m_oscService->getData(m_capturedOsc.id, m_capturedVars, objCountResult);
+    response["type"] = "osc";
+    // response["body"] = data;
 
-    long res = getData(m_capturedOsc, m_oscDataBuff);
-    if (res == _return_Busy) return 1;
-
-    int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
-
-    m_oscDataBuff->timestamp = m_oscDataBuff->valueCount  * (m_capturedOsc.settings.timeResolution_us);
-
-    QJsonObject response = createStreamDataObj(*m_oscDataBuff, lastValueCount, error);
-    emit stream(QList<QJsonObject>() << response);
-
-    if (m_oscDataBuff->sof) {
-        m_sof = true;
+    if (objCountResult > 0) {
+        emit stream(QList<QJsonObject>() << response);
     }
-
-    if (m_oscDataBuff->eof) {
-        if (m_sof) {
-            m_sof = false;
-            saveData(m_capturedOsc, *m_oscDataBuff);
-        }
-
-        m_dataLength = 0; // start from begining
-        m_oscDataBuff->eof = false;
-        m_oscDataBuff->sof = false;
-        m_oscDataBuff->valueCount= 0;
-        m_oscDataBuff->timestamp = 0;
-
-        for (OscChannelValues& chVal : m_oscDataBuff->ch) {
-            chVal.values.clear();
-        }
-    }
-
-    return 0;
 }
 
 void OscHandler::startStreamData(const OscHeader &header, QVector<int> oscVars)
 {
-    Q_ASSERT(header.id != 0);
-
     m_capturedOsc = header;
-    m_dataLength = 0;
     m_capturedVars = oscVars;
-
-    m_sof = false;
-    if (m_oscDataBuff) {
-        delete m_oscDataBuff;
-    }
-
-    m_oscDataBuff = createDataBuffer(header);
 
     startPooling();
 }
@@ -363,11 +208,10 @@ void OscHandler::stopStreamData(const OscHeader &header)
 
     stopPooling();
 
-    OscDataBuffer emptyBuff;
-    emptyBuff.id = header.id;
-    emptyBuff.deviceID = header.deviceID;
-
-    QJsonObject response = createStreamDataObj(emptyBuff, 0, STOP_STREAM_CODE);
+    int objCountResult = 0;
+    QJsonObject response = m_oscService->getData(header.id, m_capturedVars, objCountResult);
+    response["type"] = "osc";
+    response["eof"] = "1";
     emit stream(QList<QJsonObject>() << response);
 
     return;
@@ -418,53 +262,6 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     return _return_OK;
 }
 
-long OscHandler::saveData(const OscHeader &header, const OscDataBuffer& data)
-{
-    _dde_func_return_t res = _return_OK;
-    QJsonObject jsonObj = header.toJson();
-
-    QJsonDocument doc(jsonObj);
-    QByteArray bytes = doc.toJson(QJsonDocument::Compact);
-
-    QString fileName = QString("%1_%2.hdr").arg(header.deviceID.id).arg(header.settings.reason);
-    QFile file( fileName );
-
-    if( file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
-    {
-        QTextStream iStream( &file );
-        iStream.setCodec( "utf-8" );
-        iStream << bytes;
-        file.close();
-    }
-    else
-    {
-         QTextStream(stdout) << "file open failed: " << fileName << endl;
-         return _return_FAIL;
-    }
-
-    QJsonObject datjsonObj = createStreamDataObj(data, 0);
-    QString datFileName = QString("%1_%2.dat").arg(header.deviceID.id).arg(header.settings.reason);
-    QFile datFile(datFileName);
-
-    QJsonDocument datDoc(datjsonObj);
-    QCborValue v = QCborValue::fromJsonValue(datjsonObj);
-    QByteArray datBytes = v.toCbor(QCborValue::UseFloat);
-
-    if( datFile.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
-    {
-        QTextStream iStream( &datFile );
-        iStream << datBytes;
-        datFile.close();
-    }
-    else
-    {
-         QTextStream(stdout) << "file open failed: " << fileName << endl;
-         return _return_FAIL;
-    }
-
-    return res;
-}
-
 OscChannelDescr OscHandler::createChannelDescr(const OSC_CHANNEL& channel)
 {
     OscChannelDescr ret;
@@ -509,59 +306,6 @@ QJsonObject OscHandler::createChannelObj(int requestId, const OscChannelDescr& c
     obj["isDiscrete"] = ch.isDiscrete;
 
     res["body"] = obj;
-
-    return res;
-}
-
-QJsonObject OscHandler::createStreamDataObj(const OscDataBuffer &data, int startPos, int error)
-{
-    QJsonObject res;
-    QJsonArray valuesObj;
-    QJsonArray varIdListObj;
-
-    for (const OscChannelValues& chVal : data.ch) {
-        if (chVal.varId == 0) continue;
-        if (!m_capturedVars.empty() && !m_capturedVars.contains(chVal.varId)) {
-            continue;
-        }
-
-        varIdListObj << chVal.varId;
-        valuesObj << QJsonArray::fromVariantList(chVal.values.mid(startPos,  chVal.values.size()));
-    }
-
-    res["type"] = "osc";
-    res["d_id"] = data.deviceID.id;
-    res["values"] = valuesObj;
-    res["vars"] = varIdListObj;
-    res["time"] = data.timestamp;
-    res["error"] = 0;
-    res["eof"] = data.eof ? "1" : "0";
-    res["sof"] = data.sof ? "1" : "0";
-
-    if (error != 0 && error != STOP_STREAM_CODE) {
-        res["error"] = error;
-    }
-
-    if (error == STOP_STREAM_CODE) {
-        res["eof"] = "1";
-    }
-
-    QTextStream(stdout) << "values count" << "=" << valuesObj.count() <<  ", time = " << data.timestamp << "\n" ;
-    return res;
-}
-
-QString OscHandler::oscDataToString(const QJsonObject &obj)
-{
-    QJsonArray values = obj.value("values").toArray();
-    QStringList dvalList;
-    for (const QJsonValueRef& el : values) {
-        QJsonArray valBuffer = el.toArray();
-        double dval = valBuffer[0].toDouble();
-        dvalList << QString("%1").arg(dval);
-    }
-
-    QString res("");
-    res = dvalList.join(" ");
 
     return res;
 }

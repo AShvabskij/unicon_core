@@ -10,13 +10,13 @@
 #include "DDE_OSC_TYPES.h"
 #include "DDE_INTERFACES.h"
 
-class OscDataService : public IOscDataService
+class OscPageTxtService : public IOscPageService
 {
 public:
-    OscDataService();
-    ~OscDataService();
+    OscPageTxtService();
+    ~OscPageTxtService();
 
-    _dde_func_return_t open(uint16_t deviceId, int fileNum, bool writeMode);
+    _dde_func_return_t open(uint16_t deviceId, int pageNum, bool writeMode);
     _dde_func_return_t close();
 
     _dde_func_return_t addData(const DDE_SET_OSC_DATA& dat, int ch_count, bool& eof);
@@ -32,7 +32,7 @@ private:
 
     void waitForLoad();
 
-    int m_currFileNum = -1;
+    int m_currPageNum = -1;
     uint16_t m_deviceId = 0;
     std::stringstream* m_oscFileStream = nullptr;
     std::string m_oscFileBuff = "";

@@ -15,15 +15,17 @@ enum SysType
     Unknown
 };
 
+#define MAX_DEV_SUPPORT  (32+1)
+typedef quint16 DevInd;
+
 struct DevID
 {
     SysType type;
-    quint16 id;
+    DevInd id; // todo rename to 'ind'
 
     bool isValid() const {
-        return /*id >= 0 && */ type != SysType::Undefined;
+        return id <= MAX_DEV_SUPPORT && type != SysType::Undefined;
     }
-
 };
 
 bool operator==(const DevID& a, const DevID& b);

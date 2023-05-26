@@ -3,29 +3,16 @@
 
 #include "basereqhandler.h"
 #include "DDE_TOP.h"
+#include "oscdataservice.h"
 
 #include <QTimer>
 
-#define OSC_CHANNELS_MAX 48
-#define OSC_DISCRETES_MAX 128
 struct OscChannelValues
 {
     int channelNum = 0;
     uint16_t varId = 0;
     float scale = 0.0;
     QVariantList values;
-};
-
-struct OscDataBuffer
-{
-    uint16_t id;
-    DevID deviceID;
-    int valueCount = 0; // // number of points in values buffer
-    int valueDensity = 0; // number of points per millisec
-    OscChannelValues ch[OSC_CHANNELS_MAX + 1];
-    qlonglong timestamp = 0;
-    bool eof = false;
-    bool sof = false;
 };
 
 struct OscChannelDescr
@@ -99,15 +86,6 @@ struct OscHeader
         return OscChannelDescr();
     }
 
-
-    QList<quint8> chIndexes() const
-    {
-        QList<quint8> res;
-        res << analogChannels.keys();
-        res << discreteChannels.keys();
-        return res;
-    }
-
     QJsonObject toJson() const {
         QJsonObject res;
 
@@ -161,7 +139,7 @@ class OscHandler : public BaseReqHandler
 {
     Q_OBJECT
 public:
-    OscHandler(IDDE_Dispatcher* );
+    OscHandler(IDDE_Dispatcher* , OscDataService* oscService);
     virtual int handle(const QJsonObject& request);
 
 signals:
@@ -176,23 +154,18 @@ private:
     int handleOpenStream(const QJsonObject &request);
     int handleCloseStream(const QJsonObject &request);
 
-    OscDataBuffer* createDataBuffer(const OscHeader& osc);
-    long getData(const OscHeader& osc, OscDataBuffer* data);
     long getHeader(const DevID& deviceID, int oscId, OscHeader *out);
-    long saveData(const OscHeader &header, const OscDataBuffer& data);
 
     QJsonObject createHeaderObj(int requestId, const OscHeader& header);
     QJsonObject createChannelObj(int requestId, const OscChannelDescr& ch);
-    QJsonObject createStreamDataObj(const OscDataBuffer& data, int valueLength, int error = 0);
     QJsonObject createAnswerObj(int requestId, DevID deviceID, const QJsonObject &body = QJsonObject(), int error = 0);
-    QString oscDataToString(const QJsonObject &obj);
     OscChannelDescr createChannelDescr(const OSC_CHANNEL &channel);
     qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
 
     void startPooling();
     void stopPooling();
 
-    int streamData();
+    void streamData();
     void startStreamData(const OscHeader& header, QVector<int> oscVars);
     void stopStreamData(const OscHeader& header);
 
@@ -200,10 +173,10 @@ private:
     QVector<int> m_capturedVars;
     int m_streamValCount = 0;
     QTimer* m_streamTimer;
-    DDE_GET_OSC_DATA* m_ddeData; // buffer to receive data from osc
-    OscDataBuffer* m_oscDataBuff; // buffer to keep data from osc
-    bool m_sof = false;
-    int m_dataLength = 0;
+
+    OscDataService* m_oscService;
+
+
 };
 
 #endif // OSCHANDLER_H
