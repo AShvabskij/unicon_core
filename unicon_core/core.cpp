@@ -45,6 +45,7 @@ void Core::start()
 
     m_ddeDisp->setDefaultDDE(dde);
 //  m_ddeDisp->registerDDE(SysType::Undefined, dde);
+    m_oscService = new OscDataService(m_ddeDisp->dde(SysType::UAVCAN));
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp);
     DeviceHandler* device = new DeviceHandler(m_ddeDisp);
@@ -70,8 +71,6 @@ void Core::start()
     m_streamServer->start();
 
 //    IDDE* dde = m_ddeDisp->dde(SysType::DEFAULT);
-
-    m_oscService = new OscDataService(m_ddeDisp->dde(SysType::UAVCAN));
 
     QtConcurrent::run(this, &Core::thread_proc, SysType::UAVCAN);
 }

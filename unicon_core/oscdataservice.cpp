@@ -17,7 +17,7 @@ OscDataService::OscDataService(IDDE *dde)
 
 QJsonObject OscDataService::getData(quint16 id, QVector<int> vars, int& cnt)
 {
-    if (m_oscData.contains(id)) {
+    if (m_oscData.keys().contains(id)) {
         return m_oscData[id]->serialisedData(vars, cnt);
     }
 
@@ -27,6 +27,8 @@ QJsonObject OscDataService::getData(quint16 id, QVector<int> vars, int& cnt)
 void OscDataService::init(QList<quint16> devList)
 {
     for (quint16 devId: devList) {
+        if (devId == DDE_DEV0_MASTER_IND)
+            continue;
         if (!m_oscData.keys().contains(devId)) {
             m_oscData[devId] = new OscDeviceData(m_dde);
             //m_oscData[devId]->start()
@@ -45,13 +47,14 @@ OscDeviceData::OscDeviceData(IDDE* dde)
 {
     m_dde = dde;
     m_header = new DDE_OSC_HEADER();
+    m_ddeData = new DDE_GET_OSC_DATA();
 }
 
 void OscDeviceData::update(quint16 devId)
 {
     switch (m_state) {
         case Normal: {
-            memset(&m_header, 0, sizeof(m_header));
+            memset(m_header, 0, sizeof(DDE_OSC_HEADER));
             m_header->device_id = devId;
             auto res = m_dde->get_osc_header(*m_header);
             if (res == _return_FAIL) {
@@ -63,7 +66,9 @@ void OscDeviceData::update(quint16 devId)
             if (res != _return_OK) return;
 
             if (m_header->settings.trig_time > 0 && m_header->settings.reason > 0) {
-                clearBuffer();
+                if (m_buff) {
+                    clearBuffer();
+                }
                 m_state = Getting;
             }
           break;
@@ -336,8 +341,8 @@ QJsonObject OscDeviceData::headerToJson(const DDE_OSC_HEADER &h)
 
     res["device_id"] = h.device_id;
     res["id"] = h.device_id;
-    res["trig_time"] = h.settings.trig_time;
-    res["resolution_us"] = (int)h.settings.time_resolution_us;
+    res["trig_time"] = QString::number(h.settings.trig_time);
+    res["resolution_us"] = QString::number(h.settings.time_resolution_us);
 
     QJsonArray channelsObj;
     for (int chInd = 0; chInd < h.settings.channel_count; chInd++) {

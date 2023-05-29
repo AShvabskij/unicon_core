@@ -76,7 +76,7 @@ private:
     STATE m_state = Normal;
     DDE_OSC_HEADER* m_header;
     DDE_GET_OSC_DATA* m_ddeData;
-    OscData::OscDataBuffer* m_buff;
+    OscData::OscDataBuffer* m_buff = nullptr;
     bool m_sof = false;
     int m_lastDataPos = 0;
     int m_errCounter = 0;
