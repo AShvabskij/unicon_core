@@ -1,4 +1,4 @@
-#include "oscdataservice.h"
+#include "oscdatastateservice.h"
 #include <QDateTime>
 #include <QVariant>
 #include <QtDebug>
@@ -10,12 +10,12 @@
 
 using namespace OscData;
 
-OscDataService::OscDataService(IDDE *dde)
+OscDataStateService::OscDataStateService(IDDE *dde)
 {
     m_dde = dde;
 }
 
-QJsonObject OscDataService::getData(quint16 id, QVector<int> vars, int& cnt)
+QJsonObject OscDataStateService::getData(quint16 id, QVector<int> vars, int& cnt)
 {
     if (m_oscData.keys().contains(id)) {
         return m_oscData[id]->serialisedData(vars, cnt);
@@ -24,33 +24,33 @@ QJsonObject OscDataService::getData(quint16 id, QVector<int> vars, int& cnt)
     return QJsonObject();
 }
 
-void OscDataService::init(QList<quint16> devList)
+void OscDataStateService::init(QList<quint16> devList)
 {
     for (quint16 devId: devList) {
         if (devId == DDE_DEV0_MASTER_IND)
             continue;
         if (!m_oscData.keys().contains(devId)) {
-            m_oscData[devId] = new OscDeviceData(m_dde);
+            m_oscData[devId] = new OscDataState(m_dde);
             //m_oscData[devId]->start()
         }
     }
 }
 
-void OscDataService::update()
+void OscDataStateService::update()
 {
     for (quint16 id: m_oscData.keys()) {
         m_oscData[id]->update(id);
     }
 }
 
-OscDeviceData::OscDeviceData(IDDE* dde)
+OscDataState::OscDataState(IDDE* dde)
 {
     m_dde = dde;
     m_header = new DDE_OSC_HEADER();
     m_ddeData = new DDE_GET_OSC_DATA();
 }
 
-void OscDeviceData::update(quint16 devId)
+void OscDataState::update(quint16 devId)
 {
     switch (m_state) {
         case Normal: {
@@ -124,7 +124,7 @@ void OscDeviceData::update(quint16 devId)
     return;
 }
 
-QJsonObject OscDeviceData::serialisedData(QVector<int> vars, int& res)
+QJsonObject OscDataState::serialisedData(QVector<int> vars, int& res)
 {
     // todo insert in into lock section
     QJsonObject data = dataToJson(*m_buff, vars, m_lastDataPos);
@@ -134,12 +134,12 @@ QJsonObject OscDeviceData::serialisedData(QVector<int> vars, int& res)
     return data;
 }
 
-OscDataBuffer* OscDeviceData::buff()
+OscDataBuffer* OscDataState::buff()
 {
     return m_buff;
 }
 
-void OscDeviceData::clearBuffer()
+void OscDataState::clearBuffer()
 {
     Q_ASSERT(m_buff);
 
@@ -155,7 +155,7 @@ void OscDeviceData::clearBuffer()
     m_lastDataPos = 0;
 }
 
-OscDataBuffer *OscDeviceData::createDataBuffer(const DDE_OSC_HEADER &hdr)
+OscDataBuffer *OscDataState::createDataBuffer(const DDE_OSC_HEADER &hdr)
 {
    OscDataBuffer* buff = new OscDataBuffer();
 
@@ -180,7 +180,7 @@ OscDataBuffer *OscDeviceData::createDataBuffer(const DDE_OSC_HEADER &hdr)
    return buff;
 }
 
-long OscDeviceData::getData(const DDE_OSC_HEADER &hdr, OscDataBuffer *buff)
+long OscDataState::getData(const DDE_OSC_HEADER &hdr, OscDataBuffer *buff)
 {
     Q_ASSERT(buff);
     Q_ASSERT(m_ddeData);
@@ -229,7 +229,7 @@ long OscDeviceData::getData(const DDE_OSC_HEADER &hdr, OscDataBuffer *buff)
     return res;
 }
 
-long OscDeviceData::saveData(const DDE_OSC_HEADER &header, const OscDataBuffer &data)
+long OscDataState::saveData(const DDE_OSC_HEADER &header, const OscDataBuffer &data)
 {
     _dde_func_return_t res = _return_OK;
     QJsonObject jsonObj = headerToJson(header);
@@ -276,7 +276,7 @@ long OscDeviceData::saveData(const DDE_OSC_HEADER &header, const OscDataBuffer &
     return res;
 }
 
-qint32 OscDeviceData::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit)
+qint32 OscDataState::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit)
 {
     uint32_t mask = 0x0001;
     uint32_t ret = rawValue >> firstBit;
@@ -298,7 +298,7 @@ qint32 OscDeviceData::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastB
     return ret;
 }
 
-QJsonObject OscDeviceData::dataToJson(const OscDataBuffer &buff, QVector<int> vars, int startPos)
+QJsonObject OscDataState::dataToJson(const OscDataBuffer &buff, QVector<int> vars, int startPos)
 {
     QJsonObject res;
     QJsonArray valuesObj;
@@ -326,7 +326,7 @@ QJsonObject OscDeviceData::dataToJson(const OscDataBuffer &buff, QVector<int> va
     return res;
 }
 
-QString OscDeviceData::colorToString(const int &c)
+QString OscDataState::colorToString(const int &c)
 {
     QString ret = QString("#%1")
             .arg(QString::number(c, 16).rightJustified(6, '0'));
@@ -335,7 +335,7 @@ QString OscDeviceData::colorToString(const int &c)
 
 }
 
-QJsonObject OscDeviceData::headerToJson(const DDE_OSC_HEADER &h)
+QJsonObject OscDataState::headerToJson(const DDE_OSC_HEADER &h)
 {
     QJsonObject res;
 

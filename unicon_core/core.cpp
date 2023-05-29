@@ -45,7 +45,7 @@ void Core::start()
 
     m_ddeDisp->setDefaultDDE(dde);
 //  m_ddeDisp->registerDDE(SysType::Undefined, dde);
-    m_oscService = new OscDataService(m_ddeDisp->dde(SysType::UAVCAN));
+    m_oscService = new OscDataStateService(m_ddeDisp->dde(SysType::UAVCAN));
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp);
     DeviceHandler* device = new DeviceHandler(m_ddeDisp);

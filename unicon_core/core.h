@@ -5,7 +5,7 @@
 
 #include "DDE_PARAMS_TYPE.h"
 #include "dde_dispatcher.h"
-#include "oscdataservice.h"
+#include "oscdatastateservice.h"
 
 class IDDE;
 class IDDE_Dispatcher;
@@ -27,7 +27,7 @@ private:
     SocketServer* m_streamServer;
 
     IDDE_Dispatcher* m_ddeDisp;
-    OscDataService* m_oscService;
+    OscDataStateService* m_oscService;
 };
 
 #endif // APPLICATION_H

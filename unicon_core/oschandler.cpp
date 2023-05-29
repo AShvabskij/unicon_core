@@ -10,7 +10,7 @@ const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
 const int DATA_YELD_INTERVAL_MSC = 250;
 
-OscHandler::OscHandler(IDDE_Dispatcher* dde, OscDataService *oscService): BaseReqHandler(dde)
+OscHandler::OscHandler(IDDE_Dispatcher* dde, OscDataStateService *oscService): BaseReqHandler(dde)
 {
     m_streamTimer = new QTimer(this);
     m_streamTimer->setTimerType(Qt::PreciseTimer);

@@ -30,21 +30,21 @@ namespace OscData {
     };
 }
 
-class OscDeviceData;
-class OscDataService
+class OscDataState;
+class OscDataStateService
 {
 public:
-    OscDataService(IDDE* dde);
+    OscDataStateService(IDDE* dde);
     QJsonObject getData(quint16 id, QVector<int> vars, int &cnt);
     void init(QList<quint16> devList);
     void update();
 
 private:
     IDDE* m_dde;
-    QMap<quint16, OscDeviceData*> m_oscData;
+    QMap<quint16, OscDataState*> m_oscData;
 };
 
-class OscDeviceData
+class OscDataState
 {
     enum STATE {
         Normal,
@@ -56,7 +56,7 @@ class OscDeviceData
     };
 
 public:
-    OscDeviceData(IDDE *dde);
+    OscDataState(IDDE *dde);
     void update(quint16 devId);
     QJsonObject serialisedData(QVector<int> vars, int& res);
     OscData::OscDataBuffer* buff();
