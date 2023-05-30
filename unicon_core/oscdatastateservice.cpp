@@ -8,6 +8,8 @@
 #include <QFile>
 #include <QCborValue>
 
+#include <QCoreApplication>
+
 using namespace OscData;
 
 OscDataStateService::OscDataStateService(IDDE *dde)
@@ -48,6 +50,7 @@ OscDataState::OscDataState(IDDE* dde)
     m_dde = dde;
     m_header = new DDE_OSC_HEADER();
     m_ddeData = new DDE_GET_OSC_DATA();
+    m_state = STATE::Normal;
 }
 
 void OscDataState::update(quint16 devId)
@@ -71,7 +74,8 @@ void OscDataState::update(quint16 devId)
                 }
                 m_state = Getting;
             }
-          break;
+
+            break;
         }
 
         case Getting: {
@@ -231,13 +235,14 @@ long OscDataState::getData(const DDE_OSC_HEADER &hdr, OscDataBuffer *buff)
 
 long OscDataState::saveData(const DDE_OSC_HEADER &header, const OscDataBuffer &data)
 {
+    QString path = qApp->applicationDirPath() + "\\data\\";
     _dde_func_return_t res = _return_OK;
     QJsonObject jsonObj = headerToJson(header);
 
     QJsonDocument doc(jsonObj);
     QByteArray bytes = doc.toJson(QJsonDocument::Compact);
-
-    QString fileName = QString("%1_%2.hdr").arg(header.device_id).arg(header.settings.reason);
+    QDateTime trigTime = QDateTime::fromTime_t(header.settings.trig_time);
+    QString fileName = path + QString("%1_%2_%3.hdr").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh:mm:ss:zzz"));
     QFile file( fileName );
 
     if( file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
