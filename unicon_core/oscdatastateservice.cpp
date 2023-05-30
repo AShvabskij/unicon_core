@@ -235,7 +235,8 @@ long OscDataState::getData(const DDE_OSC_HEADER &hdr, OscDataBuffer *buff)
 
 long OscDataState::saveData(const DDE_OSC_HEADER &header, const OscDataBuffer &data)
 {
-    QString path = qApp->applicationDirPath() + "\\data\\";
+    const char* home = getenv("HOME");
+    QString path =  home + QString("/projects/data/"); // qApp->applicationDirPath()
     _dde_func_return_t res = _return_OK;
     QJsonObject jsonObj = headerToJson(header);
 
@@ -259,7 +260,7 @@ long OscDataState::saveData(const DDE_OSC_HEADER &header, const OscDataBuffer &d
     }
 
     QJsonObject datjsonObj = dataToJson(data, QVector<int>(), 0);
-    QString datFileName = QString("%1_%2.dat").arg(header.device_id).arg(header.settings.reason);
+    QString datFileName = path + QString("%1_%2_%3.dat").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh:mm:ss:zzz"));
     QFile datFile(datFileName);
 
     QJsonDocument datDoc(datjsonObj);
