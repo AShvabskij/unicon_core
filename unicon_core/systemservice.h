@@ -3,7 +3,7 @@
 
 #include "DDE_DEVICES_TYPE.h"
 #include "dde_dispatcher.h"
-#include "oscdatastateservice.h"
+#include "oscstateservice.h"
 
 typedef QList<quint16> DeviceIndList;
 
@@ -15,7 +15,7 @@ public:
     void update();
 
 private:
-    QMap<quint16, OscDataState*> m_oscServices;
+    QMap<quint16, OscStateMachine*> m_oscState;
     long requestDeviceLinks(DeviceIndList& links);
 
     SysType m_sysType;

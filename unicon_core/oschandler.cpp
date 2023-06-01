@@ -10,12 +10,12 @@ const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
 const int DATA_YELD_INTERVAL_MSC = 250;
 
-OscHandler::OscHandler(IDDE_Dispatcher* dde, OscDataStateService *oscService): BaseReqHandler(dde)
+OscHandler::OscHandler(IDDE_Dispatcher* dde, IOscBufferService *buffSrv): BaseReqHandler(dde)
 {
     m_streamTimer = new QTimer(this);
     m_streamTimer->setTimerType(Qt::PreciseTimer);
     connect(m_streamTimer, &QTimer::timeout, this, &OscHandler::onStreamTimerAlarm);
-    m_oscService = oscService;
+    m_buffSrv = buffSrv;
 }
 
 int OscHandler::handle(const QJsonObject &request)
@@ -183,7 +183,7 @@ void OscHandler::streamData()
     Q_ASSERT(m_capturedOsc.deviceID.isValid());
 
     int objCountResult = 0;
-    QJsonObject response = m_oscService->getData(m_capturedOsc.id, m_capturedVars, objCountResult);
+    QJsonObject response = m_buffSrv->getSerialisedData(m_capturedOsc.id, m_capturedVars, objCountResult);
     response["type"] = "osc";
     // response["body"] = data;
 
@@ -209,7 +209,7 @@ void OscHandler::stopStreamData(const OscHeader &header)
     stopPooling();
 
     int objCountResult = 0;
-    QJsonObject response = m_oscService->getData(header.id, m_capturedVars, objCountResult);
+    QJsonObject response = m_buffSrv->getSerialisedData(header.id, m_capturedVars, objCountResult);
     response["type"] = "osc";
     response["eof"] = "1";
     emit stream(QList<QJsonObject>() << response);

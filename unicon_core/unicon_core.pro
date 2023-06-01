@@ -18,8 +18,9 @@ SOURCES += \
         core.cpp \
         basereqhandler.cpp \
         devicehandler.cpp \
-        oscdatastateservice.cpp \
+        oscbuffservice.cpp \
         oschandler.cpp \
+        oscstateservice.cpp \
         paramshandler.cpp \
         requestmanager.cpp \
         responsemanager.cpp \
@@ -34,8 +35,9 @@ HEADERS += \
     dde_dispatcher.h \
     devicehandler.h \
     ireqhandler.h \
-    oscdatastateservice.h \
+    oscbuffservice.h \
     oschandler.h \
+    oscstateservice.h \
     paramshandler.h \
     requestmanager.h \
     responsemanager.h \

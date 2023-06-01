@@ -45,11 +45,11 @@ void Core::start()
 
     m_ddeDisp->setDefaultDDE(dde);
 //  m_ddeDisp->registerDDE(SysType::Undefined, dde);
-    m_oscService = new OscDataStateService(m_ddeDisp->dde(SysType::UAVCAN));
+    m_oscStateService = new OscStateService(m_ddeDisp->dde(SysType::UAVCAN), OscBufferService::instanse());
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp);
     DeviceHandler* device = new DeviceHandler(m_ddeDisp);
-    OscHandler* osc = new OscHandler(m_ddeDisp, m_oscService);
+    OscHandler* osc = new OscHandler(m_ddeDisp, OscBufferService::instanse());
 
     RequestManager::instance()->registerHandler(device);
     RequestManager::instance()->registerHandler(params);
@@ -85,7 +85,8 @@ void Core::thread_proc(SysType sysType)
     static int cnt = 0;
     while (1)
     {
-        if (++cnt == INT32_MAX) cnt = 0;
+        if (++cnt == INT32_MAX)
+            cnt = 0;
 
         if (cnt % 3) {
             m_ddeDisp->dde(sysType)->update();
@@ -94,10 +95,10 @@ void Core::thread_proc(SysType sysType)
         if (cnt % 10) {
             links.clear();
             device->requestDeviceLinks(sysType, links);
-            m_oscService->init(links);
+            m_oscStateService->init(links);
         }
 
-        m_oscService->update();
+        m_oscStateService->update();
 
         QThread::msleep(250);
     }
