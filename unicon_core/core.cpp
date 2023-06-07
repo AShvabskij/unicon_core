@@ -14,6 +14,7 @@
 #include "devicehandler.h"
 #include "oschandler.h"
 
+#include <QObject>
 #include <QtWebSockets>
 #include <QtCore>
 #include <QtConcurrent/QtConcurrent>
@@ -72,6 +73,9 @@ void Core::start()
 
 //    IDDE* dde = m_ddeDisp->dde(SysType::DEFAULT);
 
+    m_sysService = new SystemService(SysType::UAVCAN, m_ddeDisp->dde(SysType::UAVCAN));
+    connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::QueuedConnection);
+
     QtConcurrent::run(this, &Core::thread_proc, SysType::UAVCAN);
 }
 
@@ -81,17 +85,14 @@ void Core::thread_proc(SysType sysType)
 
     DeviceHandler* device = new DeviceHandler(m_ddeDisp);
 
-    QList<quint16> links;
+    QList<DevInd> links;
     static int cnt = 0;
     while (1)
     {
         if (++cnt == INT32_MAX)
             cnt = 0;
 
-        if (cnt % 3) {
-            m_ddeDisp->dde(sysType)->update();
-        }
-
+        // todo move it to systemservice
         if (cnt % 10) {
             links.clear();
             device->requestDeviceLinks(sysType, links);
@@ -102,4 +103,10 @@ void Core::thread_proc(SysType sysType)
 
         QThread::msleep(250);
     }
+}
+
+void Core::onDeviceChanged(SysType sysType)
+{
+    DeviceIndList links = m_sysService->linkedDevices(sysType);
+    m_oscStateService->init(links);
 }

@@ -1,12 +1,8 @@
 #include "oscstateservice.h"
+
 #include <QDateTime>
 #include <QVariant>
 #include <QtDebug>
-
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QFile>
-#include <QCborValue>
 
 #include <QCoreApplication>
 
@@ -16,25 +12,26 @@ OscStateService::OscStateService(IDDE *dde, IOscBufferService *buffSrv)
     m_buffSrv = buffSrv;
 }
 
-void OscStateService::init(QList<quint16> devList)
+void OscStateService::init(QList<DevInd> devList)
 {
-    m_devIdList.clear();
-
-    for (quint16 devId: devList) {
+    for (DevInd devId: devList) {
         if (devId == DDE_DEV0_MASTER_IND)
             continue;
-        m_devIdList.append(devId);
 
-        if (!m_oscState.keys().contains(devId)) {
+        if (!m_devIdList.contains(devId)) {
             m_oscState[devId] = new OscStateMachine(m_dde, m_buffSrv);
-            //m_oscData[devId]->start()
+            m_devIdList.append(devId);
         }
     }
 }
 
 void OscStateService::update()
 {
-    for (quint16 id: m_devIdList) {
+    for (DevInd id: m_devIdList) {
+        Q_ASSERT(m_oscState.keys().contains(id));
+        if (!m_oscState.keys().contains(id))
+            return;
+
         m_oscState[id]->update(id);
     }
 }
@@ -48,7 +45,7 @@ OscStateMachine::OscStateMachine(IDDE* dde, IOscBufferService *buffSrv)
     m_buffSrv = buffSrv;
 }
 
-void OscStateMachine::update(quint16 devId)
+void OscStateMachine::update(DevInd devId)
 {
     switch (m_state) {
         case Normal: {
@@ -72,7 +69,7 @@ void OscStateMachine::update(quint16 devId)
         }
 
         case Getting: {
-            auto res = retrieveData(*m_header, m_ddeData);
+            auto res = getData(*m_header, m_ddeData);
             if (res == _return_FAIL) {
                 qWarning() << "Error getting data from the osc, id = " << m_header->device_id;
                 m_state = Error;
@@ -83,7 +80,7 @@ void OscStateMachine::update(quint16 devId)
 
             res = m_buffSrv->appendData(*m_header, *m_ddeData);
 
-            OscData::OscDataBuffer* buff = m_buffSrv->get(m_header->device_id);
+            OscType::OscDataBuffer* buff = m_buffSrv->get(m_header->device_id);
 
             if (!buff) {
                 qWarning() << "Error getting buffer for the osc, id = " << m_header->device_id;
@@ -121,7 +118,7 @@ void OscStateMachine::update(quint16 devId)
     return;
 }
 
-long OscStateMachine::retrieveData(const DDE_OSC_HEADER &hdr, DDE_GET_OSC_DATA* getDat)
+long OscStateMachine::getData(const DDE_OSC_HEADER &hdr, DDE_GET_OSC_DATA* getDat)
 {
     Q_ASSERT(getDat);
 

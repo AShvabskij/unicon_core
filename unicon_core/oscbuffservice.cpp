@@ -12,16 +12,16 @@
 
 #include <QCoreApplication>
 
-using namespace OscData;
+using namespace OscType;
 
-OscData::OscDataBuffer* OscBufferService::get(uint16_t id)
+OscType::OscDataBuffer* OscBufferService::get(DevInd id)
 {
     return m_repository.value(id, nullptr);
 }
 
-void OscBufferService::clear(uint16_t id)
+void OscBufferService::clear(DevInd id)
 {
-    OscData::OscDataBuffer* buff = m_repository.value(id);
+    OscType::OscDataBuffer* buff = m_repository.value(id);
     Q_ASSERT(buff);
 
     buff->eof = false;
@@ -58,7 +58,7 @@ OscDataBuffer* OscBufferService::createDataBuffer(const DDE_OSC_HEADER &hdr)
 
 long OscBufferService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat)
 {
-    OscData::OscDataBuffer* buff = m_repository.value(hdr.device_id);
+    OscType::OscDataBuffer* buff = m_repository.value(hdr.device_id);
     if (!buff) {
         buff = createDataBuffer(hdr);
     }
@@ -125,9 +125,9 @@ qint32 OscBufferService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 la
     return ret;
 }
 
-QJsonObject OscBufferService::getSerialisedData(quint16 id, QVector<int> vars, int &cnt)
+QJsonObject OscBufferService::getSerialisedData(DevInd id, QVector<int> vars, int &cnt)
 {
-    OscData::OscDataBuffer* buff = m_repository.value(id);
+    OscType::OscDataBuffer* buff = m_repository.value(id);
     Q_ASSERT(buff);
 
     QJsonObject res = dataToJson(*buff, vars, buff->lastDataPos);
@@ -168,7 +168,7 @@ QJsonObject OscBufferService::dataToJson(const OscDataBuffer &buff, QVector<int>
 
 long OscBufferService::saveToFile(const DDE_OSC_HEADER& hdr)
 {
-    OscData::OscDataBuffer* buff = m_repository.value(hdr.device_id);
+    OscType::OscDataBuffer* buff = m_repository.value(hdr.device_id);
     Q_ASSERT(buff);
     long res = saveData(hdr, *buff);
     return res;

@@ -5,23 +5,28 @@
 #include "dde_dispatcher.h"
 #include "oscstateservice.h"
 
-typedef QList<quint16> DeviceIndList;
-
-class SystemService
+class SystemService: public QObject
 {
+    Q_OBJECT
 public:
     SystemService(SysType sysType, IDDE *dde);
-    DeviceIndList linkedDevices();
-    void update();
+    DeviceIndList linkedDevices(SysType sysType);
+    void start();
+
+signals:
+    void deviceLinkChanged(SysType sysType);
+
+private slots:
+    void onTimerAlarm();
 
 private:
-    QMap<quint16, OscStateMachine*> m_oscState;
+    QMap<DevInd, OscStateMachine*> m_oscState;
     long requestDeviceLinks(DeviceIndList& links);
 
     SysType m_sysType;
     IDDE* m_dde;
-    QList<quint16> m_deviceList;
-
+    QList<DevInd> m_deviceList;
+    QTimer* m_timer;
 };
 
 #endif // DEVICESERVICE_H

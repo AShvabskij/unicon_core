@@ -10,6 +10,8 @@ const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
 const int DATA_YELD_INTERVAL_MSC = 250;
 
+using namespace OscType;
+
 OscHandler::OscHandler(IDDE_Dispatcher* dde, IOscBufferService *buffSrv): BaseReqHandler(dde)
 {
     m_streamTimer = new QTimer(this);
@@ -302,21 +304,12 @@ QJsonObject OscHandler::createChannelObj(int requestId, const OscChannelDescr& c
     obj["scale"] = ch.scale;
     obj["min"] = ch.min;
     obj["max"] = ch.max;
-    obj["color"] =  colorToString(ch.color);
+    obj["color"] =  OscHeader::colorToString(ch.color);
     obj["isDiscrete"] = ch.isDiscrete;
 
     res["body"] = obj;
 
     return res;
-}
-
-QString colorToString(const int &c)
-{
-    QString ret = QString("#%1")
-            .arg(QString::number(c, 16).rightJustified(6, '0'));
-
-    return ret;
-
 }
 
 QJsonObject OscHandler::createAnswerObj(int requestId, DevID deviceID, const QJsonObject &body, int error)

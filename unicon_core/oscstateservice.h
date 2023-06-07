@@ -15,14 +15,14 @@ class OscStateService
 {
 public:
     OscStateService(IDDE* dde, IOscBufferService* buffSrv);
-    void init(QList<quint16> devList);
+    void init(QList<DevInd> devList);
     void update();
 
 private:
     IDDE* m_dde;
     QMap<quint16, OscStateMachine*> m_oscState;
     IOscBufferService* m_buffSrv;
-    QList<quint16> m_devIdList;
+    QList<DevInd> m_devIdList;
 };
 
 class OscStateMachine
@@ -38,11 +38,11 @@ class OscStateMachine
 
 public:
     OscStateMachine(IDDE *dde, IOscBufferService *buffSrv);
-    void update(quint16 devId);
+    void update(DevInd devId);
 
 private:
 
-    long retrieveData(const DDE_OSC_HEADER& hdr, DDE_GET_OSC_DATA* getDat);
+    long getData(const DDE_OSC_HEADER& hdr, DDE_GET_OSC_DATA* getDat);
 
     IDDE* m_dde = nullptr;
     STATE m_state = Normal;

@@ -116,7 +116,7 @@ void DeviceHandler::handleSystemInit(const QJsonObject& request)
 void DeviceHandler::handleDeviceLinks(const QJsonObject& request)
 {
     SysType sysType = sysTypeId(request);
-    QList<quint16> links;
+    QList<DevInd> links;
     long res = requestDeviceLinks(sysType, links);
     if (res <= 0) return;
 
@@ -127,7 +127,7 @@ void DeviceHandler::handleDeviceLinks(const QJsonObject& request)
     return;
 }
 
-long DeviceHandler::requestDeviceLinks(SysType sysType, QList<quint16>& links)
+long DeviceHandler::requestDeviceLinks(SysType sysType, QList<DevInd>& links)
 {
     DDE_GET_PARAMS_DATA dat;
     memset(&dat, 0, sizeof(dat));

@@ -1,25 +1,27 @@
 #include "systemservice.h"
 
 #include <QDateTime>
+#include <QTimer>
+#include <QDebug>
 
 SystemService::SystemService(SysType sysType, IDDE* dde)
 {
     m_sysType = sysType;
     m_dde = dde;
+    m_timer = new QTimer(this);
+//  m_timer->setTimerType(Qt::PreciseTimer);
+    connect(m_timer, &QTimer::timeout, this, &SystemService::onTimerAlarm);
 }
 
-DeviceIndList SystemService::linkedDevices()
+DeviceIndList SystemService::linkedDevices(SysType sysType)
 {
+    Q_UNUSED(sysType);
     return m_deviceList;
 }
 
-void SystemService::update()
+void SystemService::start()
 {
-    DeviceIndList links;
-    long res = requestDeviceLinks(links);
-    if (res == _return_OK) {
-        m_deviceList = links;
-    }
+    m_timer->start(7000);
 }
 
 long SystemService::requestDeviceLinks(DeviceIndList& links)
@@ -49,4 +51,31 @@ long SystemService::requestDeviceLinks(DeviceIndList& links)
     }
 
     return _return_OK;
+}
+
+void SystemService::onTimerAlarm()
+{
+    DeviceIndList links;
+    long res = requestDeviceLinks(links);
+    if (res != _return_OK) {
+        qWarning() << "Failed to request device links";
+        return;
+    }
+
+    bool isChanged = false;
+    for (DevInd id: links) {
+        if (!m_deviceList.contains(id)) {
+            m_deviceList.append(id);
+            isChanged = true;
+        }
+    }
+
+    for (DevInd id: m_deviceList) {
+        if (!links.contains(id)) {
+            m_deviceList.removeAll(id);
+            isChanged = true;
+        }
+    }
+
+    emit deviceLinkChanged(m_sysType);
 }

@@ -33,8 +33,10 @@ HEADERS += \
     core.h \
     basereqhandler.h \
     dde_dispatcher.h \
+    device_types.h \
     devicehandler.h \
     ireqhandler.h \
+    osc_types.h \
     oscbuffservice.h \
     oschandler.h \
     oscstateservice.h \
