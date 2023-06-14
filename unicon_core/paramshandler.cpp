@@ -314,6 +314,9 @@ long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALU
     const float NO_SCALE = 0.0f;
 
     switch (res.format) {
+    case FORMAT_HEX32:
+        res.value = static_cast<int>(el.ivalue);
+        break;
     case FORMAT_INT:
     {
         if (el.scale == NO_SCALE) {
