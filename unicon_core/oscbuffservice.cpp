@@ -22,8 +22,15 @@ OscType::OscDataBuffer* OscBufferService::get(DevInd id)
 void OscBufferService::clear(DevInd id)
 {
     OscType::OscDataBuffer* buff = m_repository.value(id);
-    Q_ASSERT(buff);
+    if (!buff)
+        return;
 
+    clearDataBuffer(buff);
+}
+
+void OscBufferService::clearDataBuffer(OscType::OscDataBuffer* buff)
+{
+    Q_ASSERT(buff);
     buff->eof = false;
     buff->sof = false;
     buff->valueCount= 0;
@@ -58,14 +65,30 @@ OscDataBuffer* OscBufferService::createDataBuffer(const DDE_OSC_HEADER &hdr)
 
 long OscBufferService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat)
 {
-    OscType::OscDataBuffer* buff = m_repository.value(hdr.device_id);
+    OscType::OscDataBuffer* buff = m_repository.value(hdr.device_id, nullptr);
     if (!buff) {
         buff = createDataBuffer(hdr);
+        m_repository[hdr.device_id] = buff;
     }
 
     Q_ASSERT(buff);
 
-    // if (m_ddeData->data_length == 0) return res;
+    m_mutex.lock();
+
+    if (buff->eof) {
+        clearDataBuffer(buff); // prepare buffer to append a new data
+    }
+
+    buff->eof = dat.eof;
+    buff->sof = dat.sof;
+    buff->timestamp = 0;
+
+    if (dat.data_length == 0) {
+        m_mutex.unlock();
+        return _return_OK;
+    }
+
+    buff->valueCount += dat.data_length;
 
     for (int chInd = 0; chInd < hdr.settings.channel_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
@@ -77,10 +100,7 @@ long OscBufferService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_D
 
         const OSC_DATA& chData = dat.data[channel.chNum];
 
-        if (dat.data_length > 0) {
-            buff->valueCount += dat.data_length;
-            chValues.values.reserve(buff->valueCount + 1);
-        }
+        chValues.values.reserve(buff->valueCount + 1);
 
 //      buff->valueDensity = buff->valueCount / DATA_YELD_INTERVAL_MSC;
         for (int i = 0; i < dat.data_length; i++) {
@@ -96,10 +116,9 @@ long OscBufferService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_D
         }
     }
 
-    buff->eof = dat.eof;
-    buff->sof = dat.sof;
     buff->timestamp = buff->valueCount  * (hdr.settings.time_resolution_us);
 
+    m_mutex.unlock();
     return _return_OK;
 }
 
@@ -130,11 +149,20 @@ QJsonObject OscBufferService::getSerialisedData(DevInd id, QVector<int> vars, in
     OscType::OscDataBuffer* buff = m_repository.value(id);
     Q_ASSERT(buff);
 
+    m_mutex.lock();
+
+    if (buff->lastDataPos == buff->valueCount) {
+        cnt = 0;
+        m_mutex.unlock();
+        return QJsonObject();
+    }
+
     QJsonObject res = dataToJson(*buff, vars, buff->lastDataPos);
 
     cnt = buff->valueCount - buff->lastDataPos;
     buff->lastDataPos = buff->valueCount;
 
+    m_mutex.unlock();
     return res;
 }
 
@@ -151,6 +179,11 @@ QJsonObject OscBufferService::dataToJson(const OscDataBuffer &buff, QVector<int>
         }
 
         varIdListObj << chVal.varId;
+        QTextStream(stdout) << "Before. Total alues count =" << chVal.values.size()
+                            << ", start pos = " << startPos
+                            << ", eof = " << buff.eof
+                            << ", time = " << buff.timestamp << "\n" ;
+
         valuesObj << QJsonArray::fromVariantList(chVal.values.mid(startPos,  chVal.values.size()));
     }
 
@@ -162,7 +195,9 @@ QJsonObject OscBufferService::dataToJson(const OscDataBuffer &buff, QVector<int>
     res["sof"] = buff.sof ? "1" : "0";
 
 
-    QTextStream(stdout) << "values count" << "=" << valuesObj.count() <<  ", time = " << buff.timestamp << "\n" ;
+    QTextStream(stdout) << "After. values count" << "=" << valuesObj.takeAt(0).toArray().count()
+                        << ", eof = " << buff.eof
+                        <<  ", time = " << buff.timestamp << "\n" ;
     return res;
 }
 
@@ -170,7 +205,10 @@ long OscBufferService::saveToFile(const DDE_OSC_HEADER& hdr)
 {
     OscType::OscDataBuffer* buff = m_repository.value(hdr.device_id);
     Q_ASSERT(buff);
+    m_mutex.lock();
     long res = saveData(hdr, *buff);
+    m_mutex.unlock();
+
     return res;
 }
 

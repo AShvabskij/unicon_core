@@ -74,8 +74,12 @@ void Core::start()
 //    IDDE* dde = m_ddeDisp->dde(SysType::DEFAULT);
 
     m_sysService = new SystemService(SysType::UAVCAN, m_ddeDisp->dde(SysType::UAVCAN));
-    connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::QueuedConnection);
+    connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
 
+    QList<DevInd> links = m_sysService->linkedDevices(SysType::UAVCAN);
+    m_oscStateService->init(links);
+
+    m_sysService->start();
     QtConcurrent::run(this, &Core::thread_proc, SysType::UAVCAN);
 }
 
@@ -83,25 +87,11 @@ void Core::thread_proc(SysType sysType)
 {
     QThread::msleep(1000);
 
-    DeviceHandler* device = new DeviceHandler(m_ddeDisp);
-
-    QList<DevInd> links;
-    static int cnt = 0;
     while (1)
     {
-        if (++cnt == INT32_MAX)
-            cnt = 0;
-
-        // todo move it to systemservice
-        if (cnt % 10) {
-            links.clear();
-            device->requestDeviceLinks(sysType, links);
-            m_oscStateService->init(links);
-        }
-
         m_oscStateService->update();
 
-        QThread::msleep(250);
+        QThread::msleep(1000);
     }
 }
 

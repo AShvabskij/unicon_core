@@ -61,7 +61,7 @@ void OscStateMachine::update(DevInd devId)
             if (res != _return_OK) return;
 
             if (m_header->settings.trig_time > 0 && m_header->settings.reason > 0) {
-                m_buffSrv->clear(m_header->device_id);
+                m_sof = false;
                 m_state = Getting;
             }
 
@@ -70,32 +70,46 @@ void OscStateMachine::update(DevInd devId)
 
         case Getting: {
             auto res = getData(*m_header, m_ddeData);
-            if (res == _return_FAIL) {
+
+            if (res == _return_Busy) {
+                m_state = Busy;
+                return;
+            }
+
+            if (res != _return_OK) {
                 qWarning() << "Error getting data from the osc, id = " << m_header->device_id;
                 m_state = Error;
                 return;
             }
 
-            if (res != _return_OK) return;
-
             res = m_buffSrv->appendData(*m_header, *m_ddeData);
 
-            OscType::OscDataBuffer* buff = m_buffSrv->get(m_header->device_id);
-
-            if (!buff) {
+            if (res != _return_OK) {
                 qWarning() << "Error getting buffer for the osc, id = " << m_header->device_id;
                 m_state = Error;
                 return;
             }
 
-            if (buff->eof) {
-                if (buff->sof) {
+            if (m_ddeData->sof) {
+                m_sof = m_ddeData->sof;
+            }
+
+            if (m_ddeData->eof) {
+                if (m_sof) {
                     m_state = Saving;
                 } else {
                     m_state = Normal;
                 }
             }
 
+            break;
+        }
+        case Busy: {
+            m_busyCounter++;
+            if (m_busyCounter % 4 == 0) {
+                m_busyCounter = 0;
+                m_state = Getting;
+            }
             break;
         }
 
@@ -127,6 +141,5 @@ long OscStateMachine::getData(const DDE_OSC_HEADER &hdr, DDE_GET_OSC_DATA* getDa
 
     _dde_func_return_t res = m_dde->get_osc_data(*getDat);
 
-    if (res != _return_OK) return res;
     return res;
 }

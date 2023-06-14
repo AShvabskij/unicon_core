@@ -16,6 +16,10 @@ SystemService::SystemService(SysType sysType, IDDE* dde)
 DeviceIndList SystemService::linkedDevices(SysType sysType)
 {
     Q_UNUSED(sysType);
+    if (m_deviceList.isEmpty()) {
+        requestDeviceLinks(m_deviceList);
+    }
+
     return m_deviceList;
 }
 
@@ -34,7 +38,10 @@ long SystemService::requestDeviceLinks(DeviceIndList& links)
     dat.param_id = 0;
 
     _dde_func_return_t res = m_dde->get_params_data(dat);
-    if (res <= _return_FAIL) return res;
+    if (res <= _return_FAIL)  {
+        qWarning() << "Failed to request device links";
+        return res;
+    }
 
     time_t timeMs = QDateTime::currentMSecsSinceEpoch();
     const int LINK_TIME_OUT = 2000; // only for master device
@@ -57,10 +64,8 @@ void SystemService::onTimerAlarm()
 {
     DeviceIndList links;
     long res = requestDeviceLinks(links);
-    if (res != _return_OK) {
-        qWarning() << "Failed to request device links";
+    if (res != _return_OK)
         return;
-    }
 
     bool isChanged = false;
     for (DevInd id: links) {
@@ -77,5 +82,7 @@ void SystemService::onTimerAlarm()
         }
     }
 
-    emit deviceLinkChanged(m_sysType);
+    if (isChanged) {
+        emit deviceLinkChanged(m_sysType);
+    }
 }

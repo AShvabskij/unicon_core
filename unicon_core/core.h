@@ -21,7 +21,7 @@ public:
     void start();
     [[ noreturn ]] void thread_proc(SysType sysType);
 
-private slots:
+public slots:
     void onDeviceChanged(SysType sysType);
 
 private:

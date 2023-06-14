@@ -24,7 +24,7 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint8_t id, DDE_OSC_HEADER& h
 	
 	if (!rec) return _return_FAIL;
 
-	hdr.settings = rec->settings;
+    hdr.settings = rec->settings;
 
 	for (int i = 0; i < rec->settings.channel_count; i++) {
 		OSC_CHANNEL& channel = hdr.channels[i];
@@ -144,8 +144,8 @@ _dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, uint8_t pageN
     if (!dat) return _return_FAIL;
 
     dat->state.pageMask[pageNum] = state;
-    std::string err = "set state = " + std::to_string(state) + ", for pageNum = " + std::to_string(pageNum) + "\n";
-    perror(err.c_str());
+    std::string msg = "set state = " + std::to_string(state) + ", for pageNum = " + std::to_string(pageNum);
+    std::cout << msg.c_str() << std::endl;
 
     return _return_OK;
 }
@@ -158,8 +158,6 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_write(uint8_t id, uint
     if (!dat) return _return_FAIL;
 
     dat->state.pageMask[pageNum] = 0;
-    std::string err = "Read page = " + std::to_string(pageNum) + "\n";
-    perror(err.c_str());
 
     // move_next_page_read()
     uint8_t nextPage = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
@@ -176,8 +174,8 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint8_t id, uint8
     if (!dat) return _return_FAIL;
 
     dat->state.pageMask[pageNum] = 1;
-    std::string err = "Written page = " + std::to_string(pageNum) + "\n";
-    perror(err.c_str());
+    std::string msg = "Written page = " + std::to_string(pageNum);
+    std::cout << msg.c_str() << std::endl;
 
     // move_next_page_write()
     uint8_t nextPage = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
@@ -201,10 +199,16 @@ int OscIPCHeaderService::get_page_ready_to_read(uint16_t id)
 
     int state = dat->state.pageMask[nextPageNum];
 
+    static std::string lastMsg = "";
     if (state == 0) {
-        perror("There is not available pages to read data yet");
+        static std::string msg = "There is not available pages to read data yet";
+        if (lastMsg != msg) {
+            lastMsg = msg;
+            std::cout << msg << std::endl;
+        }
         return -1;
     }
+    lastMsg = "";
 
     dat->state.currPageRead = nextPageNum;
 
@@ -226,13 +230,12 @@ int OscIPCHeaderService::get_page_ready_to_write(uint16_t id)
     int state = dat->state.pageMask[nextPageNum];
 
     if (state == 1) {
-        perror("Overflowed! There is not available pages to write data yet\n");
+        std::cout << "Overflowed! There is not available pages to write data yet" << std::endl;
         return -1;
     }
 
     dat->state.currPageWrite = nextPageNum;
-    std::string err = "currPageWrite = " + std::to_string(nextPageNum) + "\n";
-    perror(err.c_str());
-
+    std::string msg = "currPageWrite = " + std::to_string(nextPageNum);
+    std::cout << msg.c_str() << std::endl;
     return nextPageNum;
 }

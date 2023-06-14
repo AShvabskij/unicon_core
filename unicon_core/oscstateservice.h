@@ -30,6 +30,7 @@ class OscStateMachine
     enum STATE {
         Normal,
         Getting,
+        Busy,
         Eof,
         Saving,
         Finished,
@@ -48,7 +49,9 @@ private:
     STATE m_state = Normal;
     DDE_OSC_HEADER* m_header;
     DDE_GET_OSC_DATA* m_ddeData;
+    bool m_sof = false;
     int m_errCounter = 0;
+    int m_busyCounter = 0;
 
     IOscBufferService* m_buffSrv = nullptr;
 

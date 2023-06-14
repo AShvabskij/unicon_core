@@ -3,6 +3,7 @@
 
 #include <QTimer>
 #include <QMap>
+#include <QMutex>
 
 #include "osc_types.h"
 
@@ -38,7 +39,8 @@ private:
     OscBufferService() = default;
     ~OscBufferService() = default;
 
-    virtual OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr);
+    OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr);
+    void  clearDataBuffer(OscType::OscDataBuffer* buff);
     long saveData(const DDE_OSC_HEADER& header, const OscType::OscDataBuffer& data);
     qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
     QJsonObject dataToJson(const OscType::OscDataBuffer &buff, QVector<int> vars, int startPos);
@@ -46,6 +48,7 @@ private:
     static QString colorToString(const int &c);
 
     QMap<DevInd, OscType::OscDataBuffer*> m_repository;
+    QMutex m_mutex;
 };
 
 #endif // OSCREPOSITORY_H

@@ -13,8 +13,8 @@ public:
     DeviceIndList linkedDevices(SysType sysType);
     void start();
 
-signals:
-    void deviceLinkChanged(SysType sysType);
+
+    Q_SIGNAL void deviceLinkChanged(SysType sysType);
 
 private slots:
     void onTimerAlarm();

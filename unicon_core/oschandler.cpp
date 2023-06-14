@@ -189,9 +189,9 @@ void OscHandler::streamData()
     response["type"] = "osc";
     // response["body"] = data;
 
-    if (objCountResult > 0) {
+  if (objCountResult > 0) {
         emit stream(QList<QJsonObject>() << response);
-    }
+  }
 }
 
 void OscHandler::startStreamData(const OscHeader &header, QVector<int> oscVars)
