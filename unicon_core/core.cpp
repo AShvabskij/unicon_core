@@ -91,7 +91,7 @@ void Core::thread_proc(SysType sysType)
     {
         m_oscStateService->update();
 
-        QThread::msleep(1000);
+        QThread::msleep(100);
     }
 }
 
