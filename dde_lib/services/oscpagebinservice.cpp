@@ -14,7 +14,7 @@ using namespace std;
 namespace osc_bin_data {
     const char* OSC_FILE_ERROR = "Osc data file error!\n";
     const char* OSC_FILE_PARSE_ERROR = "Error while parsing th osc file!\n";
-    const int MAX_PAGE_SIZE = 65000;
+    const int MAX_PAGE_SIZE = 4000;
 }
 
 OscPageBinService::OscPageBinService()

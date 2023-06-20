@@ -179,11 +179,6 @@ QJsonObject OscBufferService::dataToJson(const OscDataBuffer &buff, QVector<int>
         }
 
         varIdListObj << chVal.varId;
-        QTextStream(stdout) << "Before. Total alues count =" << chVal.values.size()
-                            << ", start pos = " << startPos
-                            << ", eof = " << buff.eof
-                            << ", time = " << buff.timestamp << "\n" ;
-
         valuesObj << QJsonArray::fromVariantList(chVal.values.mid(startPos,  chVal.values.size()));
     }
 
@@ -194,10 +189,6 @@ QJsonObject OscBufferService::dataToJson(const OscDataBuffer &buff, QVector<int>
     res["eof"] = buff.eof ? "1" : "0";
     res["sof"] = buff.sof ? "1" : "0";
 
-
-    QTextStream(stdout) << "After. values count" << "=" << valuesObj.takeAt(0).toArray().count()
-                        << ", eof = " << buff.eof
-                        <<  ", time = " << buff.timestamp << "\n" ;
     return res;
 }
 

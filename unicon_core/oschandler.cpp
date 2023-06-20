@@ -8,7 +8,7 @@ const QString CMD_TYPE_OPEN_STREAM = "open_stream";
 const QString CMD_TYPE_CLOSE_STREAM = "close_stream";
 const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
-const int DATA_YELD_INTERVAL_MSC = 250;
+const int DATA_YELD_INTERVAL_MSC = 100;
 
 using namespace OscType;
 
@@ -190,6 +190,10 @@ void OscHandler::streamData()
     // response["body"] = data;
 
   if (objCountResult > 0) {
+      QTextStream(stdout) << "Osc stream values. Count =" << response["values"].toArray().takeAt(0).toArray().count()
+                          << ", eof = " << response["eof"].toString()
+                          <<  ", time(us) = " << response["time"].toInt() << "\n" ;
+
         emit stream(QList<QJsonObject>() << response);
   }
 }

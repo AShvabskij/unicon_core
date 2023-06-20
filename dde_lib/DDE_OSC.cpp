@@ -11,7 +11,7 @@
 #include "oscipcservice.h"
 
 using namespace std;
-
+const char* DDE_MSG_PREFIX = "DDE_OSC: ";
 DDE_OSC::~DDE_OSC()
 {
     if (m_sysName != "") {
@@ -193,7 +193,7 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     }
 
     string msg = "Read page = " + std::to_string(pageNum);
-    cout << msg.c_str() << endl;
+    cout << DDE_MSG_PREFIX << msg.c_str() << endl;
 
     res = m_dataSrv->open(id, pageNum, false);
     if (res != _return_OK) return res;
@@ -248,7 +248,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
     }
 
     string msg = "Write page = " + std::to_string(pageNum);
-    cout << msg.c_str() << endl;
+    cout << DDE_MSG_PREFIX << msg.c_str() << endl;
 
     _dde_func_return_t res = m_dataSrv->open(id, pageNum, true);
     if (res != _return_OK) return res;
