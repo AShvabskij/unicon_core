@@ -242,7 +242,7 @@ void ParamsHandler::handleCloseStream(const QJsonObject &request)
 
     for (const Param &p: m_capturedParams) {
         if (p.ID == pID) {
-            m_capturedParams.removeAll(p);
+            m_capturedParams.removeOne(p);
 
             QMetaObject::invokeMethod(this, "sendActualParamValue", Qt::AutoConnection,
                                       Q_ARG(const Param&, p),
