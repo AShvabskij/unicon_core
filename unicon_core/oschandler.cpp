@@ -40,14 +40,15 @@ int OscHandler::handle(const QJsonObject &request)
     return BaseReqHandler::handle(request);
 }
 
-void OscHandler::onReceivedData(DevInd ind)
+void OscHandler::onReceivedData(quint16 ind)
 {
     if (m_capturedOsc.id != ind) {
+        qWarning() << "\nOsc error on receive data, not valid osc id = " << ind;
         return;
     }
 
     m_streamValCount++;
-    qDebug() << "\nreceived data frames = " << m_streamValCount;
+    qDebug() << "\nOsc received data frames = " << m_streamValCount;
 
     streamData();
 }
@@ -163,12 +164,23 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
     return 0;
 }
 
+void OscHandler::startStreamData(const OscHeader &header, QVector<int> oscVars)
+{
+    m_capturedOsc = header;
+    m_capturedVars = oscVars;
+    m_streamValCount = 0;
+
+    QObject* src = dynamic_cast<QObject*>(m_buffSrv);
+    Q_ASSERT(src);
+    QMetaObject::Connection con = connect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)), Qt::AutoConnection);
+}
+
 void OscHandler::stopStreamData()
 {
     m_capturedOsc = OscHeader();
     m_capturedVars.clear();
     QObject* src = dynamic_cast<QObject*>(m_buffSrv);
-    disconnect(src, SIGNAL(IOscBufferService::dataReceived()), this, SLOT(OscHandler::onReceivedData()));
+    disconnect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)));
 }
 
 void OscHandler::streamData()
@@ -187,17 +199,6 @@ void OscHandler::streamData()
 
         emit stream(QList<QJsonObject>() << response);
   }
-}
-
-void OscHandler::startStreamData(const OscHeader &header, QVector<int> oscVars)
-{
-    m_capturedOsc = header;
-    m_capturedVars = oscVars;
-    m_streamValCount = 0;
-
-    QObject* src = dynamic_cast<QObject*>(m_buffSrv);
-    Q_ASSERT(src);
-    QMetaObject::Connection con = connect(src, SIGNAL(dataReceived()), this, SLOT(onReceivedData()), Qt::AutoConnection);
 }
 
 long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)

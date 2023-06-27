@@ -19,7 +19,7 @@ signals:
     void requestStreamValue();
 
 private slots:
-    void onReceivedData();
+    void onReceivedData(quint16 ind);
 
 private:
     int handleGetHeader(const QJsonObject &request);
@@ -35,10 +35,9 @@ private:
     OscType::OscChannelDescr createChannelDescr(const OSC_CHANNEL &channel);
     qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
 
-    void stopStreamData();
-
-    void streamData();
     void startStreamData(const OscType::OscHeader& header, QVector<int> oscVars);
+    void stopStreamData();
+    void streamData();
 
     OscType::OscHeader m_capturedOsc;
     QVector<int> m_capturedVars;

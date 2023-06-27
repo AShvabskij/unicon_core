@@ -22,7 +22,7 @@ public:
     virtual long saveToFile(const DDE_OSC_HEADER& hdr) = 0;
 
 // signals:
-    virtual void dataReceived(DevInd ind) = 0;
+    virtual void dataReceived(quint16 ind) = 0;
 
 };
 
@@ -47,7 +47,7 @@ public:
     long saveToFile(const DDE_OSC_HEADER &hdr) override;
 
 signals:
-    void dataReceived(DevInd ind) override;
+    void dataReceived(quint16 ind) override;
 
 private:
 
