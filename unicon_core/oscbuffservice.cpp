@@ -116,16 +116,19 @@ long OscBufferService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_D
         }
     }
 
-    buff->timestamp = buff->valueCount  * (hdr.settings.time_resolution_us);
+    int resolution = static_cast<int>(hdr.settings.time_resolution_us);
+    buff->timestamp = buff->valueCount  * resolution;
 
     m_mutex.unlock();
+
+    emit dataReceived();
     return _return_OK;
 }
 
 qint32 OscBufferService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit)
 {
     uint32_t mask = 0x0001;
-    uint32_t ret = rawValue >> firstBit;
+    qint32 ret = rawValue >> firstBit;
 
     bool isBit = (firstBit == lastBit);
     if (isBit) {
@@ -212,7 +215,7 @@ long OscBufferService::saveData(const DDE_OSC_HEADER &header, const OscDataBuffe
 
     QJsonDocument doc(jsonObj);
     QByteArray bytes = doc.toJson(QJsonDocument::Compact);
-    QDateTime trigTime = QDateTime::fromTime_t(header.settings.trig_time);
+    QDateTime trigTime = QDateTime::fromTime_t(static_cast<uint>(header.settings.trig_time));
     QString fileName = path + QString("%1_%2_%3.hdr").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh:mm:ss:zzz"));
     QFile file( fileName );
 

@@ -47,7 +47,6 @@ void Core::start()
     m_ddeDisp->setDefaultDDE(dde);
 //  m_ddeDisp->registerDDE(SysType::Undefined, dde);
     m_oscStateService = new OscStateService(m_ddeDisp->dde(SysType::UAVCAN), OscBufferService::instanse());
-    DigitalClock* m_clock = new DigitalClock();
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp);
     DeviceHandler* device = new DeviceHandler(m_ddeDisp);
