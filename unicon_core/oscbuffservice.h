@@ -15,14 +15,14 @@ class IOscBufferService
 
 public:
     virtual ~IOscBufferService() {}
-    virtual OscType::OscDataBuffer* get (DevInd id) = 0;
-    virtual void clear(DevInd id) = 0;
+    virtual OscType::OscDataBuffer* get (DevInd ind) = 0;
+    virtual void clear(DevInd ind) = 0;
     virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
-    virtual QJsonObject getSerialisedData(DevInd id, QVector<int> vars, int &cnt) = 0;
+    virtual QJsonObject getSerialisedData(DevInd ind, QVector<int> vars, int &cnt) = 0;
     virtual long saveToFile(const DDE_OSC_HEADER& hdr) = 0;
 
 // signals:
-    virtual void dataReceived() = 0;
+    virtual void dataReceived(DevInd ind) = 0;
 
 };
 
@@ -40,14 +40,14 @@ public:
         return &m_instanse;
     }
 
-    OscType::OscDataBuffer* get(DevInd id) override;
+    OscType::OscDataBuffer* get(DevInd ind) override;
     void clear(DevInd id) override;
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
-    QJsonObject getSerialisedData(DevInd id, QVector<int> vars, int &cnt) override;
+    QJsonObject getSerialisedData(DevInd ind, QVector<int> vars, int &cnt) override;
     long saveToFile(const DDE_OSC_HEADER &hdr) override;
 
 signals:
-    void dataReceived() override;
+    void dataReceived(DevInd ind) override;
 
 private:
 

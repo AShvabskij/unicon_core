@@ -8,15 +8,11 @@ const QString CMD_TYPE_OPEN_STREAM = "open_stream";
 const QString CMD_TYPE_CLOSE_STREAM = "close_stream";
 const QString CMD_TYPE = "get";
 const QString CMD_OSC_DATA = "osc_data";
-const int DATA_YELD_INTERVAL_MSC = 100;
 
 using namespace OscType;
 
 OscHandler::OscHandler(IDDE_Dispatcher* dde, IOscBufferService *buffSrv): BaseReqHandler(dde)
 {
-    m_streamTimer = new QTimer(this);
-    m_streamTimer->setTimerType(Qt::PreciseTimer);
-//  connect(m_streamTimer, &QTimer::timeout, this, &OscHandler::onStreamTimerAlarm);
     m_buffSrv = buffSrv;
 }
 
@@ -44,14 +40,14 @@ int OscHandler::handle(const QJsonObject &request)
     return BaseReqHandler::handle(request);
 }
 
-void OscHandler::onStreamTimerAlarm()
+void OscHandler::onReceivedData(DevInd ind)
 {
-    m_streamValCount++;
-
-    if (m_capturedOsc.id == 0) {
-//      m_streamTimer->stop();
+    if (m_capturedOsc.id != ind) {
         return;
     }
+
+    m_streamValCount++;
+    qDebug() << "\nreceived data frames = " << m_streamValCount;
 
     streamData();
 }
@@ -120,7 +116,9 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
     int oscId = cmdBody.value("osc_id").toInt();
     QJsonArray oscVars = cmdBody.value("osc_vars").toArray();
 
-    stopPooling(); // stopStreamData()
+    if (m_capturedOsc.deviceID.id > 0) {
+        stopStreamData();
+    }
 
     OscHeader header;
     DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
@@ -155,7 +153,7 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
     }
 
     if (m_capturedOsc.deviceID.id == deviceId && m_capturedOsc.deviceID.type == sysType) {
-        stopPooling();
+        stopStreamData();
     }
 
     DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
@@ -165,25 +163,12 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
     return 0;
 }
 
-void OscHandler::startPooling()
-{
-    QObject* src = dynamic_cast<QObject*>(m_buffSrv);
-    Q_ASSERT(src);
-    QMetaObject::Connection con = connect(src, SIGNAL(dataReceived()), this, SLOT(onStreamTimerAlarm()), Qt::AutoConnection);
-    m_streamValCount = 0;
-
-//    m_streamTimer->setInterval(DATA_YELD_INTERVAL_MSC);
-//    m_streamTimer->start();
-}
-
-void OscHandler::stopPooling()
+void OscHandler::stopStreamData()
 {
     m_capturedOsc = OscHeader();
     m_capturedVars.clear();
     QObject* src = dynamic_cast<QObject*>(m_buffSrv);
-    disconnect(src, SIGNAL(IOscBufferService::dataReceived()), this, SLOT(OscHandler::onStreamTimerAlarm()));
-
-//    m_streamTimer->stop();
+    disconnect(src, SIGNAL(IOscBufferService::dataReceived()), this, SLOT(OscHandler::onReceivedData()));
 }
 
 void OscHandler::streamData()
@@ -208,25 +193,11 @@ void OscHandler::startStreamData(const OscHeader &header, QVector<int> oscVars)
 {
     m_capturedOsc = header;
     m_capturedVars = oscVars;
+    m_streamValCount = 0;
 
-    startPooling();
-}
-
-void OscHandler::stopStreamData(const OscHeader &header)
-{
-    if (header.id == 0) {
-        return;
-    }
-
-    stopPooling();
-
-    int objCountResult = 0;
-    QJsonObject response = m_buffSrv->getSerialisedData(header.id, m_capturedVars, objCountResult);
-    response["type"] = "osc";
-    response["eof"] = "1";
-    emit stream(QList<QJsonObject>() << response);
-
-    return;
+    QObject* src = dynamic_cast<QObject*>(m_buffSrv);
+    Q_ASSERT(src);
+    QMetaObject::Connection con = connect(src, SIGNAL(dataReceived()), this, SLOT(onReceivedData()), Qt::AutoConnection);
 }
 
 long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)

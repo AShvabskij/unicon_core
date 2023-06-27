@@ -67,7 +67,7 @@ namespace OscType {
 
     struct OscHeader
     {
-        quint16 id = 0;
+        DevInd id = 0;
         DevID deviceID = {SysType::Undefined, 0};
         QString name = "";
         QString desc = "";

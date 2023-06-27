@@ -14,14 +14,14 @@
 
 using namespace OscType;
 
-OscType::OscDataBuffer* OscBufferService::get(DevInd id)
+OscType::OscDataBuffer* OscBufferService::get(DevInd ind)
 {
-    return m_repository.value(id, nullptr);
+    return m_repository.value(ind, nullptr);
 }
 
-void OscBufferService::clear(DevInd id)
+void OscBufferService::clear(DevInd ind)
 {
-    OscType::OscDataBuffer* buff = m_repository.value(id);
+    OscType::OscDataBuffer* buff = m_repository.value(ind);
     if (!buff)
         return;
 
@@ -121,7 +121,7 @@ long OscBufferService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_D
 
     m_mutex.unlock();
 
-    emit dataReceived();
+    emit dataReceived(buff->id);
     return _return_OK;
 }
 
@@ -147,9 +147,9 @@ qint32 OscBufferService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 la
     return ret;
 }
 
-QJsonObject OscBufferService::getSerialisedData(DevInd id, QVector<int> vars, int &cnt)
+QJsonObject OscBufferService::getSerialisedData(DevInd ind, QVector<int> vars, int &cnt)
 {
-    OscType::OscDataBuffer* buff = m_repository.value(id);
+    OscType::OscDataBuffer* buff = m_repository.value(ind);
     Q_ASSERT(buff);
 
     m_mutex.lock();
