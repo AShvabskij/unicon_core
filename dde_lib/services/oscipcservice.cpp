@@ -3,6 +3,11 @@
 #include "osc_ipcmemlib.h"
 #include "cpp_inc.h"
 
+#include <pthread.h>
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+
 _dde_func_return_t OscIPCHeaderService::init(const char* sysName)
 {
 	int res = osc_mem_init(sysName, sizeof(GLIO_OSC_HEADER));
@@ -128,16 +133,19 @@ _dde_func_return_t OscIPCHeaderService::set_settings(uint8_t id, const OSC_SETTI
 
 int OscIPCHeaderService::get_page_state(uint8_t id, uint8_t pageNum)
 {
+    pthread_mutex_lock(&mutex);
     assert(pageNum <= OSC_PAGE_MAX);
 
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return -1;
 
     return dat->state.pageMask[pageNum];
+    pthread_mutex_unlock(&mutex);
 }
 
 _dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, uint8_t pageNum, uint8_t state)
 {
+    pthread_mutex_lock(&mutex);
     assert(pageNum <= OSC_PAGE_MAX);
 
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
@@ -146,7 +154,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, uint8_t pageN
     dat->state.pageMask[pageNum] = state;
     std::string msg = "set state = " + std::to_string(state) + ", for pageNum = " + std::to_string(pageNum);
     std::cout << msg.c_str() << std::endl;
-
+    pthread_mutex_unlock(&mutex);
     return _return_OK;
 }
 
@@ -154,6 +162,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_write(uint8_t id, uint
 {
     assert(pageNum <= OSC_PAGE_MAX);
 
+    pthread_mutex_lock(&mutex);
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
 
@@ -163,6 +172,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_write(uint8_t id, uint
     uint8_t nextPage = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
     dat->state.currPageRead = nextPage;
 
+    pthread_mutex_unlock(&mutex);
     return _return_OK;
 }
 
@@ -170,6 +180,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint8_t id, uint8
 {
     assert(pageNum <= OSC_PAGE_MAX);
 
+    pthread_mutex_lock(&mutex);
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
 
@@ -181,11 +192,13 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint8_t id, uint8
     uint8_t nextPage = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
     dat->state.currPageWrite = nextPage;
 
+    pthread_mutex_unlock(&mutex);
     return _return_OK;
 }
 
 int OscIPCHeaderService::get_page_ready_to_read(uint16_t id)
 {
+    pthread_mutex_lock(&mutex);
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
 
@@ -206,17 +219,20 @@ int OscIPCHeaderService::get_page_ready_to_read(uint16_t id)
             lastMsg = msg;
             std::cout << msg << std::endl;
         }
+        pthread_mutex_unlock(&mutex);
         return -1;
     }
     lastMsg = "";
 
     dat->state.currPageRead = nextPageNum;
 
+    pthread_mutex_unlock(&mutex);
     return nextPageNum;
 }
 
 int OscIPCHeaderService::get_page_ready_to_write(uint16_t id)
 {
+    pthread_mutex_lock(&mutex);
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return -1;
 
@@ -231,11 +247,14 @@ int OscIPCHeaderService::get_page_ready_to_write(uint16_t id)
 
     if (state == 1) {
         std::cout << "Overflowed! There is not available pages to write data yet" << std::endl;
+        pthread_mutex_unlock(&mutex);
         return -1;
     }
 
     dat->state.currPageWrite = nextPageNum;
     std::string msg = "currPageWrite = " + std::to_string(nextPageNum);
     std::cout << msg.c_str() << std::endl;
+    pthread_mutex_unlock(&mutex);
+
     return nextPageNum;
 }
