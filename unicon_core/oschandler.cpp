@@ -167,6 +167,8 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
 
 void OscHandler::startPooling()
 {
+    QObject* src = dynamic_cast<QObject*>(m_buffSrv);
+    connect(src, SIGNAL(IOscBufferService::dataReceived()), this, SLOT(OscHandler::onStreamTimerAlarm()), Qt::AutoConnection);
     m_streamValCount = 0;
 
     m_streamTimer->setInterval(DATA_YELD_INTERVAL_MSC);
