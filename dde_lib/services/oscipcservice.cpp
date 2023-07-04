@@ -15,9 +15,7 @@ _dde_func_return_t OscIPCHeaderService::init(const char* sysName)
 	
 	if (res < 0) return _return_FAIL;
 
-    int err;
-
-    if ((sem = sem_open(SEMAPHORE_NAME, 0,0)) == SEM_FAILED) {
+    if ((sem = sem_open(SEMAPHORE_NAME, 0,0,0)) == SEM_FAILED) {
         if ((sem = sem_open(SEMAPHORE_NAME, O_CREAT, 0777, 0)) == SEM_FAILED) {
             perror("sem_open");
             return _return_FAIL;
