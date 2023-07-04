@@ -17,19 +17,25 @@ _dde_func_return_t OscIPCHeaderService::init(const char* sysName)
 
     int err;
 
-    if ((sem = sem_open(SEMAPHORE_NAME, 0)) == SEM_FAILED) {
+    if ((sem = sem_open(SEMAPHORE_NAME, 0,0)) == SEM_FAILED) {
         if ((sem = sem_open(SEMAPHORE_NAME, O_CREAT, 0777, 0)) == SEM_FAILED) {
             perror("sem_open");
             return _return_FAIL;
         }
+        return _return_FAIL;
+
     }
 
+    sem_trywait(sem);
     sem_post(sem);
+
 	return _return_OK;	
 }
 
 _dde_func_return_t OscIPCHeaderService::deInit(const char* sysName)
 {
+    sem_unlink(SEMAPHORE_NAME);
+    sem_close(sem);
 	if (sysName) osc_mem_deinit(sysName, sizeof(GLIO_OSC_HEADER));
 	return _dde_func_return_t();
 }
