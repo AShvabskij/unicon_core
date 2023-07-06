@@ -1,7 +1,7 @@
 #pragma once
 
 //---------------------------------------------------------------------------
-#include <stdint.h>
+#include <cstdint>
 #include <time.h>
 
 #include "DDE_DEVICES_TYPE.h"

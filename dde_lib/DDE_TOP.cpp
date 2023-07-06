@@ -5,7 +5,7 @@
 #include "DDE_OSC_DISPATCHER.h"
 #include "DDE_EVLOG.h"
 
-#include "stdint.h"
+#include "cstdint"
 #include "stdlib.h"
 
 //#include "ipcmem_lib.h"
