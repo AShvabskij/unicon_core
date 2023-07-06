@@ -112,7 +112,7 @@ int osc_mem_deinit(const char* sys_name, int blkSize)
     return err;
 }
 
-unsigned char* osc_mem_getData(uint8_t ind)
+unsigned char* osc_mem_getData(uint16_t ind)
 {
     if (ind >= MAX_DEV_SUPPORT) {
         return NULL;
@@ -121,7 +121,7 @@ unsigned char* osc_mem_getData(uint8_t ind)
     return _blkPtr[ind];
 }
 
-int osc_mem_setData(uint8_t ind, unsigned char* data, size_t sz)
+int osc_mem_setData(uint16_t ind, unsigned char* data, size_t sz)
 {
     if (ind >= MAX_DEV_SUPPORT) {
         return -1;

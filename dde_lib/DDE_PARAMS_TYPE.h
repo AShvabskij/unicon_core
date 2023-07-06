@@ -4,7 +4,7 @@
 //---------------------------------------------------------------------
 
 #include <time.h> 
-#include <cstdint>
+#include <stdint.h>
 
 
 #define PARAMS_REQUEST_TIMOUT_MS	1000
