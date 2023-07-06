@@ -32,7 +32,7 @@ _dde_func_return_t DDE_OSC_FILE::open(uint16_t oscId)
     return res;
 }
 
-_dde_func_return_t DDE_OSC_FILE::close(uint16_t oscId)
+_dde_func_return_t DDE_OSC_FILE::close()
 {
     _dde_func_return_t res = m_oscFileSrv->close();
     return res;

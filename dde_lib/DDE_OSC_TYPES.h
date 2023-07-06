@@ -150,7 +150,7 @@ struct GLIO_OSC_CHANNEL
 typedef struct
 {
     pthread_mutex_t shm_mutex;
-    uint8_t id;
+    uint16_t id;
     OSC_STATE state;
     OSC_SETTING settings;
     GLIO_OSC_CHANNEL channel[OSC_MAX_CHANNELS + 1];

@@ -64,7 +64,7 @@ public:
 
     virtual _dde_func_return_t init(const char* system_type) = 0;
     virtual _dde_func_return_t open(uint16_t id) = 0;
-    virtual _dde_func_return_t close(uint16_t id) = 0;
+    virtual _dde_func_return_t close() = 0;
 
     virtual _dde_func_return_t get(DDE_OSC_HEADER&) = 0;
     virtual _dde_func_return_t set(const DDE_OSC_HEADER&) = 0;
@@ -82,7 +82,7 @@ public:
 
     virtual _dde_func_return_t init(const char* ) { return _return_OK;};
     virtual _dde_func_return_t open(uint16_t ) { return _return_OK; };
-    virtual _dde_func_return_t close(uint16_t ) { return _return_OK; };
+    virtual _dde_func_return_t close() { return _return_OK; };
 
     virtual _dde_func_return_t get(DDE_OSC_HEADER& ) { return _return_OK; };
     virtual _dde_func_return_t set(const DDE_OSC_HEADER& ) { return _return_OK; };
@@ -128,18 +128,18 @@ public:
     virtual _dde_func_return_t init(const char* sysName) = 0;
     virtual _dde_func_return_t deInit(const char* sysName) = 0;
 
-    virtual _dde_func_return_t get_header(uint8_t id, DDE_OSC_HEADER&) = 0;
-    virtual _dde_func_return_t set_header(uint8_t id, const DDE_OSC_HEADER&) = 0;
+    virtual _dde_func_return_t get_header(uint16_t id, DDE_OSC_HEADER&) = 0;
+    virtual _dde_func_return_t set_header(uint16_t id, const DDE_OSC_HEADER&) = 0;
 
-    virtual const OSC_STATE get_state(uint8_t id) = 0;
-    virtual _dde_func_return_t set_state(uint8_t id, const OSC_STATE&) = 0;
-    virtual _dde_func_return_t get_settings(uint8_t id, OSC_SETTING&) = 0;
-    virtual _dde_func_return_t set_settings(uint8_t id, const OSC_SETTING&) = 0;
+    virtual const OSC_STATE get_state(uint16_t id) = 0;
+    virtual _dde_func_return_t set_state(uint16_t id, const OSC_STATE&) = 0;
+    virtual _dde_func_return_t get_settings(uint16_t id, OSC_SETTING&) = 0;
+    virtual _dde_func_return_t set_settings(uint16_t id, const OSC_SETTING&) = 0;
 
     virtual int get_page_ready_to_read(uint16_t id) = 0;
-    virtual _dde_func_return_t set_page_ready_to_write(uint8_t id, uint8_t pageNum) = 0;
+    virtual _dde_func_return_t set_page_ready_to_write(uint16_t id, uint8_t pageNum) = 0;
     virtual int get_page_ready_to_write(uint16_t id) = 0;
-    virtual _dde_func_return_t set_page_ready_to_read(uint8_t id, uint8_t pageNum) = 0;
+    virtual _dde_func_return_t set_page_ready_to_read(uint16_t id, uint8_t pageNum) = 0;
 };
 
 #endif // DDE_INTERFACES_H

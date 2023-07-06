@@ -143,10 +143,9 @@ _dde_func_return_t DDE_OSC::load_header(uint16_t id)
     return res;
 }
 
-_dde_func_return_t DDE_OSC::close(uint16_t id)
+_dde_func_return_t DDE_OSC::close()
 {
     assert(m_header);
-    assert (m_header->device_id == id);
 
     delete m_header;
     m_header = nullptr;
@@ -174,7 +173,7 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     uint16_t id = dat.device_id;
 
     if (m_header && m_header->device_id != dat.device_id) {
-        close(m_header->device_id);
+        close();
     }
 
     if (!m_header) {
@@ -221,7 +220,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
     uint16_t id = dat.device_id;
 
     if (m_header && m_header->device_id != dat.device_id) {
-        close(m_header->device_id);
+        close();
     }
 
     if (!m_header) {

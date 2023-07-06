@@ -33,7 +33,7 @@ _dde_func_return_t OscIPCHeaderService::deInit(const char* sysName)
     return _dde_func_return_t();
 }
 
-_dde_func_return_t OscIPCHeaderService::get_header(uint8_t id, DDE_OSC_HEADER& hdr)
+_dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& hdr)
 {
     GLIO_OSC_HEADER* rec = reinterpret_cast<GLIO_OSC_HEADER*> (osc_mem_getData(id));
 
@@ -68,7 +68,7 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint8_t id, DDE_OSC_HEADER& h
     return _return_OK;
 }
 
-_dde_func_return_t OscIPCHeaderService::set_header(uint8_t id, const DDE_OSC_HEADER& hdr)
+_dde_func_return_t OscIPCHeaderService::set_header(uint16_t id, const DDE_OSC_HEADER& hdr)
 {
     GLIO_OSC_HEADER rec;
     rec.id = hdr.device_id;
@@ -107,7 +107,7 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint8_t id, const DDE_OSC_HEA
     return (res > 0) ? _return_OK : _return_FAIL;
 }
 
-const OSC_STATE OscIPCHeaderService::get_state(uint8_t id)
+const OSC_STATE OscIPCHeaderService::get_state(uint16_t id)
 {
     OSC_STATE state;
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
@@ -118,7 +118,7 @@ const OSC_STATE OscIPCHeaderService::get_state(uint8_t id)
     return state;
 }
 
-_dde_func_return_t OscIPCHeaderService::set_state(uint8_t id, const OSC_STATE& setDat)
+_dde_func_return_t OscIPCHeaderService::set_state(uint16_t id, const OSC_STATE& setDat)
 {
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
@@ -130,7 +130,7 @@ _dde_func_return_t OscIPCHeaderService::set_state(uint8_t id, const OSC_STATE& s
     return _return_OK;
 }
 
-_dde_func_return_t OscIPCHeaderService::get_settings(uint8_t id, OSC_SETTING& getDat)
+_dde_func_return_t OscIPCHeaderService::get_settings(uint16_t id, OSC_SETTING& getDat)
 {
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
@@ -140,7 +140,7 @@ _dde_func_return_t OscIPCHeaderService::get_settings(uint8_t id, OSC_SETTING& ge
     return _return_OK;
 }
 
-_dde_func_return_t OscIPCHeaderService::set_settings(uint8_t id, const OSC_SETTING& setDat)
+_dde_func_return_t OscIPCHeaderService::set_settings(uint16_t id, const OSC_SETTING& setDat)
 {
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
@@ -152,7 +152,7 @@ _dde_func_return_t OscIPCHeaderService::set_settings(uint8_t id, const OSC_SETTI
     return _return_OK;
 }
 
-int OscIPCHeaderService::get_page_state(uint8_t id, uint8_t pageNum)
+int OscIPCHeaderService::get_page_state(uint16_t id, uint8_t pageNum)
 {
     assert(pageNum <= OSC_PAGE_MAX);
 
@@ -162,7 +162,7 @@ int OscIPCHeaderService::get_page_state(uint8_t id, uint8_t pageNum)
     return dat->state.pageMask[pageNum];
 }
 
-_dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, uint8_t pageNum, uint8_t state)
+_dde_func_return_t OscIPCHeaderService::set_page_state(uint16_t id, uint8_t pageNum, uint8_t state)
 {
     assert(pageNum <= OSC_PAGE_MAX);
 
@@ -178,7 +178,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_state(uint8_t id, uint8_t pageN
     return _return_OK;
 }
 
-_dde_func_return_t OscIPCHeaderService::set_page_ready_to_write(uint8_t id, uint8_t pageNum)
+_dde_func_return_t OscIPCHeaderService::set_page_ready_to_write(uint16_t id, uint8_t pageNum)
 {
     assert(pageNum <= OSC_PAGE_MAX);
 
@@ -196,7 +196,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_write(uint8_t id, uint
     return _return_OK;
 }
 
-_dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint8_t id, uint8_t pageNum)
+_dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint16_t id, uint8_t pageNum)
 {
     assert(pageNum <= OSC_PAGE_MAX);
 
