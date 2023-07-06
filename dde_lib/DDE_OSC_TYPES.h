@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <time.h>
+#include <pthread.h>
 
 #define OSC_VAR_NAME_LENGTH 64
 #define OSC_VAR_USER_NAME_LENGTH 64
@@ -148,6 +149,7 @@ struct GLIO_OSC_CHANNEL
 
 typedef struct
 {
+    pthread_mutex_t shm_mutex;
     uint8_t id;
     OSC_STATE state;
     OSC_SETTING settings;
