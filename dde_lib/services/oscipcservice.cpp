@@ -12,31 +12,9 @@ _dde_func_return_t OscIPCHeaderService::init(const char* sysName)
     if (res < 0)
         return _return_FAIL;
 
-    int err;
-    pthread_mutexattr_t attr;
-    err = pthread_mutexattr_init(&attr); if (err) goto err;
-    err = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED); if (err) goto err;
+    _dde_func_return_t ret = mutex_init();
 
-    for (uint16_t i = 0; i < MAX_DEV_SUPPORT; i++) {
-        GLIO_OSC_HEADER* rec = reinterpret_cast<GLIO_OSC_HEADER*> (osc_mem_getData(i));
-        pthread_mutex_t& shm_mutex = rec->shm_mutex;
-//      err = pthread_mutex_destroy(&shm_mutex); if (err) goto err;
-        err = pthread_mutex_init(&shm_mutex, &attr); if (err) goto err;
-
-        err = pthread_mutex_trylock(&shm_mutex);
-        if (err) {
-            std::cout << "The mutex is locked now, id = " << i << std::endl;
-            goto err;
-        }
-
-        err = pthread_mutex_unlock(&shm_mutex); if (err) goto err;
-    }
-
-    return _return_OK;
-
-err:
-    std::cout << "The mutex init is failed, code = " << err << std::endl;
-    return _return_FAIL;
+    return ret;
 }
 
 _dde_func_return_t OscIPCHeaderService::mutex_init()
