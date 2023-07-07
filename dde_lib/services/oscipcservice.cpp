@@ -14,22 +14,63 @@ _dde_func_return_t OscIPCHeaderService::init(const char* sysName)
 
     int err;
     pthread_mutexattr_t attr;
-    err = pthread_mutexattr_init(&attr); if (err) return _return_FAIL;
-    err = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED); if (err) return _return_FAIL;
+    err = pthread_mutexattr_init(&attr); if (err) goto err;
+    err = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED); if (err) goto err;
 
-    for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
+    for (uint16_t i = 0; i < MAX_DEV_SUPPORT; i++) {
         GLIO_OSC_HEADER* rec = reinterpret_cast<GLIO_OSC_HEADER*> (osc_mem_getData(i));
         pthread_mutex_t& shm_mutex = rec->shm_mutex;
-        err = pthread_mutex_destroy(&shm_mutex); if (err) return _return_FAIL;
-        err = pthread_mutex_init(&shm_mutex, &attr); if (err) return _return_FAIL;
+//      err = pthread_mutex_destroy(&shm_mutex); if (err) goto err;
+        err = pthread_mutex_init(&shm_mutex, &attr); if (err) goto err;
+
+        err = pthread_mutex_trylock(&shm_mutex);
+        if (err) {
+            std::cout << "The mutex is locked now, id = " << i << std::endl;
+            goto err;
+        }
+
+        err = pthread_mutex_unlock(&shm_mutex); if (err) goto err;
     }
 
     return _return_OK;
+
+err:
+    std::cout << "The mutex init is failed, code = " << err << std::endl;
+    return _return_FAIL;
+}
+
+_dde_func_return_t OscIPCHeaderService::mutex_init()
+{
+    int err;
+    pthread_mutexattr_t attr;
+    err = pthread_mutexattr_init(&attr); if (err) goto err;
+    err = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED); if (err) goto err;
+
+    for (uint16_t i = 0; i < MAX_DEV_SUPPORT; i++) {
+        GLIO_OSC_HEADER* rec = reinterpret_cast<GLIO_OSC_HEADER*> (osc_mem_getData(i));
+        pthread_mutex_t& shm_mutex = rec->shm_mutex;
+        err = pthread_mutex_init(&shm_mutex, &attr); if (err) goto err;
+
+        err = pthread_mutex_trylock(&shm_mutex);
+        if (err) {
+            std::cout << "The mutex is locked now, id = " << i << std::endl;
+            goto err;
+        }
+
+        err = pthread_mutex_unlock(&shm_mutex); if (err) goto err;
+    }
+
+    return _return_OK;
+
+err:
+    std::cout << "The mutex init is failed, code = " << err << std::endl;
+    return _return_FAIL;
 }
 
 _dde_func_return_t OscIPCHeaderService::deInit(const char* sysName)
 {
     if (sysName) osc_mem_deinit(sysName, sizeof(GLIO_OSC_HEADER));
+
     return _dde_func_return_t();
 }
 
@@ -38,8 +79,6 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
     GLIO_OSC_HEADER* rec = reinterpret_cast<GLIO_OSC_HEADER*> (osc_mem_getData(id));
 
     if (!rec) return _return_FAIL;
-
-    pthread_mutex_lock(&rec->shm_mutex);
 
     hdr.settings = rec->settings;
 
@@ -62,8 +101,6 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
         channel.var.type = glio_ch.type;
         channel.var.color = glio_ch.color;
     }
-
-    pthread_mutex_unlock(&rec->shm_mutex);
 
     return _return_OK;
 }
