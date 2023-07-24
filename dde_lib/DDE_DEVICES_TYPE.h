@@ -26,8 +26,6 @@ typedef struct {
 #pragma pack(push,1)
 typedef struct
 {
-    pthread_mutex_t shm_mutex;
-
     uint8_t device_id;
     uint16_t el_count;
     uint8_t none;
@@ -36,6 +34,17 @@ typedef struct
     GLIO_ELEMENT_VALUE el[ELEMENTS_ID_MAX+1];
  
 } DEVICE_ELEMENTS;
+#pragma pack(pop)
+
+#pragma pack(push,1)
+typedef struct
+{
+    pthread_mutex_t shm_mutex;
+
+    DDE_PARAMS_CMD cmd[MAX_DEV_SUPPORT];
+
+} DEVICE_COMMANDS;
+
 #pragma pack(pop)
 
 #pragma pack(push,1)
