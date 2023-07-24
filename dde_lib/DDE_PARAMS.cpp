@@ -254,8 +254,9 @@ _dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 {
     // check that requiest is not already in the queue.If it is do not push it.
+
     for (auto const& pp : list_read) {
-        if (pp.device_id == p.device_id && pp.module_id == pp.module_id && pp.param_id == p.param_id && pp.header_reset == p.header_reset) {
+        if (pp.device_id == p.device_id && pp.module_id == p.module_id && pp.param_id == p.param_id && pp.header_reset == p.header_reset) {
             direct_read(p);
             return _return_OK;
         }
@@ -422,6 +423,7 @@ void DDE_PARAMS::update()
 
             while ((res != 1) && (!timeout)) {
                 res = PARAMS_DATA_write_cmd(device_id, cmd);
+
                 if (res != 1) {
                     attempts++;
                     if (attempts > 10)
@@ -433,6 +435,12 @@ void DDE_PARAMS::update()
                         set_err.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
                         set_err.param_id = DDE_DEV0_MODULE0_PARAM14_READ_CMD_ERR_COUNTER;
                         set_err.ivalue = err_write_cmd_counter;
+
+                        std::cout <<	"Error write cmd! dev_id=" << static_cast<int>(device_id) << \
+                                        " mod_id="<< static_cast<int>(cmd.module_id)<<\
+                                        " par_id="<< static_cast<int>(cmd.param_id)<<\
+                                        " nRW="<< static_cast<int>(cmd.nRW)<<\
+                                        " attempts = "<< attempts <<std::endl;
 
                         direct_write(set_err);
                         timeout = true;

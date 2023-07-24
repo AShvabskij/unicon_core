@@ -31,7 +31,7 @@ _dde_func_return_t OscIPCHeaderService::mutex_init()
 
         err = pthread_mutex_trylock(&shm_mutex);
         if (err) {
-            std::cout << "The mutex is locked now, id = " << i << std::endl;
+            std::cout << "The mutex is locked now, id = " << i << ", error = " << err << std::endl;
             goto err;
         }
 

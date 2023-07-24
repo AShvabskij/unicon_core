@@ -1,4 +1,5 @@
 #include "ipcmem.h"
+#include <pthread.h>
 
 //-----------------------------------------------------------------------
 
@@ -119,6 +120,25 @@ int IPCMEM_init(char* dev_name)
                           basename(stmp));
 #endif
         }
+    }
+
+    int err;
+    pthread_mutexattr_t attr;
+    err = pthread_mutexattr_init(&attr); if (err) return -1;
+    err = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED); if (err) return -1;
+
+    for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
+        DEVICE_ELEMENTS* dev = pDev[i];
+        pthread_mutex_t shm_mutex = dev->shm_mutex;
+        err = pthread_mutex_init(&shm_mutex, &attr); if (err) return -1;
+
+        err = pthread_mutex_trylock(&shm_mutex);
+        if (err) {
+//          std::cout << "The mutex is locked now, id = " << i << ", error = " << err << std::endl;
+            return -1;
+        }
+
+        err = pthread_mutex_unlock(&shm_mutex); if (err) return -1;
     }
 
     return 0;
@@ -278,36 +298,42 @@ int IPCMEM_set_element_descr(uint8_t device_id, GLIO_ELEMENT_DESCR* el)
 
 int IPCMEM_read_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd)
 {
-    int res;
     if (device_id >= MAX_DEV_SUPPORT) return -4;
+
+    pthread_mutex_lock(&pDev[device_id]->shm_mutex);
 
     if (pDev[device_id]->cmd.cmd_flag == 1) {
         memcpy(cmd, &pDev[device_id]->cmd, sizeof(DDE_PARAMS_CMD));
         pDev[device_id]->cmd.cmd_flag = 0;
+        pthread_mutex_unlock(&pDev[device_id]->shm_mutex);
+
         return 1;
     }
-    else
-        return -1;
-    //return 0;
+
+    pthread_mutex_unlock(&pDev[device_id]->shm_mutex);
+
+    return -1;
 }
 
 int IPCMEM_write_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd)
 {
-    int res;
-
     if (device_id >= MAX_DEV_SUPPORT) {
         perror("if (device_id >= MAX_DEV_SUPPORT)");
         return -4;
     }
 
+    pthread_mutex_lock(&pDev[device_id]->shm_mutex);
+
     if (pDev[device_id]->cmd.cmd_flag == 0)
     {
-        cmd->cmd_flag = 1; //force cmd_flag to 1
+
         memcpy(&pDev[device_id]->cmd, cmd, sizeof(DDE_PARAMS_CMD));
+        pthread_mutex_unlock(&pDev[device_id]->shm_mutex);
+        pDev[device_id]->cmd.cmd_flag = 1; //force cmd_flag to 1
         return 1;
     }
-    else
-        return -1;
 
-   // return 0;
+    pthread_mutex_unlock(&pDev[device_id]->shm_mutex);
+
+    return -1;
 }

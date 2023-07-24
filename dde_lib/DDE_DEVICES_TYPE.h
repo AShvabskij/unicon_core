@@ -1,6 +1,7 @@
 #pragma once
 
 #include <DDE_PARAMS_TYPE.h> 
+#include <pthread.h>
 
 #define MAX_DEV_SUPPORT  (32+1)
 #define ELEMENTS_ID_MAX		0xFFF
@@ -25,6 +26,8 @@ typedef struct {
 #pragma pack(push,1)
 typedef struct
 {
+    pthread_mutex_t shm_mutex;
+
     uint8_t device_id;
     uint16_t el_count;
     uint8_t none;
