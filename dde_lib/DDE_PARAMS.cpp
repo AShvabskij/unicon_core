@@ -426,7 +426,7 @@ void DDE_PARAMS::update()
 
                 if (res != 1) {
                     attempts++;
-                    if (attempts > 10)
+                    if (attempts > 1)
                     {
                         err_write_cmd_counter++;
 
@@ -445,7 +445,7 @@ void DDE_PARAMS::update()
                         direct_write(set_err);
                         timeout = true;
                     }
-                    usleep(100);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 }
             }
 
