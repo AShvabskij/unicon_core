@@ -325,7 +325,6 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
     list_read.pop_front();
     int a2 = list_read.size();
 
-
     return _return_OK;
 }
 
@@ -426,7 +425,8 @@ void DDE_PARAMS::update()
 
                 if (res != 1) {
                     attempts++;
-                    if (attempts > 1)
+
+                    if (attempts >= 5)
                     {
                         err_write_cmd_counter++;
 

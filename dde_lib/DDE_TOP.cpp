@@ -136,6 +136,6 @@ int DDE_TOP::thread_proc()
 
         update();
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }

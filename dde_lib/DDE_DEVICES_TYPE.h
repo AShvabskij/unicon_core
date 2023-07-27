@@ -39,7 +39,7 @@ typedef struct
 #pragma pack(push,1)
 typedef struct
 {
-    pthread_mutex_t shm_mutex;
+    pthread_mutex_t shm_mutex[MAX_DEV_SUPPORT];
 
     DDE_PARAMS_CMD cmd[MAX_DEV_SUPPORT];
 
