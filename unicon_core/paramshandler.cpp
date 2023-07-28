@@ -385,7 +385,7 @@ void ParamsHandler::streamParamsValue()
     QList<ParamID> modules;
     QList<ParamValue> sentValues;
 
-    if (m_capturedParams.size() > 2) {
+    if (m_capturedParams.size() > 7) {
         // Optimized variant: getting all param values from param modules at once
         for (const Param& p : m_capturedParams) {
             ParamID modId = {p.ID.devId, p.ID.moduleId, 0};
