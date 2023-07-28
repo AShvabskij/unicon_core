@@ -108,7 +108,7 @@ int initCmdMutex()
     return 0;
 
 err:
-    sprintf("The mutex init is failed, device id = %d, code = %d", devInd, err);
+    printf("The mutex init is failed, device id = %d, code = %d\n", devInd, err);
     return -1;
 
 }
@@ -340,6 +340,30 @@ int IPCMEM_set_element_descr(uint8_t device_id, GLIO_ELEMENT_DESCR* el)
     return 0;
 }
 
+int IPCMEM_write_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd, int cmd_cnt)
+{
+    if (device_id >= MAX_DEV_SUPPORT) {
+        perror("if (device_id >= MAX_DEV_SUPPORT)");
+        return -4;
+    }
+
+    // A.S. a clever data protection algorithm
+    int err = pthread_mutex_trylock(&_devCmdPtr->shm_mutex[device_id]);
+    if (err) return -1; // A device shared mutex is locked until the data is fully read (see IPCMEM_read_cmd)
+
+    for (int i= 0; i < cmd_cnt; i++) {
+        DDE_PARAMS_CMD* cmd_ptr = cmd + i;
+        memcpy(&_devCmdPtr->cmd[device_id][i], cmd_ptr, sizeof(DDE_PARAMS_CMD));
+        _devCmdPtr->cmd[device_id][i].cmd_flag = 1; //force cmd_flag to 1
+
+//      printf("IPCMEM_write_cmd: dev_id=%d, mod_id=%d, par_id=%d, nRW=%d\n", device_id, cmd_ptr->module_id, cmd_ptr->param_id, cmd_ptr->nRW);
+
+    }
+
+    // A.S. There is no need to unlock the mutex here. The mutex is unlocked only in read procedure (see IPCMEM_read_cmd)
+    return 1;
+}
+
 int IPCMEM_read_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd)
 {
     if (!cmd) return -1;
@@ -352,33 +376,17 @@ int IPCMEM_read_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd)
         return -1;
     }
 
-    if (_devCmdPtr->cmd[device_id].cmd_flag == 1) {
-        memcpy(cmd, &_devCmdPtr->cmd[device_id], sizeof(DDE_PARAMS_CMD));
-        _devCmdPtr->cmd[device_id].cmd_flag = 0;
+    for (int i = 0; i < MAX_DEV_CMD_CNT; ++i) {
+        if (_devCmdPtr->cmd[device_id][i].cmd_flag == 1) {
+            memcpy(cmd, &_devCmdPtr->cmd[device_id][i], sizeof(DDE_PARAMS_CMD));
+            _devCmdPtr->cmd[device_id][i].cmd_flag = 0;
 
-        pthread_mutex_unlock(shm_mutex);
-        return 1;
+//          printf("IPCMEM_read_cmd: dev_id=%d, mod_id=%d, par_id=%d, nRW=%d\n", device_id, cmd->module_id, cmd->param_id, cmd->nRW);
+
+            return 1;
+        }
     }
 
+    pthread_mutex_unlock(shm_mutex);
     return -1;
-}
-
-int IPCMEM_write_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd)
-{
-    if (device_id >= MAX_DEV_SUPPORT) {
-        perror("if (device_id >= MAX_DEV_SUPPORT)");
-        return -4;
-    }
-
-    struct timespec wait;
-    wait.tv_sec=0;
-    wait.tv_nsec=100000000;
-
-    int err = pthread_mutex_timedlock(&_devCmdPtr->shm_mutex[device_id], &wait);
-//  int err = pthread_mutex_lock(&_devCmdPtr->shm_mutex[device_id]);
-    if (err) return -1;
-
-    memcpy(&_devCmdPtr->cmd[device_id], cmd, sizeof(DDE_PARAMS_CMD));
-    _devCmdPtr->cmd[device_id].cmd_flag = 1; //force cmd_flag to 1
-    return 1;
 }

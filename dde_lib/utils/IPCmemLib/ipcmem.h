@@ -67,7 +67,7 @@ int IPCMEM_get_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, G
 int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, uint32_t ivalue, time_t time);
 int IPCMEM_set_element_descr(uint8_t device_id, GLIO_ELEMENT_DESCR* el);
 int IPCMEM_read_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd);
-int IPCMEM_write_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd);
+int IPCMEM_write_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd, int cmd_cnt);
 
 
 //-------------------------------------------------------------------------

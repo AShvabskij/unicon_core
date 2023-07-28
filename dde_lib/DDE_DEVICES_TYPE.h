@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #define MAX_DEV_SUPPORT  (32+1)
+#define MAX_DEV_CMD_CNT  5
 #define ELEMENTS_ID_MAX		0xFFF
 
 // 32 device on CAN bus + 1 connex master with ID=0
@@ -41,7 +42,7 @@ typedef struct
 {
     pthread_mutex_t shm_mutex[MAX_DEV_SUPPORT];
 
-    DDE_PARAMS_CMD cmd[MAX_DEV_SUPPORT];
+    DDE_PARAMS_CMD cmd[MAX_DEV_SUPPORT][MAX_DEV_CMD_CNT];
 
 } DEVICE_COMMANDS;
 
