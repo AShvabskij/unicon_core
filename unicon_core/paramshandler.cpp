@@ -382,58 +382,64 @@ void ParamsHandler::streamParamsValue()
         return;
     }
 
-    QList<ParamID> modules;
+    QMap<int, ParamList> modules;
     QList<ParamValue> sentValues;
 
-    if (m_capturedParams.size() > 7) {
-        // Optimized variant: getting all param values from param modules at once
-        for (const Param& p : m_capturedParams) {
-            ParamID modId = {p.ID.devId, p.ID.moduleId, 0};
-            if (modules.contains(modId)) continue;
+    for (const Param& p : m_capturedParams) {
+        ParamID modId = {p.ID.devId, p.ID.moduleId, 0};
 
-            modules << modId;
-        }
-
-        int error = 0;
-        _dde_func_return_t res = _return_OK;
-        ParamValueList allValues;
-        for (const ParamID& modId  : modules) {
-            ParamValueList values = getModuleValues(modId, res);
-            error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
-            if (error != 0) break;
-
-            allValues << values;
-        }
-
-        for (const ParamValue& val : allValues) {
-            for (const Param& p : m_capturedParams) {
-                if (p.ID == val.paramID) {
-                    sentValues << val;
-                    break;
-                }
-            }
-        }
-
-        QList<QJsonObject> responseList;
-        for (const ParamValue& val : sentValues) {
-            QJsonObject response = createStreamValueObj(val, error);
-            responseList << response;
-        }
-        emit stream(responseList);
-
-    } else {
-        // Simplified variant, getting all param values one by one
-        QList<QJsonObject> responseList;
-        for (const Param &p : m_capturedParams) {
-            ParamValue val(p);
-            long res = getParamValue(p, &val);
-            int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
-            QJsonObject response = createStreamValueObj(val, error);
-            responseList << response;
-        }
-        emit stream(responseList);
+        modules[modId.uid()].append(p);
     }
 
+    int error = 0;
+    _dde_func_return_t res = _return_OK;
+    ParamValueList allValues;
+    ParamList singleParams;
+
+    const int GROUP_PARAMS_COUNT_MIN = 5;
+    for (const int modKey: modules.keys()) {
+        if (modules[modKey].count() >= GROUP_PARAMS_COUNT_MIN) {
+            ParamID pID = modules[modKey].value(0).ID;
+            ParamID modId = {pID.devId, pID.moduleId, 0};
+
+            ParamValueList values = getModuleValues(modId, res); // request all values of the group
+            error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
+            if (error != 0) {
+                for (auto value : values) value.error = error;
+            }
+
+            allValues.append(values);
+        }
+
+        else {
+            singleParams.append(modules[modKey]);
+        }
+    }
+
+    for (const Param &p : singleParams) {
+        ParamValue val(p);
+        long res = getParamValue(p, &val); // request value of the single parameter
+        error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
+        val.error = error;
+        allValues.append(val);
+    }
+
+    for (const ParamValue& val : allValues) {
+        for (const Param& p : m_capturedParams) {
+            if (p.ID == val.paramID) {
+                sentValues.append(val);
+                break;
+            }
+        }
+    }
+
+    QList<QJsonObject> responseList;
+    for (const ParamValue& val : sentValues) {
+        QJsonObject response = createStreamValueObj(val, val.error);
+        responseList.append(response);
+    }
+
+    emit stream(responseList);
     return;
 }
 
