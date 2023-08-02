@@ -11,7 +11,7 @@ const QString CMD_PARAMS_DATA = "param_data";
 const QString CMD_SYSTEM_INIT = "system_init";
 
 const int DATA_YELD_INTERVAL_MSC = 100;
-const int STREAM_OBJECT_LIMIT = 6000;//*100;
+const int STREAM_OBJECT_LIMIT = 60000;//*100;
 
 bool operator==(const ParamID& a, const ParamID& b) {
     return a.devId == b.devId &&

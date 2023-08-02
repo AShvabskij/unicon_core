@@ -47,6 +47,7 @@ OscStateMachine::OscStateMachine(IDDE* dde, IOscBufferService *buffSrv)
 
 void OscStateMachine::update(DevInd devId)
 {
+    STATE prevState = m_state;
     switch (m_state) {
         case Normal: {
             memset(m_header, 0, sizeof(DDE_OSC_HEADER));
@@ -127,6 +128,10 @@ void OscStateMachine::update(DevInd devId)
             break;
         }
         default: break;
+    }
+
+    if (m_state == STATE::Normal) {
+        qDebug() << "OscStateMachine: Swithed to state = " << "NORMAL" << ", id = " << m_header->device_id;
     }
 
     return;
