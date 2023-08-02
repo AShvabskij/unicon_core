@@ -698,6 +698,7 @@ QJsonObject ParamsHandler::createValueObj(int requestId, const ParamValue& value
 QJsonObject ParamsHandler::createStreamValueObj(const ParamValue& value, int error)
 {
     QJsonObject res;
+    res["type"] = "par";
     res["d_id"] = value.paramID.devId.id;
     res["m_id"] = value.paramID.moduleId;
     res["p_id"] = value.paramID.id;

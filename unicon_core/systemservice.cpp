@@ -25,7 +25,7 @@ DeviceIndList SystemService::linkedDevices(SysType sysType)
 
 void SystemService::start()
 {
-    m_timer->start(7000);
+    m_timer->start(5000);
 }
 
 long SystemService::requestDeviceLinks(DeviceIndList& links)

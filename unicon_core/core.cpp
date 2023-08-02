@@ -99,4 +99,10 @@ void Core::onDeviceChanged(SysType sysType)
 {
     DeviceIndList links = m_sysService->linkedDevices(sysType);
     m_oscStateService->init(links);
+
+    QJsonObject res;
+    res["type"] = "sys";
+    res["status"] = "1"; // 1 - links changed
+
+    StreamManager::instance()->stream({res});
 }
