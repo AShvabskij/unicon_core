@@ -268,7 +268,8 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
     //1) Add request to queue
     if (list_read.size() < list_read_max) {
         if (isValidData(p)) {
-            list_read.push_back(p);
+            list_read.push(p);
+            assert(list_read.size() <= list_read_max);
         }
         else {
             perror("Failed to add data into reading list. Invalid data \n");
@@ -303,7 +304,7 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
 
     //1) Add request to queue
     if (list_write.size() < list_write_max) {
-        list_write.push_back(p);
+        list_write.push(p);
     }
     else {
         perror("The writing list is overflowed\n");
@@ -322,9 +323,7 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
     if (list_read.empty()) return _return_FAIL;
 
     p = list_read.front();
-    int a1 = list_read.size();
-    list_read.pop_front();
-    int a2 = list_read.size();
+    list_read.pop();
 
     return _return_OK;
 }
@@ -334,7 +333,7 @@ _dde_func_return_t DDE_PARAMS::pop_write_request(DDE_SET_PARAMS_DATA& p)
     if (list_write.empty()) return _return_FAIL;
 
     p = list_write.front();
-    list_write.pop_front();
+    list_write.pop();
     return _return_OK;
 }
 

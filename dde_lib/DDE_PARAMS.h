@@ -60,8 +60,8 @@ private:
     std::thread *thr_params;
     ParamDescr* _paramDescr;
 
-    std::list <DDE_GET_PARAMS_DATA> list_read;
-    std::list <DDE_SET_PARAMS_DATA> list_write;
+    std::queue <DDE_GET_PARAMS_DATA> list_read;
+    std::queue <DDE_SET_PARAMS_DATA> list_write;
 
     short err_write_cmd_counter = 0;
     short err_read_cmd_counter = 0;
