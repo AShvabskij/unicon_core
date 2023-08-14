@@ -315,6 +315,7 @@ long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALU
 
     switch (res.format) {
     case FORMAT_HEX32:
+    case FORMAT_BIN:
         res.value = static_cast<int>(el.ivalue);
         break;
     case FORMAT_INT:
@@ -346,7 +347,7 @@ long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALU
     }; break;
     default: {
         if (el.ivalue > 0 && paramId.id > 0) {
-            QTextStream(stdout) << "The param value format is undefined, " << paramId.logStr() << "\n";
+            QTextStream(stdout) << "`The param value format is undefined, " << paramId.logStr() << "\n";
         }
 
         res.value = el.ivalue;
