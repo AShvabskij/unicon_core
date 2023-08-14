@@ -86,7 +86,7 @@ typedef struct
 #ifdef SET_CPP
     GLIO_ELEMENT_FORMAT_ENUM format;  // 0 - not defined 1-int 2-float 3-bit, 4-hex, 5-text
 #else
-    int format; //// 0 - not defined 1-int 2-float 3-bit, 4-hex, 5-text
+    int format; //// 0 - not defined 1-bin 2-int 3-float, 4-hex, 5-text, 6-ascii
 #endif    
     float scale;
     char dim[DIM_SIZE]; // unit of measurement
