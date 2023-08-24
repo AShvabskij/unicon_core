@@ -333,8 +333,9 @@ long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALU
         if (el.scale == NO_SCALE) {
             res.value = static_cast<int>(el.ivalue);
         } else {
-            float scaledVal = static_cast<int>(el.ivalue)  * el.scale;
-            res.value = static_cast<int>(std::round(scaledVal));
+            double scaledVal = static_cast<int>(el.ivalue)  * el.scale;
+            res.value = QString::number(scaledVal, 'f', 3);
+//          res.value = static_cast<int>(std::round(scaledVal));
         }
     }; break;
     case FORMAT_FLOAT: {
