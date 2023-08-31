@@ -12,7 +12,7 @@ const QString CMD_SYSTEM_INIT = "system_init";
 
 const int DATA_YELD_INTERVAL_MSC = 100;
 const int STREAM_OBJECT_LIMIT = 60000;//*100;
-const float NO_SCALE = 0.0f;
+const float ZERO_SCALE = 0.0f;
 
 bool operator==(const ParamID& a, const ParamID& b) {
     return a.devId == b.devId &&
@@ -170,11 +170,11 @@ long ParamsHandler::setParamValue(const ParamValue& value)
 
     switch (value.format) {
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT: {
-        int ivalue = value.value.toInt();
-        if (value.scale == NO_SCALE) {
+        if (value.scale == ZERO_SCALE) {
+            int ivalue = value.value.toInt();
             setData.ivalue = *(reinterpret_cast<uint32_t*>(&ivalue));
         } else {
-            float scaledVal = ivalue / value.scale;
+            float scaledVal = value.value.toFloat() / value.scale;
             setData.ivalue = static_cast<uint32_t>(std::round(scaledVal));
         }
 
@@ -330,7 +330,7 @@ long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALU
         break;
     case FORMAT_INT:
     {
-        if (el.scale == NO_SCALE) {
+        if (el.scale == ZERO_SCALE) {
             res.value = static_cast<int>(el.ivalue);
         } else {
             double scaledVal = static_cast<int>(el.ivalue)  * el.scale;
