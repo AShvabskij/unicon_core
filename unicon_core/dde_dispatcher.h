@@ -1,32 +1,7 @@
 #ifndef DDE_DISPATCHER_H
 #define DDE_DISPATCHER_H
 
-#include <QMap>
-
-enum SysType
-{
-    Undefined = 0,
-    DEFAULT = 0,
-    FILE_IO = 1,
-    UAVCAN = 2,
-    CANOPEN = 3,
-    MODBUS = 4,
-    CONNEX_MVCP = 5,
-    Unknown
-};
-
-struct DevID
-{
-    SysType type;
-    int id;
-
-    bool isValid() const {
-        return id >= 0 && type != SysType::Undefined;
-    }
-
-};
-
-bool operator==(const DevID& a, const DevID& b);
+#include "device_types.h"
 
 class IDDE;
 

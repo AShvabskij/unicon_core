@@ -1,20 +1,16 @@
 #pragma once
 
-#include <string>
-#include <fstream>
-#include <vector>
-#include <thread>
-
 #include "DDE_TYPES.h"
 #include "DDE_OSC_TYPES.h"
 #include "DDE_INTERFACES.h"
 
-class DDE_OSC_FILE : public IDDE_OSC
+class DDE_OSC_DISPATCHER : public IDDE_OSC
 {
 public:
-    DDE_OSC_FILE();
+    DDE_OSC_DISPATCHER();
+	~DDE_OSC_DISPATCHER();
 
-    virtual _dde_func_return_t init(const char* /*system_type*/);
+    virtual _dde_func_return_t init(const char* sys_type);
     virtual _dde_func_return_t open(uint16_t oscId);
     virtual _dde_func_return_t close();
 
@@ -24,8 +20,7 @@ public:
     virtual _dde_func_return_t set(const DDE_SET_OSC_DATA&);
 
     virtual void update();
-private:
 
-    IOscFileService* m_oscFileSrv = nullptr;
-    
+private:
+    IDDE_OSC* m_osc = nullptr;
 };

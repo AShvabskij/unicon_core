@@ -254,20 +254,22 @@ _dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 {
     // check that requiest is not already in the queue.If it is do not push it.
+/*
     for (auto const& pp : list_read) {
-        if (pp.device_id == p.device_id && pp.module_id == pp.module_id && pp.param_id == p.param_id && pp.header_reset == p.header_reset) {
+        if (pp.device_id == p.device_id && pp.module_id == p.module_id && pp.param_id == p.param_id && pp.header_reset == p.header_reset) {
             direct_read(p);
             return _return_OK;
         }
     }
-
+*/
     //0) set timeout counter to 0
     p.timeout = 0;
 
     //1) Add request to queue
     if (list_read.size() < list_read_max) {
         if (isValidData(p)) {
-            list_read.push_back(p);
+            list_read.push(p);
+            assert(list_read.size() <= list_read_max);
         }
         else {
             perror("Failed to add data into reading list. Invalid data \n");
@@ -290,18 +292,19 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
 {
     // check that requiest is not already in the queue.If it is do not push it.
+/*
     for (auto const& pp : list_write) {
-        if (pp.device_id == p.device_id && pp.module_id == pp.module_id && pp.param_id == p.param_id && pp.ivalue == p.ivalue) {
+        if (pp.device_id == p.device_id && pp.module_id == p.module_id && pp.param_id == p.param_id && pp.ivalue == p.ivalue) {
             return _return_OK;
         }
     }
-
+*/
     //0) set timeout counter to 0
     //p.timeout = 0;
 
     //1) Add request to queue
     if (list_write.size() < list_write_max) {
-        list_write.push_back(p);
+        list_write.push(p);
     }
     else {
         perror("The writing list is overflowed\n");
@@ -320,10 +323,7 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
     if (list_read.empty()) return _return_FAIL;
 
     p = list_read.front();
-    int a1 = list_read.size();
-    list_read.pop_front();
-    int a2 = list_read.size();
-
+    list_read.pop();
 
     return _return_OK;
 }
@@ -333,7 +333,7 @@ _dde_func_return_t DDE_PARAMS::pop_write_request(DDE_SET_PARAMS_DATA& p)
     if (list_write.empty()) return _return_FAIL;
 
     p = list_write.front();
-    list_write.pop_front();
+    list_write.pop();
     return _return_OK;
 }
 
@@ -395,6 +395,7 @@ void DDE_PARAMS::update()
     DDE_GET_PARAMS_DATA get_params;
     DDE_SET_PARAMS_DATA set_params;
     DDE_PARAMS_CMD cmd;
+    DDE_PARAMS_CMD cmd_arr[MAX_DEV_SUPPORT][MAX_DEV_CMD_CNT];
 
 
     //proceed GET and SET buffers - there are many options here.
@@ -407,81 +408,105 @@ void DDE_PARAMS::update()
     bool set_empty = false;
     bool timeout = false;
     uint32_t attempts = 0;
-    while (!((get_empty && set_empty) || timeout))
-    {
-        int res = pop_read_request(get_params);// get_list.front();
+    int cmd_ind_arr[MAX_DEV_SUPPORT];
+    int res = 0;
 
-        if (res == _return_OK) {
-            uint8_t device_id = get_params.device_id;
-            cmd.module_id = get_params.module_id;
-            cmd.param_id = get_params.param_id;
-            cmd.ivalue = get_params.el_count;
-            cmd.nRW = 0;
-            res = 0;
-            attempts = 0;
+    std::fill_n(cmd_ind_arr, MAX_DEV_SUPPORT, 0);
+    while (!get_empty) {
+        int res = pop_read_request(get_params);// list_read.front();
 
-            while ((res != 1) && (!timeout)) {
-                res = PARAMS_DATA_write_cmd(device_id, cmd);
-                if (res != 1) {
-                    attempts++;
-                    if (attempts > 10)
-                    {
-                        err_write_cmd_counter++;
-
-                        DDE_SET_PARAMS_DATA set_err;
-                        set_err.device_id = device_id;
-                        set_err.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
-                        set_err.param_id = DDE_DEV0_MODULE0_PARAM14_READ_CMD_ERR_COUNTER;
-                        set_err.ivalue = err_write_cmd_counter;
-
-                        direct_write(set_err);
-                        timeout = true;
-                    }
-                    usleep(100);
-                }
-            }
-
-        }
-        else
-        {
+        if (res != _return_OK) {
             get_empty = true;
+            continue;
         }
 
+        cmd.module_id = get_params.module_id;
+        cmd.param_id = get_params.param_id;
+        cmd.ivalue = get_params.el_count;
+        cmd.nRW = 0; // "read" cmd
 
-        timeout = false;
-        res = pop_write_request(set_params);// get_list.front();
+        uint16_t device_id = get_params.device_id;
+        int cmd_ind = cmd_ind_arr[device_id]++;
+        assert(cmd_ind < MAX_DEV_CMD_CNT);
+        assert(device_id < MAX_DEV_SUPPORT);
 
-        if (res == _return_OK) {
-            uint8_t device_id = set_params.device_id;
-            cmd.module_id = set_params.module_id;
-            cmd.param_id = set_params.param_id;
-            cmd.ivalue = set_params.ivalue;
-            cmd.nRW = 1;
-            res = 0; attempts = 0;
+        cmd_arr[device_id][cmd_ind] = cmd;
+
+        if (cmd_ind_arr[device_id] >= MAX_DEV_CMD_CNT) {
+            break;
+        }
+    }
+
+    for (uint16_t device_id = 0; device_id < DEVICE_ID_MAX; device_id++) {
+        res= 0;
+        attempts = 0;
+        int cmd_ind = cmd_ind_arr[device_id];
+        if (cmd_ind > 0) {
             while ((res != 1) && (!timeout)) {
-                res = PARAMS_DATA_write_cmd(device_id, cmd);
+                res = PARAMS_DATA_write_cmd(device_id, cmd_arr[device_id], cmd_ind);
+
                 if (res != 1) {
                     attempts++;
-                    if (attempts > 10)
-                    {
+
+                    if (attempts >= 10) {
                         err_read_cmd_counter++;
 
                         DDE_SET_PARAMS_DATA set_err;
                         set_err.device_id = device_id;
                         set_err.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
-                        set_err.param_id = DDE_DEV0_MODULE0_PARAM15_WRIT_CMD_ERR_COUNTER;
-                        set_err.ivalue = err_read_cmd_counter;
+                        set_err.param_id = DDE_DEV0_MODULE0_PARAM14_READ_CMD_ERR_COUNTER;
+                        set_err.ivalue = static_cast<uint32_t>(err_read_cmd_counter);
+
+                        std::cout <<	"Error write cmd! dev_id=" << static_cast<int>(device_id) << \
+                                        " mod_id="<< static_cast<int>(cmd.module_id)<<\
+                                        " par_id="<< static_cast<int>(cmd.param_id)<<\
+                                        " nRW="<< static_cast<int>(cmd.nRW)<<\
+                                        " attempts = "<< attempts <<std::endl;
 
                         direct_write(set_err);
                         timeout = true;
                     }
-                    usleep(100);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 }
             }
         }
-        else
-        {
+    }
+
+    timeout = false;
+    while (!set_empty || timeout) {
+
+        res = pop_write_request(set_params);// list_write.front();
+
+        if (res != _return_OK) {
             set_empty = true;
+            continue;
+        }
+
+        uint8_t device_id = set_params.device_id;
+        cmd.module_id = set_params.module_id;
+        cmd.param_id = set_params.param_id;
+        cmd.ivalue = set_params.ivalue;
+        cmd.nRW = 1; // "write" cmd
+        res = 0; attempts = 0;
+        while ((res != 1) && (!timeout)) {
+            res = PARAMS_DATA_write_cmd(device_id, &cmd, 1);
+            if (res != 1) {
+                attempts++;
+                if (attempts > 10)
+                {
+                    err_write_cmd_counter++;
+
+                    DDE_SET_PARAMS_DATA set_err;
+                    set_err.device_id = device_id;
+                    set_err.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
+                    set_err.param_id = DDE_DEV0_MODULE0_PARAM15_WRIT_CMD_ERR_COUNTER;
+                    set_err.ivalue = static_cast<uint32_t>(err_write_cmd_counter);
+
+                    direct_write(set_err);
+                    timeout = true;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
         }
     }
 

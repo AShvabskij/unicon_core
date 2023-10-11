@@ -14,7 +14,7 @@ struct ParamID
     }
 
     int uid() const {
-        return (moduleId << 6) + id;
+        return (devId.id << 12) + (moduleId << 6) + id;
     }
 
     QString logStr() const {
@@ -49,6 +49,7 @@ struct ParamValue
 
     QVariant value;
     qlonglong timestamp = 0;
+    int error = 0;
 
     int format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_UNDEFINED;
     float scale = 0.0;

@@ -1,4 +1,5 @@
 #include "devicehandler.h"
+#include <QDateTime>
 
 const QString CMD_DEVICE_HEADER = "device_header";
 const QString CMD_DEVICE_HEADERS = "device_headers";
@@ -115,7 +116,7 @@ void DeviceHandler::handleSystemInit(const QJsonObject& request)
 void DeviceHandler::handleDeviceLinks(const QJsonObject& request)
 {
     SysType sysType = sysTypeId(request);
-    QList<int> links;
+    QList<DevInd> links;
     long res = requestDeviceLinks(sysType, links);
     if (res <= 0) return;
 
@@ -126,12 +127,12 @@ void DeviceHandler::handleDeviceLinks(const QJsonObject& request)
     return;
 }
 
-long DeviceHandler::requestDeviceLinks(SysType sysType, QList<int>& links)
+long DeviceHandler::requestDeviceLinks(SysType sysType, QList<DevInd>& links)
 {
     DDE_GET_PARAMS_DATA dat;
     memset(&dat, 0, sizeof(dat));
 
-    dat.device_id = DDE_DEV0_MASTER;
+    dat.device_id = DDE_DEV0_MASTER_IND;
     dat.module_id = DDE_DEV0_MODULE1_DEVS_LINK;
     dat.param_id = 0;
 
@@ -141,10 +142,10 @@ long DeviceHandler::requestDeviceLinks(SysType sysType, QList<int>& links)
     time_t timeMs = QDateTime::currentMSecsSinceEpoch();
     const int LINK_TIME_OUT = 2000; // only for master device
 
-    for (int i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ++i) {
+    for (quint16 i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ++i) {
         time_t diffTime = (dat.el[i].timestamp != 0) ? timeMs - dat.el[i].timestamp : 0;
         if (dat.el[i].ivalue == 1 ) {
-            if (i == DDE_DEV0_MASTER && diffTime > LINK_TIME_OUT) {
+            if (i == DDE_DEV0_MASTER_IND && diffTime > LINK_TIME_OUT) {
                 break;
             }
 
@@ -157,10 +158,10 @@ long DeviceHandler::requestDeviceLinks(SysType sysType, QList<int>& links)
 
 void DeviceHandler::handleReqDevices(SysType sysType, int requestId)
 {
-    QMap<SysType, QList<int>> allLinks;
+    QMap<SysType, QList<quint16>> allLinks;
 
     if (sysType != SysType::Undefined) {
-        QList<int> links;
+        QList<quint16> links;
         requestDeviceLinks(sysType, links);
         allLinks.insert(sysType, links);
     } else {
@@ -169,7 +170,7 @@ void DeviceHandler::handleReqDevices(SysType sysType, int requestId)
             SysType sysType = (SysType)ival;
             if (m_dde->dde(sysType) == nullptr) continue;
 
-            QList<int> links;
+            QList<quint16> links;
             requestDeviceLinks(sysType, links);
             allLinks.insert(sysType, links);
         }
@@ -177,7 +178,7 @@ void DeviceHandler::handleReqDevices(SysType sysType, int requestId)
 
     DeviceList devices;
     for (SysType key: allLinks.keys()) {
-        for (int i : allLinks[key]) {
+        for (quint16 i : allLinks[key]) {
             Device d({key, i});
 
             long res = requestDevice(d);
@@ -196,7 +197,7 @@ void DeviceHandler::handleReqDevices(SysType sysType, int requestId)
 
 void DeviceHandler::handleReqDeviceHeader(SysType sysType, int deviceId, int requestId)
 {
-    Device device({sysType, deviceId});
+    Device device({sysType, static_cast<quint16>(deviceId)});
     requestDevice(device);
 
     QJsonObject response = createResponse(requestId, {device});
@@ -334,11 +335,11 @@ QJsonObject DeviceHandler::createResponse(int requestId, const DeviceList& devic
     return res;
 }
 
-QJsonObject DeviceHandler::createResponse(int requestId, const QList<int>& links)
+QJsonObject DeviceHandler::createResponse(int requestId, const QList<quint16>& links)
 {
     QJsonArray body;
 
-    for (int devId : links) {
+    for (quint16 devId : links) {
         body << devId;
     }
 

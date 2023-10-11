@@ -48,13 +48,14 @@ int PARAMS_DATA_direct_write(DDE_SET_PARAMS_DATA& set_params)
 
 int PARAMS_DATA_update_descr(uint8_t device_id, GLIO_ELEMENT_DESCR& el)
 {
-    return IPCMEM_set_element_descr(device_id, &el);
+    IPCMEM_set_element_descr(device_id, &el);
+    return _return_OK;
 }
 
-int PARAMS_DATA_write_cmd(uint8_t device_id, DDE_PARAMS_CMD& cmd)
+int PARAMS_DATA_write_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd, int cmd_cnt)
 {
     int res;
-    res = IPCMEM_write_cmd(device_id,&cmd);
+    res = IPCMEM_write_cmd(device_id, cmd, cmd_cnt);
 
 
     return res;

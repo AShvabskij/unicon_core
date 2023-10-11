@@ -11,12 +11,13 @@ public:
     ~DDE_OSC_EMUL() = default;
 
     virtual _dde_func_return_t init(const char* system_type);
-    virtual _dde_func_return_t open(uint16_t deviceId);
-    virtual _dde_func_return_t close(uint16_t deviceId);
+    virtual _dde_func_return_t open(uint16_t id);
+    virtual _dde_func_return_t close(uint16_t id);
 
-    virtual _dde_func_return_t get(DDE_GET_OSC_HEADER& p);
+    virtual _dde_func_return_t get(DDE_OSC_HEADER& p);
     virtual _dde_func_return_t get(DDE_GET_OSC_DATA& p);
-    virtual _dde_func_return_t set(DDE_GET_OSC_HEADER& p);
+    virtual _dde_func_return_t set(const DDE_SET_OSC_DATA&);
+    virtual _dde_func_return_t set(const DDE_OSC_HEADER& p);
 
     virtual void update();
 

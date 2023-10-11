@@ -1,27 +1,31 @@
 #include "ipcmem.h"
+#include <pthread.h>
 
 //-----------------------------------------------------------------------
 
 const uint32_t mem_owner_flag = 0664;
 const uint32_t dir_owner_flag = 0777;
 
-const char *dirPath = "/tmp/files";
+const char* dirPath = "/tmp/files";
 //#ifdef SET_NEW_IPC
-    const char *nfPath = "/blk";
+const char* nfPath = "/blk";
 //#else
 //    const char *nfPath = "/tmp/files/blk";
 //#endif
 
 char pathKey[MAX_DEV_SUPPORT][MAX_FNAME_LEN];
-int shmDev[MAX_DEV_SUPPORT] = {-1};
-unsigned char *blkPtr[MAX_DEV_SUPPORT] = {NULL};
-DEVICE_ELEMENTS*pDev[MAX_DEV_SUPPORT] = {NULL};
+const char* pathCmdKey = "DEVICE_COMMANDS";
+
+int shmDev[MAX_DEV_SUPPORT] = { -1 };
+unsigned char* blkPtr[MAX_DEV_SUPPORT] = { NULL };
+DEVICE_ELEMENTS* pDev[MAX_DEV_SUPPORT] = { NULL };
+DEVICE_COMMANDS* _devCmdPtr = { NULL };
 
 #ifdef SET_DEBUG_IPC
-    char chap[BUF_TMP] = {0};
-    char stmp[MAX_FNAME_LEN] = {0};
-    extern FILE *fd_log;
-    extern void Report(uint8_t addTime, const char *fmt, ...);
+char chap[BUF_TMP] = { 0 };
+char stmp[MAX_FNAME_LEN] = { 0 };
+extern FILE* fd_log;
+extern void Report(uint8_t addTime, const char* fmt, ...);
 #endif
 
 
@@ -33,16 +37,16 @@ DEVICE_ELEMENTS*pDev[MAX_DEV_SUPPORT] = {NULL};
 //
 int initBlk(int did, size_t sz, unsigned char with)
 {
-int ret = -1;
-unsigned char *adr = MAP_FAILED;
-int flg = O_RDWR;
+    int ret = -1;
+    unsigned char* adr = MAP_FAILED;
+    int flg = O_RDWR;
 
     if (with) flg |= O_CREAT;
 
     int key = shm_open(pathKey[did], flg, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);// | S_IROTH | S_IWOTH);
     if (key != -1) {
         if (with) ftruncate(key, sizeof(DEVICE_ELEMENTS));
-        adr = (unsigned char *)mmap(NULL, sz, PROT_READ| PROT_WRITE, MAP_SHARED, key, 0);
+        adr = (unsigned char*)mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
         if (adr != MAP_FAILED) {
             blkPtr[did] = adr;
             ret = key;
@@ -54,15 +58,70 @@ int flg = O_RDWR;
 
     return ret;
 }
+
+int initCmdBlk(const char* keyName, size_t sz, unsigned char with)
+{
+    int ret = -1;
+    unsigned char* adr = MAP_FAILED;
+    int flg = O_RDWR;
+
+    if (with) flg |= O_CREAT;
+
+    int key = shm_open(keyName, flg, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);// | S_IROTH | S_IWOTH);
+    if (key != -1) {
+        if (with) ftruncate(key, sz);
+        adr = (unsigned char*)mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
+        if (adr != MAP_FAILED) {
+            _devCmdPtr = adr;
+            ret = key;
+        }
+    }
+#ifdef SET_DEBUG_IPC
+    Report(1, "[%s] shm_open()=%d mmap()=%p\n", __func__, key, adr);
+#endif
+
+    return ret;
+}
+
+int initCmdMutex()
+{
+    if (!_devCmdPtr) return -1;
+
+    int err;
+    pthread_mutexattr_t attr;
+    err = pthread_mutexattr_init(&attr); if (err) return -1;
+    err = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED); if (err) return -1;
+
+    int devInd = 0;
+    for (devInd = 0; devInd < MAX_DEV_SUPPORT; devInd++) {
+        pthread_mutex_t* shm_mutex = &_devCmdPtr->shm_mutex[devInd];
+        err = pthread_mutex_init(shm_mutex, &attr); if (err) goto err;
+
+        err = pthread_mutex_trylock(shm_mutex);
+        if (err) {
+            goto err;
+        }
+
+        err = pthread_mutex_unlock(shm_mutex); if (err) goto err;
+    }
+
+    return 0;
+
+err:
+    printf("The mutex init is failed, device id = %d, code = %d\n", devInd, err);
+    return -1;
+
+}
+
 //----------------------------------------------------------------------
 //        Create in folder 'files' file's for get key to
 //                make shared memory blocks
 //
 int mkKeyFiles(unsigned char with)
 {
-int schet = 0, ret = -1;
-char namef[MAX_FNAME_LEN + 32] = {0};
-char named[MAX_FNAME_LEN] = {0};
+    int schet = 0, ret = -1;
+    char namef[MAX_FNAME_LEN + 32] = { 0 };
+    char named[MAX_FNAME_LEN] = { 0 };
 
 
     strcat(named, nfPath);
@@ -99,34 +158,40 @@ int IPCMEM_init(char* dev_name)
             Report(1, "[%s] Can't get shm_blk by '%s' for 'pDev[%d]'.\n", __func__, pathKey[i], i);
 #endif
             return -1;
-        } else {
+        }
+        else {
             pDev[i] = (DEVICE_ELEMENTS*)blkPtr[i];
 #ifdef SET_DEBUG_IPC
             strcpy(stmp, pathKey[i]);
             if (with)
                 Report(1, "[%s] Create shared memory block #%d (size:%lu addr:%p file:%s)\n",
-                          __func__,
-                          shmDev[i],
-                          sizeof(DEVICE_PARAMS),
-                          pDev[i],
-                          basename(stmp));
+                    __func__,
+                    shmDev[i],
+                    sizeof(DEVICE_PARAMS),
+                    pDev[i],
+                    basename(stmp));
             else
                 Report(1, "[%s] Attach shared memory block #%d (size:%lu addr:%p file:%s)\n",
-                          __func__,
-                          shmDev[i],
-                          sizeof(DEVICE_PARAMS),
-                          pDev[i],
-                          basename(stmp));
+                    __func__,
+                    shmDev[i],
+                    sizeof(DEVICE_PARAMS),
+                    pDev[i],
+                    basename(stmp));
 #endif
         }
     }
 
-    return 0;
+    int res = initCmdBlk(pathCmdKey, sizeof(DEVICE_COMMANDS), dev_name);
+    if (res < 0) return res;
+
+    res = initCmdMutex();
+
+    return res;
 }
 //-----------------  Release All shared memory blocks  -----------------------
 uint16_t IPCMEM_Deinit(unsigned char dev_name)
 {
-uint16_t err = 0;
+    uint16_t err = 0;
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
         if (pDev[i] != NULL) {
@@ -139,7 +204,8 @@ uint16_t err = 0;
                         err |= 2;
                     }
                 }
-            } else {
+            }
+            else {
                 err |= 1;
             }
         }
@@ -154,10 +220,10 @@ upShmBlk(int did)
 {
     if ((did < 0) || (did >= MAX_DEV_SUPPORT)) return;
 
-    DEVICE_ELEMENTS*one = pDev[did];
+    DEVICE_ELEMENTS* one = pDev[did];
     if (!one) return;
 
-    memset((uint8_t *)one, 0, sizeof(DEVICE_ELEMENTS));
+    memset((uint8_t*)one, 0, sizeof(DEVICE_ELEMENTS));
 
     one->device_id = get_devID(did);//dev_items[did].id;
     //DDE_PARAMS_CMD cmd;
@@ -184,11 +250,11 @@ upShmBlk(int did)
 //   Function put struct's value to shared memory block by device_id
 //          On success, return zero. On error, return -1
 //
-int putDataIPC(uint8_t id, DEVICE_ELEMENTS*rec)
+int putDataIPC(uint8_t id, DEVICE_ELEMENTS* rec)
 {
     if ((id >= MAX_DEV_SUPPORT) || !rec) return -1;
 
-    memcpy((uint8_t *)pDev[id], (uint8_t *)rec, sizeof(DEVICE_ELEMENTS));
+    memcpy((uint8_t*)pDev[id], (uint8_t*)rec, sizeof(DEVICE_ELEMENTS));
 
     return 0;
 }
@@ -196,17 +262,15 @@ int putDataIPC(uint8_t id, DEVICE_ELEMENTS*rec)
 //   Function get struct's value from shared memory block by device_id
 //       On success, return zero. On error, return -1
 //
-int getDataIPC(uint8_t id, DEVICE_ELEMENTS*rec)
+int getDataIPC(uint8_t id, DEVICE_ELEMENTS* rec)
 {
     if ((id >= MAX_DEV_SUPPORT) || !rec) return -1;
 
-    memcpy((uint8_t *)rec, (uint8_t *)pDev[id], sizeof(DEVICE_ELEMENTS));
+    memcpy((uint8_t*)rec, (uint8_t*)pDev[id], sizeof(DEVICE_ELEMENTS));
 
     return 0;
 }
 //----------------------------------------------------------------------
-
-
 
 
 
@@ -236,7 +300,7 @@ int IPCMEM_get_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, G
     if (param_id > PARAMS_ID_MAX) return -2; // todo: assert p->param_ID = PARAMS_ID_MAX;
     if (module_id > MODULES_ID_MAX) return -3;
     if (device_id >= MAX_DEV_SUPPORT) return -4;
-    uint16_t addr = module_id * (PARAMS_COUNT_MAX) + param_id;
+    uint16_t addr = module_id * (PARAMS_COUNT_MAX)+param_id;
 
     memcpy((uint8_t*)el, (uint8_t*)&pDev[device_id]->el[addr], sizeof(GLIO_ELEMENT_VALUE));
 
@@ -250,7 +314,7 @@ int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, u
     if (param_id > PARAMS_ID_MAX) return -2; // p->param_ID = PARAMS_ID_MAX;
     if (module_id > MODULES_ID_MAX) return -3;
     if (device_id >= MAX_DEV_SUPPORT) return -4;
-    uint16_t addr = module_id * (PARAMS_COUNT_MAX) + param_id;
+    uint16_t addr = module_id * (PARAMS_COUNT_MAX)+param_id;
     pDev[device_id]->el[addr].ivalue = ivalue;
     pDev[device_id]->el[addr].timestamp = time;
     //memcpy((uint8_t*)&pDev[device_id]->el[addr].ivalue, (uint8_t*)el, sizeof(GLIO_ELEMENT_VALUE));
@@ -268,7 +332,7 @@ int IPCMEM_set_element_descr(uint8_t device_id, GLIO_ELEMENT_DESCR* el)
     if (param_id > PARAMS_ID_MAX) return -2; // p->param_ID = PARAMS_ID_MAX;
     if (module_id > MODULES_ID_MAX) return -3;
     if (device_id >= MAX_DEV_SUPPORT) return -4;
-    uint16_t addr = module_id * (PARAMS_COUNT_MAX) + param_id;
+    uint16_t addr = module_id * (PARAMS_COUNT_MAX)+param_id;
     pDev[device_id]->el[addr].format = el->format;
     pDev[device_id]->el[addr].scale = el->scale;
     //memcpy((uint8_t*)&pDev[device_id]->el[addr].ivalue, (uint8_t*)el, sizeof(GLIO_ELEMENT_VALUE));
@@ -276,38 +340,53 @@ int IPCMEM_set_element_descr(uint8_t device_id, GLIO_ELEMENT_DESCR* el)
     return 0;
 }
 
-int IPCMEM_read_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd)
+int IPCMEM_write_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd, int cmd_cnt)
 {
-    int res;
-    if (device_id >= MAX_DEV_SUPPORT) return -4;
-
-    if (pDev[device_id]->cmd.cmd_flag == 1) {
-        memcpy(cmd, &pDev[device_id]->cmd, sizeof(DDE_PARAMS_CMD));
-        pDev[device_id]->cmd.cmd_flag = 0;
-        return 1;
-    }
-    else
-        return -1;
-    //return 0;
-}
-
-int IPCMEM_write_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd)
-{
-    int res;
-
     if (device_id >= MAX_DEV_SUPPORT) {
         perror("if (device_id >= MAX_DEV_SUPPORT)");
         return -4;
     }
 
-    if (pDev[device_id]->cmd.cmd_flag == 0)
-    {
-        cmd->cmd_flag = 1; //force cmd_flag to 1
-        memcpy(&pDev[device_id]->cmd, cmd, sizeof(DDE_PARAMS_CMD));
-        return 1;
-    }
-    else
-        return -1;
+    // A.S. a clever data protection algorithm
+    int err = pthread_mutex_trylock(&_devCmdPtr->shm_mutex[device_id]);
+    if (err) return -1; // A device shared mutex is locked until the data is fully read (see IPCMEM_read_cmd)
 
-   // return 0;
+    for (int i= 0; i < cmd_cnt; i++) {
+        DDE_PARAMS_CMD* cmd_ptr = cmd + i;
+        memcpy(&_devCmdPtr->cmd[device_id][i], cmd_ptr, sizeof(DDE_PARAMS_CMD));
+        _devCmdPtr->cmd[device_id][i].cmd_flag = 1; //force cmd_flag to 1
+
+//      printf("IPCMEM_write_cmd: dev_id=%d, mod_id=%d, par_id=%d, nRW=%d\n", device_id, cmd_ptr->module_id, cmd_ptr->param_id, cmd_ptr->nRW);
+
+    }
+
+    // A.S. There is no need to unlock the mutex here. The mutex is unlocked only in read procedure (see IPCMEM_read_cmd)
+    return 1;
+}
+
+int IPCMEM_read_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd)
+{
+    if (!cmd) return -1;
+    if (device_id >= MAX_DEV_SUPPORT) return -4;
+
+    pthread_mutex_t* shm_mutex = &_devCmdPtr->shm_mutex[device_id];
+    int err = pthread_mutex_trylock(shm_mutex);
+    if (!err) {
+        pthread_mutex_unlock(shm_mutex);
+        return -1;
+    }
+
+    for (int i = 0; i < MAX_DEV_CMD_CNT; ++i) {
+        if (_devCmdPtr->cmd[device_id][i].cmd_flag == 1) {
+            memcpy(cmd, &_devCmdPtr->cmd[device_id][i], sizeof(DDE_PARAMS_CMD));
+            _devCmdPtr->cmd[device_id][i].cmd_flag = 0;
+
+//          printf("IPCMEM_read_cmd: dev_id=%d, mod_id=%d, par_id=%d, nRW=%d\n", device_id, cmd->module_id, cmd->param_id, cmd->nRW);
+
+            return 1;
+        }
+    }
+
+    pthread_mutex_unlock(shm_mutex);
+    return -1;
 }

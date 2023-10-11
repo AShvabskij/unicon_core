@@ -11,7 +11,8 @@ const QString CMD_PARAMS_DATA = "param_data";
 const QString CMD_SYSTEM_INIT = "system_init";
 
 const int DATA_YELD_INTERVAL_MSC = 100;
-const int STREAM_OBJECT_LIMIT = 6000;//*100;
+const int STREAM_OBJECT_LIMIT = 60000;//*100;
+const float ZERO_SCALE = 0.0f;
 
 bool operator==(const ParamID& a, const ParamID& b) {
     return a.devId == b.devId &&
@@ -84,7 +85,7 @@ void ParamsHandler::handleGetHeader(const QJsonObject &request)
     ParamList params;
     long ret = true;
 
-    DevID devID = {sysType, deviceId};
+    DevID devID = {sysType, static_cast<quint16>(deviceId)};
     if (paramId == 0) {
         ret = getParamHeaders(devID, moduleId, &params);
     } else {
@@ -115,7 +116,7 @@ void ParamsHandler::handleGetValue(const QJsonObject &request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     ParamValue val;
-    val.paramID = {{sysType,deviceId}, moduleId, paramId};
+    val.paramID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
 
     long res = getParamValue(val.paramID, &val);
     int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
@@ -140,7 +141,7 @@ void ParamsHandler::handleSetValue(const QJsonObject &request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     Param p;
-    p.ID = {{sysType,deviceId}, moduleId, paramId};
+    p.ID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
     _dde_func_return_t ret = getParamHeader(p.ID, &p);
     if (ret <= _return_FAIL) {
         return;
@@ -168,7 +169,17 @@ long ParamsHandler::setParamValue(const ParamValue& value)
     setData.ivalue = 0;
 
     switch (value.format) {
-    case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT:
+    case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT: {
+        if (value.scale == ZERO_SCALE) {
+            int ivalue = value.value.toInt();
+            setData.ivalue = *(reinterpret_cast<uint32_t*>(&ivalue));
+        } else {
+            float scaledVal = value.value.toFloat() / value.scale;
+            setData.ivalue = static_cast<uint32_t>(std::round(scaledVal));
+        }
+
+        break;
+    }
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_BIN:
     case GLIO_ELEMENT_FORMAT_ENUM::FORMAT_HEX32: {
         int ivalue = value.value.toInt();
@@ -207,7 +218,7 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     Param p;
-    p.ID = {{sysType,deviceId}, moduleId, paramId};
+    p.ID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
     long ret = getParamHeader(p.ID, &p);
     if (ret <= _return_FAIL) {
         return;
@@ -238,11 +249,11 @@ void ParamsHandler::handleCloseStream(const QJsonObject &request)
     int moduleId = cmdBody.value("module_id").toInt();
     int paramId  = cmdBody.value("param_id").toInt();
 
-    ParamID pID = {{sysType,deviceId}, moduleId, paramId};
+    ParamID pID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
 
     for (const Param &p: m_capturedParams) {
         if (p.ID == pID) {
-            m_capturedParams.removeAll(p);
+            m_capturedParams.removeOne(p);
 
             QMetaObject::invokeMethod(this, "sendActualParamValue", Qt::AutoConnection,
                                       Q_ARG(const Param&, p),
@@ -311,16 +322,20 @@ long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALU
 
     res.format = static_cast<GLIO_ELEMENT_FORMAT_ENUM>(el.format);
     res.scale = el.scale;
-    const float NO_SCALE = 0.0f;
 
     switch (res.format) {
+    case FORMAT_HEX32:
+    case FORMAT_BIN:
+        res.value = static_cast<int>(el.ivalue);
+        break;
     case FORMAT_INT:
     {
-        if (el.scale == NO_SCALE) {
+        if (el.scale == ZERO_SCALE) {
             res.value = static_cast<int>(el.ivalue);
         } else {
-            float scaledVal = static_cast<int>(el.ivalue)  * el.scale;
-            res.value = static_cast<int>(std::round(scaledVal));
+            double scaledVal = static_cast<int>(el.ivalue)  * el.scale;
+            res.value = QString::number(scaledVal, 'f', 3);
+//          res.value = static_cast<int>(std::round(scaledVal));
         }
     }; break;
     case FORMAT_FLOAT: {
@@ -343,7 +358,7 @@ long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALU
     }; break;
     default: {
         if (el.ivalue > 0 && paramId.id > 0) {
-            QTextStream(stdout) << "The param value format is undefined, " << paramId.logStr() << "\n";
+            QTextStream(stdout) << "`The param value format is undefined, " << paramId.logStr() << "\n";
         }
 
         res.value = el.ivalue;
@@ -379,58 +394,64 @@ void ParamsHandler::streamParamsValue()
         return;
     }
 
-    QList<ParamID> modules;
+    QMap<int, ParamList> modules;
     QList<ParamValue> sentValues;
 
-    if (m_capturedParams.size() > 2) {
-        // Optimized variant: getting all param values from param modules at once
-        for (const Param& p : m_capturedParams) {
-            ParamID modId = {p.ID.devId, p.ID.moduleId, 0};
-            if (modules.contains(modId)) continue;
+    for (const Param& p : m_capturedParams) {
+        ParamID modId = {p.ID.devId, p.ID.moduleId, 0};
 
-            modules << modId;
-        }
-
-        int error = 0;
-        _dde_func_return_t res = _return_OK;
-        ParamValueList allValues;
-        for (const ParamID& modId  : modules) {
-            ParamValueList values = getModuleValues(modId, res);
-            error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
-            if (error != 0) break;
-
-            allValues << values;
-        }
-
-        for (const ParamValue& val : allValues) {
-            for (const Param& p : m_capturedParams) {
-                if (p.ID == val.paramID) {
-                    sentValues << val;
-                    break;
-                }
-            }
-        }
-
-        QList<QJsonObject> responseList;
-        for (const ParamValue& val : sentValues) {
-            QJsonObject response = createStreamValueObj(val, error);
-            responseList << response;
-        }
-        emit stream(responseList);
-
-    } else {
-        // Simplified variant, getting all param values one by one
-        QList<QJsonObject> responseList;
-        for (const Param &p : m_capturedParams) {
-            ParamValue val(p);
-            long res = getParamValue(p, &val);
-            int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
-            QJsonObject response = createStreamValueObj(val, error);
-            responseList << response;
-        }
-        emit stream(responseList);
+        modules[modId.uid()].append(p);
     }
 
+    int error = 0;
+    _dde_func_return_t res = _return_OK;
+    ParamValueList allValues;
+    ParamList singleParams;
+
+    const int GROUP_PARAMS_COUNT_MIN = 5;
+    for (const int modKey: modules.keys()) {
+        if (modules[modKey].count() >= GROUP_PARAMS_COUNT_MIN) {
+            ParamID pID = modules[modKey].value(0).ID;
+            ParamID modId = {pID.devId, pID.moduleId, 0};
+
+            ParamValueList values = getModuleValues(modId, res); // request all values of the group
+            error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
+            if (error != 0) {
+                for (auto value : values) value.error = error;
+            }
+
+            allValues.append(values);
+        }
+
+        else {
+            singleParams.append(modules[modKey]);
+        }
+    }
+
+    for (const Param &p : singleParams) {
+        ParamValue val(p);
+        long res = getParamValue(p, &val); // request value of the single parameter
+        error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
+        val.error = error;
+        allValues.append(val);
+    }
+
+    for (const ParamValue& val : allValues) {
+        for (const Param& p : m_capturedParams) {
+            if (p.ID == val.paramID) {
+                sentValues.append(val);
+                break;
+            }
+        }
+    }
+
+    QList<QJsonObject> responseList;
+    for (const ParamValue& val : sentValues) {
+        QJsonObject response = createStreamValueObj(val, val.error);
+        responseList.append(response);
+    }
+
+    emit stream(responseList);
     return;
 }
 
@@ -689,6 +710,7 @@ QJsonObject ParamsHandler::createValueObj(int requestId, const ParamValue& value
 QJsonObject ParamsHandler::createStreamValueObj(const ParamValue& value, int error)
 {
     QJsonObject res;
+    res["type"] = "par";
     res["d_id"] = value.paramID.devId.id;
     res["m_id"] = value.paramID.moduleId;
     res["p_id"] = value.paramID.id;
