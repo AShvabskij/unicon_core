@@ -8,3 +8,7 @@ MOTOR DATA_D34;COSP;The motor power factor;69;3;R;;;;;1
 MAIN&PROTECT_D34;RATED LINE VOLTAGE;HRVS-DN-PowerStart's rate voltage;129;2;W;2300;15000;V;;3300
 MAIN&PROTECT_D34;STARTER FLC;HRVS-DN-PowerStart's FLC (Full Load Current);130;2;W;20;1800;A;;150
 MAIN&PROTECT_D34;MOTOR FLA;Sets motor's FLA(Full load Ampere);131;2;W;0;1800;A;;150
+OSC PARAMETERS;Reason;Trigger reason;385;2;W;;;;;0;
+OSC PARAMETERS;Time;Trigger time;386;2;R;;;ms;;0;
+OSC PARAMETERS;Resolution;;387;2;W;;;us;;0;
+OSC PARAMETERS;Buffer length;;388;2;W;;;us;;0;

@@ -98,7 +98,7 @@ class IOscFileService // Interface for working with the oscilloscope data file
 public:
     virtual ~IOscFileService() {};
 
-    virtual _dde_func_return_t open(const char* fileName, bool saveMode) = 0;
+    virtual _dde_func_return_t open(uint16_t device_id, const char* fileName) = 0;
     virtual _dde_func_return_t close() = 0;
 
     virtual _dde_func_return_t addData(DDE_GET_OSC_DATA& p) = 0;

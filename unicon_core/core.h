@@ -33,6 +33,9 @@ private:
     IDDE_Dispatcher* m_ddeDisp;
     OscStateService* m_oscStateService;
     SystemService* m_sysService;
+
+    SysType m_sysType;
+
 };
 
 #endif // APPLICATION_H

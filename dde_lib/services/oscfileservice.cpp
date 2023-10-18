@@ -14,6 +14,7 @@ using namespace OSC_FILE;
 
 const char* OSC_FILE_ERROR = "Osc data file error!\n";
 const char* OSC_FILE_PARSE_ERROR = "Error while parsing th osc file!\n";
+const char* OSC_FILE_PARSE_LIMIT_ERROR = "Exceeded The maximum allowed number of variables!\n";
 const int SET_SIZE = 16;
 
 OscFileService::OscFileService()
@@ -24,12 +25,15 @@ OscFileService::~OscFileService()
     close();
 }
 
-_dde_func_return_t OscFileService::open(const char* fileName, bool )
+_dde_func_return_t OscFileService::open(uint16_t device_id, const char* fileName)
 {
-    _dde_func_return_t res = loadHeader(fileName);
+    if (m_header && m_header->device_id == device_id && m_fileName == fileName) {
+        return _return_OK; // already opened
+    }
+
+    _dde_func_return_t res = loadHeader(device_id, fileName);
     if (!res) return res;
 
-    res = loadData();
     return res;
 }
 
@@ -57,7 +61,7 @@ _dde_func_return_t OscFileService::addData(DDE_GET_OSC_DATA& /*p*/)
 std::ifstream OscFileService::openOscFile(const char* fileName)
 {
 
-    string fullFileName = "/home/pi/Desktop/Release/" + string(fileName) + ".csv";
+    string fullFileName = string(fileName) + ".csv";
     std::ifstream file(fullFileName);
     if (!file.is_open()) {
         file.open(fileName);
@@ -116,12 +120,8 @@ int OscFileService::saveHeader(FILE_HEADER& /*header*/)
     return _return_OK;
 }
 
-int OscFileService::loadHeader(const char* fileName)
+int OscFileService::loadHeader(uint16_t device_id, const char* fileName)
 {
-    if (m_header && m_fileName == fileName) {
-        return _return_OK;
-    }
-
     delete m_header;
     m_header = new FILE_HEADER();
 
@@ -130,6 +130,10 @@ int OscFileService::loadHeader(const char* fileName)
 
     if (res == _return_OK) {
         res = parseHeader(fileStream, *m_header);
+    }
+
+    if (res == _return_OK) {
+        m_header->device_id = device_id;
         m_fileName = fileName;
     }
 
@@ -179,12 +183,11 @@ int OscFileService::th_loadData()
 
 _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc)
 {
-    waitForLoad();
+    if (!m_oscFileStream) {
+        loadData();
+    }
 
-
-//    if (!m_oscFileStream) {
-//        loadData(p.device_id);
-//    }
+      //   waitForLoad();
 
     if (!m_oscFileStream) {
         return _return_FAIL;
@@ -268,8 +271,9 @@ _dde_func_return_t OscFileService::getHeader(DDE_OSC_HEADER &p)
     return _return_OK;
 }
 
-_dde_func_return_t OscFileService::setHeader(const DDE_OSC_HEADER&)
+_dde_func_return_t OscFileService::setHeader(const DDE_OSC_HEADER& h)
 {
+    m_header->settings = h.settings;
     return _return_OK;
 }
 
@@ -279,14 +283,19 @@ OSC_VAR OscFileService::createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t 
     ret.id = descr.var_id;
     ret.device_id = deviceId;
     strcpy(ret.name, descr.name);
+    strcpy(ret.user_name, descr.name);
     ret.min = descr.min;
     ret.max = descr.max;
     ret.scale = descr.gain;
     ret.type = descr.isDiscrete ? OSC_VAR_TYPE::DISCRETE : (descr.isDigital ? OSC_VAR_TYPE::DIGITAL : OSC_VAR_TYPE::ANALOG);
+    memset(ret.dim, '\0', sizeof(ret.dim));
 
     std::stringstream ss;
-    ss << "0x" << std::hex << descr.color.Red << descr.color.Blue << descr.color.Green;
-    ss >> ret.color;
+    ss << std::hex << static_cast<int>(descr.color.Red) << static_cast<int>(descr.color.Green) << static_cast<int>(descr.color.Blue);
+    std::string sss;
+    ss >> sss;
+
+    ret.color = std::stol(sss, nullptr, 16);
 
     return ret;
 }
@@ -395,7 +404,13 @@ int OscFileService::parseHeader(const std::ifstream& fileStream, FILE_HEADER& he
         bool isDigital = (line[0] == '&');
 
         const VAR_DESCR& var = createVarDescr(elems, ++varId, isDigital);
+        if (chInd == OSC_MAX_VARS) {
+            cout << OSC_FILE_PARSE_LIMIT_ERROR;
+            return res;
+        }
+
         header.vars[++chInd] = var;
+        header.settings.channel_count = chInd + 1;
     }
 
     return res;

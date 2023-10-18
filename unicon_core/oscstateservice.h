@@ -29,6 +29,7 @@ class OscStateMachine
 {
     enum STATE {
         Normal,
+        Idle,
         Getting,
         Busy,
         Eof,
@@ -52,6 +53,7 @@ private:
     bool m_sof = false;
     int m_errCounter = 0;
     int m_busyCounter = 0;
+    int m_idleCounter = 0;
 
     IOscBufferService* m_buffSrv = nullptr;
 

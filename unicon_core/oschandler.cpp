@@ -48,7 +48,7 @@ void OscHandler::onReceivedData(quint16 ind)
     }
 
     m_streamValCount++;
-//  qDebug() << "\nOsc received data frames = " << m_streamValCount;
+    qDebug() << "\nOsc received data frames = " << m_streamValCount;
 
     streamData();
 }
