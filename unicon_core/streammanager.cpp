@@ -57,7 +57,7 @@ void StreamManager::unregisterClient(QWebSocket *client)
 
 int StreamManager::registerHandler(IReqHandler *handler)
 {
-    QMetaObject::Connection con = connect(handler, &IReqHandler::stream, this, &StreamManager::stream, Qt::QueuedConnection);
+    QMetaObject::Connection con = connect(handler, &IReqHandler::stream, this, &StreamManager::stream, Qt::DirectConnection);
     if (!con) {
         QTextStream(stdout) << "The stream connection is failed! " << '\n';
         return -1;
