@@ -4,10 +4,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <algorithm>
 
 #include "csv_parser.h"
 
-char separator_line = ';';
+char SEPARATOR_LINE = ';';
+const int REVISION_SIZE = 16;
 
 UAVCANcsvParser::UAVCANcsvParser()
 {
@@ -15,66 +17,90 @@ UAVCANcsvParser::UAVCANcsvParser()
 
 UAVCANcsvParser::~UAVCANcsvParser()
 {
-	result.clear();
-	delete[] tbl_name;
-	sstream.clear();
+	_result.clear();
+	_sstream.clear();
 }
 
-int UAVCANcsvParser::parse(const char* string_stream)
+_dde_func_return_t UAVCANcsvParser::parse(const char* string_stream)
 {
-	sstream.str(string_stream);
+	_result.clear();
 
-	Row revision = read_revision(&sstream);
-	strcpy((char*)tbl_name, revision[0].c_str());
-	if (strlen(tbl_name) != 16)
-		return -1;
+	_sstream.str(string_stream);
 
-	std::vector<Row> rows = read_data(&sstream);
-	if (rows.size() <= 1)
-		return -1;
+	Row revision = read_revision(&_sstream);
+	if (strlen(revision[0].c_str()) != REVISION_SIZE) {
+		return _return_FAIL;
+	}
+	std::string _revision = revision[0].c_str();
+
+	std::vector<Row> rows = read_data(&_sstream);
+	if (rows.size() <= 1) {
+		return _return_FAIL;
+	}
+
+	_result.reserve(rows.size());
 
 	for (int i = 0; i < rows.size() - 1; i++)
 	{
-		result.push_back(compose_a_header(rows[i]));
+		DDE_SET_PARAMS_HEADER param;
+
+		auto res = compose_header(rows[i], &param);
+
+		if (res != _return_OK) {
+			_result.clear();
+			return res;
+		}
+
+		_result.push_back(param);
 	}
-	return 0;
+
+	return _return_OK;
+}
+
+PARAM_HEADER_LIST UAVCANcsvParser::result()
+{
+	return _result;
 }
 
 bool is_valid_field(const char* str, int num_field)
 {
+	bool res = true;
 	try
 	{
-		bool res = false;
 		switch (num_field)
 		{
-		case 0:
+		case 0: // param id
 			res = strlen(str) == 4;
 			for (int i = 0; i < strlen(str); i++)
 				res = res && ('0' <= str[i] && str[i] <= '9'\
 					|| 'a' <= str[i] && str[i] <= 'f'\
 					|| 'A' <= str[i] && str[i] <= 'F');
 			break;
-		case 2:
-			res = (strlen(str) == 1);
-			res = res && ('0' <= str[0] && str[0] <= '6');
-			break;
-		case 3:
-			res = (strlen(str) == 1);
+		case 2: // r/w flag
+			res = (strlen(str) >= 1);
 			res = res && ('1' <= str[0] && str[0] <= '2');
 			break;
-		case 5:
-			res = strlen(str) >= 1;
+		case 3: // format
 			for (int i = 0; i < strlen(str); i++)
-				res = res && (('0' <= str[i] && str[i] <= '9') || str[i] == '.');
+				res = res && (std::isdigit(str[i]));
+			break;
+		case 5: // scale
+			for (int i = 0; i < strlen(str); i++)
+				res = res && (std::isdigit(str[i]) || str[i] == '.' || str[i] == 'e' || str[i] == 'E' || str[i] == '-');
 			break;
 		}
-		return res;
 	}
 	catch (const std::exception&)
 	{
-		return false;
+		res = false;
+
 	}
-	
+
+	if (!res) {
+		std::cout << "Incompatable value in the dictionary line = """ << str << """, field num = " << num_field;
+	}
+
+	return res;
 }
 
 bool is_validRow(Row cells)
@@ -83,19 +109,18 @@ bool is_validRow(Row cells)
 //		 is_Valid = isValid && !(Cells.begin() == Cells.end());
 
 	is_valid = is_valid && is_valid_field(cells[0].c_str(),0);
+
 	if (cells.size() == 2)
 		return is_valid;
 
 	is_valid = is_valid && is_valid_field(cells[2].c_str(),2);
 	is_valid = is_valid && is_valid_field(cells[3].c_str(),3);
-	if (cells.size() == 5)
-		return is_valid;
-
 	is_valid = is_valid && is_valid_field(cells[5].c_str(),5);
+
 	return is_valid;
 }
 
-Row split(std::string str, char separator)
+Row UAVCANcsvParser::split(std::string str, char separator)
 {
 	Row res;
 	std::string param;
@@ -107,22 +132,33 @@ Row split(std::string str, char separator)
 	return res;
 }
 
-Row read_row(std::stringstream* stream)
+Row UAVCANcsvParser::read_row(std::stringstream* stream)
 {
 	Row res;
+
 	while (!stream->eof())
 	{
 		std::string row;
-		std::getline(*stream, row, separator_line);
+		std::getline(*stream, row, SEPARATOR_LINE);
+
+		row.erase(std::remove_if(row.begin(), row.end(), isspace), row.end());
+ 		row.erase(std::remove(row.begin(), row.end(), '\t'), row.end());
+
 		res = split(row, ',');
-		if (!is_validRow(res))
+		if (res.size() <= 1) {
 			continue;
-		res[1].erase(0, res[1].find_first_of("_") + 1);
+		}
+
+		if (!is_validRow(res)) {
+			std::cout << "Incompatible row in the dictionary file, row = " << row;
+			continue;
+		}
+
 		return res;
 	}
 }
 
-std::vector<Row> read_data(std::stringstream* stream)
+std::vector<Row> UAVCANcsvParser::read_data(std::stringstream* stream)
 {
 	std::vector<Row> rows;
 	do
@@ -132,10 +168,10 @@ std::vector<Row> read_data(std::stringstream* stream)
 	return rows;
 }
 
-Row read_revision(std::stringstream* stream)
+Row UAVCANcsvParser::read_revision(std::stringstream* stream)
 {
 	std::string row;
-	std::getline(*stream, row, separator_line);
+	std::getline(*stream, row, SEPARATOR_LINE);
 	if (row.find('{') != std::string::npos)
 		row.erase(row.find('{'), 1);
 	Row revision;
@@ -143,32 +179,45 @@ Row read_revision(std::stringstream* stream)
 	return revision;
 }
 
-DDE_SET_PARAMS_HEADER compose_a_header(Row cells)
+_dde_func_return_t UAVCANcsvParser::compose_header(const Row& cells, DDE_SET_PARAMS_HEADER* header)
 {
-	DDE_SET_PARAMS_HEADER res;
+	strncpy(header->descr, "\000", 1); //clean trash
+	memset(header->txtValues, 0, DDE_PARAMS_TXTVALUES_MAX_COUNT);// = nullptr;
+	header->reg_id = 0;
+	memset(header->txtSubIndexes, 0, DDE_PARAMS_TXTVALUES_MAX_COUNT); //= nullptr;
+	header->format = (GLIO_ELEMENT_FORMAT_ENUM)0;
+	header->writable = false;
+	strncpy(header->dim, "\000", 1);
+	header->scale = 0;
 
-	strncpy(res.descr, "\000", 1); //clean trash
-	res.txtValues = nullptr;
-	res.id = 0;
-	res.txtSubIndexes = 0;
-//---------------------------------------------
-	res.module_id = stoi(cells[0], 0, 16) / 256;  //take the first 2 bytes
-	res.param_id = stoi(cells[0], 0, 16) % 256;   //take the last 2 bytes
-	strcpy(res.name, cells[1].c_str());
+	header->module_id = stoi(cells[0], 0, 16) / 256;  //take the first 2 bytes
+	header->param_id = stoi(cells[0], 0, 16) % 256;   //take the last 2 bytes
 
-	if (cells.size() >= 5)
-	{
-		res.format = (GLIO_ELEMENT_FORMAT_ENUM)stoi(cells[2]);
-		res.writable = stoi(cells[3]) == 2 ? true : false;
-		strcpy(res.unit, cells[4].c_str());
+	std::string paramName = cells[1];
+//	paramName.erase(0, paramName.find_first_of("_") + 1);
+	strcpy(header->name, paramName.c_str());
+
+	if (cells.size() <= 2) return _return_OK; // module description
+
+	if (cells.size() < 6) return _return_FAIL;
+
+	header->writable = stoi(cells[2]) == 2 ? true : false;
+	header->format = parseFormat(cells[3]);
+	strcpy(header->dim, cells[4].c_str());
+	if (cells[5] != "") {
+		header->scale = stof(cells[5]);
 	}
-	else
-	{
-		res.format = (GLIO_ELEMENT_FORMAT_ENUM)0;
-		res.writable = false;
-		strncpy(res.unit, "\000", 1);
+
+	return _return_OK;
+}
+
+GLIO_ELEMENT_FORMAT_ENUM UAVCANcsvParser::parseFormat(const std::string& cell)
+{
+	if (cell == "") return GLIO_ELEMENT_FORMAT_ENUM::FORMAT_INT; // default value
+	int res = stoi(cell);
+	if (res < 0 || res > GLIO_ELEMENT_FORMAT_ENUM::FORMAT_UNKNOWN) {
+		return GLIO_ELEMENT_FORMAT_ENUM::FORMAT_UNDEFINED;
 	}
 
-	res.scale = cells.size() >= 6 ? stof(cells[5]) : 0;
-	return res;
+	return static_cast<GLIO_ELEMENT_FORMAT_ENUM>(res);
 }

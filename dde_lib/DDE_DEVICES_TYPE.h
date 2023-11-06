@@ -9,7 +9,7 @@
 
 // 32 device on CAN bus + 1 connex master with ID=0
 
-#define DDE_DEV0_MASTER_IND                              0
+#define DDE_DEV0_MASTER_IND 0
 
 #pragma pack(push,1)
 typedef struct {

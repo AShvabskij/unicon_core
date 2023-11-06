@@ -8,7 +8,7 @@ ParamDescr::ParamDescr()
 ParamDescr::~ParamDescr()
 {}
 
-int ParamDescr::init(string device_name, string device_description, db_type type)
+int ParamDescr::init(string device_name, string device_description)
 {
     if (device_name.empty())
     {
@@ -16,18 +16,27 @@ int ParamDescr::init(string device_name, string device_description, db_type type
         return _return_FAIL;
     }
 
-    if (_inited && _dev_name == device_name)
+    if (_inited && (_dev_name == device_name))
     {
         return _return_OK;
     }
-
+    _type = db_type::usual;
     _dev_name = device_name;
     _dev_description = device_description;
+    
 
-    int res = init_tbl(_dev_name.c_str(), _dev_description.c_str(), (uint8_t)type);
-    _inited = (res > 0);
 
-    return res;
+    int res_usual = init_tbl(_dev_name.c_str(), _dev_description.c_str(), (uint8_t)db_type::usual);
+    
+    //add tesxtual descrtipion table. even if not exist create it empty
+    int res_txt = init_tbl(_dev_name.c_str(), _dev_description.c_str(), (uint8_t)db_type::txt);
+
+    _inited = ((res_usual > 0)&&(res_txt>0));
+    if (_inited)
+    return _return_OK;
+    else
+    return _return_FAIL;
+
 }
 
 int ParamDescr::get(DDE_GET_PARAMS_HEADER* p, db_type type)
