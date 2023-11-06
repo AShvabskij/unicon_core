@@ -34,19 +34,18 @@ void Core::start()
 
 #ifdef __WIN32__
     IDDE* dde = new DDE_EMUL();
+    m_sysType = SysType::FILE_IO;
     dde->init("FILE_IO");
-    m_ddeDisp->registerDDE(SysType::FILE_IO, dde);
 #else
     IDDE* dde = new DDE_TOP();
+    m_sysType = SysType::UAVCAN;
+
     dde->init("UAVCAN"); // TODO: replace arg to const char*
-    m_ddeDisp->registerDDE(SysType::UAVCAN, dde);
-//  QtConcurrent::run(dde, &IDDE::update);
-//  m_ddeDisp->registerDDE(SysType::UAVCAN, dde);
 #endif
 
     m_ddeDisp->setDefaultDDE(dde);
-//  m_ddeDisp->registerDDE(SysType::Undefined, dde);
-    m_oscStateService = new OscStateService(m_ddeDisp->dde(SysType::UAVCAN), OscBufferService::instanse());
+    m_ddeDisp->registerDDE(m_sysType, dde);
+    m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), OscBufferService::instanse());
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp);
     DeviceHandler* device = new DeviceHandler(m_ddeDisp);
@@ -73,14 +72,14 @@ void Core::start()
 
 //    IDDE* dde = m_ddeDisp->dde(SysType::DEFAULT);
 
-    m_sysService = new SystemService(SysType::UAVCAN, m_ddeDisp->dde(SysType::UAVCAN));
+    m_sysService = new SystemService(m_sysType, m_ddeDisp->dde(m_sysType));
     connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
 
-    QList<DevInd> links = m_sysService->linkedDevices(SysType::UAVCAN);
+    QList<DevInd> links = m_sysService->linkedDevices(m_sysType);
     m_oscStateService->init(links);
 
     m_sysService->start();
-    QtConcurrent::run(this, &Core::thread_proc, SysType::UAVCAN);
+    QtConcurrent::run(this, &Core::thread_proc, m_sysType);
 }
 
 void Core::thread_proc(SysType sysType)

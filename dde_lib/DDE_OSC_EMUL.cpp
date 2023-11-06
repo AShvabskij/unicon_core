@@ -4,8 +4,8 @@
 #include <chrono>
 
 const int CHANNELS_MAX = 16;
-const int BUFFER_MAX = 500;
-const int DATA_YELD_INTERVAL_MSC = 50;
+const int BUFFER_MAX = 5000;
+const int DATA_YELD_INTERVAL_MSC = 100;
 const int RESOLUTION_MKS = (DATA_YELD_INTERVAL_MSC * 1000) / BUFFER_MAX;
 
 _dde_func_return_t DDE_OSC_EMUL::get(DDE_OSC_HEADER& p)

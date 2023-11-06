@@ -6,6 +6,9 @@
 
 #include <QCoreApplication>
 
+const int MAX_OSC_ERROR_COUNT = 10;
+const int MAX_OSC_IDLE_COUNT = 10;
+
 OscStateService::OscStateService(IDDE *dde, IOscBufferService *buffSrv)
 {
     m_dde = dde;
@@ -61,12 +64,24 @@ void OscStateMachine::update(DevInd devId)
             if (res != _return_OK) return;
 
             if (m_header->settings.trig_time > 0 && m_header->settings.reason > 0) {
-                m_sof = false;
+                m_errCounter = 0;
                 m_state = Getting;
+                m_sof = false;
+            } else {
+                m_idleCounter = 0;
+                m_state = Idle;
             }
 
             break;
         }
+
+    case Idle: {
+        m_idleCounter++;
+        if (m_idleCounter > MAX_OSC_IDLE_COUNT) {
+            m_state = Normal;
+        }
+        break;
+    }
 
         case Getting: {
             auto res = getData(*m_header, m_ddeData);
@@ -123,6 +138,11 @@ void OscStateMachine::update(DevInd devId)
         }
         case Error: {
             m_errCounter++;
+            if (m_errCounter > MAX_OSC_ERROR_COUNT) {
+                m_state = Finished;
+                break;
+            }
+
             m_state = Normal;
             break;
         }

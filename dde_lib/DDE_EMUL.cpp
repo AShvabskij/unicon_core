@@ -33,11 +33,29 @@ _dde_func_return_t DDE_EMUL::get_params_data(DDE_GET_PARAMS_DATA& p)
 
 _dde_func_return_t DDE_EMUL::set_params_data(DDE_SET_PARAMS_DATA& p)
 {
+    if (p.module_id == 6 && p.param_id == 1) { // someone set osc reason value to start/stop osc
+        DDE_OSC_HEADER h;
+        h.device_id = p.device_id;
+        m_osc->get(h);
+        h.settings.reason = p.ivalue;
+
+        if (h.settings.reason == 1) {
+            time_t timeMsc = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch()
+                ).count();
+
+            h.settings.trig_time = timeMsc;
+        }
+
+        m_osc->set(h);
+    }
+
     return m_params->set(p);
 }
 
 _dde_func_return_t DDE_EMUL::get_osc_header(DDE_OSC_HEADER& p)
 {
+    m_osc->open(p.device_id);
     return m_osc->get(p);
 }
 

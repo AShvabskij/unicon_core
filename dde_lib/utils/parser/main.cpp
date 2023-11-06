@@ -3,7 +3,7 @@
 
 #include "csv_parser.h"
 
-const char* string_stream = "DEVN007300620107,27.03.2022;\
+const char* string_stream = "DCDC010203040506,27.03.2022;\
 0100,M1_ADC;\
 0101,W1_mode,2,1,Wt;\
 0102,W3_Udc1_gain,3,1,V;\
@@ -55,12 +55,12 @@ const char* string_stream = "DEVN007300620107,27.03.2022;\
 
 int main()
 {
-    UAVCANcsvParser* obj = new UAVCANcsvParser();
-    obj->parse(string_stream);
+    UAVCANcsvParser obj;
+    obj.parse(string_stream);
 
-    ParamDescr par_desc;
-    par_desc.init(obj->tbl_name, "NONE", db_type::usual);
-    for (int i = 0; i < obj->result.size(); i++)
-        par_desc.set(&obj->result[i], db_type::usual);
-    par_desc.close();
+    //ParamDescr par_desc;
+    //par_desc.init(obj.tbl_name, "NONE", db_type::usual);
+    //for (int i = 0; i < obj.result.size(); i++)
+    //    par_desc.set(&obj.result[i], db_type::usual);
+    //par_desc.close();
 }

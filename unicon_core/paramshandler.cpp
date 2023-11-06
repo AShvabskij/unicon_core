@@ -358,7 +358,7 @@ long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALU
     }; break;
     default: {
         if (el.ivalue > 0 && paramId.id > 0) {
-            QTextStream(stdout) << "`The param value format is undefined, " << paramId.logStr() << "\n";
+            qWarning() << "The param value format is undefined, " << paramId.logStr() << "\n";
         }
 
         res.value = el.ivalue;
@@ -446,12 +446,19 @@ void ParamsHandler::streamParamsValue()
     }
 
     QList<QJsonObject> responseList;
-    for (const ParamValue& val : sentValues) {
+    for (ParamValue& val : sentValues) {
         QJsonObject response = createStreamValueObj(val, val.error);
         responseList.append(response);
     }
 
     emit stream(responseList);
+
+    for (const ParamValue& val : sentValues) {
+        if (!val.isActual()) {
+            qWarning() << "The param value actuality is exceeded, " << val.paramID.logStr() << ", actuality = " << val.timestamp -  QDateTime::currentMSecsSinceEpoch() << "\n";
+        }
+    }
+
     return;
 }
 
