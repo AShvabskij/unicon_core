@@ -192,11 +192,25 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
 
     string dev_name = create_device_name(p.device_id);
 
-    int res = _paramDescr->init(dev_name.c_str(), "", db_type::usual); // we need to look in db for correct table according device_name and device_revision
+    int res = _paramDescr->init(dev_name.c_str(), ""); // we need to look in db for correct table according device_name and device_revision
     if (res == _return_OK) {
         res = _paramDescr->get(&p, db_type::usual);
     }
 
+    if (p.param_id == 0) {
+        int el_count = p.el_count;
+        for (int ii = 0; ii < el_count; ii++) {
+            if (p.el_descr[ii].format == 5) {
+                p.param_id = ii;
+                res = _paramDescr->get(&p, db_type::txt);
+            }
+        }
+    }
+     else  {
+       if (p.el_descr[0].format == 5) //Single element always return in 0 item
+       res = _paramDescr->get(&p, db_type::txt);
+    }
+    
     return res;
 }
 
@@ -207,14 +221,31 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
     //assert(p.el.device_id < DEVICE_ID_MAX);
     assert(p.module_id <= MODULES_ID_MAX);
     assert(p.param_id <= PARAMS_ID_MAX);
+    
+    //we need check if parameter presented and lately decide to replace or add
+    DDE_GET_PARAMS_HEADER hdr;
+    hdr.device_id = p.device_id;
+    hdr.module_id = p.module_id;
+    hdr.param_id = p.param_id;
 
     string dev_name = create_device_name(p.device_id);
 
-    int res = _paramDescr->init(dev_name.c_str(), "", db_type::usual);
+    int res = _paramDescr->init(dev_name.c_str(), "");
     if (res == _return_OK) {
+        res = _paramDescr->get(&hdr, db_type::usual);
+        if (res!= _return_OK)
         res = _paramDescr->set(&p, db_type::usual);
+        
+        //if tesxtual descrtipion exist add another table
+    if (p.txtValues[0] != nullptr) {
+            res = _paramDescr->get(&hdr, db_type::txt);
+            if (res != _return_OK)
+            res = _paramDescr->set(&p, db_type::txt);
+        }
     }
 
+    
+    
     if (res != _return_OK) return res;
 
     GLIO_ELEMENT_DESCR el;
@@ -222,6 +253,7 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
     el.mod = p.module_id;
     el.format = p.format;
     el.scale = p.scale;
+    el.writable = p.writable;
     strncpy(el.dim, p.dim, DIM_SIZE);
 
     update_data_descr(p.device_id, el);
@@ -323,7 +355,7 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
     if (list_read.empty()) return _return_FAIL;
 
     p = list_read.front();
-    list_read.pop();
+    list_read.pop(); //A&D 31.08.2023 catch this hangs
 
     return _return_OK;
 }

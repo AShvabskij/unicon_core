@@ -14,7 +14,7 @@
 #define PARAMS_COUNT_MAX	(0x3F + 1)
 
 // 32 device on CAN bus + 1 connex master with ID=0
-#define DEVICE_ID_MAX		(32+1)
+#define DEVICE_ID_MAX		(16+1)
 
 #define DDE_DEV0_MODULE0_DESCRIPTION                 0
 #define     DDE_DEV0_MODULE0_PARAM0_DESCRIPTION      0
@@ -86,7 +86,7 @@ typedef struct
 #ifdef SET_CPP
     GLIO_ELEMENT_FORMAT_ENUM format;  // 0 - not defined 1-int 2-float 3-bit, 4-hex, 5-text
 #else
-    int format; //// 0 - not defined 1-bin 2-int 3-float, 4-hex, 5-text, 6-ascii
+    int format; //// 0 - not defined 1-int 2-float 3-bit, 4-hex, 5-text
 #endif    
     float scale;
     char dim[DIM_SIZE]; // unit of measurement
@@ -153,7 +153,7 @@ typedef struct
     uint16_t module_id;
     uint16_t param_id;
 
-    uint16_t id;
+    uint16_t reg_id;
     char name[DDE_PARAMS_NAME_LENGTH];
     char descr[DDE_PARAMS_DESCR_LENGTH];
 
@@ -165,8 +165,8 @@ typedef struct
 
     float scale;
     char dim[DIM_SIZE]; // unit of measurement
-    char* txtValues; // list of predefined text values
-    int txtSubIndexes;
+    char* txtValues[DDE_PARAMS_TXTVALUES_MAX_COUNT]; // list of predefined text values
+    int txtSubIndexes[DDE_PARAMS_TXTVALUES_MAX_COUNT];
     bool writable;
 }DDE_SET_PARAMS_HEADER;
 #pragma pack(pop)
