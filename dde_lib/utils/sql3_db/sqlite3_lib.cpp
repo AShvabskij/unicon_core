@@ -246,26 +246,27 @@ int one_desc_recs_callback(void *uk, int columns, char **aDat, char **aName)
     //hdr->param_id = atoi(aDat[2]);
     // if (hdr->param_id != 0) callback_counter = hdr->param_id; NOT needed as it is reset to 0 before call
     int param_id_from_table = atoi(aDat[2]);
-    if ((callback_counter >= DDE_PARAMS_NAME_LENGTH)||(param_id_from_table >= DDE_PARAMS_NAME_LENGTH)) {
+    int ind =  (hdr->param_id > 0) ?  hdr->param_id : param_id_from_table;
+
+    if ((callback_counter >= PARAMS_COUNT_MAX)||(ind >= PARAMS_COUNT_MAX)) {
         char msg[256] = { 0 };
-        sprintf(msg, "Select error, glio counter is exceeded max value");
+        sprintf(msg, "Select error, counter or index is exceeded max value");
         print_msg_sql(msg, 1);
         return -1;
     }
 
-    memcpy(hdr->el_descr[hdr->param_id].name, aDat[4], DDE_PARAMS_NAME_LENGTH - 1);
-    memcpy(hdr->el_descr[hdr->param_id].descr, aDat[5], DDE_PARAMS_DESCR_LENGTH - 1);
-    hdr->el_descr[hdr->param_id].format = (GLIO_ELEMENT_FORMAT_ENUM)atoi(aDat[6]);
-    hdr->el_descr[hdr->param_id].scale = atof(aDat[7]);
-    memcpy(hdr->el_descr[hdr->param_id].dim, aDat[8], DIM_SIZE);
-    hdr->el_descr[hdr->param_id].writable = atoi(aDat[9]);
-    hdr->el_descr[hdr->param_id].id = atoi(aDat[2]);
+    hdr->el_descr[ind].id = param_id_from_table;
+    hdr->el_descr[ind].mod = hdr->module_id;
 
-    hdr->el_descr[hdr->param_id].mod = hdr->module_id;
-    
-    //if (hdr->param_id == 0)  // get all 
-        callback_counter++;
+    memcpy(hdr->el_descr[ind].name, aDat[4], DDE_PARAMS_NAME_LENGTH - 1);
+    memcpy(hdr->el_descr[ind].descr, aDat[5], DDE_PARAMS_DESCR_LENGTH - 1);
+    hdr->el_descr[ind].format = (GLIO_ELEMENT_FORMAT_ENUM)atoi(aDat[6]);
+    hdr->el_descr[ind].scale = atof(aDat[7]);
+    memcpy(hdr->el_descr[ind].dim, aDat[8], DIM_SIZE);
+    hdr->el_descr[ind].writable = atoi(aDat[9]);
 
+    //if (hdr->param_id == 0)  // get all
+    callback_counter++;
 
     return 0;
 }
@@ -274,7 +275,7 @@ int one_desc_recs_callback(void *uk, int columns, char **aDat, char **aName)
 //int txt_counter = 0;
 int one_txt_recs_callback(void *uk, int columns, char **aDat, char **aName)
 {
-    int ii, param_id;
+    int ii;
     if (!columns && columns == 4)
         return -1;
     if (callback_counter > DDE_PARAMS_TXTVALUES_MAX_COUNT) 
@@ -282,15 +283,22 @@ int one_txt_recs_callback(void *uk, int columns, char **aDat, char **aName)
 
     DDE_GET_PARAMS_HEADER* hdr = ((DDE_GET_PARAMS_HEADER*)uk);
 
+    if (hdr->param_id == 0 || hdr->param_id >= PARAMS_COUNT_MAX) {
+        char msg[256] = { 0 };
+        sprintf(msg, "Select error, param_id is not valid now");
+        print_msg_sql(msg, 1);
+        return -1;
+    }
+
     //if (callback_counter == 0)
     {
         ii = callback_counter;
+        int txt_id_from_table = atoi(aDat[1]);
 
-        param_id = hdr->param_id; //A&D according to agriment with Aleksandr return to the same item as requested
-        hdr->el_descr[param_id].id = atoi(aDat[1]);
-        hdr->el_descr[param_id].txtSubIndexes[ii] = atoi(aDat[2]);        
-        hdr->el_descr[param_id].txtValues[ii] = (char*)malloc(sizeof(char[DDE_PARAMS_TXTVALUE_LENGTH])); //TODO A&D this will probably leak )
-        strcpy(hdr->el_descr[param_id].txtValues[ii], aDat[3]);
+        int ind = hdr->param_id; //A&D according to agriment with Aleksandr return to the same item as requested
+        hdr->el_descr[ind].txtSubIndexes[ii] = atoi(aDat[2]);
+        hdr->el_descr[ind].txtValues[ii] = (char*)malloc(sizeof(char[DDE_PARAMS_TXTVALUE_LENGTH])); //TODO A&D this will probably leak )
+        strcpy(hdr->el_descr[ind].txtValues[ii], aDat[3]);
     }
     //else
     //{   
@@ -334,9 +342,6 @@ int get_rec(const char* device_name, const char* device_description, int param_i
         return _return_FAIL;
 
     //buf->device_id = atoi(device_description);
-    hdr->timeout = 0;
-    hdr->timeout_flg = 0;
-    hdr->el_count = 0;
     int ret = -1, rc;
     callback_counter = 0;
 

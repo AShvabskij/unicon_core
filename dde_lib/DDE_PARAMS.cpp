@@ -194,8 +194,15 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
 
     int res = _paramDescr->init(dev_name.c_str(), ""); // we need to look in db for correct table according device_name and device_revision
     if (res == _return_OK) {
+
+        p.timeout = 0;
+        p.timeout_flg = 0;
+        p.el_count = 0;
         res = _paramDescr->get(&p, db_type::usual);
     }
+
+    if (res != _return_OK)
+        return res;
 
     if (p.param_id == 0) {
         int el_count = p.el_count;
@@ -205,10 +212,12 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
                 res = _paramDescr->get(&p, db_type::txt);
             }
         }
+        p.param_id = 0;
     }
      else  {
        if (p.el_descr[0].format == 5) //Single element always return in 0 item
        res = _paramDescr->get(&p, db_type::txt);
+
     }
     
     return res;

@@ -291,12 +291,13 @@ void DeviceHandler::handleReqModuleHeader(SysType sysType, int deviceId, int mod
 
     for (int i = 0; i < header.el_count; ++i) {
         GLIO_ELEMENT_DESCR& elem = header.el_descr[i];
-        if (elem.id == 0) {
+        if (i == 0) {
             module.name = elem.name;
             module.desc = elem.descr;
+            continue;
         }
 
-        if (elem.mod == moduleId) {
+        if (elem.mod == moduleId && elem.id != 0) {
             module.params << elem.id;
         }
     }
