@@ -395,7 +395,7 @@ int get_rec(const char* device_name, const char* device_description, int param_i
             //offset = glio_counter - 1;
             //for (num_glio = 0; num_glio < glio_counter; num_glio++)
             //{
-                int txt_id = hdr->module_id* MODULES_ID_MAX+hdr->param_id;
+                int txt_id = hdr->module_id* (MODULES_ID_MAX+1) +hdr->param_id;
                 sprintf(tmp, "SELECT * FROM `%s` WHERE txt_id_s=%d;", txt_name, txt_id);
                 
                 callback_counter = 0;

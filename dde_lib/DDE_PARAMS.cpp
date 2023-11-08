@@ -210,6 +210,13 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
             if (p.el_descr[ii].format == 5) {
                 p.param_id = ii;
                 res = _paramDescr->get(&p, db_type::txt);
+                if (!res) {
+                    std::cout <<	"Error getting txt param! dev_id=" << static_cast<int>(p.device_id) << \
+                                    " mod_id="<< static_cast<int>(p.module_id)<<\
+                                    " par_id="<< static_cast<int>(p.param_id) << std::endl;
+                    res = _return_OK; // temporaly
+
+                }
             }
         }
         p.param_id = 0;
