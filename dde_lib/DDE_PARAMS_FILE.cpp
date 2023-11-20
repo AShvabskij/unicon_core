@@ -56,7 +56,7 @@ void DDE_PARAMS_FILE::setTestDevice()
                 setDat.ivalue = 0x32363030;
                 break;
             case DDE_DEV0_MODULE0_PARAM4_HASH:
-                setDat.ivalue = 0x37303130 + (i / devices_step);
+                setDat.ivalue = 0x37303130 + (i/devices_step);
                 break;
             }
 
@@ -80,7 +80,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
     file->setWorkDirectory("/home/pi/Desktop/Release/");
 #endif
 
-    for (int ii = 1; ii <= devices_count * devices_step; ii = ii + devices_step) {
+    for (int ii = 1; ii <= devices_count * devices_step; ii = ii + devices_step)	{
         string fileName = "parameters_" + to_string(ii) + ".csv";
         res = file->open(fileName);
         if (res != 0) {
@@ -118,6 +118,11 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
             uint16_t moduleId = elemId >> 6 << 6;
 
             uint16_t paramNum = elemId - moduleId;
+/*
+            if (moduleNum == 0 && paramNum == 0) {
+                continue;
+            }
+*/
             strcpy(m_devDescr[ii].el_descr[moduleId].name, cells[0].c_str());
 
             GLIO_ELEMENT_DESCR& el_descr = m_devDescr[ii].el_descr[elemId];
@@ -137,7 +142,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
             el_value.scale = el_descr.scale;
             if (el_descr.format == GLIO_ELEMENT_FORMAT_ENUM::FORMAT_FLOAT) {
                 float fvalue = atof(cells[10].c_str());
-                memcpy(&el_value.ivalue, &fvalue, sizeof(float));
+                memcpy(&el_value.ivalue, &fvalue, sizeof (float));
             } else {
                 el_value.ivalue = atoi(cells[10].c_str());
             }
@@ -151,7 +156,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
                     if (i >= DDE_PARAMS_TXTVALUES_MAX_COUNT) {
                         break;
                     }
-                    char* c = new char[DDE_PARAMS_TXTVALUE_LENGTH + 1];
+                    char* c = new char[DDE_PARAMS_TXTVALUE_LENGTH +1];
                     strncpy(c, txtValues.at(i).c_str(), DDE_PARAMS_TXTVALUE_LENGTH);
                     el_descr.txtValues[i] = c;
                     el_descr.txtSubIndexes[i] = i + 1;
@@ -174,18 +179,18 @@ void DDE_PARAMS_FILE::setTestLinks()
         setDat.param_id = ii;
         switch (ii)
         {
-        case 1:
-            setDat.ivalue = 1;
-            break;
-        case 11:
-            setDat.ivalue = 1;
-            break;
-        case 21:
-            setDat.ivalue = 1;
-            break;
-        case 31:
-            setDat.ivalue = 1;
-            break;
+            case 1:
+                setDat.ivalue = 1;
+                break;
+            case 11:
+                setDat.ivalue = 1;
+                break;
+            case 21:
+                setDat.ivalue = 1;
+                break;
+            case 31:
+                setDat.ivalue = 1;
+                break;
         default: setDat.ivalue = 0;
         }
 
@@ -193,7 +198,7 @@ void DDE_PARAMS_FILE::setTestLinks()
     }
 }
 
-_dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER& p)
+_dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_HEADER &p)
 {
     if (p.device_id > DEVICE_ID_MAX || p.param_id > ELEMENTS_ID_MAX || p.module_id > ELEMENTS_ID_MAX) {
         memset(&p, 0, sizeof(DDE_GET_PARAMS_HEADER));
@@ -245,9 +250,9 @@ _dde_func_return_t DDE_PARAMS_FILE::get(DDE_GET_PARAMS_DATA& p)
         return _return_FAIL;
     }
 
-    //    if (p.module_id > PARAMS_ID_MAX || p.param_id > PARAMS_ID_MAX) {
-    //        return -1;
-    //    }
+//    if (p.module_id > PARAMS_ID_MAX || p.param_id > PARAMS_ID_MAX) {
+//        return -1;
+//    }
 
     if (p.module_id > ELEMENTS_ID_MAX || p.param_id > ELEMENTS_ID_MAX) {
         return _return_FAIL;
@@ -311,9 +316,9 @@ float DDE_PARAMS_FILE::elemValueToFloat(const GLIO_ELEMENT_DESCR& elDescr, GLIO_
 
 inline time_t DDE_PARAMS_FILE::systemTime()
 {
-    time_t timeMsc = std::chrono::duration_cast<std::chrono::milliseconds>(
+    time_t timeMsc = std::chrono::duration_cast< std::chrono::milliseconds >(
         std::chrono::system_clock::now().time_since_epoch()
-        ).count();
+    ).count();
 
     return timeMsc;
 }
@@ -322,7 +327,7 @@ _dde_func_return_t DDE_PARAMS_FILE::set(DDE_SET_PARAMS_DATA& p)
 {
     //check valid input
 
-    if (p.device_id > DEVICE_ID_MAX || p.param_id > ELEMENTS_ID_MAX/*PARAMS_ID_MAX*/) {
+    if (p.device_id > DEVICE_ID_MAX || p.param_id > ELEMENTS_ID_MAX/*PARAMS_ID_MAX*/ ) {
         return _return_FAIL;
     }
 
@@ -341,13 +346,13 @@ float DDE_PARAMS_FILE::generateValue(float frequency_hertz, int amplitude, float
     float w = (2 * pi * f);
 
     float t = (timeMsc & 0xFFFF) * 0.001;
-    float rnd = 1 + noise * ((rand() % 100) / (100 * 1.0));
+    float rnd = 1 + noise*((rand()%100)/(100*1.0));
     float res = a * sin((w * t * rnd));
 
     return res;
 }
 
-float DDE_PARAMS_FILE::generateValue(float value, float noise)
+float DDE_PARAMS_FILE::generateValue(float value , float noise)
 {
     static int tick = 0;
     static int tick2 = 0;
@@ -359,10 +364,9 @@ float DDE_PARAMS_FILE::generateValue(float value, float noise)
     if (tick % 6 == 0) {
         tick2++;
         if (tick2 % 2 == 0) {
-            rnd = 1 + noise * ((rand() % 100) / (100 * 1.0));
-        }
-        else {
-            rnd = 1 - noise * ((rand() % 100) / (100 * 1.0));
+            rnd = 1 + noise*((rand()%100)/(100*1.0));
+        } else {
+            rnd = 1 - noise*((rand()%100)/(100*1.0));
         }
     }
 
@@ -376,7 +380,7 @@ StringList DDE_PARAMS_FILE::split(std::string inputStr, char delim)
     std::stringstream inputStream(inputStr);
 
     char specChars[] = "\"\'`";
-    while (std::getline(inputStream, item, delim)) {
+    while(std::getline(inputStream, item, delim)) {
         if (item.empty()) {
             continue;
         }
@@ -386,16 +390,16 @@ StringList DDE_PARAMS_FILE::split(std::string inputStr, char delim)
         }
 
         if (std::isspace(*item.rbegin())) {
-            item.erase(item.length() - 1);
+            item.erase(item.length()-1);
         }
 
-        item.erase(std::remove_if(std::begin(item), std::end(item), [specChars](const char& c) {
+        item.erase(std::remove_if(std::begin(item), std::end(item),[specChars](const char & c) {
             for (unsigned int i = 0; i < strlen(specChars); ++i)
             {
                 if (c == specChars[i]) return true;
             }
             return false;
-            }), item.end());
+        }), item.end());
 
         res.push_back(item);
     }

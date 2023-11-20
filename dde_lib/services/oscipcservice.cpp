@@ -89,7 +89,7 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint16_t id, const DDE_OSC_HE
     rec.id = hdr.device_id;
 
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(rec.id));
-    //  // pthread_mutex_lock(&dat->shm_mutex);
+//  // pthread_mutex_lock(&dat->shm_mutex);
 
     if (dat) {
         rec.state = dat->state;
@@ -117,7 +117,7 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint16_t id, const DDE_OSC_HE
     }
 
     int res = osc_mem_setData(id, reinterpret_cast<unsigned char*>(&rec), sizeof(GLIO_OSC_HEADER));
-    //  // pthread_mutex_unlock(&dat->shm_mutex);
+//  // pthread_mutex_unlock(&dat->shm_mutex);
 
     return (res > 0) ? _return_OK : _return_FAIL;
 }
@@ -138,9 +138,9 @@ _dde_func_return_t OscIPCHeaderService::set_state(uint16_t id, const OSC_STATE& 
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
 
-    //  // pthread_mutex_lock(&dat->shm_mutex);
+//  // pthread_mutex_lock(&dat->shm_mutex);
     memcpy(&dat->state, &setDat, sizeof(OSC_STATE));
-    //  // pthread_mutex_unlock(&dat->shm_mutex);
+//  // pthread_mutex_unlock(&dat->shm_mutex);
 
     return _return_OK;
 }
@@ -160,9 +160,9 @@ _dde_func_return_t OscIPCHeaderService::set_settings(uint16_t id, const OSC_SETT
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
 
-    //  // pthread_mutex_lock(&dat->shm_mutex);
+//  // pthread_mutex_lock(&dat->shm_mutex);
     memcpy(&dat->settings, &setDat, sizeof(OSC_SETTING));
-    //  // pthread_mutex_unlock(&dat->shm_mutex);
+//  // pthread_mutex_unlock(&dat->shm_mutex);
 
     return _return_OK;
 }
@@ -184,9 +184,9 @@ _dde_func_return_t OscIPCHeaderService::set_page_state(uint16_t id, uint8_t page
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
 
-    //  // pthread_mutex_lock(&dat->shm_mutex);
+//  // pthread_mutex_lock(&dat->shm_mutex);
     dat->state.pageMask[pageNum] = state;
-    //  // pthread_mutex_unlock(&dat->shm_mutex);
+//  // pthread_mutex_unlock(&dat->shm_mutex);
 
     std::string msg = "set state = " + std::to_string(state) + ", for pageNum = " + std::to_string(pageNum);
     std::cout << msg.c_str() << std::endl;
