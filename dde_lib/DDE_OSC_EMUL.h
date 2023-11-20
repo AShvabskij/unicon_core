@@ -12,7 +12,7 @@ public:
 
     virtual _dde_func_return_t init(const char* system_type);
     virtual _dde_func_return_t open(uint16_t id);
-    virtual _dde_func_return_t close(uint16_t id);
+    virtual _dde_func_return_t close();
 
     virtual _dde_func_return_t get(DDE_OSC_HEADER& p);
     virtual _dde_func_return_t get(DDE_GET_OSC_DATA& p);
