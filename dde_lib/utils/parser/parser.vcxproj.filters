@@ -16,9 +16,6 @@
     <ClInclude Include="..\..\csvfile.h">
       <Filter>DDE</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\DDE.h">
-      <Filter>DDE</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\DDE_EVLOG.h">
       <Filter>DDE</Filter>
     </ClInclude>
@@ -52,8 +49,11 @@
     <ClInclude Include="..\..\DDE_TYPES.h">
       <Filter>DDE</Filter>
     </ClInclude>
-    <ClInclude Include="..\sql3_db\db_sqlib.h">
+    <ClInclude Include="..\dde_db\db_sqlib.h">
       <Filter>db.lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_DEVICES_TYPE.h">
+      <Filter>DDE</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -61,8 +61,9 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\sql3_db\bin\x64\Debug\db_lib.a">
+    <Library Include="..\dde_db\bin\ARM\Debug\libdde_db.a">
       <Filter>db.lib</Filter>
     </Library>
+    <Library Include="..\IPCmemLib\bin\ARM\Debug\libipcmem_lib.a" />
   </ItemGroup>
 </Project>

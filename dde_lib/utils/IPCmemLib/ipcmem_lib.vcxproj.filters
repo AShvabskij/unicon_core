@@ -6,6 +6,7 @@
     <ClCompile Include="..\clogs\func.c">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="osc_ipcmemlib.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ipcmem_lib.h" />
@@ -14,9 +15,6 @@
       <Filter>dde_lib</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\dde_lib\csvfile.h">
-      <Filter>dde_lib</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\dde_lib\DDE.h">
       <Filter>dde_lib</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\dde_lib\DDE_EVLOG.h">
@@ -57,6 +55,13 @@
     </ClInclude>
     <ClInclude Include="..\clogs\inc.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_TOP.h">
+      <Filter>dde_lib</Filter>
+    </ClInclude>
+    <ClInclude Include="osc_ipcmemlib.h" />
+    <ClInclude Include="..\..\DDE_DEVICES_TYPE.h">
+      <Filter>dde_lib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

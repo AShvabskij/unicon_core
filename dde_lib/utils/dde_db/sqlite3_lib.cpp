@@ -227,7 +227,7 @@ int add_rec(const char* device_name, const char* device_description, DDE_SET_PAR
                 return busy_or_fail(rc);
 
             ii++;
-            if (ii > DDE_PARAMS_TXTVALUES_MAX_COUNT) break;
+            if (ii >= DDE_PARAMS_TXTVALUES_MAX_COUNT) break;
         }
 
         return _return_OK;
@@ -298,7 +298,7 @@ int one_txt_recs_callback(void *uk, int columns, char **aDat, char **aName)
         int ind = hdr->param_id; //A&D according to agriment with Aleksandr return to the same item as requested
         hdr->el_descr[ind].txtSubIndexes[ii] = atoi(aDat[2]);
         hdr->el_descr[ind].txtValues[ii] = (char*)malloc(sizeof(char[DDE_PARAMS_TXTVALUE_LENGTH])); //TODO A&D this will probably leak )
-        strcpy(hdr->el_descr[ind].txtValues[ii], aDat[3]);
+        strncpy(hdr->el_descr[ind].txtValues[ii], aDat[3], DDE_PARAMS_TXTVALUE_LENGTH);
     }
     //else
     //{   

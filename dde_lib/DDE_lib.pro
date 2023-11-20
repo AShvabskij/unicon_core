@@ -10,7 +10,6 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    DDE_OSC_DISPATCHER.cpp \
     DDE_TOP.cpp \
     DDE_EVLOG.cpp \
     DDE_OSC.cpp \
@@ -20,18 +19,13 @@ SOURCES += \
     DDE_PARAMS_FILE.cpp \
     DDE_EMUL.cpp \
     csvfile.cpp \
-    services/oscfileservice.cpp \
-    services/oscipcservice.cpp \
-    services/oscpagebinservice.cpp \
-    services/oscpagetxtservice.cpp
+    oscdatafile.cpp
 
 unix: SOURCES += \
     DDE_PARAMS.cpp
 
 HEADERS += \
-    DDE_DEVICES_TYPE.h \
     DDE_INTERFACES.h \
-    DDE_OSC_DISPATCHER.h \
     cpp_inc.h \
     DDE_TOP.h \
     DDE_EVLOG.h \
@@ -46,16 +40,13 @@ HEADERS += \
     DDE_PARAMS_TYPE.h \
     DDE_TYPES.h \
     DDE_EMUL.h \
-    services/oscfileservice.h \
-    services/oscipcservice.h \
-    services/oscpagebinservice.h \
-    services/oscpagetxtservice.h
+    oscdatafile.h
 
 INCLUDEPATH += $$PWD/utils/csvfile
+
+
 INCLUDEPATH += $$PWD/utils/IPCmemLib
 DEPENDPATH += $$PWD/utils/IPCmemLib
-
-INCLUDEPATH += $$PWD/services
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/utils/IPCmemLib/bin/x64/release/ -lipcmem_lib
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/utils/IPCmemLib/bin/x64/debug/ -lipcmem_lib

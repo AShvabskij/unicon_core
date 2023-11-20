@@ -93,12 +93,12 @@
   <ItemGroup>
     <ClCompile Include="..\clogs\func.c" />
     <ClCompile Include="ipcmem.c" />
+    <ClCompile Include="osc_ipcmemlib.c" />
     <ClCompile Include="ipcmem_lib.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\dde_lib\cpp_inc.h" />
     <ClInclude Include="..\..\..\dde_lib\csvfile.h" />
-    <ClInclude Include="..\..\..\dde_lib\DDE.h" />
     <ClInclude Include="..\..\..\dde_lib\DDE_EVLOG.h" />
     <ClInclude Include="..\..\..\dde_lib\DDE_EVLOG_TYPES.h" />
     <ClInclude Include="..\..\..\dde_lib\DDE_OSC.h" />
@@ -110,9 +110,12 @@
     <ClInclude Include="..\..\..\dde_lib\DDE_PARAMS_FILE.h" />
     <ClInclude Include="..\..\..\dde_lib\DDE_PARAMS_TYPE.h" />
     <ClInclude Include="..\..\..\dde_lib\DDE_TYPES.h" />
+    <ClInclude Include="..\..\DDE_DEVICES_TYPE.h" />
+    <ClInclude Include="..\..\DDE_TOP.h" />
     <ClInclude Include="..\clogs\func.h" />
     <ClInclude Include="..\clogs\inc.h" />
     <ClInclude Include="ipcmem.h" />
+    <ClInclude Include="osc_ipcmemlib.h" />
     <ClInclude Include="ipcmem_lib.h" />
   </ItemGroup>
   <ItemDefinitionGroup />

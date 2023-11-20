@@ -17,8 +17,7 @@ public:
     virtual _dde_func_return_t get_params_data(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t set_params_data(DDE_SET_PARAMS_DATA& p);
 
-    virtual _dde_func_return_t get_osc_header(DDE_OSC_HEADER& p);
-    virtual _dde_func_return_t set_osc_header(DDE_OSC_HEADER& p);
+    virtual _dde_func_return_t get_osc_header(DDE_GET_OSC_HEADER& p);
     virtual _dde_func_return_t get_osc_data(DDE_GET_OSC_DATA& p);
     virtual _dde_func_return_t set_osc_data(DDE_SET_OSC_DATA& p) ;
 

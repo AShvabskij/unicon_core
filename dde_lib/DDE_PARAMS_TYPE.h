@@ -11,6 +11,9 @@
 
 #define PARAMS_ID_MAX		0x3F
 #define MODULES_ID_MAX		0x3F
+//this is to simlify calculation of dde_addr from compact uint16_t addr. If you change PARAMS_ID_MAX or MODULES_ID_MAX move this accidfingly
+#define MODULES_ID_SHR		6
+
 #define PARAMS_COUNT_MAX	(0x3F + 1)
 
 // 32 device on CAN bus + 1 connex master with ID=0

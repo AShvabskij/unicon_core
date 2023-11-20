@@ -46,7 +46,7 @@ public:
     OscFileService();
     ~OscFileService();
 
-    _dde_func_return_t open(uint16_t device_id, const char* fileName);
+    _dde_func_return_t open(const char* fileName, bool saveMode);
     virtual _dde_func_return_t close();
 
     virtual _dde_func_return_t addData(DDE_GET_OSC_DATA& p);
@@ -56,7 +56,7 @@ public:
     virtual _dde_func_return_t setHeader(const DDE_OSC_HEADER& p);
 
 private:
-    int loadHeader(uint16_t device_id, const char *fileName);
+    int loadHeader(const char *fileName);
     int loadData();
     // int getHeader(uint16_t device_id, OSC_FILE::FILE_HEADER& header);
     int saveHeader(OSC_FILE::FILE_HEADER& header);

@@ -2,7 +2,7 @@
 
 #include <string>
 #include <fstream>
-#include <map>
+#include <vector>
 #include <thread>
 
 #include "DDE_TYPES.h"
@@ -26,6 +26,6 @@ public:
     virtual void update();
 private:
 
-    std::map<uint16_t, IOscFileService*> m_oscFileSrv;
+    IOscFileService* m_oscFileSrv = nullptr;
     
 };

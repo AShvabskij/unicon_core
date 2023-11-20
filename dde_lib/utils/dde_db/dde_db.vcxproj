@@ -43,7 +43,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\cpp_inc.h" />
     <ClInclude Include="..\..\csvfile.h" />
-    <ClInclude Include="..\..\DDE.h" />
+    <ClInclude Include="..\..\DDE_DEVICES_TYPE.h" />
     <ClInclude Include="..\..\DDE_EVLOG.h" />
     <ClInclude Include="..\..\DDE_EVLOG_TYPES.h" />
     <ClInclude Include="..\..\DDE_OSC.h" />
@@ -54,6 +54,7 @@
     <ClInclude Include="..\..\DDE_PARAMS_EMUL.h" />
     <ClInclude Include="..\..\DDE_PARAMS_FILE.h" />
     <ClInclude Include="..\..\DDE_PARAMS_TYPE.h" />
+    <ClInclude Include="..\..\DDE_TOP.h" />
     <ClInclude Include="..\..\DDE_TYPES.h" />
     <ClInclude Include="sqlite3.h" />
     <ClInclude Include="sqlite3ext.h" />
@@ -61,14 +62,15 @@
     <ClInclude Include="sqlite3_lib.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{1643d3fa-4a22-4ad1-aa45-235cf98d382b}</ProjectGuid>
+    <ProjectGuid>{0C11A392-D05C-4D3B-B8FE-0048F1129EAB}</ProjectGuid>
     <Keyword>Linux</Keyword>
-    <RootNamespace>_sql3</RootNamespace>
+    <RootNamespace>_dde_db</RootNamespace>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <ApplicationType>Linux</ApplicationType>
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
     <TargetLinuxPlatform>Generic</TargetLinuxPlatform>
     <LinuxProjectType>{2238F9CD-F817-4ECC-BD14-2524D2669B35}</LinuxProjectType>
+    <ProjectName>dde_db</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
@@ -105,11 +107,11 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Debian\dde_lib\utils\sql3_db;C:\Debian\dde_lib;$(IncludePath)</IncludePath>
-    <TargetName>db_lib</TargetName>
+    <IncludePath>C:\Debian\dde_lib\utils\dde_db;C:\Debian\dde_lib;$(IncludePath)</IncludePath>
+    <TargetName>libdde_db</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <TargetName>db_lib</TargetName>
+    <TargetName>libdde_db</TargetName>
     <IncludePath>C:\Debian\dde_lib\utils\sql3_db;C:\Debian\dde_lib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
