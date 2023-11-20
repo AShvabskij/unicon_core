@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="SQLite3 core">
+      <UniqueIdentifier>{0fbe1812-aeb6-48fc-9802-364ca0cecdc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DDE">
+      <UniqueIdentifier>{c5dc36fa-2bef-4c92-88c1-1ef218d87efc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="From Alex">
+      <UniqueIdentifier>{da1bf0d5-5eb7-4257-9032-32e38eba01ca}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="shell.c">
+      <Filter>SQLite3 core</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite3.c">
+      <Filter>SQLite3 core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\DDE_UAVCAN\gabbi4ci-srv_cli-modbus\func.c">
+      <Filter>From Alex</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite3_lib.c" />
+    <ClCompile Include="db_sqlib.cpp" />
+    <ClCompile Include="csv_parser.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sqlite3.h">
+      <Filter>SQLite3 core</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3ext.h">
+      <Filter>SQLite3 core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_UAVCAN\gabbi4ci-srv_cli-modbus\func.h">
+      <Filter>From Alex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE_UAVCAN\gabbi4ci-srv_cli-modbus\inc.h">
+      <Filter>From Alex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE_EVLOG.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE_EVLOG_TYPES.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE_OSC.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE_OSC_EMUL.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE_OSC_FILE.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE_OSC_TYPES.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE_PARAMS.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE_PARAMS_EMUL.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE_PARAMS_FILE.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE_PARAMS_TYPE.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\DDE\DDE_TYPES.h">
+      <Filter>DDE</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3_lib.h" />
+    <ClInclude Include="db_sqlib.h" />
+    <ClInclude Include="csv_parser.h" />
+  </ItemGroup>
+</Project>
