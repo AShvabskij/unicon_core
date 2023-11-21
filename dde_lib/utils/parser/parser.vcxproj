@@ -75,10 +75,10 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Debian\dde_lib;C:\Debian\dde_lib\utils\sql3_db</IncludePath>
+    <IncludePath>C:\Debian\dde_lib;C:\Debian\dde_lib\utils\dde_db</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <IncludePath>C:\Debian\dde_lib;C:\Debian\dde_lib\utils\sql3_db</IncludePath>
+    <IncludePath>C:\Debian\dde_lib;C:\Debian\dde_lib\utils\dde_db</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <IncludePath>C:\Debian\dde_lib;C:\Debian\dde_lib\utils\sql3_db</IncludePath>
@@ -93,7 +93,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\cpp_inc.h" />
     <ClInclude Include="..\..\csvfile.h" />
-    <ClInclude Include="..\..\DDE.h" />
+    <ClInclude Include="..\..\DDE_DEVICES_TYPE.h" />
     <ClInclude Include="..\..\DDE_EVLOG.h" />
     <ClInclude Include="..\..\DDE_EVLOG_TYPES.h" />
     <ClInclude Include="..\..\DDE_OSC.h" />
@@ -105,11 +105,12 @@
     <ClInclude Include="..\..\DDE_PARAMS_FILE.h" />
     <ClInclude Include="..\..\DDE_PARAMS_TYPE.h" />
     <ClInclude Include="..\..\DDE_TYPES.h" />
-    <ClInclude Include="..\sql3_db\db_sqlib.h" />
+    <ClInclude Include="..\dde_db\db_sqlib.h" />
     <ClInclude Include="csv_parser.h" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\sql3_db\bin\x64\Debug\db_lib.a" />
+    <Library Include="..\dde_db\bin\ARM\Debug\libdde_db.a" />
+    <Library Include="..\IPCmemLib\bin\ARM\Debug\libipcmem_lib.a" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
@@ -118,7 +119,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Link>
-      <LibraryDependencies>pthread;dl</LibraryDependencies>
+      <LibraryDependencies>pthread;dl;</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">

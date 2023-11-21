@@ -109,7 +109,7 @@ long DDE_OSC_EMUL::open(uint16_t)
     return _return_OK;
 }
 
-long DDE_OSC_EMUL::close(uint16_t)
+long DDE_OSC_EMUL::close()
 {
     return _return_OK;
 }

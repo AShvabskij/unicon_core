@@ -289,16 +289,21 @@ void DeviceHandler::handleReqModuleHeader(SysType sysType, int deviceId, int mod
         return;
     }
 
-    for (int i = 0; i < header.el_count; ++i) {
-        GLIO_ELEMENT_DESCR& elem = header.el_descr[i];
+    module.name = header.el_descr[0].name;
+    module.desc = header.el_descr[0].descr;
+
+    int ind = 0;
+    int count = 0;
+    while (count < header.el_count && ind < PARAMS_COUNT_MAX) {
+        ind++;
+        GLIO_ELEMENT_DESCR& elem = header.el_descr[ind];
+
         if (elem.id == 0) {
-            module.name = elem.name;
-            module.desc = elem.descr;
+            continue;
         }
 
-        if (elem.mod == moduleId) {
-            module.params << elem.id;
-        }
+        module.params << elem.id;
+        count++;
     }
 
     QJsonObject response = createResponse(requestId, module);

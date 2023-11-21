@@ -625,30 +625,36 @@ long ParamsHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamLi
 
     if (res <= _return_FAIL) return res;
 
-    for (int i = 0; i < m_header->el_count; ++i) {
-
-        GLIO_ELEMENT_DESCR& elem = m_header->el_descr[i];
-        if (elem.id == 0) {
-            continue;
-        }
-
+    int ind = 0;
+    int count = 0;
+    while (count < m_header->el_count && ind < PARAMS_COUNT_MAX) {
+        ind++;
+        GLIO_ELEMENT_DESCR& elem = m_header->el_descr[ind];
         Param p;
-        p.ID = {deviceId, moduleId, elem.id};
 
-        p.name = elem.name;
-        p.desc = elem.descr;
-        p.valueUnit = elem.dim;
-        p.writable = elem.writable;
-        p.valueFormat = elem.format;
-        p.valueScale = elem.scale;
+        if (elem.id != 0) {
+            p.ID = {deviceId, moduleId, elem.id};
+            p.name = elem.name;
+            p.desc = elem.descr;
+            p.valueUnit = elem.dim;
+            p.writable = elem.writable;
+            p.valueFormat = elem.format;
+            p.valueScale = elem.scale;
 
-        for (int ind = 0; ind < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++ind) {
-            if (elem.txtValues[ind] != nullptr) {
-                p.valueTexts[elem.txtSubIndexes[ind]] = elem.txtValues[ind];
+            for (int ind = 0; ind < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++ind) {
+                if (elem.txtValues[ind] != nullptr) {
+                    p.valueTexts[elem.txtSubIndexes[ind]] = elem.txtValues[ind];
+                }
             }
+        } else {
+            p.ID = {deviceId, moduleId, ind};
+            p.name = "______res_____";
+            p.writable = 0;
+            p.valueFormat = 0;
         }
 
         *out << p;
+        count++;
     }
 
     return _return_OK;

@@ -34,15 +34,43 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="shell.c" />
+    <ClCompile Include="sqlite3.c" />
+    <ClCompile Include="db_sqlib.cpp" />
+    <ClCompile Include="sqlite3_lib.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\cpp_inc.h" />
+    <ClInclude Include="..\..\csvfile.h" />
+    <ClInclude Include="..\..\DDE_DEVICES_TYPE.h" />
+    <ClInclude Include="..\..\DDE_EVLOG.h" />
+    <ClInclude Include="..\..\DDE_EVLOG_TYPES.h" />
+    <ClInclude Include="..\..\DDE_OSC.h" />
+    <ClInclude Include="..\..\DDE_OSC_EMUL.h" />
+    <ClInclude Include="..\..\DDE_OSC_FILE.h" />
+    <ClInclude Include="..\..\DDE_OSC_TYPES.h" />
+    <ClInclude Include="..\..\DDE_PARAMS.h" />
+    <ClInclude Include="..\..\DDE_PARAMS_EMUL.h" />
+    <ClInclude Include="..\..\DDE_PARAMS_FILE.h" />
+    <ClInclude Include="..\..\DDE_PARAMS_TYPE.h" />
+    <ClInclude Include="..\..\DDE_TOP.h" />
+    <ClInclude Include="..\..\DDE_TYPES.h" />
+    <ClInclude Include="sqlite3.h" />
+    <ClInclude Include="sqlite3ext.h" />
+    <ClInclude Include="db_sqlib.h" />
+    <ClInclude Include="sqlite3_lib.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{852d6155-d80a-40af-bde3-6eca23d7459d}</ProjectGuid>
+    <ProjectGuid>{0C11A392-D05C-4D3B-B8FE-0048F1129EAB}</ProjectGuid>
     <Keyword>Linux</Keyword>
-    <RootNamespace>IPC_MEM_TB</RootNamespace>
+    <RootNamespace>_dde_db</RootNamespace>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <ApplicationType>Linux</ApplicationType>
     <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
     <TargetLinuxPlatform>Generic</TargetLinuxPlatform>
-    <LinuxProjectType>{D51BCBC9-82E9-4017-911E-C93873C4EA2B}</LinuxProjectType>
+    <LinuxProjectType>{2238F9CD-F817-4ECC-BD14-2524D2669B35}</LinuxProjectType>
+    <ProjectName>dde_db</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
@@ -78,47 +106,27 @@
   <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\Debian\dde_lib\utils\dde_db;C:\Debian\dde_lib;$(IncludePath)</IncludePath>
+    <TargetName>libdde_db</TargetName>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <IncludePath>C:\Debian\dde_lib;$(IncludePath)</IncludePath>
+    <TargetName>libdde_db</TargetName>
+    <IncludePath>C:\Debian\dde_lib\utils\sql3_db;C:\Debian\dde_lib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <IncludePath>C:\Debian\dde_lib;$(IncludePath)</IncludePath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Debian\dde_lib;$(IncludePath)</IncludePath>
+    <TargetName>db_lib</TargetName>
+    <IncludePath>C:\Debian\dde_lib\utils\sql3_db;C:\Debian\dde_lib;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-    <IncludePath>C:\Debian\dde_lib;$(IncludePath)</IncludePath>
+    <TargetName>db_lib</TargetName>
+    <IncludePath>C:\Debian\dde_lib\utils\sql3_db;C:\Debian\dde_lib;$(IncludePath)</IncludePath>
   </PropertyGroup>
-  <ItemGroup>
-    <ClCompile Include="..\clogs\func.c" />
-    <ClCompile Include="ipcmem.c" />
-    <ClCompile Include="osc_ipcmemlib.c" />
-    <ClCompile Include="ipcmem_lib.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\dde_lib\cpp_inc.h" />
-    <ClInclude Include="..\..\..\dde_lib\csvfile.h" />
-    <ClInclude Include="..\..\..\dde_lib\DDE_EVLOG.h" />
-    <ClInclude Include="..\..\..\dde_lib\DDE_EVLOG_TYPES.h" />
-    <ClInclude Include="..\..\..\dde_lib\DDE_OSC.h" />
-    <ClInclude Include="..\..\..\dde_lib\DDE_OSC_EMUL.h" />
-    <ClInclude Include="..\..\..\dde_lib\DDE_OSC_FILE.h" />
-    <ClInclude Include="..\..\..\dde_lib\DDE_OSC_TYPES.h" />
-    <ClInclude Include="..\..\..\dde_lib\DDE_PARAMS.h" />
-    <ClInclude Include="..\..\..\dde_lib\DDE_PARAMS_EMUL.h" />
-    <ClInclude Include="..\..\..\dde_lib\DDE_PARAMS_FILE.h" />
-    <ClInclude Include="..\..\..\dde_lib\DDE_PARAMS_TYPE.h" />
-    <ClInclude Include="..\..\..\dde_lib\DDE_TYPES.h" />
-    <ClInclude Include="..\..\DDE_DEVICES_TYPE.h" />
-    <ClInclude Include="..\..\DDE_TOP.h" />
-    <ClInclude Include="..\clogs\func.h" />
-    <ClInclude Include="..\clogs\inc.h" />
-    <ClInclude Include="ipcmem.h" />
-    <ClInclude Include="osc_ipcmemlib.h" />
-    <ClInclude Include="ipcmem_lib.h" />
-  </ItemGroup>
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Link>
+      <LibraryDependencies>pthread;dl</LibraryDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

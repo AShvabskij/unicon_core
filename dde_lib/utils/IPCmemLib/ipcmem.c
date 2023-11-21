@@ -336,7 +336,6 @@ int IPCMEM_set_element_descr(uint8_t device_id, GLIO_ELEMENT_DESCR* el)
     pDev[device_id]->el[addr].format = el->format;
     pDev[device_id]->el[addr].scale = el->scale;
     //memcpy((uint8_t*)&pDev[device_id]->el[addr].ivalue, (uint8_t*)el, sizeof(GLIO_ELEMENT_VALUE));
-
     return 0;
 }
 
