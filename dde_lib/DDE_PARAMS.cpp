@@ -6,6 +6,7 @@
 
 
 #include <string>
+#include <sstream>
 #include <cmath>
 #include <chrono>
 #include <unistd.h>
@@ -456,6 +457,7 @@ void DDE_PARAMS::update()
     bool set_empty = false;
     bool timeout = false;
     uint32_t attempts = 0;
+    std::string lastError;
     int cmd_ind_arr[MAX_DEV_SUPPORT];
     int res = 0;
 
@@ -496,7 +498,7 @@ void DDE_PARAMS::update()
                 if (res != 1) {
                     attempts++;
 
-                    if (attempts >= 10) {
+                    if (attempts == 10) {
                         err_read_cmd_counter++;
 
                         DDE_SET_PARAMS_DATA set_err;
@@ -505,16 +507,26 @@ void DDE_PARAMS::update()
                         set_err.param_id = DDE_DEV0_MODULE0_PARAM14_READ_CMD_ERR_COUNTER;
                         set_err.ivalue = static_cast<uint32_t>(err_read_cmd_counter);
 
-                        std::cout <<	"Error write cmd! dev_id=" << static_cast<int>(device_id) << \
+                        std::stringstream ss("");
+                        ss << "Error write cmd! dev_id=" << static_cast<int>(device_id) << \
                                         " mod_id="<< static_cast<int>(cmd.module_id)<<\
                                         " par_id="<< static_cast<int>(cmd.param_id)<<\
                                         " nRW="<< static_cast<int>(cmd.nRW)<<\
                                         " attempts = "<< attempts <<std::endl;
+                        string error;
+                        ss >> error;
+                        if (lastError != error) {
+
+                            std::cout << error;
+                            lastError = error;
+                        }
 
                         direct_write(set_err);
                         timeout = true;
                     }
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                } else {
+                    lastError = "";
                 }
             }
         }
