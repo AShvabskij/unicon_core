@@ -228,7 +228,7 @@ long OscBufferService::saveData(const DDE_OSC_HEADER &header, const OscDataBuffe
     }
     else
     {
-         QTextStream(stdout) << "file open failed: " << fileName << endl;
+         QTextStream(stdout) << "file open failed: " << fileName << Qt::endl;
          return _return_FAIL;
     }
 
@@ -248,7 +248,7 @@ long OscBufferService::saveData(const DDE_OSC_HEADER &header, const OscDataBuffe
     }
     else
     {
-         QTextStream(stdout) << "file open failed: " << fileName << endl;
+         QTextStream(stdout) << "file open failed: " << fileName << Qt::endl;
          return _return_FAIL;
     }
 
