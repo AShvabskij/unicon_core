@@ -4,14 +4,10 @@
 #include "ipcmem_lib.h"
 #include "db_sqlib.h"
 
-
 #include <string>
-#include <sstream>
 #include <cmath>
 #include <chrono>
 #include <unistd.h>
-
-
 
 using namespace std;
 //------------------------------------------------------------------------------
@@ -457,7 +453,7 @@ void DDE_PARAMS::update()
     bool set_empty = false;
     bool timeout = false;
     uint32_t attempts = 0;
-    std::string lastError;
+    static std::string lastError;
     int cmd_ind_arr[MAX_DEV_SUPPORT];
     int res = 0;
 
@@ -507,18 +503,16 @@ void DDE_PARAMS::update()
                         set_err.param_id = DDE_DEV0_MODULE0_PARAM14_READ_CMD_ERR_COUNTER;
                         set_err.ivalue = static_cast<uint32_t>(err_read_cmd_counter);
 
-                        std::stringstream ss("");
-                        ss << "Error write cmd! dev_id=" << static_cast<int>(device_id) << \
-                                        " mod_id="<< static_cast<int>(cmd.module_id)<<\
-                                        " par_id="<< static_cast<int>(cmd.param_id)<<\
-                                        " nRW="<< static_cast<int>(cmd.nRW)<<\
-                                        " attempts = "<< attempts <<std::endl;
-                        string error;
-                        ss >> error;
-                        if (lastError != error) {
+                        string error = "Error remote reading cmd! dev_id=" + std::to_string(device_id) +
+                                        " mod_id=" + std::to_string(cmd.module_id) +
+                                        " par_id=" + std::to_string(cmd.param_id) +
+                                        " nRW=" + std::to_string(cmd.nRW) +
+                                        " attempts = " + std::to_string(attempts) +
+                                        ". Check if a remote device proccess is working!";
+                        if (lastError.compare(error.c_str()) != 0) { // A.S : To avoid multiple logging the same error
 
-                            std::cout << error;
-                            lastError = error;
+                            lastError = error.c_str();
+                            std::cout << lastError.c_str() << std::endl;
                         }
 
                         direct_write(set_err);
