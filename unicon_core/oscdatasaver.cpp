@@ -16,10 +16,10 @@ long OscDataJSonFileSaver::save(const DDE_OSC_HEADER &header, const OscType::Osc
         QString path =  QString("./data/"); // qApp->applicationDirPath()
         QJsonObject jsonObj = headerToJson(header);
 
-        QDateTime trigTime = QDateTime::fromTime_t(static_cast<uint>(header.settings.trig_time));
-        QString fileName = path + QString("%1_%2_%3.hdr").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh:mm:ss:zzz"));
+        QDateTime trigTime = QDateTime::currentDateTime(); //QDateTime::fromTime_t(static_cast<uint>(header.settings.trig_time));
+        QString hdrfileName = path + QString("%1_%2_%3.hdr").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh:mm:ss:zzz"));
 
-        _dde_func_return_t res = saveObj(fileName, jsonObj);
+        _dde_func_return_t res = saveObj(hdrfileName, jsonObj);
 
         if (!res)
             return res;
@@ -27,7 +27,9 @@ long OscDataJSonFileSaver::save(const DDE_OSC_HEADER &header, const OscType::Osc
         QJsonObject datjsonObj = data.toJson();
         QString datFileName = path + QString("%1_%2_%3.dat").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh:mm:ss:zzz"));
 
-        res = saveObj(datFileName, datjsonObj);
+        res = saveObj(datFileName, datjsonObj, true);
+
+        qInfo() << "Saved data file:" << datFileName << Qt::endl;
 
         return res;
 }
