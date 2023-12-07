@@ -11,9 +11,9 @@ const QString CMD_OSC_DATA = "osc_data";
 
 using namespace OscType;
 
-OscHandler::OscHandler(IDDE_Dispatcher* dde, IOscBufferService *buffSrv): BaseReqHandler(dde)
+OscHandler::OscHandler(IDDE_Dispatcher* dde, IOscDataService *dataSrv): BaseReqHandler(dde)
 {
-    m_buffSrv = buffSrv;
+    m_dataSrv = dataSrv;
 }
 
 int OscHandler::handle(const QJsonObject &request)
@@ -170,7 +170,7 @@ void OscHandler::startStreamData(const OscHeader &header, QVector<int> oscVars)
     m_capturedVars = oscVars;
     m_streamValCount = 0;
 
-    QObject* src = dynamic_cast<QObject*>(m_buffSrv);
+    QObject* src = dynamic_cast<QObject*>(m_dataSrv);
     Q_ASSERT(src);
     QMetaObject::Connection con = connect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)), Qt::AutoConnection);
 }
@@ -179,7 +179,7 @@ void OscHandler::stopStreamData()
 {
     m_capturedOsc = OscHeader();
     m_capturedVars.clear();
-    QObject* src = dynamic_cast<QObject*>(m_buffSrv);
+    QObject* src = dynamic_cast<QObject*>(m_dataSrv);
     disconnect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)));
 }
 
@@ -188,7 +188,7 @@ void OscHandler::streamData()
     Q_ASSERT(m_capturedOsc.deviceID.isValid());
 
     int objCountResult = 0;
-    QJsonObject response = m_buffSrv->getSerialisedData(m_capturedOsc.id, m_capturedVars, objCountResult);
+    QJsonObject response = m_dataSrv->getSerialisedData(m_capturedOsc.id, m_capturedVars, objCountResult);
     response["type"] = "osc";
     // response["body"] = data;
 

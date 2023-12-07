@@ -6,13 +6,15 @@
 
 #include <QCoreApplication>
 
+#include "oscdataservice.h"
+
 const int MAX_OSC_ERROR_COUNT = 10;
 const int MAX_OSC_IDLE_COUNT = 10;
 
-OscStateService::OscStateService(IDDE *dde, IOscBufferService *buffSrv)
+OscStateService::OscStateService(IDDE *dde, IOscDataService *dataSrv)
 {
     m_dde = dde;
-    m_buffSrv = buffSrv;
+    m_dataSrv = dataSrv;
 }
 
 void OscStateService::init(QList<DevInd> devList)
@@ -22,7 +24,7 @@ void OscStateService::init(QList<DevInd> devList)
             continue;
 
         if (!m_devIdList.contains(devId)) {
-            m_oscState[devId] = new OscStateMachine(m_dde, m_buffSrv);
+            m_oscState[devId] = new OscStateMachine(m_dde, m_dataSrv);
             m_devIdList.append(devId);
         }
     }
@@ -39,13 +41,13 @@ void OscStateService::update()
     }
 }
 
-OscStateMachine::OscStateMachine(IDDE* dde, IOscBufferService *buffSrv)
+OscStateMachine::OscStateMachine(IDDE* dde, IOscDataService *dataSrv)
 {
     m_dde = dde;
     m_header = new DDE_OSC_HEADER();
     m_ddeData = new DDE_GET_OSC_DATA();
     m_state = STATE::Normal;
-    m_buffSrv = buffSrv;
+    m_dataSrv = dataSrv;
 }
 
 void OscStateMachine::update(DevInd devId)
@@ -97,7 +99,7 @@ void OscStateMachine::update(DevInd devId)
                 return;
             }
 
-            res = m_buffSrv->appendData(*m_header, *m_ddeData);
+            res = m_dataSrv->appendData(*m_header, *m_ddeData);
 
             if (res != _return_OK) {
                 qWarning() << "Error getting buffer for the osc, id = " << m_header->device_id;
@@ -129,7 +131,7 @@ void OscStateMachine::update(DevInd devId)
         }
 
         case Saving: {
-            m_buffSrv->saveToFile(*m_header);
+            m_dataSrv->save(*m_header);
             m_state = Normal;
           break;
         }

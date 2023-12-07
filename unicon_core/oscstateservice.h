@@ -4,7 +4,7 @@
 #include "DDE_TOP.h"
 #include "DDE_OSC_TYPES.h"
 #include "DDE_DEVICES_TYPE.h"
-#include "oscbuffservice.h"
+#include "osc_types.h"
 
 #include <QTimer>
 #include <QJsonObject>
@@ -14,14 +14,14 @@ class OscStateMachine;
 class OscStateService
 {
 public:
-    OscStateService(IDDE* dde, IOscBufferService* buffSrv);
+    OscStateService(IDDE* dde, IOscDataService* dataSrv);
     void init(QList<DevInd> devList);
     void update();
 
 private:
     IDDE* m_dde;
     QMap<quint16, OscStateMachine*> m_oscState;
-    IOscBufferService* m_buffSrv;
+    IOscDataService* m_dataSrv;
     QList<DevInd> m_devIdList;
 };
 
@@ -39,7 +39,7 @@ class OscStateMachine
     };
 
 public:
-    OscStateMachine(IDDE *dde, IOscBufferService *buffSrv);
+    OscStateMachine(IDDE *dde, IOscDataService *dataSrv);
     void update(DevInd devId);
 
 private:
@@ -55,8 +55,7 @@ private:
     int m_busyCounter = 0;
     int m_idleCounter = 0;
 
-    IOscBufferService* m_buffSrv = nullptr;
-
+    IOscDataService* m_dataSrv = nullptr;
 };
 
 #endif //OSC_DATA_H

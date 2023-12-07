@@ -5,8 +5,9 @@
 #include "DDE_OSC_TYPES.h"
 #include "DDE_TYPES.h"
 
-#include "QJsonObject"
-#include "QJsonArray"
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QVector>
 
 namespace OscType {
 
@@ -53,6 +54,32 @@ namespace OscType {
         qlonglong timestamp = 0;
         bool eof = false;
         bool sof = false;
+
+        QJsonObject toJson(QVector<int> vars = QVector<int>(), int startPos = 0) const
+        {
+            QJsonObject res;
+            QJsonArray valuesObj;
+            QJsonArray varIdListObj;
+
+            for (const OscChannelValues& chVal : this->ch) {
+                if (chVal.varId == 0) continue;
+                if (!vars.empty() && !vars.contains(chVal.varId)) {
+                    continue;
+                }
+
+                varIdListObj << chVal.varId;
+                valuesObj << QJsonArray::fromVariantList(chVal.values.mid(startPos,  chVal.values.size()));
+            }
+
+            res["d_id"] = this->id;
+            res["values"] = valuesObj;
+            res["vars"] = varIdListObj;
+            res["time"] = this->timestamp;
+            res["eof"] = this->eof ? "1" : "0";
+            res["sof"] = this->sof ? "1" : "0";
+
+            return res;
+        }
     };
 
     struct OscSettings
@@ -156,5 +183,28 @@ namespace OscType {
     typedef QVector<OscHeader> OSCList;
 
 }
+
+class IOscDataService
+{
+
+public:
+    virtual ~IOscDataService() {}
+    virtual OscType::OscDataBuffer* get (DevInd ind) = 0;
+    virtual void clear(DevInd ind) = 0;
+    virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
+    virtual QJsonObject getSerialisedData(DevInd ind, QVector<int> vars, int &cnt) = 0;
+    virtual long save(const DDE_OSC_HEADER& hdr) = 0;
+
+// signals:
+    virtual void dataReceived(quint16 ind) = 0;
+
+};
+
+class IOscDataSaver
+{
+public:
+    virtual ~IOscDataSaver() {}
+    virtual long save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data) = 0;
+};
 
 #endif // OSCTYPES_H

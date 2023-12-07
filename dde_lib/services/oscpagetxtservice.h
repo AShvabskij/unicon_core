@@ -1,5 +1,5 @@
-#ifndef OSCDATASERVICE_H
-#define OSCDATASERVICE_H
+#ifndef OSCPAGETXTSERVICE_H
+#define OSCPAGETXTSERVICE_H
 
 #include <string>
 #include <fstream>
@@ -42,4 +42,4 @@ private:
     std::fstream m_outf;
 };
 
-#endif // OSCDATASERVICE
+#endif

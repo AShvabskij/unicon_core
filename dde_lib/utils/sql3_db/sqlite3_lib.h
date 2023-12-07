@@ -8,7 +8,7 @@
 #include <string.h>
 #include "sqlite3.h"
 #include <signal.h>
-#include <ucontext.h>
+// #include <ucontext.h>
 #include "DDE_TYPES.h"
 //
 #ifdef __cplusplus

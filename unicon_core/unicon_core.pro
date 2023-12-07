@@ -18,7 +18,8 @@ SOURCES += \
         core.cpp \
         basereqhandler.cpp \
         devicehandler.cpp \
-        oscbuffservice.cpp \
+        oscdatasaver.cpp \
+        oscdataservice.cpp \
         oschandler.cpp \
         oscstateservice.cpp \
         paramshandler.cpp \
@@ -37,7 +38,8 @@ HEADERS += \
     devicehandler.h \
     ireqhandler.h \
     osc_types.h \
-    oscbuffservice.h \
+    oscdatasaver.h \
+    oscdataservice.h \
     oschandler.h \
     oscstateservice.h \
     paramshandler.h \

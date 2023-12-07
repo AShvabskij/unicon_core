@@ -4,7 +4,7 @@
 #include "basereqhandler.h"
 #include "DDE_TOP.h"
 #include "osc_types.h"
-#include "oscbuffservice.h"
+#include "oscdataservice.h"
 
 #include <QTimer>
 
@@ -12,7 +12,7 @@ class OscHandler : public BaseReqHandler
 {
     Q_OBJECT
 public:
-    OscHandler(IDDE_Dispatcher* , IOscBufferService* buffSrv);
+    OscHandler(IDDE_Dispatcher* , IOscDataService* buffSrv);
     virtual int handle(const QJsonObject& request);
 
 signals:
@@ -43,7 +43,7 @@ private:
     QVector<int> m_capturedVars;
     int m_streamValCount = 0;
 
-    IOscBufferService* m_buffSrv;
+    IOscDataService* m_dataSrv;
 };
 
 #endif // OSCHANDLER_H

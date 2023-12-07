@@ -14,6 +14,9 @@
 #include "devicehandler.h"
 #include "oschandler.h"
 
+#include "oscdataservice.h"
+#include "oscdatasaver.h"
+
 #include <QObject>
 #include <QtWebSockets>
 #include <QtCore>
@@ -45,11 +48,13 @@ void Core::start()
 
     m_ddeDisp->setDefaultDDE(dde);
     m_ddeDisp->registerDDE(m_sysType, dde);
-    m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), OscBufferService::instanse());
+
+    OscDataService* oscService = new OscDataService(OscDataJSonFileSaver::instance());
+    m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), oscService);
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp);
     DeviceHandler* device = new DeviceHandler(m_ddeDisp);
-    OscHandler* osc = new OscHandler(m_ddeDisp, OscBufferService::instanse());
+    OscHandler* osc = new OscHandler(m_ddeDisp, oscService);
 
     RequestManager::instance()->registerHandler(device);
     RequestManager::instance()->registerHandler(params);

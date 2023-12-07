@@ -1,5 +1,5 @@
-#ifndef OSCREPOSITORY_H
-#define OSCREPOSITORY_H
+#ifndef OSCDATASERVICE_H
+#define OSCDATASERVICE_H
 
 #include <QObject>
 #include <QDebug>
@@ -10,41 +10,23 @@
 
 #include "osc_types.h"
 
-class IOscBufferService
-{
-
-public:
-    virtual ~IOscBufferService() {}
-    virtual OscType::OscDataBuffer* get (DevInd ind) = 0;
-    virtual void clear(DevInd ind) = 0;
-    virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
-    virtual QJsonObject getSerialisedData(DevInd ind, QVector<int> vars, int &cnt) = 0;
-    virtual long saveToFile(const DDE_OSC_HEADER& hdr) = 0;
-
-// signals:
-    virtual void dataReceived(quint16 ind) = 0;
-
-};
-
-class OscBufferService: public QObject,
-                        public IOscBufferService
+class OscDataService: public QObject,
+                        public IOscDataService
 {
      Q_OBJECT
 public:
-    OscBufferService() = default;
-    ~OscBufferService() override {}
+    OscDataService(IOscDataSaver* s) {
+        Q_ASSERT(s);
+        m_dataSaver = s;
+    };
 
-    static OscBufferService* instanse() {
-        static OscBufferService m_instanse;
-
-        return &m_instanse;
-    }
+    ~OscDataService() override {}
 
     OscType::OscDataBuffer* get(DevInd ind) override;
     void clear(DevInd id) override;
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
     QJsonObject getSerialisedData(DevInd ind, QVector<int> vars, int &cnt) override;
-    long saveToFile(const DDE_OSC_HEADER &hdr) override;
+    long save(const DDE_OSC_HEADER &hdr) override;
 
 signals:
     void dataReceived(quint16 ind) override;
@@ -61,6 +43,7 @@ private:
 
     QMap<DevInd, OscType::OscDataBuffer*> m_repository;
     QMutex m_mutex;
+    IOscDataSaver* m_dataSaver = nullptr;
 };
 
-#endif // OSCREPOSITORY_H
+#endif // OSCDATASERVICE_H
