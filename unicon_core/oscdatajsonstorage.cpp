@@ -25,7 +25,7 @@ long OscDataJSonStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDa
         QJsonObject jsonObj = headerToJson(header);
 
         QDateTime trigTime = QDateTime::fromTime_t(static_cast<uint>(header.settings.trig_time));
-        QString baseFileName = QString("%1_%2_%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh:mm:ss:zzz"));
+        QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
 
         QString headerFile = path + "/" + baseFileName + ".hdr";
         _dde_func_return_t res = saveObj(headerFile, jsonObj);
@@ -46,7 +46,7 @@ QString OscDataJSonStorage::createPath(const DDE_OSC_HEADER &header)
     QDateTime now = QDateTime::currentDateTime();
     QString year = "Y" + QString::number(now.date().year());
     QString abbreviatedMonth = now.toString("MMM");
-    QString dayOfMonth = abbreviatedMonth + "_" + now.date().day();
+    QString dayOfMonth = abbreviatedMonth + "_" + QString::number(now.date().day());
 
     QString dataLoggerPath =  QString("./DataLogger/"); // qApp->applicationDirPath()
     QString path = dataLoggerPath + year + "/" + abbreviatedMonth + "/" + dayOfMonth;
