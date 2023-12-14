@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QCborValue>
+#include <QDir>
 
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
 #define ENDL Qt::endl
@@ -20,7 +21,7 @@
 long OscDataJSonStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data)
 {
     //  const char* home = getenv("HOME");
-        QString path =  calcPath(header);
+        QString path =  createPath(header);
         QJsonObject jsonObj = headerToJson(header);
 
         QDateTime trigTime = QDateTime::fromTime_t(static_cast<uint>(header.settings.trig_time));
@@ -40,7 +41,7 @@ long OscDataJSonStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDa
         return res;
 }
 
-QString OscDataJSonStorage::calcPath(const DDE_OSC_HEADER &header)
+QString OscDataJSonStorage::createPath(const DDE_OSC_HEADER &header)
 {
     QDateTime now = QDateTime::currentDateTime();
     QString year = "Y" + QString::number(now.date().year());
@@ -49,6 +50,13 @@ QString OscDataJSonStorage::calcPath(const DDE_OSC_HEADER &header)
 
     QString dataLoggerPath =  QString("./DataLogger/"); // qApp->applicationDirPath()
     QString path = dataLoggerPath + year + "/" + abbreviatedMonth + "/" + dayOfMonth;
+
+    QDir dir;
+    bool res = dir.mkpath(path);
+
+    if (!res) {
+        qWarning() << "Couldn't create folder to path:" + path;
+    }
 
     return path;
 }
