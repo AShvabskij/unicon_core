@@ -11,6 +11,8 @@ CONFIG += c++11
 
 SOURCES += \
     db_sqlib.cpp \
+    shell.c \
+    sqlite3.c
 
 unix: SOURCES += \
     sqlite3_lib.cpp
