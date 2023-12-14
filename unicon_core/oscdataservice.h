@@ -15,7 +15,7 @@ class OscDataService: public QObject,
 {
      Q_OBJECT
 public:
-    OscDataService(IOscDataSaver* s) {
+    OscDataService(IOscDataStorageService* s) {
         Q_ASSERT(s);
         m_dataSaver = s;
     };
@@ -27,13 +27,13 @@ public:
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
     QJsonObject getSerialisedData(DevInd ind, QVector<int> vars, int &cnt) override;
     long save(const DDE_OSC_HEADER &hdr) override;
+    OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr);
 
 signals:
     void dataReceived(quint16 ind) override;
 
 private:
 
-    OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr);
     void  clearDataBuffer(OscType::OscDataBuffer* buff);
     long saveData(const DDE_OSC_HEADER& header, const OscType::OscDataBuffer& data);
     qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
@@ -43,7 +43,7 @@ private:
 
     QMap<DevInd, OscType::OscDataBuffer*> m_repository;
     QMutex m_mutex;
-    IOscDataSaver* m_dataSaver = nullptr;
+    IOscDataStorageService* m_dataSaver = nullptr;
 };
 
 #endif // OSCDATASERVICE_H

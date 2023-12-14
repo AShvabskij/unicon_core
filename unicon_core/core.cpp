@@ -15,7 +15,7 @@
 #include "oschandler.h"
 
 #include "oscdataservice.h"
-#include "oscdatasaver.h"
+#include "oscdatajsonstorage.h"
 
 #include <QObject>
 #include <QtWebSockets>
@@ -49,7 +49,7 @@ void Core::start()
     m_ddeDisp->setDefaultDDE(dde);
     m_ddeDisp->registerDDE(m_sysType, dde);
 
-    OscDataService* oscService = new OscDataService(OscDataJSonFileSaver::instance());
+    OscDataService* oscService = new OscDataService(OscDataJSonStorage::instance());
     m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), oscService);
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp);

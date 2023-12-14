@@ -194,17 +194,22 @@ public:
     virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
     virtual QJsonObject getSerialisedData(DevInd ind, QVector<int> vars, int &cnt) = 0;
     virtual long save(const DDE_OSC_HEADER& hdr) = 0;
+    virtual OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) = 0;
+
 
 // signals:
     virtual void dataReceived(quint16 ind) = 0;
 
 };
 
-class IOscDataSaver
+class IOscDataStorageService
 {
 public:
-    virtual ~IOscDataSaver() {}
+    virtual ~IOscDataStorageService() {}
     virtual long save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data) = 0;
+    virtual long loadHeader(QString fileFrom, DDE_OSC_HEADER &header) = 0;
+    virtual long loadData(QString fileFrom, OscType::OscDataBuffer* data) = 0;
+
 };
 
 #endif // OSCTYPES_H
