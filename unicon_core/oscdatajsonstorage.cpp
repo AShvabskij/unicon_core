@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QCborValue>
+#include <QCborStreamReader>
 #include <QDir>
 
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
@@ -67,29 +68,38 @@ long OscDataJSonStorage::saveObj(const QString fileName, const QJsonObject &obj,
 
     QJsonDocument doc(obj);
     QByteArray bytes;
-
     if (useBinaryFormat) {
-        QCborValue v = QCborValue::fromJsonValue(obj);
-        bytes = v.toCbor(QCborValue::UseFloat);
+        QCborValue cborValue = QCborValue::fromJsonValue(obj);
+        bytes = cborValue.toCbor(QCborValue::UseFloat);
     } else {
         bytes = doc.toJson(QJsonDocument::Compact);
     }
 
     QFile file( fileName );
 
-    if( file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
-    {
+    if (useBinaryFormat) {
+        if( !file.open( QIODevice::WriteOnly |  QIODevice::Truncate ) ) {
+            QTextStream(stdout) << "file open failed: " << fileName << ENDL;
+            return _return_FAIL;
+        }
+
+        QCborStreamWriter writer(&file);
+
+        // Serialize the QCborValue to the file
+        writer.append(bytes);
+    } else {
+        if( !file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
+        {
+            QTextStream(stdout) << "file open failed: " << fileName << ENDL;
+            return _return_FAIL;
+        }
+
         QTextStream iStream( &file );
         iStream.setCodec( "utf-8" );
         iStream << bytes;
-        file.close();
-    }
-    else
-    {
-         QTextStream(stdout) << "file open failed: " << fileName << ENDL;
-         return _return_FAIL;
     }
 
+    file.close();
     return res;
 }
 
@@ -143,7 +153,7 @@ QString OscDataJSonStorage::colorToString(const int &c)
 
 long OscDataJSonStorage::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
 {
-    QString path = QFileInfo(fileFrom).absolutePath();
+    QString path = QFileInfo(fileFrom).absolutePath() + QString("\\");
     QString name = QFileInfo(fileFrom).baseName();
 
     QString headerFile = path + name + ".hdr";
@@ -151,12 +161,13 @@ long OscDataJSonStorage::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
 
     if(!file.open( QIODevice::ReadOnly | QIODevice::Text ))
     {
-        QTextStream inStream( &file );
-        file.close();
+        QTextStream(stdout) << "file open failed: " << headerFile << ENDL;
+        return _return_FAIL;
     }
 
     QTextStream inStream( &file );
     QString content = inStream.readAll();
+
     QJsonDocument d = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject obj = d.object();
 
@@ -168,24 +179,75 @@ long OscDataJSonStorage::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
     return _return_OK;
 }
 
+QByteArray decodeByteArray(QCborStreamReader &reader)
+{
+    QByteArray result;
+    auto r = reader.readByteArray();
+    while (r.status == QCborStreamReader::Ok) {
+        result += r.data;
+        r = reader.readByteArray();
+    }
+
+    if (r.status == QCborStreamReader::Error) {
+        // handle error condition
+        result.clear();
+    }
+    return result;
+}
+
+QString decodeString(QCborStreamReader &reader)
+{
+    QString result;
+    auto r = reader.readString();
+    while (r.status == QCborStreamReader::Ok) {
+        result += r.data;
+        r = reader.readString();
+    }
+
+    if (r.status == QCborStreamReader::Error) {
+        // handle error condition
+        result.clear();
+    }
+    return result;
+}
+
 long OscDataJSonStorage::loadData(QString fileFrom, OscType::OscDataBuffer *data)
 {
-    QString path = QFileInfo(fileFrom).absolutePath();
+    QString path = QFileInfo(fileFrom).absolutePath() + QString("\\");
     QString name = QFileInfo(fileFrom).baseName();
 
-    QString headerFile = path + name + ".dat";
-    QFile file( headerFile );
+    QString datFile = path + name + ".dat";
+    QFile file( datFile );
 
     if(!file.open( QIODevice::ReadOnly | QIODevice::Text ))
     {
-        QTextStream inStream( &file );
-        file.close();
+        QTextStream(stdout) << "file open failed: " << datFile << ENDL;
+        return _return_FAIL;
     }
 
     QTextStream inStream( &file );
+
+    QByteArray bytes;
+    inStream >> bytes;
+
     QString content = inStream.readAll();
-    QJsonDocument d = QJsonDocument::fromJson(content.toUtf8());
-    QJsonObject obj = d.object();
+
+    QJsonObject datjsonObj = data->toJson();
+    QJsonDocument doc(datjsonObj);
+    QString js_str = doc.toJson();
+
+    QCborValue v1 = QCborValue::fromVariant(js_str);
+    QCborValue v2 = QCborValue::fromJsonValue(datjsonObj);
+//  bytes = v2.toCbor(QCborValue::UseFloat);
+
+    QString encodedString = bytes;
+
+    // Convert QString to QCborValue
+    QCborValue cborValue = QCborValue::fromCbor(bytes);
+
+    QJsonValue resValue = cborValue.toJsonValue();
+    QByteArray cborData = cborValue.toByteArray();
+    QJsonObject obj = resValue.toObject();
 
     long ret = jsonToData(obj, *data);
     if (!ret)
@@ -215,6 +277,7 @@ long OscDataJSonStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
         ch.gain = elem["gain"].toInt();
         ch.offset = elem["offset"].toInt();
 
+        ch.var.id = elem["var_id"].toInt();
         strcpy(ch.var.name, elem["name"].toString().toStdString().c_str());
         strcpy(ch.var.dim, elem["dim"].toString().toStdString().c_str());
         ch.var.scale = elem["scale"].toDouble(0);
