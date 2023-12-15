@@ -130,34 +130,37 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
     return 1;
 }
 
-void doConvert(QString fileFrom, QString fileTo)
+long doConvert(QString fileFrom, QString fileTo)
 {
     IOscDataStorageService* datFile = new OscDataJSonStorage();
 
     DDE_OSC_HEADER hdr;
     long res = datFile->loadHeader(fileFrom, hdr);
 
-    if (res < 0)
-        return;
+    if (!res)
+        return res;
 
     OscType::OscDataBuffer* datBuff = createDataBuffer(hdr);
     res = datFile->loadData(fileFrom, datBuff);
 
-    qInfo() << "Convertion сompleted successfully!";
+    if (!res)
+        return res;
 
     QFile file( fileTo );
 
     if(!file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
     {
          QTextStream(stdout) << "file open failed: " << fileTo << ENDL;
-//       return _return_FAIL;
+         return _return_FAIL;
     }
 
     QTextStream iStream( &file );
     iStream.setCodec( "utf-8" );
 
-    generateContent(hdr, *datBuff, iStream);
+    res = generateContent(hdr, *datBuff, iStream);
     file.close();
+
+    return res;
 }
 
 int main(int argc, char *argv[])
@@ -168,11 +171,14 @@ int main(int argc, char *argv[])
         QString firstArg = argv[1];
         QString secondArg = argv[2];
 
-        qInfo() << "first = " << firstArg << "second = " << secondArg;
+        qInfo() << "convert from  = " << firstArg << "to = " << secondArg;
 
-        doConvert(firstArg, secondArg);
+        long res = doConvert(firstArg, secondArg);
 
+        if (res) {
+            qInfo() << "Convertion сompleted successfully!";
+        }
     }
 
-    return a.exec();
+//  return a.exec();
 }
