@@ -11,6 +11,8 @@
 #include <QFileInfo>
 #include <QCborValue>
 #include <QCborStreamReader>
+#include <QCborStreamWriter>
+#include <QDataStream>
 #include <QDir>
 
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
@@ -66,15 +68,6 @@ long OscDataJSonStorage::saveObj(const QString fileName, const QJsonObject &obj,
 {
     _dde_func_return_t res = _return_OK;
 
-    QJsonDocument doc(obj);
-    QByteArray bytes;
-    if (useBinaryFormat) {
-        QCborValue cborValue = QCborValue::fromJsonValue(obj);
-        bytes = cborValue.toCbor(QCborValue::UseFloat);
-    } else {
-        bytes = doc.toJson(QJsonDocument::Compact);
-    }
-
     QFile file( fileName );
 
     if (useBinaryFormat) {
@@ -85,14 +78,19 @@ long OscDataJSonStorage::saveObj(const QString fileName, const QJsonObject &obj,
 
         QCborStreamWriter writer(&file);
 
+        QCborValue cborValue = QCborValue::fromJsonValue(obj);
+        QByteArray bytes = cborValue.toCbor(QCborValue::UseFloat);
         // Serialize the QCborValue to the file
         writer.append(bytes);
+
     } else {
         if( !file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
         {
             QTextStream(stdout) << "file open failed: " << fileName << ENDL;
             return _return_FAIL;
         }
+        QJsonDocument doc(obj);
+        QByteArray bytes = doc.toJson(QJsonDocument::Compact);
 
         QTextStream iStream( &file );
         iStream.setCodec( "utf-8" );
@@ -195,22 +193,6 @@ QByteArray decodeByteArray(QCborStreamReader &reader)
     return result;
 }
 
-QString decodeString(QCborStreamReader &reader)
-{
-    QString result;
-    auto r = reader.readString();
-    while (r.status == QCborStreamReader::Ok) {
-        result += r.data;
-        r = reader.readString();
-    }
-
-    if (r.status == QCborStreamReader::Error) {
-        // handle error condition
-        result.clear();
-    }
-    return result;
-}
-
 long OscDataJSonStorage::loadData(QString fileFrom, OscType::OscDataBuffer *data)
 {
     QString path = QFileInfo(fileFrom).absolutePath() + QString("\\");
@@ -219,42 +201,24 @@ long OscDataJSonStorage::loadData(QString fileFrom, OscType::OscDataBuffer *data
     QString datFile = path + name + ".dat";
     QFile file( datFile );
 
-    if(!file.open( QIODevice::ReadOnly | QIODevice::Text ))
+    if(!file.open( QIODevice::ReadOnly))
     {
         QTextStream(stdout) << "file open failed: " << datFile << ENDL;
         return _return_FAIL;
     }
 
-    QTextStream inStream( &file );
+    QCborStreamReader reader( &file );
+    QByteArray bytes = decodeByteArray(reader);
 
-    QByteArray bytes;
-    inStream >> bytes;
+    file.close();
 
-    QString content = inStream.readAll();
-
-    QJsonObject datjsonObj = data->toJson();
-    QJsonDocument doc(datjsonObj);
-    QString js_str = doc.toJson();
-
-    QCborValue v1 = QCborValue::fromVariant(js_str);
-    QCborValue v2 = QCborValue::fromJsonValue(datjsonObj);
-//  bytes = v2.toCbor(QCborValue::UseFloat);
-
-    QString encodedString = bytes;
-
-    // Convert QString to QCborValue
     QCborValue cborValue = QCborValue::fromCbor(bytes);
-
     QJsonValue resValue = cborValue.toJsonValue();
-    QByteArray cborData = cborValue.toByteArray();
     QJsonObject obj = resValue.toObject();
 
     long ret = jsonToData(obj, *data);
-    if (!ret)
-        return ret;
 
-
-    return _return_OK;
+    return ret;
 }
 
 long OscDataJSonStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
@@ -301,10 +265,15 @@ long OscDataJSonStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuf
     QJsonArray vars = obj["vars"].toArray();
     QJsonArray values = obj["values"].toArray();
 
+    int maxValueCount = 0;
     for (int i = 0; i < vars.count(); ++i) {
         data.ch[i].varId = vars[i].toInt();
         data.ch[i].values = values[i].toArray().toVariantList();
+        int valueCount = data.ch[i].values.count();
+        maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     }
+
+    data.valueCount = maxValueCount;
 
     return _return_OK;
 }
