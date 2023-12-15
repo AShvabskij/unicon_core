@@ -9,6 +9,7 @@ SUBDIRS += \
     dde_lib/DDE_lib.pro \
     dde_lib/utils/sql3_db \
 #   unicon_testpanel \
+    gabbi_convertor \
     unicon_core
 
 
