@@ -44,6 +44,9 @@ namespace OscType {
         QVariantList values;
     };
 
+    const int DATA_VERSION = 1;
+    const int DATA_SUBVERSION = 1;
+
     struct OscDataBuffer
     {
         DevInd id;
@@ -61,6 +64,14 @@ namespace OscType {
             QJsonArray valuesObj;
             QJsonArray varIdListObj;
 
+            res["ver"] = DATA_VERSION;
+            res["sub_ver"] = DATA_SUBVERSION;
+
+            res["d_id"] = this->id;
+            res["time"] = this->timestamp;
+            res["eof"] = this->eof ? "1" : "0";
+            res["sof"] = this->sof ? "1" : "0";
+
             for (const OscChannelValues& chVal : this->ch) {
                 if (chVal.varId == 0) continue;
                 if (!vars.empty() && !vars.contains(chVal.varId)) {
@@ -71,12 +82,8 @@ namespace OscType {
                 valuesObj << QJsonArray::fromVariantList(chVal.values.mid(startPos,  chVal.values.size()));
             }
 
-            res["d_id"] = this->id;
             res["values"] = valuesObj;
             res["vars"] = varIdListObj;
-            res["time"] = this->timestamp;
-            res["eof"] = this->eof ? "1" : "0";
-            res["sof"] = this->sof ? "1" : "0";
 
             return res;
         }

@@ -18,8 +18,27 @@
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
 #define ENDL Qt::endl
 #else
-#define ENDL endl
+#define ENDL "\n"
 #endif
+
+const uint8_t DATA_VERSION = 1;
+const uint8_t DATA_SUBVERSION = 1;
+
+QString colorToString(const int &c)
+{
+    QString ret = QString("#%1")
+            .arg(QString::number(c, 16).rightJustified(6, '0'));
+
+    return ret;
+
+}
+
+int stringToColor(QString hexColor)
+{
+    hexColor = hexColor.remove("#");
+    int retColor = hexColor.toUInt(nullptr, 16);
+    return retColor;
+}
 
 long OscDataJSonStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data)
 {
@@ -58,7 +77,7 @@ QString OscDataJSonStorage::createPath(const DDE_OSC_HEADER &header)
     bool res = dir.mkpath(path);
 
     if (!res) {
-        qWarning() << "Couldn't create folder to path:" + path;
+        qWarning() << "Couldn't create folder:" + path;
     }
 
     return path;
@@ -72,7 +91,7 @@ long OscDataJSonStorage::saveObj(const QString fileName, const QJsonObject &obj,
 
     if (useBinaryFormat) {
         if( !file.open( QIODevice::WriteOnly |  QIODevice::Truncate ) ) {
-            QTextStream(stdout) << "file open failed: " << fileName << ENDL;
+            QTextStream(stdout) << "File open failed: " << fileName << ENDL;
             return _return_FAIL;
         }
 
@@ -80,13 +99,13 @@ long OscDataJSonStorage::saveObj(const QString fileName, const QJsonObject &obj,
 
         QCborValue cborValue = QCborValue::fromJsonValue(obj);
         QByteArray bytes = cborValue.toCbor(QCborValue::UseFloat);
-        // Serialize the QCborValue to the file
-        writer.append(bytes);
+
+        writer.append(bytes); // serialize the QCborValue to the file
 
     } else {
         if( !file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
         {
-            QTextStream(stdout) << "file open failed: " << fileName << ENDL;
+            QTextStream(stdout) << "File open failed: " << fileName << ENDL;
             return _return_FAIL;
         }
         QJsonDocument doc(obj);
@@ -105,6 +124,8 @@ QJsonObject OscDataJSonStorage::headerToJson(const DDE_OSC_HEADER &h)
 {
     QJsonObject res;
 
+    res["version"] = DATA_VERSION;
+    res["sub_version"] = DATA_SUBVERSION;
     res["device_id"] = h.device_id;
     res["id"] = h.device_id;
     res["trig_time"] = QString::number(h.settings.trig_time);
@@ -140,21 +161,12 @@ QJsonObject OscDataJSonStorage::headerToJson(const DDE_OSC_HEADER &h)
     return res;
 }
 
-QString OscDataJSonStorage::colorToString(const int &c)
-{
-    QString ret = QString("#%1")
-            .arg(QString::number(c, 16).rightJustified(6, '0'));
-
-    return ret;
-
-}
-
 long OscDataJSonStorage::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
 {
-    QString path = QFileInfo(fileFrom).absolutePath() + QString("\\");
+    QString path = QFileInfo(fileFrom).absolutePath();
     QString name = QFileInfo(fileFrom).baseName();
 
-    QString headerFile = path + name + ".hdr";
+    QString headerFile = path + QDir::separator() + name + ".hdr";
     QFile file( headerFile );
 
     if(!file.open( QIODevice::ReadOnly | QIODevice::Text ))
@@ -170,7 +182,7 @@ long OscDataJSonStorage::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
     QJsonObject obj = d.object();
 
     long ret = jsonToHeader(obj, header);
-    if (!ret)
+    if (ret <=0 )
         return ret;
 
 
@@ -195,10 +207,10 @@ QByteArray decodeByteArray(QCborStreamReader &reader)
 
 long OscDataJSonStorage::loadData(QString fileFrom, OscType::OscDataBuffer *data)
 {
-    QString path = QFileInfo(fileFrom).absolutePath() + QString("\\");
+    QString path = QFileInfo(fileFrom).absolutePath();
     QString name = QFileInfo(fileFrom).baseName();
 
-    QString datFile = path + name + ".dat";
+    QString datFile = path + QDir::separator() + name + ".dat";
     QFile file( datFile );
 
     if(!file.open( QIODevice::ReadOnly))
@@ -223,11 +235,23 @@ long OscDataJSonStorage::loadData(QString fileFrom, OscType::OscDataBuffer *data
 
 long OscDataJSonStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
 {
-    h.device_id = obj["device_id"].toInt();
-    h.settings.reason = obj["reason"].toInt();
-    h.settings.trig_time = obj["trig_time"].toInt();
-    h.settings.triger_mode = obj["trig_mode"].toInt();
-    h.settings.time_resolution_us = obj["resolution_us"].toInt();
+    uint8_t ver = obj["version"].toVariant().toUInt();
+    uint8_t sub_ver = obj["sub_version"].toVariant().toUInt();
+
+    if (ver != DATA_VERSION) {
+        QTextStream(stdout) << "The json header version " <<  ver << " is not supported" <<  ", the current version is " << DATA_SUBVERSION << ENDL;
+        return -1;
+    }
+
+    if (sub_ver > DATA_SUBVERSION) {
+        QTextStream(stdout) << "The json header version " << sub_ver <<  "is an older version of the current version " << DATA_SUBVERSION << ENDL;
+    }
+
+    h.device_id = obj["device_id"].toVariant().toInt();
+    h.settings.reason = obj["reason"].toVariant().toInt();
+    h.settings.trig_time = obj["trig_time"].toVariant().toInt();
+    h.settings.triger_mode = obj["trig_mode"].toVariant().toInt();
+    h.settings.time_resolution_us = obj["resolution_us"].toVariant().toInt();
 
     QJsonArray arr = obj["channels"].toArray();
     h.settings.channel_count = arr.count();
@@ -247,7 +271,7 @@ long OscDataJSonStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
         ch.var.scale = elem["scale"].toDouble(0);
         ch.var.min = elem["min"].toDouble(0);
         ch.var.max = elem["max"].toDouble(0);
-        ch.var.color = elem["color"].toInt();
+        ch.var.color = stringToColor(elem["color"].toString());
         ch.var.type = (elem["isAnalog"].toBool()) ? OSC_VAR_TYPE::ANALOG : h.channels[ind].var.type;
         ch.var.type = (elem["isDiscrete"].toBool()) ? OSC_VAR_TYPE::DISCRETE : h.channels[ind].var.type;
         ch.var.type = (elem["isDigital"].toBool()) ? OSC_VAR_TYPE::DIGITAL : h.channels[ind].var.type;
@@ -258,6 +282,18 @@ long OscDataJSonStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
 
 long OscDataJSonStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuffer &data)
 {
+    uint8_t ver = obj["version"].toVariant().toUInt();
+    uint8_t sub_ver = obj["sub_version"].toVariant().toUInt();
+
+    if (ver != DATA_VERSION) {
+        QTextStream(stdout) << "The json data version " <<  ver << " is not supported" <<  ", the current version is " << DATA_SUBVERSION << ENDL;
+        return -1;
+    }
+
+    if (sub_ver > DATA_SUBVERSION) {
+        QTextStream(stdout) << "The json data version " << sub_ver <<  " is an older version of the current version " << DATA_SUBVERSION << ENDL;
+    }
+
     data.id =  obj["d_id"].toInt();
     data.timestamp = obj["time"].toVariant().toLongLong();
     data.eof = obj["eof"].toBool();

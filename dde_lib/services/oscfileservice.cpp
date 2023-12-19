@@ -15,6 +15,7 @@ using namespace OSC_FILE;
 const char* OSC_FILE_ERROR = "Osc data file error!\n";
 const char* OSC_FILE_PARSE_ERROR = "Error while parsing th osc file!\n";
 const char* OSC_FILE_PARSE_LIMIT_ERROR = "Exceeded The maximum allowed number of variables!\n";
+
 const int SET_SIZE = 16;
 
 OscFileService::OscFileService()
@@ -416,7 +417,7 @@ int OscFileService::parseHeader(const std::ifstream& fileStream, FILE_HEADER& he
     return res;
 }
 
-VAR_DESCR OscFileService::createVarDescr(std::vector<std::string> elems, uint16_t varId, bool isDigital)
+VAR_DESCR OscFileService::createVarDescr(std::vector<std::string>& elems, uint16_t varId, bool isDigital)
 {
     int setNum = atoi(elems[1].substr(1).c_str());
     int setChNum = atoi(elems[2].c_str());
@@ -446,9 +447,14 @@ VAR_DESCR OscFileService::createVarDescr(std::vector<std::string> elems, uint16_
     int colorInd = isDigital ? 5 : 7;
     string color = elems[colorInd];
     vector<string> colors = split(color, ' ');
-    chDescr.color.Red = stoi(colors[0]);
-    chDescr.color.Green = stoi(colors[1]);
-    chDescr.color.Blue = stoi(colors[2]);
+    if (colors.size() >= 3) {
+        chDescr.color.Red = stoi(colors[0]);
+        chDescr.color.Green = stoi(colors[1]);
+        chDescr.color.Blue = stoi(colors[2]);
+    } else {
+        cout << OSC_FILE_PARSE_ERROR;
+    }
+
 
     return chDescr;
 }

@@ -26,7 +26,6 @@ private:
     QJsonObject headerToJson(const DDE_OSC_HEADER &h);
     long jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h);
     long jsonToData(const QJsonObject& obj, OscType::OscDataBuffer &data);
-    QString colorToString(const int &c);
 };
 
 #endif // OSCDATASAVER_H
