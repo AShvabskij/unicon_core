@@ -4,7 +4,12 @@
 #include <QVariant>
 #include <QtDebug>
 #include <QFile>
+#include <QFileInfo>
+#include <QDir>
 #include <QColor>
+#include <QCommandLineParser>
+#include <QCommandLineOption>
+#include <QTextStream>
 
 #include <iostream>
 #include <memory>
@@ -19,7 +24,7 @@ const char SEP = ',';
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
 #define ENDL Qt::endl
 #else
-#define ENDL endl
+#define ENDL "\n"
 #endif
 
 OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
@@ -78,27 +83,28 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
          if (ch.var.type == OSC_VAR_TYPE::ANALOG || ch.var.type == OSC_VAR_TYPE::DIGITAL) {
              line << QString("@") + QString(ch.var.name)
                  << QString("L") + QString::number(numOfSet)
-                 << QString::number(chNumOfSet).leftJustified(2, '0')
-                 << QString("D") + QString::number(ch.firstBit).leftJustified(2, '0')
-                 << QString("D") + QString::number(ch.lastBit).leftJustified(2, '0')
+                 << QString::number(chNumOfSet).rightJustified(2, '0')
+                 << QString("D") + QString::number(ch.firstBit).rightJustified(2, '0')
+                 << QString("D") + QString::number(ch.lastBit).rightJustified(2, '0')
                  << QString::number(ch.gain) << QString::number(ch.offset)
-                 << QString::number(qRed(rgb)) << QString::number(qGreen(rgb)) << QString::number(qBlue(rgb))
+                 << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
                  << "TRUE";
          }
          else if (ch.var.type == OSC_VAR_TYPE::DISCRETE) {
              line << QString("&") + QString(ch.var.name)
                  << QString("L") + QString::number(numOfSet)
-                 << QString::number(chNumOfSet).leftJustified(2, '0')
-                 << QString("D") + QString::number(ch.firstBit).leftJustified(2, '0')
+                 << QString::number(chNumOfSet).rightJustified(2, '0')
+                 << QString("D") + QString::number(ch.firstBit).rightJustified(2, '0')
                  << QString("BIT")
-                 << QString::number(ch.var.color) << "TRUE";
+                 << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
+                 << "TRUE";
          }
 
          res << line.join(SEP) << ENDL;
 
          varIndexes << QString::number(i);
          varNames << ch.var.name;
-         varNumOfSets <<  QString("L") + QString::number(numOfSet) + "_" + QString::number(chNumOfSet).leftJustified(2, '0');
+         varNumOfSets <<  QString("L") + QString::number(numOfSet) + "_" + QString::number(chNumOfSet).rightJustified(2, '0');
      }
 
      res << ENDL << ENDL;
@@ -120,7 +126,6 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
                  break;
              }
 
-             auto& ch = hdr.channels[chNum];
              rec << chVal.values[i].toString();
          }
 
@@ -137,13 +142,13 @@ long doConvert(QString fileFrom, QString fileTo)
     DDE_OSC_HEADER hdr;
     long res = datFile->loadHeader(fileFrom, hdr);
 
-    if (!res)
+    if (res <= 0)
         return res;
 
     OscType::OscDataBuffer* datBuff = createDataBuffer(hdr);
     res = datFile->loadData(fileFrom, datBuff);
 
-    if (!res)
+    if (res <= 0)
         return res;
 
     QFile file( fileTo );
@@ -165,20 +170,53 @@ long doConvert(QString fileFrom, QString fileTo)
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
+    QCoreApplication app(argc, argv);
 
-    if (argc >= 3) {
-        QString firstArg = argv[1];
-        QString secondArg = argv[2];
+//  std::cout << "Hello, world!" << std::endl;
 
-        qInfo() << "convert from  = " << firstArg << "to = " << secondArg;
+    QCoreApplication::setApplicationName("GabbiConverter");
+    QCoreApplication::setApplicationVersion("1.0");
 
-        long res = doConvert(firstArg, secondArg);
+    QCommandLineParser parser;
+    parser.setApplicationDescription("Read file names from command line arguments");
+    parser.addHelpOption();
+    parser.addVersionOption();
 
-        if (res) {
-            qInfo() << "Convertion сompleted successfully!";
-        }
+    QCommandLineOption file1Option(QStringList() << "from", "Path to source file (Unicon format)", "id-reason-time[.hdr|dat]");
+    QCommandLineOption file2Option(QStringList() << "to", "Write generated data into <file> (Gabbi csv format)", "id-reason-time.csv");
+
+    parser.addOption(file1Option);
+    parser.addOption(file2Option);
+
+    parser.process(app);
+
+    QString fileFrom = parser.value(file1Option);
+    QString fileTo = parser.value(file2Option);
+
+
+    if (fileFrom.isEmpty() || fileTo.isEmpty()) {
+        QTextStream(stdout) << "Error: Missing command line argument(s)." << ENDL;
+        parser.showHelp(-2);
+        return -2;
     }
 
-//  return a.exec();
+    QString path = QFileInfo(fileTo).absolutePath();
+    QString name = QFileInfo(fileTo).baseName();
+    QString sfx = QFileInfo(fileTo).suffix();
+
+    if (sfx.isEmpty()) {
+        sfx = "csv";
+    }
+
+    fileTo = QDir::cleanPath(path + QDir::separator() + name + "." + sfx);
+
+    QTextStream(stdout) << "Convert from " << fileFrom << " to " << fileTo << ENDL;
+
+    long res = doConvert(fileFrom, fileTo);
+
+    if (res > 0) {
+        QTextStream(stdout) << "Convertion Completed successfully!" << ENDL;
+    }
+
+    return res;
 }
