@@ -8,6 +8,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QVector>
+#include <QtConcurrent/QtConcurrent>
 
 namespace OscType {
 
@@ -41,11 +42,33 @@ namespace OscType {
         int channelNum = 0;
         quint16 varId = 0;
         float scale = 0.0;
+        float offset = 0.0;
         QVariantList values;
     };
 
     const int DATA_VERSION = 1;
     const int DATA_SUBVERSION = 1;
+
+    class MultiplyFunctor {
+    public:
+        using result_type = QVariant;
+
+        MultiplyFunctor(float scale, float offset) : scale(scale), offset(offset) {}
+
+        QVariant operator()(const QVariant& value) const {
+            if (value.canConvert(QMetaType::Double)) {
+                double originalValue = value.toFloat();
+                return QVariant(originalValue * scale + offset);
+            } else {
+                qWarning() << "Element is not a numeric type and will be skipped.";
+                return value;
+            }
+        }
+
+    private:
+        float scale;
+        float offset;
+    };
 
     struct OscDataBuffer
     {
@@ -57,6 +80,11 @@ namespace OscType {
         qlonglong timestamp = 0;
         bool eof = false;
         bool sof = false;
+
+        void multiplyArrayByCoefficient(QVariantList& numberArray, float scale, float offset) const {
+            QVariantList res = QtConcurrent::blockingMapped(numberArray, MultiplyFunctor(scale, offset));
+            numberArray = res;
+        }
 
         QJsonObject toJson(QVector<int> vars = QVector<int>(), int startPos = 0) const
         {
@@ -79,7 +107,13 @@ namespace OscType {
                 }
 
                 varIdListObj << chVal.varId;
-                valuesObj << QJsonArray::fromVariantList(chVal.values.mid(startPos,  chVal.values.size()));
+                QVariantList values = chVal.values.mid(startPos,  chVal.values.size());
+
+                if (chVal.scale != 0 && chVal.scale != 1.0) {
+                    multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
+                }
+
+                valuesObj << QJsonArray::fromVariantList(values);
             }
 
             res["values"] = valuesObj;
@@ -87,6 +121,7 @@ namespace OscType {
 
             return res;
         }
+
     };
 
     struct OscSettings

@@ -67,7 +67,7 @@ private:
     int parseHeader(const std::ifstream& fileStream, OSC_FILE::FILE_HEADER &header);
     std::string readLine(std::istream &stream);
     std::vector<std::uint16_t> parseValues(std::string line);
-    float normalizeValue(uint16_t rawValue, float gain, float offset);
+    float normalizeValue(uint16_t rawValue);
     std::vector<std::string> split(std::string inputStr, char delim);
     OSC_FILE::VAR_DESCR createVarDescr(std::vector<std::string> &elems, uint16_t varId, bool isDigital);
     OSC_VAR createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId);

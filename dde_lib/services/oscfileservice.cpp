@@ -223,17 +223,19 @@ _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeld
 
             uint16_t rawValue = values[elemInd];
             if (var.isDigital) {
-                uint16_t val = rawValue;
+                uint16_t val = -1;
                 if (var.firstBit == 0 && var.lastBit == 15) {
-                    val = normalizeValue(rawValue, var.gain, var.offset);
+                    val = normalizeValue(rawValue);
+                } else {
+                    val = rawValue;
                 }
-                p.data[chNum].u_buff[buffInd] = val;
+
+                p.data[chNum].i_buff[buffInd] = val;
             } else if(var.isDiscrete) {
-                uint16_t rawValue = values[elemInd];
-                p.data[chNum].u_buff[buffInd] = rawValue;
+                p.data[chNum].i_buff[buffInd] = rawValue;
             }
             else {
-                float val = normalizeValue(rawValue, var.gain, var.offset);
+                float val = normalizeValue(rawValue);
                 p.data[chNum].f_buff[buffInd] = val;
             }
         }
@@ -301,7 +303,6 @@ OSC_VAR OscFileService::createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t 
     return ret;
 }
 
-
 std::string OscFileService::readLine(std::istream &stream)
 {
     if (stream.eof()) {
@@ -319,7 +320,7 @@ std::string OscFileService::readLine(std::istream &stream)
     return line;
 }
 
-float OscFileService::normalizeValue(uint16_t rawValue, float gain, float offset)
+float OscFileService::normalizeValue(uint16_t rawValue)
 {
     if (rawValue == 0) {
         return rawValue;
@@ -327,7 +328,7 @@ float OscFileService::normalizeValue(uint16_t rawValue, float gain, float offset
 
     uint16_t zeroLevel = 0x7FFF;
     float normValue = rawValue - zeroLevel;
-    normValue =  normValue * gain + offset;
+//  normValue =  normValue * gain + offset;
     return normValue;
 }
 

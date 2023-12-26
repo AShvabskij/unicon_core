@@ -61,6 +61,7 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
         chValues.channelNum = channel.chNum;
         chValues.varId = channel.var.id;
         chValues.scale = channel.var.scale;
+        chValues.offset = channel.offset;
     }
 
     return buff;

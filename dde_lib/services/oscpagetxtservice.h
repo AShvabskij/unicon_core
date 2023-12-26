@@ -27,7 +27,7 @@ private:
     void th_loadData();
     std::string readLine(std::istream &stream);
     std::vector<int32_t> parseValues(std::string line);
-    float normalizeValue(int32_t rawValue, float gain, float offset);
+    float normalizeValue(int32_t rawValue);
     std::vector<std::string> split(std::string inputStr, char delim);
 
     void waitForLoad();

@@ -180,7 +180,7 @@ _dde_func_return_t OscPageTxtService::readNextData(const DDE_OSC_HEADER& header,
             } else if (ch.var.type == OSC_VAR_TYPE::DISCRETE) {
                 getDat.data[chNum].i_buff[buffInd] = rawValue;
             } else {
-                float val = normalizeValue(rawValue, ch.gain, ch.offset);
+                float val = normalizeValue(rawValue);
                 getDat.data[chNum].f_buff[buffInd] = val;
             }
         }
@@ -211,15 +211,13 @@ std::string OscPageTxtService::readLine(std::istream &stream)
     return line;
 }
 
-float OscPageTxtService::normalizeValue(int32_t rawValue, float gain, float offset)
+float OscPageTxtService::normalizeValue(int32_t rawValue)
 {
     if (rawValue == 0) {
         return rawValue;
     }
 
-//    float zeroLevel = 0x7FFF;
-//    float normValue = rawValue - zeroLevel;
-    float normValue =  rawValue * gain + offset;
+    float normValue =  rawValue;
     return normValue;
 }
 
