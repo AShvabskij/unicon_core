@@ -30,6 +30,17 @@ void OscDataService::clear(DevInd ind)
     m_mutex.unlock();
 }
 
+void OscDataService::reset(DevInd ind)
+{
+    OscType::OscDataBuffer* buff = m_repository.value(ind);
+    if (!buff)
+        return;
+
+    m_mutex.lock();
+    m_repository.remove(ind);
+    m_mutex.unlock();
+}
+
 void OscDataService::clearDataBuffer(OscType::OscDataBuffer* buff)
 {
     Q_ASSERT(buff);
@@ -60,7 +71,7 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
         OscChannelValues& chValues = buff->ch[chInd];
         chValues.channelNum = channel.chNum;
         chValues.varId = channel.var.id;
-        chValues.scale = channel.var.scale;
+        chValues.scale = channel.gain;
         chValues.offset = channel.offset;
     }
 

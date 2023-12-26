@@ -24,6 +24,7 @@ public:
 
     OscType::OscDataBuffer* get(DevInd ind) override;
     void clear(DevInd id) override;
+    void reset(DevInd ind) override;
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
     QJsonObject getSerialisedData(DevInd ind, QVector<int> vars, int &cnt) override;
     long save(const DDE_OSC_HEADER &hdr) override;

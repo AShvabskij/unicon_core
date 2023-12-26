@@ -110,7 +110,7 @@ namespace OscType {
                 QVariantList values = chVal.values.mid(startPos,  chVal.values.size());
 
                 if (chVal.scale != 0 && chVal.scale != 1.0) {
-                    multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
+                     multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
                 }
 
                 valuesObj << QJsonArray::fromVariantList(values);
@@ -233,6 +233,7 @@ public:
     virtual ~IOscDataService() {}
     virtual OscType::OscDataBuffer* get (DevInd ind) = 0;
     virtual void clear(DevInd ind) = 0;
+    virtual void reset(DevInd ind) = 0;
     virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
     virtual QJsonObject getSerialisedData(DevInd ind, QVector<int> vars, int &cnt) = 0;
     virtual long save(const DDE_OSC_HEADER& hdr) = 0;
