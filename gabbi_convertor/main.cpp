@@ -43,10 +43,22 @@ OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
         OscType::OscChannelValues& chValues = buff->ch[chInd];
         chValues.channelNum = channel.chNum;
         chValues.varId = channel.var.id;
-        chValues.scale = channel.var.scale;
+        chValues.scale = channel.gain;
+        chValues.offset = channel.offset;
     }
 
     return buff;
+}
+
+int denormalizeValue(float value)
+{
+    if (value == 0) {
+        return value;
+    }
+
+    uint16_t zeroLevel = 0x7FFF;
+    int res = value + zeroLevel;
+    return res;
 }
 
 long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& data, QTextStream& stream)
@@ -59,7 +71,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
      res << ".PlotName, " << plotName << ENDL;
      res << ".Date, " << QDateTime(QDateTime::fromTime_t(static_cast<uint>(hdr.settings.trig_time))).date().toString();
      res << ".Time, " << QDateTime(QDateTime::fromTime_t(static_cast<uint>(hdr.settings.trig_time))).time().toString();
-     res << ".Ts" << hdr.settings.time_resolution_us;
+     res << ".Ts," << hdr.settings.time_resolution_us / (1000 * 1000);
 
      res << ENDL;
 
@@ -126,7 +138,8 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
                  break;
              }
 
-             rec << chVal.values[i].toString();
+             int value = denormalizeValue(chVal.values[i].toFloat());
+             rec << QString(value);
          }
 
          res << rec.join(",") << ENDL;
