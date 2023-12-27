@@ -55,7 +55,7 @@ long OscDataJSonStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDa
         if (!res)
             return res;
 
-        QJsonObject datjsonObj = data.serilalizeToJSon();
+        QJsonObject datjsonObj = data.serializeToJSon();
 
         QString datFile = path + "/" + baseFileName + ".dat";
         res = saveObj(datFile, datjsonObj, true);
@@ -63,7 +63,7 @@ long OscDataJSonStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDa
         return res;
 }
 
-QString OscDataJSonStorage::createPath(const DDE_OSC_HEADER &header)
+QString OscDataJSonStorage::createPath(const DDE_OSC_HEADER &)
 {
     QDateTime now = QDateTime::currentDateTime();
     QString year = "Y" + QString::number(now.date().year());
