@@ -55,7 +55,7 @@ long OscDataJSonStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDa
         if (!res)
             return res;
 
-        QJsonObject datjsonObj = data.toJson();
+        QJsonObject datjsonObj = data.serilalizeToJSon();
 
         QString datFile = path + "/" + baseFileName + ".dat";
         res = saveObj(datFile, datjsonObj, true);

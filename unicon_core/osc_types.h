@@ -122,6 +122,38 @@ namespace OscType {
             return res;
         }
 
+        QJsonObject serializeToJSon() const
+        {
+            QJsonObject res;
+            QJsonArray valuesObj;
+            QList<int> varIdList;
+            QJsonArray varIdListObj;
+
+            res["ver"] = DATA_VERSION;
+            res["sub_ver"] = DATA_SUBVERSION;
+
+            res["d_id"] = this->id;
+            res["time"] = this->timestamp;
+
+            for (const OscChannelValues& chVal : this->ch) {
+                if (chVal.varId == 0) continue;
+
+                varIdList << chVal.varId;
+                varIdListObj << chVal.varId;
+            }
+            res["vars"] = varIdListObj;
+
+            for (const OscChannelValues& chVal : this->ch) {
+                if (!varIdList.contains(chVal.varId))
+                        continue;
+
+                QVariantList values = chVal.values;
+                valuesObj << QJsonArray::fromVariantList(values);
+            }
+            res["values"] = valuesObj;
+
+            return res;
+        }
     };
 
     struct OscSettings
