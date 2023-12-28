@@ -92,9 +92,6 @@ namespace OscType {
             QJsonArray valuesObj;
             QJsonArray varIdListObj;
 
-            res["ver"] = DATA_VERSION;
-            res["sub_ver"] = DATA_SUBVERSION;
-
             res["d_id"] = this->id;
             res["time"] = this->timestamp;
             res["eof"] = this->eof ? "1" : "0";
@@ -129,8 +126,8 @@ namespace OscType {
             QList<int> varIdList;
             QJsonArray varIdListObj;
 
-            res["ver"] = DATA_VERSION;
-            res["sub_ver"] = DATA_SUBVERSION;
+            res["version"] = DATA_VERSION;
+            res["sub_version"] = DATA_SUBVERSION;
 
             res["d_id"] = this->id;
             res["time"] = this->timestamp;

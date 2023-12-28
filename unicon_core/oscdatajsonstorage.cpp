@@ -286,7 +286,7 @@ long OscDataJSonStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuf
     uint8_t sub_ver = obj["sub_version"].toVariant().toUInt();
 
     if (ver != DATA_VERSION) {
-        QTextStream(stdout) << "The json data version " <<  ver << " is not supported" <<  ", the current version is " << DATA_SUBVERSION << ENDL;
+        QTextStream(stdout) << "The json data version " <<  ver << " is not supported" <<  ", the current supported version is " << DATA_VERSION << ENDL;
         return -1;
     }
 
@@ -296,8 +296,6 @@ long OscDataJSonStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuf
 
     data.id =  obj["d_id"].toInt();
     data.timestamp = obj["time"].toVariant().toLongLong();
-    data.eof = obj["eof"].toBool();
-    data.sof = obj["sof"].toBool();
     QJsonArray vars = obj["vars"].toArray();
     QJsonArray values = obj["values"].toArray();
 

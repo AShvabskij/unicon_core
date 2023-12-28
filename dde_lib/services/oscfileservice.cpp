@@ -123,19 +123,21 @@ int OscFileService::saveHeader(FILE_HEADER& /*header*/)
 
 int OscFileService::loadHeader(uint16_t device_id, const char* fileName)
 {
-    delete m_header;
-    m_header = new FILE_HEADER();
-
     ifstream fileStream = openOscFile(fileName);
     int res = fileStream.is_open() ? _return_OK : _return_FAIL;
 
     if (res == _return_OK) {
+        delete m_header;
+        m_header = new FILE_HEADER();
+        m_header->device_id = device_id;
         res = parseHeader(fileStream, *m_header);
     }
 
     if (res == _return_OK) {
-        m_header->device_id = device_id;
         m_fileName = fileName;
+    } else {
+        delete m_header;
+        m_header = nullptr;
     }
 
     fileStream.close();
@@ -184,6 +186,8 @@ int OscFileService::th_loadData()
 
 _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeldIntervalMsc)
 {
+    assert(m_header != nullptr);
+
     if (!m_oscFileStream) {
         loadData();
     }
@@ -195,7 +199,12 @@ _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeld
     }
 
     auto resolution_us = m_header->settings.time_resolution_us;
-    p.data_length = (resolution_us != 0) ? (datYeldIntervalMsc * 1000) / resolution_us : 0;
+    if (resolution_us != 0) {
+        p.data_length = (datYeldIntervalMsc * 1000) / resolution_us;
+    } else {
+        std::cout << "Osc error! Header resolution is assigned to 0 , device id = " << m_header->device_id << "\n";
+    }
+
     p.overflow = 0;
     p.header_updated = 0;
     p.next_ready = true;
