@@ -42,6 +42,8 @@ int stringToColor(QString hexColor)
 
 long OscDataJSonStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data)
 {
+    QTextStream(stdout) << "Saving osc data, device id = " << header.device_id << ENDL;
+
     //  const char* home = getenv("HOME");
         QString path =  createPath(header);
         QJsonObject jsonObj = headerToJson(header);
