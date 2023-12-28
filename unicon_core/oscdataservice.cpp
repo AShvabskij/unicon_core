@@ -9,8 +9,31 @@
 #include <QJsonObject>
 #include <QFile>
 #include <QCborValue>
+#include <QtConcurrent/QtConcurrent>
 
 #include <QCoreApplication>
+
+
+class MultiplyFunctor {
+public:
+    using result_type = QVariant;
+
+    MultiplyFunctor(float scale, float offset) : scale(scale), offset(offset) {}
+
+    QVariant operator()(const QVariant& value) const {
+        if (value.canConvert(QMetaType::Double)) {
+            double originalValue = value.toFloat();
+            return QVariant(originalValue * scale + offset);
+        } else {
+            qWarning() << "Element is not a numeric type and will be skipped.";
+            return value;
+        }
+    }
+
+private:
+    float scale;
+    float offset;
+};
 
 using namespace OscType;
 
@@ -162,7 +185,7 @@ qint32 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 last
     return ret;
 }
 
-QJsonObject OscDataService::getSerialisedData(DevInd ind, QVector<int> vars, int &cnt)
+QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &cnt)
 {
     OscType::OscDataBuffer* buff = m_repository.value(ind);
     Q_ASSERT(buff);
@@ -175,12 +198,50 @@ QJsonObject OscDataService::getSerialisedData(DevInd ind, QVector<int> vars, int
         return QJsonObject();
     }
 
-    QJsonObject res = buff->toJson(vars, buff->lastDataPos);
+    QJsonObject res = dataToJson(*buff, vars, buff->lastDataPos);
 
     cnt = buff->valueCount - buff->lastDataPos;
     buff->lastDataPos = buff->valueCount;
 
     m_mutex.unlock();
+    return res;
+}
+
+void multiplyArrayByCoefficient(QVariantList& numberArray, float scale, float offset) {
+    QVariantList res = QtConcurrent::blockingMapped(numberArray, MultiplyFunctor(scale, offset));
+    numberArray = res;
+}
+
+QJsonObject OscDataService::dataToJson(const OscType::OscDataBuffer& data, QVector<int> vars, int startPos) const
+{
+    QJsonObject res;
+    QJsonArray valuesObj;
+    QJsonArray varIdListObj;
+
+    res["d_id"] = data.id;
+    res["time"] = data.timestamp;
+    res["eof"] = data.eof ? "1" : "0";
+    res["sof"] = data.sof ? "1" : "0";
+
+    for (const OscChannelValues& chVal : data.ch) {
+        if (chVal.varId == 0) continue;
+        if (!vars.empty() && !vars.contains(chVal.varId)) {
+            continue;
+        }
+
+        varIdListObj << chVal.varId;
+        QVariantList values = chVal.values.mid(startPos,  chVal.values.size());
+
+        if (chVal.scale != 0 && chVal.scale != 1.0) {
+             multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
+        }
+
+        valuesObj << QJsonArray::fromVariantList(values);
+    }
+
+    res["values"] = valuesObj;
+    res["vars"] = varIdListObj;
+
     return res;
 }
 

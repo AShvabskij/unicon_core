@@ -8,7 +8,6 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QVector>
-#include <QtConcurrent/QtConcurrent>
 
 namespace OscType {
 
@@ -49,27 +48,6 @@ namespace OscType {
     const int DATA_VERSION = 1;
     const int DATA_SUBVERSION = 1;
 
-    class MultiplyFunctor {
-    public:
-        using result_type = QVariant;
-
-        MultiplyFunctor(float scale, float offset) : scale(scale), offset(offset) {}
-
-        QVariant operator()(const QVariant& value) const {
-            if (value.canConvert(QMetaType::Double)) {
-                double originalValue = value.toFloat();
-                return QVariant(originalValue * scale + offset);
-            } else {
-                qWarning() << "Element is not a numeric type and will be skipped.";
-                return value;
-            }
-        }
-
-    private:
-        float scale;
-        float offset;
-    };
-
     struct OscDataBuffer
     {
         DevInd id;
@@ -80,44 +58,6 @@ namespace OscType {
         qlonglong timestamp = 0;
         bool eof = false;
         bool sof = false;
-
-        void multiplyArrayByCoefficient(QVariantList& numberArray, float scale, float offset) const {
-            QVariantList res = QtConcurrent::blockingMapped(numberArray, MultiplyFunctor(scale, offset));
-            numberArray = res;
-        }
-
-        QJsonObject toJson(QVector<int> vars = QVector<int>(), int startPos = 0) const
-        {
-            QJsonObject res;
-            QJsonArray valuesObj;
-            QJsonArray varIdListObj;
-
-            res["d_id"] = this->id;
-            res["time"] = this->timestamp;
-            res["eof"] = this->eof ? "1" : "0";
-            res["sof"] = this->sof ? "1" : "0";
-
-            for (const OscChannelValues& chVal : this->ch) {
-                if (chVal.varId == 0) continue;
-                if (!vars.empty() && !vars.contains(chVal.varId)) {
-                    continue;
-                }
-
-                varIdListObj << chVal.varId;
-                QVariantList values = chVal.values.mid(startPos,  chVal.values.size());
-
-                if (chVal.scale != 0 && chVal.scale != 1.0) {
-                     multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
-                }
-
-                valuesObj << QJsonArray::fromVariantList(values);
-            }
-
-            res["values"] = valuesObj;
-            res["vars"] = varIdListObj;
-
-            return res;
-        }
 
         QJsonObject serializeToJSon() const
         {
@@ -264,7 +204,7 @@ public:
     virtual void clear(DevInd ind) = 0;
     virtual void reset(DevInd ind) = 0;
     virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
-    virtual QJsonObject getSerialisedData(DevInd ind, QVector<int> vars, int &cnt) = 0;
+    virtual QJsonObject serialisedData(DevInd ind, QVector<int> vars, int &cnt) = 0;
     virtual long save(const DDE_OSC_HEADER& hdr) = 0;
     virtual OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) = 0;
 
