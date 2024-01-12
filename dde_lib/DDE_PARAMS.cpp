@@ -358,7 +358,7 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
     if (list_read.empty()) return _return_FAIL;
 
     std::lock_guard<std::mutex> lock{ m_mutex };
-    p = list_read.front();
+    p = std::move(list_read.front());
     list_read.pop_front();
 
     return _return_OK;
@@ -369,7 +369,7 @@ _dde_func_return_t DDE_PARAMS::pop_write_request(DDE_SET_PARAMS_DATA& p)
     if (list_write.empty()) return _return_FAIL;
 
     std::lock_guard<std::mutex> lock{ m_mutex };
-    p = list_write.front();
+    p = std::move(list_write.front());
     list_write.pop_front();
 
     return _return_OK;
@@ -503,7 +503,6 @@ void DDE_PARAMS::update()
                                         " attempts = " + std::to_string(attempts) +
                                         ". Check if a remote device proccess is working!";
                         if (lastError.compare(error.c_str()) != 0) { // A.S : To avoid multiple logging the same error
-
                             lastError = error.c_str();
                             std::cout << lastError.c_str() << std::endl;
                         }
