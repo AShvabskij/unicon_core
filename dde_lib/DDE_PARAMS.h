@@ -5,6 +5,8 @@
 #include "DDE_INTERFACES.h"
 #include "cpp_inc.h"
 
+#include <mutex>
+
 //#define SUB_INDEX_MAX	0x3f
 //#define ADDRESS_MAX		0xfff
 
@@ -60,15 +62,13 @@ private:
     std::thread *thr_params;
     ParamDescr* _paramDescr;
 
-    std::queue <DDE_GET_PARAMS_DATA> list_read;
-    std::queue <DDE_SET_PARAMS_DATA> list_write;
-
+    std::deque <DDE_GET_PARAMS_DATA> list_read;
+    std::deque <DDE_SET_PARAMS_DATA> list_write;
+    std::mutex m_mutex;
     short err_write_cmd_counter = 0;
     short err_read_cmd_counter = 0;
 
     //int thread_proc();
     inline time_t systemTime();
     std::string create_device_name(const uint8_t device_id);
-
-    uint32_t devices_count;
 };

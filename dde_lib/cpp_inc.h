@@ -7,7 +7,7 @@
 #include <string>
 #include <string.h>
 #include <list>
-#include <queue>
+#include <deque>
 #include <iterator>
 #include <thread>
 #include <time.h>

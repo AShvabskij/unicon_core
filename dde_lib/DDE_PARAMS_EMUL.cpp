@@ -11,7 +11,7 @@ DDE_PARAMS_EMUL::DDE_PARAMS_EMUL()
 {
 	//1) clear
     memset(m_devData, 0, sizeof(m_devData));
-    memset(m_devDescr, 0, sizeof(m_devDescr));
+    // memset(m_devDescr, 0, sizeof(DEVICE_ELEMENTS_DESCR)); // todo: correct it
 
 	//2) fill with names devices
 

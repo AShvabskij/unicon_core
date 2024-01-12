@@ -284,13 +284,12 @@ _dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
     if (p.device_id > DEVICE_ID_MAX) res = _return_FAIL;
     if (p.module_id > MODULES_ID_MAX) res = _return_FAIL;
 
-    if (p.header_reset > 1) res = _return_FAIL;
-    if (p.header_reset < 0) res = _return_FAIL;
+    if (p.header_reset != 0 && p.header_reset != 1) res = _return_FAIL;
 
     if (res == _return_FAIL) {
         string err = "The data is not valid: id = " + std::to_string(p.module_id) + "."
                 + std::to_string(p.param_id) + ", el count = " + std::to_string(p.el_count);
-        perror(err.c_str());
+        std::cout << err.c_str();
     }
 
     return res;
@@ -298,30 +297,31 @@ _dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
 
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 {
-    // check that requiest is not already in the queue.If it is do not push it.
-/*
-    for (auto const& pp : list_read) {
-        if (pp.device_id == p.device_id && pp.module_id == p.module_id && pp.param_id == p.param_id && pp.header_reset == p.header_reset) {
+    // check that requiest is not already in the queue.If it is do not push it to avoid list_read oversizing.
+    std::lock_guard<std::mutex> lock{ m_mutex };
+    for(auto it = list_read.crbegin();it!=list_read.crend();it++)
+    {
+        if (it->device_id == p.device_id && it->module_id == p.module_id && it->param_id == p.param_id && it->header_reset == p.header_reset) {
             direct_read(p);
             return _return_OK;
         }
     }
-*/
+
     //0) set timeout counter to 0
     p.timeout = 0;
 
     //1) Add request to queue
     if (list_read.size() < list_read_max) {
         if (isValidData(p)) {
-            list_read.push(p);
+            list_read.push_back(p);
             assert(list_read.size() <= list_read_max);
         }
         else {
-            perror("Failed to add data into reading list. Invalid data \n");
+            std::cout << "Failed to add data into reading list. Invalid data \n";
         }
     }
     else {
-        perror("The reading list is overflowed\n");
+        std::cout << "Command queue (to get data) is overflowed!\n";
         return _return_Busy;
     }
 
@@ -336,23 +336,13 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 //------------------------------------------------------------------------------
 _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
 {
-    // check that requiest is not already in the queue.If it is do not push it.
-/*
-    for (auto const& pp : list_write) {
-        if (pp.device_id == p.device_id && pp.module_id == p.module_id && pp.param_id == p.param_id && pp.ivalue == p.ivalue) {
-            return _return_OK;
-        }
-    }
-*/
-    //0) set timeout counter to 0
-    //p.timeout = 0;
-
     //1) Add request to queue
     if (list_write.size() < list_write_max) {
-        list_write.push(p);
+        std::lock_guard<std::mutex> lock{ m_mutex };
+        list_write.push_back(p);
     }
     else {
-        perror("The writing list is overflowed\n");
+        std::cout << "Command queue (to set data) is overflowed\n";
         return _return_Busy;
     }
 
@@ -367,8 +357,9 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
 
     if (list_read.empty()) return _return_FAIL;
 
+    std::lock_guard<std::mutex> lock{ m_mutex };
     p = list_read.front();
-    list_read.pop(); //A&D 31.08.2023 catch this hangs
+    list_read.pop_front();
 
     return _return_OK;
 }
@@ -377,8 +368,10 @@ _dde_func_return_t DDE_PARAMS::pop_write_request(DDE_SET_PARAMS_DATA& p)
 {
     if (list_write.empty()) return _return_FAIL;
 
+    std::lock_guard<std::mutex> lock{ m_mutex };
     p = list_write.front();
-    list_write.pop();
+    list_write.pop_front();
+
     return _return_OK;
 }
 
@@ -494,7 +487,7 @@ void DDE_PARAMS::update()
                 if (res != 1) {
                     attempts++;
 
-                    if (attempts == 10) {
+                    if (attempts > 5) {
                         err_read_cmd_counter++;
 
                         DDE_SET_PARAMS_DATA set_err;
@@ -546,7 +539,7 @@ void DDE_PARAMS::update()
             res = PARAMS_DATA_write_cmd(device_id, &cmd, 1);
             if (res != 1) {
                 attempts++;
-                if (attempts > 10)
+                if (attempts > 5)
                 {
                     err_write_cmd_counter++;
 
@@ -564,5 +557,5 @@ void DDE_PARAMS::update()
         }
     }
 
-    if (timeout == true) perror("while ((get_empty && set_empty) || timeout) resulted with timeout");
+    if (timeout == true) std::cout << ("while ((get_empty && set_empty) || timeout) resulted with timeout");
 }

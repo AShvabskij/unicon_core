@@ -408,7 +408,7 @@ void ParamsHandler::streamParamsValue()
     ParamValueList allValues;
     ParamList singleParams;
 
-    const int GROUP_PARAMS_COUNT_MIN = 5;
+    const int GROUP_PARAMS_COUNT_MIN = 3;
     for (const int modKey: modules.keys()) {
         if (modules[modKey].count() >= GROUP_PARAMS_COUNT_MIN) {
             ParamID pID = modules[modKey].value(0).ID;
@@ -455,7 +455,10 @@ void ParamsHandler::streamParamsValue()
 
     for (const ParamValue& val : sentValues) {
         if (!val.isActual()) {
-            qWarning() << "The param value actuality is exceeded, " << val.paramID.logStr() << ", actuality = " << val.timestamp -  QDateTime::currentMSecsSinceEpoch() << "\n";
+            const int delta = val.timestamp -  QDateTime::currentMSecsSinceEpoch();
+            if (delta > -10000) {
+                qWarning() << "The param value actuality is exceeded, " << val.paramID.logStr() << ", actuality = " << delta << "\n";
+            }
         }
     }
 
