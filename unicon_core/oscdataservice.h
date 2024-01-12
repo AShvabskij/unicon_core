@@ -26,7 +26,7 @@ public:
     void clear(DevInd id) override;
     void reset(DevInd ind) override;
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
-    QJsonObject getSerialisedData(DevInd ind, QVector<int> vars, int &cnt) override;
+    QJsonObject serialisedData(DevInd ind, QVector<int> vars, int &cnt) override;
     long save(const DDE_OSC_HEADER &hdr) override;
     OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr);
 
@@ -38,7 +38,7 @@ private:
     void  clearDataBuffer(OscType::OscDataBuffer* buff);
     long saveData(const DDE_OSC_HEADER& header, const OscType::OscDataBuffer& data);
     qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
-    QJsonObject dataToJson(const OscType::OscDataBuffer &buff, QVector<int> vars, int startPos);
+    QJsonObject dataToJson(const OscType::OscDataBuffer& data, QVector<int> vars, int startPos) const;
     QJsonObject headerToJson(const DDE_OSC_HEADER &h);
     static QString colorToString(const int &c);
 

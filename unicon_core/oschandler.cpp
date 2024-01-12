@@ -188,7 +188,7 @@ void OscHandler::streamData()
     Q_ASSERT(m_capturedOsc.deviceID.isValid());
 
     int objCountResult = 0;
-    QJsonObject response = m_dataSrv->getSerialisedData(m_capturedOsc.id, m_capturedVars, objCountResult);
+    QJsonObject response = m_dataSrv->serialisedData(m_capturedOsc.id, m_capturedVars, objCountResult);
     response["type"] = "osc";
     // response["body"] = data;
 
