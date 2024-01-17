@@ -183,7 +183,7 @@ void DeviceHandler::handleReqDevices(SysType sysType, int requestId)
 
             long res = requestDevice(d);
 
-            if (res <= 0 || d.isEmpty()) continue;
+            if (res <= 0 || d.name.isEmpty() || d.isEmpty()) continue;
 
             devices << d;
         }

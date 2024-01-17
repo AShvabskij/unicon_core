@@ -6,8 +6,8 @@
 struct Device
 {
     DevID ID = {SysType::Undefined, 0};
-    QString unitName;
-    QString name;
+    QString name; // name of similar devices : DEVICE_NAME + HW_REV + SW_REV, f.e. "DCDC00010002"
+    QString instanceName; // unique device instance name: name + ID
     QString desc;
     SysType sysType  = Undefined;
     QVector<int> modules;
@@ -23,7 +23,7 @@ struct Device
         return ID.isValid();
     }
     bool isEmpty() {
-        return name.isEmpty() || modules.count() == 0;
+        return modules.count() == 0;
     }
 };
 typedef QVector<Device> DeviceList;
