@@ -210,7 +210,9 @@ long DeviceHandler::requestDevice(Device& device)
 {
     if (!device.isValid()) return _return_FAIL;
 
+    device.unitName = getDeviceUnitName(device.ID);
     device.name = getDeviceName(device.ID);
+
     if (device.name.isEmpty()) return _return_OK;
 
     device.desc = ""; // todo: получать из другого сервиса
@@ -261,9 +263,16 @@ QString DeviceHandler::getDeviceName(const DevID& deviceId)
         retName.append(name);
     }
 
-    QString devIdSection = QString("%0").arg(dat.device_id);
+    return retName;
+}
+
+QString DeviceHandler::getDeviceUnitName(const DevID& deviceId)
+{
+    QString retName = getDeviceName(deviceId);
+
+    QString devIdSection = QString("%0").arg(deviceId.id);
     devIdSection = devIdSection.leftJustified(2, '0');
-    retName = retName.trimmed() + devIdSection;
+    retName = retName.trimmed() + "[" + devIdSection + "]";
     return retName.trimmed();
 }
 

@@ -6,6 +6,7 @@
 struct Device
 {
     DevID ID = {SysType::Undefined, 0};
+    QString unitName;
     QString name;
     QString desc;
     SysType sysType  = Undefined;
@@ -61,6 +62,7 @@ private:
 
     long requestDevice(Device& device);
     QString getDeviceName(const DevID &deviceId);
+    QString getDeviceUnitName(const DevID& deviceId);
     QString getDeviceDescr(const DevID& deviceId);
 
     QJsonObject createResponse(int requestId, const DeviceList& devices);
