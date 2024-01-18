@@ -47,6 +47,7 @@ namespace OscType {
 
     const int DATA_VERSION = 1;
     const int DATA_SUBVERSION = 1;
+    const int MAX_DATA_COUNT = 1000000;
 
     struct OscDataBuffer
     {
@@ -58,6 +59,13 @@ namespace OscType {
         qlonglong timestamp = 0;
         bool eof = false;
         bool sof = false;
+
+        bool isOversized() {
+            if (valueCount > MAX_DATA_COUNT)
+                return true;
+
+            return false;
+        }
 
         QJsonObject serializeToJSon() const
         {
