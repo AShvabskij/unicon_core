@@ -117,9 +117,10 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     if (buff->eof) {
         clearDataBuffer(buff); // prepare buffer to append a new data
     }
+
     if (buff->isOversized()) {
-        qWarning() << "Osc buffer is oversized, count = " << buff->valueCount;
-        clearDataBuffer(buff); // prepare buffer to append a new data
+        qWarning() << "Osc buffer is oversized!" <<  " Count = " << buff->valueCount << "\n";
+        clearDataBuffer(buff);
     }
 
     buff->eof = dat.eof;
