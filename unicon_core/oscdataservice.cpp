@@ -60,6 +60,7 @@ void OscDataService::reset(DevInd ind)
         return;
 
     m_mutex.lock();
+    delete buff;
     m_repository.remove(ind);
     m_mutex.unlock();
 }

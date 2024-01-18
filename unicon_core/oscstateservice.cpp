@@ -53,30 +53,30 @@ OscStateMachine::OscStateMachine(IDDE* dde, IOscDataService *dataSrv)
 void OscStateMachine::update(DevInd devId)
 {
     switch (m_state) {
-        case Normal: {
-            memset(m_header, 0, sizeof(DDE_OSC_HEADER));
-            m_header->device_id = devId;
-            auto res = m_dde->get_osc_header(*m_header);
-            if (res == _return_FAIL) {
-                qWarning() << "Error getting header from osc, id = " << m_header->device_id;
-                m_state = Error;
-                return;
-            }
-
-            if (res != _return_OK) return;
-
-            if (m_header->settings.trig_time > 0 && m_header->settings.reason > 0) {
-                m_dataSrv->reset(m_header->device_id);
-                m_errCounter = 0;
-                m_state = Getting;
-                m_sof = false;
-            } else {
-                m_idleCounter = 0;
-                m_state = Idle;
-            }
-
-            break;
+    case Normal: {
+        memset(m_header, 0, sizeof(DDE_OSC_HEADER));
+        m_header->device_id = devId;
+        auto res = m_dde->get_osc_header(*m_header);
+        if (res == _return_FAIL) {
+            qWarning() << "Error getting header from osc, id = " << m_header->device_id;
+            m_state = Error;
+            return;
         }
+
+        if (res != _return_OK) return;
+
+        if (m_header->settings.trig_time > 0 && m_header->settings.reason > 0) {
+            m_dataSrv->reset(m_header->device_id);
+            m_errCounter = 0;
+            m_state = Getting;
+            m_sof = false;
+        } else {
+            m_idleCounter = 0;
+            m_state = Idle;
+        }
+
+        break;
+    }
 
     case Idle: {
         m_idleCounter++;
@@ -86,70 +86,70 @@ void OscStateMachine::update(DevInd devId)
         break;
     }
 
-        case Getting: {
-            auto res = getData(*m_header, m_ddeData);
+    case Getting: {
+        auto res = getData(*m_header, m_ddeData);
 
-            if (res == _return_Busy) {
-                m_state = Busy;
-                return;
+        if (res == _return_Busy) {
+            m_state = Busy;
+            return;
+        }
+
+        if (res != _return_OK) {
+            qWarning() << "Error getting data from the osc, id = " << m_header->device_id;
+            m_state = Error;
+            return;
+        }
+
+        res = m_dataSrv->appendData(*m_header, *m_ddeData);
+
+        if (res != _return_OK) {
+            qWarning() << "Error getting buffer for the osc, id = " << m_header->device_id;
+            m_state = Error;
+            return;
+        }
+
+        if (m_ddeData->sof) {
+            m_sof = m_ddeData->sof;
+        }
+
+        if (m_ddeData->eof) {
+            if (m_sof) {
+                m_state = Saving;
+            } else {
+                m_state = Normal;
             }
+        }
 
-            if (res != _return_OK) {
-                qWarning() << "Error getting data from the osc, id = " << m_header->device_id;
-                m_state = Error;
-                return;
-            }
+        break;
+    }
+    case Busy: {
+        m_busyCounter++;
+        if (m_busyCounter % 4 == 0) {
+            m_busyCounter = 0;
+            m_state = Getting;
+        }
+        break;
+    }
 
-            res = m_dataSrv->appendData(*m_header, *m_ddeData);
-
-            if (res != _return_OK) {
-                qWarning() << "Error getting buffer for the osc, id = " << m_header->device_id;
-                m_state = Error;
-                return;
-            }
-
-            if (m_ddeData->sof) {
-                m_sof = m_ddeData->sof;
-            }
-
-            if (m_ddeData->eof) {
-                if (m_sof) {
-                    m_state = Saving;
-                } else {
-                    m_state = Normal;
-                }
-            }
-
+    case Saving: {
+        m_dataSrv->save(*m_header);
+        m_state = Normal;
+        break;
+    }
+    case Finished: {
+        break;
+    }
+    case Error: {
+        m_errCounter++;
+        if (m_errCounter > MAX_OSC_ERROR_COUNT) {
+            m_state = Finished;
             break;
         }
-        case Busy: {
-            m_busyCounter++;
-            if (m_busyCounter % 4 == 0) {
-                m_busyCounter = 0;
-                m_state = Getting;
-            }
-            break;
-        }
 
-        case Saving: {
-            m_dataSrv->save(*m_header);
-            m_state = Normal;
-          break;
-        }
-        case Finished: {
-            break;
-        }
-        case Error: {
-            m_errCounter++;
-            if (m_errCounter > MAX_OSC_ERROR_COUNT) {
-                m_state = Finished;
-                break;
-            }
-
-            m_state = Normal;
-            break;
-        }
-        default: break;
+        m_state = Normal;
+        break;
+    }
+    default: break;
     }
 
     return;
