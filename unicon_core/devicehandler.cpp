@@ -210,7 +210,7 @@ long DeviceHandler::requestDevice(Device& device)
 {
     if (!device.isValid()) return _return_FAIL;
 
-    device.unitName = getDeviceUnitName(device.ID);
+    device.instanceName = getDeviceInstanceName(device.ID);
     device.name = getDeviceName(device.ID);
 
     if (device.name.isEmpty()) return _return_OK;
@@ -266,7 +266,7 @@ QString DeviceHandler::getDeviceName(const DevID& deviceId)
     return retName;
 }
 
-QString DeviceHandler::getDeviceUnitName(const DevID& deviceId)
+QString DeviceHandler::getDeviceInstanceName(const DevID& deviceId)
 {
     QString retName = getDeviceName(deviceId);
 

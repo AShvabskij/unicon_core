@@ -62,7 +62,7 @@ private:
 
     long requestDevice(Device& device);
     QString getDeviceName(const DevID &deviceId);
-    QString getDeviceUnitName(const DevID& deviceId);
+    QString getDeviceInstanceName(const DevID& deviceId);
     QString getDeviceDescr(const DevID& deviceId);
 
     QJsonObject createResponse(int requestId, const DeviceList& devices);
