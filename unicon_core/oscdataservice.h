@@ -28,7 +28,7 @@ public:
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
     QJsonObject serialisedData(DevInd ind, QVector<int> vars, int &cnt) override;
     long save(const DDE_OSC_HEADER &hdr) override;
-    OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr);
+    OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) override;
 
 signals:
     void dataReceived(quint16 ind) override;
