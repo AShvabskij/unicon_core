@@ -122,6 +122,25 @@ long OscDataJSonStorage::saveObj(const QString fileName, const QJsonObject &obj,
     return res;
 }
 
+QString OSC_VAR_TYPE_TO_STRING(OSC_VAR_TYPE type)
+{
+    switch (type) {
+        case OSC_VAR_TYPE::ANALOG: return "FLT";
+        case OSC_VAR_TYPE::DIGITAL: return "INT";
+        case OSC_VAR_TYPE::DISCRETE: return "BIT";
+    default: return "";
+    }
+}
+
+OSC_VAR_TYPE OSC_VAR_TYPE_FROM_STRING(QString type)
+{
+    if (type == "FLT") return OSC_VAR_TYPE::ANALOG;
+    if (type == "INT") return OSC_VAR_TYPE::DIGITAL;
+    if (type == "BIT") return OSC_VAR_TYPE::DISCRETE;
+
+    return OSC_VAR_TYPE::UNDEFINED;
+}
+
 QJsonObject OscDataJSonStorage::headerToJson(const DDE_OSC_HEADER &h)
 {
     QJsonObject res;
@@ -151,9 +170,8 @@ QJsonObject OscDataJSonStorage::headerToJson(const DDE_OSC_HEADER &h)
         obj["min"] = ch.var.min;
         obj["max"] = ch.var.max;
         obj["color"] = colorToString(ch.var.color);
-        obj["isDiscrete"] = ch.var.type == OSC_VAR_TYPE::DISCRETE;
-        obj["isAnalog"] = ch.var.type == OSC_VAR_TYPE::ANALOG;
-        obj["isDigital"] = ch.var.type == OSC_VAR_TYPE::DIGITAL;
+
+        obj["type"] = OSC_VAR_TYPE_TO_STRING(ch.var.type);
 
         channelsObj << obj;
     }
@@ -274,9 +292,7 @@ long OscDataJSonStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
         ch.var.min = elem["min"].toDouble(0);
         ch.var.max = elem["max"].toDouble(0);
         ch.var.color = stringToColor(elem["color"].toString());
-        ch.var.type = (elem["isAnalog"].toBool()) ? OSC_VAR_TYPE::ANALOG : h.channels[ind].var.type;
-        ch.var.type = (elem["isDiscrete"].toBool()) ? OSC_VAR_TYPE::DISCRETE : h.channels[ind].var.type;
-        ch.var.type = (elem["isDigital"].toBool()) ? OSC_VAR_TYPE::DIGITAL : h.channels[ind].var.type;
+        ch.var.type = OSC_VAR_TYPE_FROM_STRING(elem["type"].toString());
     }
 
     return _return_OK;

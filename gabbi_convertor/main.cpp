@@ -20,6 +20,8 @@
 
 const int SET_SIZE = 16;
 const char SEP = ',';
+const int MAX_BIT_NUM = 15; // from zero to 15
+const int MAX_VALUE = 0xFFFE; // from zero to 15
 
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
 #define ENDL Qt::endl
@@ -52,8 +54,8 @@ OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
 
 int denormalizeValue(float value)
 {
-    if (value == 0) {
-        return value;
+    if (value > MAX_VALUE) {
+        value = MAX_VALUE;
     }
 
     uint16_t zeroLevel = 0x7FFF;
@@ -87,18 +89,20 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
          if (ch.var.id <= 0)
              continue;
 
-         int chNumOfSet = ch.chNum - (numOfSet - 1) * SET_SIZE;
+         int chNumOfSet = (ch.chNum + 1) - (numOfSet - 1) * SET_SIZE;
 
          QStringList line;
 
          QRgb rgb = ch.var.color;
 
          if (ch.var.type == OSC_VAR_TYPE::ANALOG || ch.var.type == OSC_VAR_TYPE::DIGITAL) {
+             int lastBit = (ch.lastBit > 0 && ch.lastBit < MAX_BIT_NUM) ? ch.lastBit : MAX_BIT_NUM;
+
              line << QString("@") + QString(ch.var.name)
                  << QString("L") + QString::number(numOfSet)
                  << QString::number(chNumOfSet).rightJustified(2, '0')
                  << QString("D") + QString::number(ch.firstBit).rightJustified(2, '0')
-                 << QString("D") + QString::number(ch.lastBit).rightJustified(2, '0')
+                 << QString("D") + QString::number(lastBit).rightJustified(2, '0')
                  << QString::number(ch.gain) << QString::number(ch.offset)
                  << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
                  << "TRUE";
@@ -128,6 +132,8 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
 
      for (int i = 0; i < data.valueCount; i++) {
          QStringList rec;
+         rec << QString::number(i + 1);
+
          for (int chNum = 0; chNum <= OSC_MAX_VARS; chNum++) {
              const OscType::OscChannelValues& chVal = data.ch[chNum];
 
