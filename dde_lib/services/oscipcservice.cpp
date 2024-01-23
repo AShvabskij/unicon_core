@@ -52,6 +52,17 @@ _dde_func_return_t OscIPCHeaderService::deInit(const char* sysName)
     return _dde_func_return_t();
 }
 
+bool isValid(const GLIO_OSC_CHANNEL& ch)
+{
+   if (ch.type == OSC_VAR_TYPE::UNDEFINED)
+       return false;
+
+   if (strlen(ch.name) == 0)
+       return false;
+
+   return true;
+}
+
 _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& hdr)
 {
     GLIO_OSC_HEADER* rec = reinterpret_cast<GLIO_OSC_HEADER*> (osc_mem_getData(id));
@@ -60,9 +71,15 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
 
     hdr.settings = rec->settings;
 
-    for (int i = 0; i < rec->settings.channel_count; i++) {
-        OSC_CHANNEL& channel = hdr.channels[i];
+    int count = 0;
+    for (int i = 0; i <= OSC_MAX_VARS; i++) {
+
         const GLIO_OSC_CHANNEL& glio_ch = rec->channel[i];
+
+        if (!isValid(glio_ch))
+            break;
+
+        OSC_CHANNEL& channel = hdr.channels[i];
 
         channel.chNum = glio_ch.chNum;
         channel.gain = glio_ch.gain;
@@ -78,7 +95,11 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
         channel.var.max = glio_ch.max;
         channel.var.type = glio_ch.type;
         channel.var.color = glio_ch.color;
+
+        count++;
     }
+
+    hdr.settings.channel_count = count;
 
     return _return_OK;
 }

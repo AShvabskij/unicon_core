@@ -179,9 +179,11 @@ _dde_func_return_t OscPageTxtService::readNextData(const DDE_OSC_HEADER& header,
                 getDat.data[chNum].i_buff[buffInd] = rawValue;
             } else if (ch.var.type == OSC_VAR_TYPE::DISCRETE) {
                 getDat.data[chNum].i_buff[buffInd] = rawValue;
-            } else {
+            } else if (ch.var.type == OSC_VAR_TYPE::ANALOG){
                 float val = normalizeValue(rawValue);
                 getDat.data[chNum].f_buff[buffInd] = val;
+            } else {
+                getDat.data[chNum].f_buff[buffInd] = rawValue;
             }
         }
     }

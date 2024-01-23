@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <time.h>
 #include <pthread.h>
+#include <string.h>
 
 #define OSC_VAR_NAME_LENGTH 64
 #define OSC_VAR_USER_NAME_LENGTH 64
@@ -25,9 +26,9 @@ struct RGB {
 enum OSC_VAR_TYPE
 {
      UNDEFINED = 0,
-     ANALOG = 1,
-     DIGITAL = 2,
-     DISCRETE = 3
+     ANALOG = 1, // todo: rename to FLOAT
+     DIGITAL = 2, // todo: rename to INTEGER
+     DISCRETE = 3 // todo: rename to BIT
 };
 
 struct OSC_VAR
