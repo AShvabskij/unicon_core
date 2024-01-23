@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <time.h>
 #include <pthread.h>
-#include <string.h>
 
 #define OSC_VAR_NAME_LENGTH 64
 #define OSC_VAR_USER_NAME_LENGTH 64
