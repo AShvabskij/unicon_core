@@ -52,7 +52,7 @@ _dde_func_return_t OscIPCHeaderService::deInit(const char* sysName)
     return _dde_func_return_t();
 }
 
-bool isValid(const GLIO_OSC_CHANNEL& ch)
+bool OscIPCHeaderService::isValidOscChannel(const GLIO_OSC_CHANNEL& ch)
 {
    if (ch.type == OSC_VAR_TYPE::UNDEFINED)
        return false;
@@ -76,7 +76,7 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
 
         const GLIO_OSC_CHANNEL& glio_ch = rec->channel[i];
 
-        if (!isValid(glio_ch))
+        if (!isValidOscChannel(glio_ch))
             break;
 
         OSC_CHANNEL& channel = hdr.channels[i];
