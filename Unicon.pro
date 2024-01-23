@@ -8,7 +8,7 @@ SUBDIRS += \
 #   unicon_testpanel \
     unicon_core
 
-win32: SUBDIRS += gabbi_convertor
+# win32: SUBDIRS += gabbi_convertor
 
 
 # unix: SUBDIRS += \
