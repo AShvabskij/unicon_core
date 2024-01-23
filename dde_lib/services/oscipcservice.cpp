@@ -63,6 +63,17 @@ bool OscIPCHeaderService::isValidOscChannel(const GLIO_OSC_CHANNEL& ch)
    return true;
 }
 
+bool OscIPCHeaderService::isValidOscChannel(const OSC_CHANNEL& ch)
+{
+   if (ch.var.type == OSC_VAR_TYPE::UNDEFINED)
+       return false;
+
+   if (strlen(ch.var.name) == 0)
+       return false;
+
+   return true;
+}
+
 _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& hdr)
 {
     GLIO_OSC_HEADER* rec = reinterpret_cast<GLIO_OSC_HEADER*> (osc_mem_getData(id));
@@ -118,8 +129,12 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint16_t id, const DDE_OSC_HE
 
     rec.settings = hdr.settings;
 
-    for (int i = 0; i < hdr.settings.channel_count; i++) {
+    for (int i = 0; i <= OSC_MAX_VARS; i++) {
         const OSC_CHANNEL& channel = hdr.channels[i];
+
+        if (!isValidOscChannel(channel))
+            break;
+
         GLIO_OSC_CHANNEL& glio_ch = rec.channel[i];
 
         glio_ch.chNum = channel.chNum;
