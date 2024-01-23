@@ -24,6 +24,7 @@
 const uint8_t DATA_VERSION = 1;
 const uint8_t DATA_SUBVERSION = 1;
 
+namespace {
 QString colorToString(const int &c)
 {
     QString ret = QString("#%1")
@@ -33,11 +34,13 @@ QString colorToString(const int &c)
 
 }
 
+
 int stringToColor(QString hexColor)
 {
     hexColor = hexColor.remove("#");
     int retColor = hexColor.toUInt(nullptr, 16);
     return retColor;
+}
 }
 
 long OscDataJSonStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data)

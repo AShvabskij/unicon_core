@@ -40,7 +40,6 @@ private:
     qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
     QJsonObject dataToJson(const OscType::OscDataBuffer& data, QVector<int> vars, int startPos) const;
     QJsonObject headerToJson(const DDE_OSC_HEADER &h);
-    static QString colorToString(const int &c);
 
     QMap<DevInd, OscType::OscDataBuffer*> m_repository;
     QMutex m_mutex;

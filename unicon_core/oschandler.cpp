@@ -11,6 +11,7 @@ const QString CMD_OSC_DATA = "osc_data";
 
 using namespace OscType;
 
+namespace {
 QString colorToString(const int &c)
 {
     QString ret = QString("#%1")
@@ -63,6 +64,7 @@ QJsonObject headerToJson(const OscHeader& h) {
     res["discrete_channels"] = discretesObj;
 
     return res;
+}
 }
 
 OscHandler::OscHandler(IDDE_Dispatcher* dde, IOscDataService *dataSrv): BaseReqHandler(dde)
@@ -340,7 +342,7 @@ QJsonObject OscHandler::createChannelObj(int requestId, const OscChannelDescr& c
     obj["scale"] = ch.scale;
     obj["min"] = ch.min;
     obj["max"] = ch.max;
-    obj["color"] =  OscHeader::colorToString(ch.color);
+    obj["color"] =  colorToString(ch.color);
     obj["isDiscrete"] = ch.isDiscrete;
 
     res["body"] = obj;
