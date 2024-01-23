@@ -175,11 +175,11 @@ _dde_func_return_t OscPageTxtService::readNextData(const DDE_OSC_HEADER& header,
             assert(chNum <= OSC_MAX_CHANNELS);
 
             int32_t rawValue = values[elemInd];
-            if (ch.var.type == OSC_VAR_TYPE::DIGITAL) {
+            if (ch.var.type == OSC_VAR_TYPE::OSC_VAR_INT) {
                 getDat.data[chNum].i_buff[buffInd] = rawValue;
-            } else if (ch.var.type == OSC_VAR_TYPE::DISCRETE) {
+            } else if (ch.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
                 getDat.data[chNum].i_buff[buffInd] = rawValue;
-            } else if (ch.var.type == OSC_VAR_TYPE::ANALOG){
+            } else if (ch.var.type == OSC_VAR_TYPE::OSC_VAR_FLOAT){
                 float val = normalizeValue(rawValue);
                 getDat.data[chNum].f_buff[buffInd] = val;
             } else {

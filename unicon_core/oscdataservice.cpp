@@ -148,10 +148,10 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
 
 //      buff->valueDensity = buff->valueCount / DATA_YELD_INTERVAL_MSC;
         for (int i = 0; i < dat.data_length; i++) {
-            if (channel.var.type == OSC_VAR_TYPE::DIGITAL) {
+            if (channel.var.type == OSC_VAR_TYPE::OSC_VAR_INT) {
                 int32_t rawValue = chData.i_buff[i];
                 chValues.values.append(rawValue);
-            } else if (channel.var.type == OSC_VAR_TYPE::DISCRETE) {
+            } else if (channel.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
                 int32_t rawValue = chData.i_buff[i];
                 chValues.values.append(discreteValue(rawValue, channel.firstBit, channel.lastBit));
             } else {

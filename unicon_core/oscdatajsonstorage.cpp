@@ -128,18 +128,18 @@ long OscDataJSonStorage::saveObj(const QString fileName, const QJsonObject &obj,
 QString OSC_VAR_TYPE_TO_STRING(OSC_VAR_TYPE type)
 {
     switch (type) {
-        case OSC_VAR_TYPE::ANALOG: return "FLT";
-        case OSC_VAR_TYPE::DIGITAL: return "INT";
-        case OSC_VAR_TYPE::DISCRETE: return "BIT";
+        case OSC_VAR_TYPE::OSC_VAR_FLOAT: return "FLT";
+        case OSC_VAR_TYPE::OSC_VAR_INT: return "INT";
+        case OSC_VAR_TYPE::OSC_VAR_DISCRETE: return "BIT";
     default: return "";
     }
 }
 
 OSC_VAR_TYPE OSC_VAR_TYPE_FROM_STRING(QString type)
 {
-    if (type == "FLT") return OSC_VAR_TYPE::ANALOG;
-    if (type == "INT") return OSC_VAR_TYPE::DIGITAL;
-    if (type == "BIT") return OSC_VAR_TYPE::DISCRETE;
+    if (type == "FLT") return OSC_VAR_TYPE::OSC_VAR_FLOAT;
+    if (type == "INT") return OSC_VAR_TYPE::OSC_VAR_INT;
+    if (type == "BIT") return OSC_VAR_TYPE::OSC_VAR_DISCRETE;
 
     return OSC_VAR_TYPE::UNDEFINED;
 }

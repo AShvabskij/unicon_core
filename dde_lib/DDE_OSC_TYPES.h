@@ -25,9 +25,9 @@ struct RGB {
 enum OSC_VAR_TYPE
 {
      UNDEFINED = 0,
-     ANALOG = 1, // todo: rename to FLOAT
-     DIGITAL = 2, // todo: rename to INTEGER
-     DISCRETE = 3 // todo: rename to BIT
+     OSC_VAR_FLOAT = 1,
+     OSC_VAR_INT = 2,
+     OSC_VAR_DISCRETE = 3
 };
 
 struct OSC_VAR

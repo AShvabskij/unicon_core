@@ -280,9 +280,9 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
             continue;
         }
 
-        if (channel.var.type == OSC_VAR_TYPE::ANALOG || channel.var.type == OSC_VAR_TYPE::DIGITAL) {
+        if (channel.var.type == OSC_VAR_TYPE::OSC_VAR_FLOAT || channel.var.type == OSC_VAR_TYPE::OSC_VAR_INT) {
             out->analogChannels[chInd] = createChannelDescr(channel);
-        } else if (channel.var.type == OSC_VAR_TYPE::DISCRETE) {
+        } else if (channel.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
             out->discreteChannels[chInd] = createChannelDescr(channel);
         }
     }
@@ -316,8 +316,8 @@ OscChannelDescr OscHandler::createChannelDescr(const OSC_CHANNEL& channel)
     ret.firstBit = channel.firstBit;
     ret.lastBit = channel.lastBit;
 
-    ret.isDiscrete = (channel.var.type == OSC_VAR_TYPE::DISCRETE);
-    ret.isDigital = (channel.var.type == OSC_VAR_TYPE::DIGITAL);
+    ret.isDiscrete = (channel.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE);
+    ret.isDigital = (channel.var.type == OSC_VAR_TYPE::OSC_VAR_INT);
 
     return ret;
 }
