@@ -143,60 +143,6 @@ namespace OscType {
 
             return OscChannelDescr();
         }
-
-        static QString colorToString(const int &c)
-        {
-            QString ret = QString("#%1")
-                    .arg(QString::number(c, 16).rightJustified(6, '0'));
-
-            return ret;
-        }
-
-        QJsonObject toJson() const {
-            QJsonObject res;
-
-            res["device_id"] = deviceID.id;
-            res["id"] = id;
-            res["desc"] = desc;
-            res["name"] = name;
-            res["trig_time"] = settings.trigDTime.toMSecsSinceEpoch();
-            res["resolution_us"] = settings.timeResolution_us;
-
-            QJsonArray channelsObj;
-            for (quint8 chInd : analogChannels.keys()) {
-                const OscChannelDescr& ch = analogChannels.value(chInd);
-                QJsonObject obj;
-                obj["ch_num"] = ch.channelNum;
-                obj["var_id"] = ch.varId;
-                obj["name"] = ch.varName;
-                obj["scale"] = ch.scale;
-                obj["min"] = ch.min;
-                obj["max"] = ch.max;
-                obj["color"] = colorToString(ch.color);
-                obj["isDiscrete"] = false;
-
-                channelsObj << obj;
-            }
-
-            res["analog_channels"] = channelsObj;
-
-            QJsonArray discretesObj;
-            for (quint8 chInd : discreteChannels.keys()) {
-                const OscChannelDescr& ch = discreteChannels.value(chInd);
-                QJsonObject obj;
-                obj["ch_num"] = ch.channelNum;
-                obj["var_id"] = ch.varId;
-                obj["name"] = ch.varName;
-                obj["color"] = colorToString(ch.color);
-                obj["isDiscrete"] = true;
-
-                discretesObj << obj;
-            }
-
-            res["discrete_channels"] = discretesObj;
-
-            return res;
-        }
     };
 
     typedef QVector<OscHeader> OSCList;

@@ -11,6 +11,60 @@ const QString CMD_OSC_DATA = "osc_data";
 
 using namespace OscType;
 
+QString colorToString(const int &c)
+{
+    QString ret = QString("#%1")
+            .arg(QString::number(c, 16).rightJustified(6, '0'));
+
+    return ret;
+}
+
+QJsonObject headerToJson(const OscHeader& h) {
+    QJsonObject res;
+
+    res["device_id"] = h.deviceID.id;
+    res["id"] = h.id;
+    res["desc"] = h.desc;
+    res["name"] = h.name;
+    res["trig_time"] = h.settings.trigDTime.toMSecsSinceEpoch();
+    res["resolution_us"] = h.settings.timeResolution_us;
+
+    QJsonArray channelsObj;
+    for (quint8 chInd : h.analogChannels.keys()) {
+        const OscChannelDescr& ch = h.analogChannels.value(chInd);
+        QJsonObject obj;
+        obj["ch_num"] = ch.channelNum;
+        obj["var_id"] = ch.varId;
+        obj["name"] = ch.varName;
+        obj["scale"] = ch.scale;
+        obj["min"] = ch.min;
+        obj["max"] = ch.max;
+        obj["color"] = colorToString(ch.color);
+        obj["isDiscrete"] = false;
+
+        channelsObj << obj;
+    }
+
+    res["analog_channels"] = channelsObj;
+
+    QJsonArray discretesObj;
+    for (quint8 chInd : h.discreteChannels.keys()) {
+        const OscChannelDescr& ch = h.discreteChannels.value(chInd);
+        QJsonObject obj;
+        obj["ch_num"] = ch.channelNum;
+        obj["var_id"] = ch.varId;
+        obj["name"] = ch.varName;
+        obj["color"] = colorToString(ch.color);
+        obj["isDiscrete"] = true;
+
+        discretesObj << obj;
+    }
+
+    res["discrete_channels"] = discretesObj;
+
+    return res;
+}
+
 OscHandler::OscHandler(IDDE_Dispatcher* dde, IOscDataService *dataSrv): BaseReqHandler(dde)
 {
     m_dataSrv = dataSrv;
@@ -270,7 +324,7 @@ QJsonObject OscHandler::createHeaderObj(int requestId, const OscHeader& header)
 {
     QJsonObject res;
     res["request_id"] = requestId;
-    res["body"] = header.toJson();
+    res["body"] = headerToJson(header);
 
     return res;
 }
