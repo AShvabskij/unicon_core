@@ -232,7 +232,7 @@ QJsonObject OscDataService::dataToJson(const OscType::OscDataBuffer& data, QVect
         varIdListObj << chVal.varId;
         QVariantList values = chVal.values.mid(startPos,  chVal.values.size());
 
-        if (chVal.scale != 0 && chVal.scale != 1.0) {
+        if (chVal.scale != 0.0 && chVal.scale != 1.0) {
              multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
         }
 

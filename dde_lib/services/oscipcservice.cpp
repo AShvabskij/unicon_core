@@ -81,7 +81,8 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
         channel.firstBit = glio_ch.firstBit;
         channel.lastBit = glio_ch.lastBit;
 
-        channel.var.id = glio_ch.chNum + 1;
+        channel.var.id = i;
+
         strcpy(channel.var.name, glio_ch.name);
         strcpy(channel.var.user_name, glio_ch.userName);
         strcpy(channel.var.dim, glio_ch.dim);
