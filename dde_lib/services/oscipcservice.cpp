@@ -52,17 +52,6 @@ _dde_func_return_t OscIPCHeaderService::deInit(const char* sysName)
     return _dde_func_return_t();
 }
 
-bool OscIPCHeaderService::isValidOscChannel(const GLIO_OSC_CHANNEL& ch)
-{
-   if (ch.type == OSC_VAR_TYPE::UNDEFINED)
-       return false;
-
-   if (strlen(ch.name) == 0)
-       return false;
-
-   return true;
-}
-
 bool OscIPCHeaderService::isValidOscChannel(const OSC_CHANNEL& ch)
 {
    if (ch.var.type == OSC_VAR_TYPE::UNDEFINED)
@@ -80,15 +69,9 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
 
     if (!rec) return _return_FAIL;
 
-    hdr.settings = rec->settings;
-
-    int count = 0;
-    for (int i = 0; i <= OSC_MAX_VARS; i++) {
+    for (int i = 0; i < rec->settings.channel_count; i++) {
 
         const GLIO_OSC_CHANNEL& glio_ch = rec->channel[i];
-
-        if (!isValidOscChannel(glio_ch))
-            break;
 
         OSC_CHANNEL& channel = hdr.channels[i];
 
@@ -106,11 +89,9 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
         channel.var.max = glio_ch.max;
         channel.var.type = glio_ch.type;
         channel.var.color = glio_ch.color;
-
-        count++;
     }
 
-    hdr.settings.channel_count = count;
+    hdr.settings = rec->settings;
 
     return _return_OK;
 }
@@ -127,8 +108,7 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint16_t id, const DDE_OSC_HE
         rec.state = dat->state;
     }
 
-    rec.settings = hdr.settings;
-
+    int count = 0;
     for (int i = 0; i <= OSC_MAX_VARS; i++) {
         const OSC_CHANNEL& channel = hdr.channels[i];
 
@@ -150,7 +130,11 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint16_t id, const DDE_OSC_HE
         glio_ch.max = channel.var.max;
         glio_ch.type = channel.var.type;
         glio_ch.color = channel.var.color;
+        count++;
     }
+
+    rec.settings = hdr.settings;
+    rec.settings.channel_count = count;
 
     int res = osc_mem_setData(id, reinterpret_cast<unsigned char*>(&rec), sizeof(GLIO_OSC_HEADER));
 //  // pthread_mutex_unlock(&dat->shm_mutex);

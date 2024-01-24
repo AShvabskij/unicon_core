@@ -88,9 +88,6 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
 
     for (int chInd = 0; chInd < hdr.settings.channel_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
-        if (channel.var.id <= 0) {
-            continue;
-        }
 
         OscChannelValues& chValues = buff->ch[chInd];
         chValues.channelNum = channel.chNum;
@@ -136,9 +133,6 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
 
     for (int chInd = 0; chInd < hdr.settings.channel_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
-        if (channel.var.id <= 0) {
-            continue;
-        }
 
         OscChannelValues& chValues = buff->ch[chInd];
 
