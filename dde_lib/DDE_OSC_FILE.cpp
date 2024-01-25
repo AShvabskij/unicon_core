@@ -15,8 +15,8 @@ const int DATA_YELD_INTERVAL_MSC = 100;
 
 DDE_OSC_FILE::DDE_OSC_FILE()
 {
-    for (auto [key, service] : m_oscFileSrv) {
-        delete service;
+    for (auto service : m_oscFileSrv) {
+        delete service.second;
     }
 }
 
@@ -40,8 +40,8 @@ _dde_func_return_t DDE_OSC_FILE::open(uint16_t oscId)
 
 _dde_func_return_t DDE_OSC_FILE::close()
 {
-    for (auto [key, service] : m_oscFileSrv) {
-        _dde_func_return_t res = service->close();
+    for (auto service : m_oscFileSrv) {
+        _dde_func_return_t res = service.second->close();
         if (res != _return_OK) {
             return res;
         }

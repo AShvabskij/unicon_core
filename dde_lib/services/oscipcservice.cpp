@@ -71,9 +71,17 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
 
     for (int i = 0; i < rec->settings.channel_count; i++) {
 
-        const GLIO_OSC_CHANNEL& glio_ch = rec->channel[i];
-
         OSC_CHANNEL& channel = hdr.channels[i];
+        channel = OSC_CHANNEL();
+
+        const GLIO_OSC_CHANNEL& glio_ch = rec->channel[i];
+        if (strlen(glio_ch.name) == 0 || glio_ch.type == OSC_VAR_TYPE::UNDEFINED) {
+            std::cout << DDE_LOG_PREFIX
+                      << "Error getting osc channel header from IPC" << ", channel index = " << i
+                      << std::endl;
+
+            continue;
+        }
 
         channel.chNum = glio_ch.chNum;
         channel.gain = glio_ch.gain;
