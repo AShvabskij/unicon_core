@@ -95,7 +95,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
 
          QRgb rgb = ch.var.color;
 
-         if (ch.var.type == OSC_VAR_TYPE::ANALOG || ch.var.type == OSC_VAR_TYPE::DIGITAL) {
+         if (ch.var.type == OSC_VAR_FLOAT || ch.var.type == OSC_VAR_INT) {
              int lastBit = (ch.lastBit > 0 && ch.lastBit < MAX_BIT_NUM) ? ch.lastBit : MAX_BIT_NUM;
 
              line << QString("@") + QString(ch.var.name)
@@ -107,7 +107,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
                  << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
                  << "TRUE";
          }
-         else if (ch.var.type == OSC_VAR_TYPE::DISCRETE) {
+         else if (ch.var.type == OSC_VAR_DISCRETE) {
              line << QString("&") + QString(ch.var.name)
                  << QString("L") + QString::number(numOfSet)
                  << QString::number(chNumOfSet).rightJustified(2, '0')
