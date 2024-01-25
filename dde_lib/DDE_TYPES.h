@@ -14,5 +14,4 @@
 #define _return_Ready	2
 #define _return_Busy	3
 
-const char* DDE_LOG_PREFIX = "DDE_OSC: ";
 

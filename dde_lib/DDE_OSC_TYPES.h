@@ -41,7 +41,7 @@ struct OSC_VAR
     char dim[6];
     float min = 0.0;
     float max = 0.0;
-    float scale;
+    float scale = 0.0;
     int color;
 };
 
