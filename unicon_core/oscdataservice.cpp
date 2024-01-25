@@ -148,8 +148,10 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
             } else if (channel.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
                 int32_t rawValue = chData.i_buff[i];
                 chValues.values.append(discreteValue(rawValue, channel.firstBit, channel.lastBit));
-            } else {
+            } else if (channel.var.type == OSC_VAR_TYPE::OSC_VAR_FLOAT){
                 chValues.values.append(chData.f_buff[i]);
+            } else {
+                qWarning() << "Undefined var type" << ", id = " << channel.var.id << ", name = " << channel.var.name;
             }
         }
     }
