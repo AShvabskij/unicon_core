@@ -10,8 +10,6 @@
 #include "oscpagebinservice.h"
 #include "oscipcservice.h"
 
-const char* DDE_LOG_PREFIX = "DDE_OSC: ";
-
 using namespace std;
 DDE_OSC::~DDE_OSC()
 {

@@ -5,8 +5,6 @@
 
 #include <pthread.h>
 
-const char* DDE_LOG_PREFIX = "DDE_OSC: ";
-
 _dde_func_return_t OscIPCHeaderService::init(const char* sysName)
 {
     int res = osc_mem_init(sysName, sizeof(GLIO_OSC_HEADER));
