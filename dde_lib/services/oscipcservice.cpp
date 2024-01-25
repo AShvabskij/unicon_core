@@ -5,6 +5,8 @@
 
 #include <pthread.h>
 
+const char* DDE_LOG_PREFIX = "DDE_OSC: ";
+
 _dde_func_return_t OscIPCHeaderService::init(const char* sysName)
 {
     int res = osc_mem_init(sysName, sizeof(GLIO_OSC_HEADER));
@@ -98,6 +100,7 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
         channel.var.max = glio_ch.max;
         channel.var.type = glio_ch.type;
         channel.var.color = glio_ch.color;
+        channel.var.scale = glio_ch.gain;
     }
 
     hdr.settings = rec->settings;
