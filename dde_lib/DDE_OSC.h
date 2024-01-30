@@ -24,12 +24,12 @@ public:
     virtual void update();
 private:
 
-    _dde_func_return_t load_header(uint16_t id);
+    _dde_func_return_t get_header(uint16_t id);
     _dde_func_return_t open_page(uint16_t id, int pageNum);
     _dde_func_return_t clear_pages(uint16_t id);
 
     IOscPageService* m_dataSrv = nullptr;
     IOscHeaderService* m_headerSrv = nullptr;
-    DDE_OSC_HEADER* m_header = nullptr; // todo: get rid of it
+    DDE_OSC_HEADER m_header; // current header to read osc data
     std::string m_sysName = "";
 };

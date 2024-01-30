@@ -261,11 +261,6 @@ _dde_func_return_t OscFileService::getHeader(DDE_OSC_HEADER &p)
 {
     if (!m_header || m_header->device_id != p.device_id) return _return_FAIL;
 
-//    OSC_FILE::FILE_HEADER header;
-//    int res = getHeader(p.device_id, header);
-
-//    if (res != _return_OK) return res;
-
     p.settings = m_header->settings;
 
     for (int chInd = 1; chInd <= OSC_MAX_VARS; chInd++) {
@@ -273,7 +268,7 @@ _dde_func_return_t OscFileService::getHeader(DDE_OSC_HEADER &p)
         const OSC_FILE::VAR_DESCR& var = m_header->vars[chInd];
 
         channel.chNum = var.chNum;
-        channel.var = createOscVar(var, p.device_id);
+        channel.var = createOscVar(var);
         channel.gain = var.gain;
         channel.offset = var.offset;
         channel.firstBit = var.firstBit;
@@ -289,11 +284,10 @@ _dde_func_return_t OscFileService::setHeader(const DDE_OSC_HEADER& h)
     return _return_OK;
 }
 
-OSC_VAR OscFileService::createOscVar(const OSC_FILE::VAR_DESCR& descr, uint16_t deviceId)
+OSC_VAR OscFileService::createOscVar(const OSC_FILE::VAR_DESCR& descr)
 {
     OSC_VAR ret;
     ret.id = descr.var_id;
-    ret.device_id = deviceId;
     strcpy(ret.name, descr.name);
     strcpy(ret.user_name, descr.name);
     ret.min = descr.min;

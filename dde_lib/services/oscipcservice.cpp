@@ -72,7 +72,6 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
     for (int i = 0; i < rec->settings.channel_count; i++) {
 
         OSC_CHANNEL& channel = hdr.channels[i];
-        channel = OSC_CHANNEL();
 
         const GLIO_OSC_CHANNEL& glio_ch = rec->channel[i];
         if (strlen(glio_ch.name) == 0 || glio_ch.type == OSC_VAR_TYPE::UNDEFINED) {

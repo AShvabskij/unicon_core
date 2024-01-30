@@ -97,9 +97,10 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
 
 _dde_func_return_t DDE_OSC::open(uint16_t device_id)
 {
-    load_header(device_id);
-    assert(m_header);
-    assert(m_header->device_id == device_id);
+    _dde_func_return_t res = get_header(device_id);
+    if (res != _return_OK) return res;
+
+    assert(m_header.device_id == device_id);
 
     static int colors[4];
     colors[0] = 0xffff00;
@@ -108,60 +109,64 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
     colors[3] = 0x01ffff;
 
     for (int i = 0; i < OSC_MAX_VARS; i++) {
-        if (m_header->channels[i].var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
-            m_header->channels[i].var.color = colors[0];
+        if (m_header.channels[i].var.color != 0) {
+            continue;
+        }
+
+        if (m_header.channels[i].var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
+            m_header.channels[i].var.color = colors[0];
         } else {
-            m_header->channels[i].var.color = colors[i % 4];
+            m_header.channels[i].var.color = colors[i % 4];
         }
     }
 
-    _dde_func_return_t res = m_headerSrv->set_header(device_id, *m_header);
+    res = m_headerSrv->set_header(device_id, m_header);
     if (res != _return_OK) return res;
 
     OSC_STATE state = m_headerSrv->get_state(device_id);
     state.user_enabled = true;
-
-// todo: start reading from curr pos, from current writing pos o from zero page?
-//  state.currPageRead = state.currPageWrite;
 
     res = m_headerSrv->set_state(device_id, state);
 
     return res;
 }
 
-_dde_func_return_t DDE_OSC::load_header(uint16_t id)
+_dde_func_return_t DDE_OSC::get_header(uint16_t id)
 {
-    m_header = new DDE_OSC_HEADER();
-    m_header->device_id = id;
-    _dde_func_return_t res = m_headerSrv->get_header(id, *m_header);
-    if (res != _return_OK) {
-        delete m_header;
-        m_header = nullptr;
-    }
+    memset(&m_header, 0, sizeof (DDE_OSC_HEADER));
+
+    m_header.device_id = id;
+    _dde_func_return_t res = m_headerSrv->get_header(id, m_header);
 
     return res;
 }
 
 _dde_func_return_t DDE_OSC::close()
 {
-    assert(m_header);
+    memset(&m_header, 0 ,sizeof (DDE_OSC_HEADER));
 
-    delete m_header;
-    m_header = nullptr;
+    uint16_t devId = m_header.device_id;
 
-/*
-    OSC_STATE state = m_headerSrv->get_state(id);
+    OSC_STATE state = m_headerSrv->get_state(devId);
     state.user_enabled = false;
-    state.currPageRead = 0;
-    m_headerSrv->set_state(id, state);
-*/
+    m_headerSrv->set_state(devId, state);
+
     _dde_func_return_t res = m_dataSrv->close();
     return res;
 }
 
 _dde_func_return_t DDE_OSC::get(DDE_OSC_HEADER& h)
 {
-    _dde_func_return_t res = m_headerSrv->get_header(h.device_id, h);
+    _dde_func_return_t res = _return_OK;
+    if (m_header.device_id != h.device_id) {
+        res = open(h.device_id); // the device has changed, need to open a new one
+    } else {
+        res = get_header(h.device_id); // header might be changed, need to reload
+    }
+
+    if (res != _return_OK) return res;
+
+    memcpy(&h, &m_header, sizeof (DDE_OSC_HEADER));
 
     return res;
 }
@@ -169,20 +174,15 @@ _dde_func_return_t DDE_OSC::get(DDE_OSC_HEADER& h)
 _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 {
     _dde_func_return_t res = _return_OK;
-    uint16_t id = dat.device_id;
+    uint16_t devId = dat.device_id;
 
-    if (m_header && m_header->device_id != dat.device_id) {
-        close();
+    if (m_header.device_id != devId || dat.header_updated == 1) {
+        res = get_header(devId);
     }
 
-    if (!m_header) {
-        load_header(id);
-    }
+    assert(m_header.device_id == devId);
 
-    assert(m_header);
-    assert(m_header->device_id == id);
-
-    int pageNum = m_headerSrv->get_page_ready_to_read(id);
+    int pageNum = m_headerSrv->get_page_ready_to_read(devId);
     dat.data_length = 0;
     dat.next_ready = (pageNum >= 0);
 
@@ -190,23 +190,22 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
         return _return_Busy;
     }
 
-    string msg = "Read page = " + std::to_string(pageNum);
-    cout << DDE_LOG_PREFIX << msg.c_str() << endl;
+    cout << DDE_LOG_PREFIX << "Reading page = " << std::to_string(pageNum) << endl;
 
-    res = m_dataSrv->open(id, pageNum, false);
+    res = m_dataSrv->open(devId, pageNum, false);
     if (res != _return_OK) return res;
 
     bool eof = false;
-    res = m_dataSrv->readNextData(*m_header, dat, eof);
+    res = m_dataSrv->readNextData(m_header, dat, eof);
     dat.next_ready = (res == _return_OK) && !eof;
 
     if (res != _return_OK || eof) {
         m_dataSrv->close();
-        m_headerSrv->set_page_ready_to_write(id, static_cast<uint8_t>(pageNum));
+        m_headerSrv->set_page_ready_to_write(devId, static_cast<uint8_t>(pageNum));
 
-        int nextPageNum = m_headerSrv->get_page_ready_to_read(id);
+        int nextPageNum = m_headerSrv->get_page_ready_to_read(devId);
         if (nextPageNum >= 0) {
-            m_dataSrv->open(id, nextPageNum, false);
+            m_dataSrv->open(devId, nextPageNum, false);
             dat.next_ready = true;
         }
     }
@@ -216,48 +215,47 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
 
 _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 {
-    uint16_t id = dat.device_id;
+    _dde_func_return_t res = _return_OK;
+    uint16_t devId = dat.device_id;
 
-    if (m_header && m_header->device_id != dat.device_id) {
-        close();
+    if (m_header.device_id != dat.device_id  || dat.header_updated == 1) {
+        res = get_header(devId);
     }
 
-    if (!m_header) {
-        load_header(id);
-    }
-
-    assert(m_header);
-    assert(m_header->device_id == id);
+    assert(m_header.device_id == devId);
 
     if (dat.sof) {
-        clear_pages(id);
+        clear_pages(devId);
     }
+
+    if (res != _return_OK) return res;
 
     if(dat.data_length == 0) return _return_OK; // there is nothing to save
 
-    int pageNum = m_headerSrv->get_page_ready_to_write(id);
+    int pageNum = m_headerSrv->get_page_ready_to_write(devId);
     if (pageNum < 0) { // there is not free pages
-        OSC_STATE state =  m_headerSrv->get_state(id);
+        OSC_STATE state =  m_headerSrv->get_state(devId);
         if (!state.overflowed) {
             state.overflowed = true;
-            m_headerSrv->set_state(id, state);
+            m_headerSrv->set_state(devId, state);
         }
+
         return _return_FAIL;
     }
 
-    string msg = "Write page = " + std::to_string(pageNum);
-    cout << DDE_LOG_PREFIX << msg.c_str() << endl;
+    cout << DDE_LOG_PREFIX << "Writing page = " << pageNum << endl;
 
-    _dde_func_return_t res = m_dataSrv->open(id, pageNum, true);
+    res = m_dataSrv->open(devId, pageNum, true);
     if (res != _return_OK) return res;
 
     bool get_eof = false;
-    res = m_dataSrv->addData(dat, m_header->settings.channel_count, get_eof);
+    res = m_dataSrv->addData(dat, m_header.settings.channel_count, get_eof);
+
     if (res != _return_OK) return res;
 
     if (get_eof || dat.eof) {
         m_dataSrv->close();
-        m_headerSrv->set_page_ready_to_read(id, static_cast<uint8_t>(pageNum));
+        m_headerSrv->set_page_ready_to_read(devId, static_cast<uint8_t>(pageNum));
     }
 
     return res;
