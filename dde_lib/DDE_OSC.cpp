@@ -133,7 +133,7 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
 
 _dde_func_return_t DDE_OSC::get_header(uint16_t id)
 {
-    memset(&m_header, 0, sizeof (DDE_OSC_HEADER));
+    m_header = DDE_OSC_HEADER();
 
     m_header.device_id = id;
     _dde_func_return_t res = m_headerSrv->get_header(id, m_header);
@@ -143,7 +143,7 @@ _dde_func_return_t DDE_OSC::get_header(uint16_t id)
 
 _dde_func_return_t DDE_OSC::close()
 {
-    memset(&m_header, 0 ,sizeof (DDE_OSC_HEADER));
+    m_header = DDE_OSC_HEADER();
 
     uint16_t devId = m_header.device_id;
 

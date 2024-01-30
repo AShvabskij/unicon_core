@@ -44,12 +44,12 @@ public:
 
 private:
 
-    long getData(const DDE_OSC_HEADER& hdr, DDE_GET_OSC_DATA* getDat);
+    long getData(const DDE_OSC_HEADER& hdr, DDE_GET_OSC_DATA &getDat);
 
     IDDE* m_dde = nullptr;
     STATE m_state = Normal;
-    DDE_OSC_HEADER* m_header;
-    DDE_GET_OSC_DATA* m_ddeData;
+    DDE_OSC_HEADER m_header;
+    DDE_GET_OSC_DATA m_ddeData;
     bool m_sof = false;
     int m_errCounter = 0;
     int m_busyCounter = 0;
