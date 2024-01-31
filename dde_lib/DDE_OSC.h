@@ -24,12 +24,12 @@ public:
     virtual void update();
 private:
 
-    _dde_func_return_t get_header(uint16_t id);
+    DDE_OSC_HEADER get_header(uint16_t id, _dde_func_return_t& res);
     _dde_func_return_t open_page(uint16_t id, int pageNum);
     _dde_func_return_t clear_pages(uint16_t id);
 
     IOscPageService* m_dataSrv = nullptr;
     IOscHeaderService* m_headerSrv = nullptr;
-    DDE_OSC_HEADER m_header; // current header to read osc data
+    DDE_OSC_HEADER m_header; // current header to read osc data. todo: May be it is reduntant and could be removed
     std::string m_sysName = "";
 };

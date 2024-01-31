@@ -98,7 +98,8 @@ struct DDE_GET_OSC_DATA
     uint16_t device_id = 0;
 
     uint32_t header_updated = 0;    //if flag is set update the header, clear screen and draw data
-    uint16_t data_length = 0;   // The length of a data in OSC_CH_DATA
+    uint16_t data_length = 0;   // The length of a data values in OSC_DATA
+    uint16_t channel_count = 0;   // The count of channels in OSC_DATA
     uint16_t overflow = 0;  // flag if  buffer is overflowed (for debugging only)
     bool next_ready = false;    // flag if next data frame is ready
     bool eof = false;    // flag if it is the last frame

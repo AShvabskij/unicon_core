@@ -117,7 +117,7 @@ public:
     virtual _dde_func_return_t close() = 0;
 
     virtual _dde_func_return_t addData(const DDE_SET_OSC_DATA& dat, int ch_count, bool& eof) = 0;
-    virtual _dde_func_return_t readNextData(const DDE_OSC_HEADER& header, DDE_GET_OSC_DATA& getDat, bool& eof) = 0;
+    virtual _dde_func_return_t readNextData(DDE_GET_OSC_DATA& getDat, int ch_count, bool& eof) = 0;
 };
 
 class IOscHeaderService // Interface for working with the oscilloscope header

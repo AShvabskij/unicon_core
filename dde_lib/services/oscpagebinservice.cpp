@@ -73,7 +73,7 @@ _dde_func_return_t OscPageBinService::close()
     return _return_OK;
 }
 
-_dde_func_return_t OscPageBinService::readNextData(const DDE_OSC_HEADER& header, DDE_GET_OSC_DATA& getDat, bool& eof)
+_dde_func_return_t OscPageBinService::readNextData(DDE_GET_OSC_DATA& getDat, int ch_count, bool& eof)
 {
     if (!m_file) {
         cout << osc_bin_data::OSC_FILE_ERROR;
@@ -92,7 +92,7 @@ _dde_func_return_t OscPageBinService::readNextData(const DDE_OSC_HEADER& header,
 
     eof = false;
 
-    for(int ch = 0; ch < header.settings.channel_count; ch++) {
+    for(int ch = 0; ch < ch_count; ch++) {
         char* buff = (char*)&getDat.data[ch];
         int buff_length = sizeof(char) * sizeof(int32_t) * getDat.data_length;
         m_file.read(buff, buff_length);

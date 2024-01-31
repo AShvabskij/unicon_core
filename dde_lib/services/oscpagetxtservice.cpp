@@ -135,7 +135,7 @@ std::fstream OscPageTxtService::openOscFile(uint16_t deviceId, int pageNum, bool
     return file;
 }
 
-_dde_func_return_t OscPageTxtService::readNextData(const DDE_OSC_HEADER& header, DDE_GET_OSC_DATA& getDat, bool& eof)
+_dde_func_return_t OscPageTxtService::readNextData(DDE_GET_OSC_DATA& getDat, int ch_count, bool& eof)
 {
     waitForLoad();
 
@@ -161,30 +161,18 @@ _dde_func_return_t OscPageTxtService::readNextData(const DDE_OSC_HEADER& header,
         getDat.data_length = static_cast<uint16_t>(buffInd + 1);
 
         const auto& values = parseValues(line);
-        size_t ch_count = values.size();
-        if (ch_count >= OSC_MAX_CHANNELS) {
+        int column_count = values.size();
+        if (ch_count >= OSC_MAX_CHANNELS || ch_count > column_count) {
             cout << osc_data::OSC_FILE_PARSE_ERROR;
             continue;
         }
 
-        for (unsigned int chInd = 0; chInd < ch_count; chInd++) {
-            auto& ch = header.channels[chInd];
-            uint16_t elemInd = chInd;
+        for (int chInd = 0; chInd < ch_count; chInd++) {
 
-            uint8_t chNum = ch.chNum;
-            assert(chNum <= OSC_MAX_CHANNELS);
+            assert(chInd <= OSC_MAX_CHANNELS);
 
-            int32_t rawValue = values[elemInd];
-            if (ch.var.type == OSC_VAR_TYPE::OSC_VAR_INT) {
-                getDat.data[chNum].i_buff[buffInd] = rawValue;
-            } else if (ch.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
-                getDat.data[chNum].i_buff[buffInd] = rawValue;
-            } else if (ch.var.type == OSC_VAR_TYPE::OSC_VAR_FLOAT){
-                float val = normalizeValue(rawValue);
-                getDat.data[chNum].f_buff[buffInd] = val;
-            } else {
-                getDat.data[chNum].f_buff[buffInd] = rawValue;
-            }
+            int32_t rawValue = values[chInd];
+            getDat.data[chInd].i_buff[buffInd] = rawValue;
         }
     }
 
@@ -211,16 +199,6 @@ std::string OscPageTxtService::readLine(std::istream &stream)
     }
 
     return line;
-}
-
-float OscPageTxtService::normalizeValue(int32_t rawValue)
-{
-    if (rawValue == 0) {
-        return rawValue;
-    }
-
-    float normValue =  rawValue;
-    return normValue;
 }
 
 std::vector<int32_t> OscPageTxtService::parseValues(std::string line)
@@ -264,8 +242,8 @@ _dde_func_return_t OscPageTxtService::addData(const DDE_SET_OSC_DATA& dat, int c
     ostringstream line;
 
     for (int i = 0; i < dat.data_length; i++) {
-        for (int num = 0; num < ch_count; num++) {
-            int32_t elem = dat.data[num].i_buff[i];
+        for (int chInd = 0; chInd < ch_count; chInd++) {
+            int32_t elem = dat.data[chInd].i_buff[i];
             line << elem << delim;
         }
         line << "\n";
