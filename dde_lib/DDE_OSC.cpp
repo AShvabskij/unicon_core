@@ -98,7 +98,9 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
 _dde_func_return_t DDE_OSC::open(uint16_t device_id)
 {
     _dde_func_return_t res = _return_OK;
-    m_header = get_header(device_id, res);
+    m_header = DDE_OSC_HEADER();
+    m_header.device_id = device_id;
+    res = m_headerSrv->get_header(device_id, m_header);
 
     if (res != _return_OK) return res;
 
@@ -135,16 +137,6 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
     return res;
 }
 
-DDE_OSC_HEADER DDE_OSC::get_header(uint16_t id, _dde_func_return_t& res)
-{
-    DDE_OSC_HEADER header;
-
-    header.device_id = id;
-    res = m_headerSrv->get_header(id, header);
-
-    return header;
-}
-
 _dde_func_return_t DDE_OSC::close()
 {
     uint16_t devId = m_header.device_id;
@@ -166,7 +158,7 @@ _dde_func_return_t DDE_OSC::get(DDE_OSC_HEADER& h)
         if (res != _return_OK) return res;
     }
 
-    m_header = get_header(h.device_id, res); // header should be updated
+    res = m_headerSrv->get_header(m_header.device_id, m_header); // header should be updated
 
     if (res != _return_OK) return res;
 
@@ -181,7 +173,8 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     uint16_t devId = dat.device_id;
 
     if (m_header.device_id != devId || dat.header_updated == 1) {
-        m_header = get_header(devId, res);
+        m_header.device_id = devId;
+        res = m_headerSrv->get_header(devId, m_header);
     }
 
     assert(m_header.device_id == devId);
@@ -227,7 +220,8 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
     }
 
     if (m_header.device_id != dat.device_id  || dat.header_updated == 1) {
-        m_header = get_header(devId, res);
+        m_header.device_id = devId;
+        res = m_headerSrv->get_header(devId, m_header);
     }
 
     assert(m_header.device_id == devId);

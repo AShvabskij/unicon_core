@@ -24,7 +24,6 @@ public:
     virtual void update();
 private:
 
-    DDE_OSC_HEADER get_header(uint16_t id, _dde_func_return_t& res);
     _dde_func_return_t open_page(uint16_t id, int pageNum);
     _dde_func_return_t clear_pages(uint16_t id);
 

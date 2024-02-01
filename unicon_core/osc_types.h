@@ -78,7 +78,7 @@ namespace OscType {
             QList<Number32> values = numValues.mid(startPos,  numValues.size());
 
             res.reserve(values.count());
-            for (const Number32 &num: numValues) {
+            for (const Number32 &num: values) {
                 if (type == FloatType) {
                     res << num.f;
                 } else if (type == IntegerType) {
