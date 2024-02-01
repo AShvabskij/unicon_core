@@ -26,6 +26,8 @@ private:
     QJsonObject headerToJson(const DDE_OSC_HEADER &h);
     long jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h);
     long jsonToData(const QJsonObject& obj, OscType::OscDataBuffer &data);
+    QList<OscType::Number32> convertJsonArrayToNumber32List(const QJsonArray &jsonArray, OscType::OscChannelValues::Type type);
+    QList<qint8> convertJsonArrayToInt8List(const QJsonArray &jsonArray);
 };
 
 #endif // OSCDATASAVER_H

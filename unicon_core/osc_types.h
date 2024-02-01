@@ -11,6 +11,10 @@
 
 namespace OscType {
 
+    const int DATA_VERSION = 1;
+    const int DATA_SUBVERSION = 1;
+    const int MAX_DATA_COUNT = 1000000;
+
     enum TriggerModeEnum {
         Single, Continues, Stream
     };
@@ -36,18 +40,67 @@ namespace OscType {
         int color;
     };
 
+    union Number32
+    {
+        float f;
+        int i = 0;
+    };
+
     struct OscChannelValues
     {
         int channelNum = 0;
         quint16 varId = 0;
+
         float scale = 0.0;
         float offset = 0.0;
-        QVariantList values;
-    };
 
-    const int DATA_VERSION = 1;
-    const int DATA_SUBVERSION = 1;
-    const int MAX_DATA_COUNT = 1000000;
+        enum Type { IntegerType, FloatType, DiscreteType } type = FloatType;
+
+        QList<Number32> numValues;
+        QList<qint8> discrValues;
+
+        QList<int> intValues(int startPos) const {
+            QList<int> res;
+            if (type != IntegerType) return res;
+
+            QList<Number32> values = numValues.mid(startPos,  numValues.size());
+            res.reserve(values.count());
+
+            for (const Number32 &num: values) {
+                res << num.i;
+            }
+
+            return res;
+        }
+
+        QList<float> fltValues(int startPos) const {
+            QList<float> res;
+            QList<Number32> values = numValues.mid(startPos,  numValues.size());
+
+            res.reserve(values.count());
+            for (const Number32 &num: numValues) {
+                if (type == FloatType) {
+                    res << num.f;
+                } else if (type == IntegerType) {
+                    res << num.i;
+                }
+            }
+
+            return res;
+        }
+
+        QList<qint8> dscrValues(int startPos) const {
+            return discrValues.mid(startPos,  discrValues.size());
+        }
+
+        void clear() {
+            numValues.clear();
+            discrValues.clear();
+        }
+
+
+//      QList<OscValue> values;
+    };
 
     struct OscDataBuffer
     {
@@ -92,9 +145,23 @@ namespace OscType {
                 if (!varIdList.contains(chVal.varId))
                         continue;
 
-                QVariantList values = chVal.values;
-                valuesObj << QJsonArray::fromVariantList(values);
+                switch (chVal.type) {
+                    case OscChannelValues::IntegerType:
+                        for (int i=0; i< chVal.numValues.count(); i++) {
+                            valuesObj << chVal.numValues[i].i;
+                        } break;
+                    case OscChannelValues::FloatType:
+                        for (int i=0; i< chVal.numValues.count(); i++) {
+                            valuesObj << chVal.numValues[i].f;
+                        } break;
+
+                    case OscChannelValues::DiscreteType:
+                        for (int i=0; i< chVal.discrValues.count(); i++) {
+                            valuesObj << chVal.discrValues[i];
+                        }
+                };
             }
+
             res["values"] = valuesObj;
 
             return res;
