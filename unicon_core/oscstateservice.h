@@ -34,6 +34,7 @@ class OscStateMachine
         Busy,
         Eof,
         Saving,
+        Updated,
         Finished,
         Error
     };

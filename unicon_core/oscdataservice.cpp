@@ -54,10 +54,12 @@ void OscDataService::reset(DevInd ind)
     if (!buff)
         return;
 
-    qDebug() << "Deleting buffer" << ", value count = " << buff->valueCount;
+    qDebug() << "Clearing buffer" << ", value count = " << buff->valueCount;
     m_mutex.lock();
-    delete buff;
-    m_repository.remove(ind);
+    clearDataBuffer(buff);
+
+//  delete buff;
+//  m_repository.remove(ind);
     m_mutex.unlock();
 }
 
@@ -96,12 +98,15 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
         switch (channel.var.type) {
         case OSC_VAR_TYPE::OSC_VAR_INT: {
             chValues.type = OscChannelValues::IntegerType;
+            chValues.numValues.reserve(MAX_DATA_COUNT);
         } break;
         case OSC_VAR_TYPE::OSC_VAR_FLOAT: {
             chValues.type = OscChannelValues::FloatType;
+            chValues.numValues.reserve(MAX_DATA_COUNT);
         } break;
         case OSC_VAR_TYPE::OSC_VAR_DISCRETE: {
             chValues.type = OscChannelValues::DiscreteType;
+            chValues.discrValues.reserve(MAX_DATA_COUNT);
         } break;
         case UNDEFINED: {
             qWarning() << "Undefined var type" << ", id = " << channel.var.id << ", name = " << channel.var.name;
@@ -144,6 +149,7 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     }
 
     buff->valueCount += dat.data_length;
+    buff->maxCount = buff->maxCount < buff->valueCount ? buff->valueCount : buff->maxCount;
 
     for (int chInd = 0; chInd < hdr.settings.channel_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
@@ -156,14 +162,12 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
 
         switch (channel.var.type) {
         case OSC_VAR_TYPE::OSC_VAR_INT: {
-            chValues.numValues.reserve(buff->valueCount + 1);
             for (int i = 0; i < dat.data_length; i++) {
                 auto val = chData.i_buff[i];
                 chValues.append(val);
             }
         } break;
         case OSC_VAR_TYPE::OSC_VAR_FLOAT: {
-            chValues.numValues.reserve(buff->valueCount + 1);
             for (int i = 0; i < dat.data_length; i++) {
                 auto val = chData.f_buff[i];
                 chValues.append(val);

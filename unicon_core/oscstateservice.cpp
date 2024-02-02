@@ -118,6 +118,10 @@ void OscStateMachine::update(DevInd devId)
             }
         }
 
+        if (m_ddeData.header_updated && m_state == Getting) {
+            m_state = Updated;
+        }
+
         break;
     }
     case Busy: {
@@ -131,6 +135,11 @@ void OscStateMachine::update(DevInd devId)
 
     case Saving: {
         m_dataSrv->save(m_header);
+        m_state = Normal;
+        break;
+    }
+    case Updated: {
+        // m_dataSrv->remove(m_header.device_id);
         m_state = Normal;
         break;
     }

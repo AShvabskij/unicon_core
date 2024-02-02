@@ -145,6 +145,7 @@ namespace OscType {
     {
         DevInd id;
         int valueCount = 0; // // number of points in values buffer
+        int maxCount = 0; // // maximum number of points in values buffer
         int valueDensity = 0; // number of points per millisec
         int lastDataPos = 0;
         OscChannelValues ch[OSC_MAX_VARS + 1];

@@ -331,6 +331,7 @@ long OscDataJSonStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuf
 
 
     data.valueCount = maxValueCount;
+    data.maxCount = maxValueCount;
 
     return _return_OK;
 }
