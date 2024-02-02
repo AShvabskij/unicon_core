@@ -18,7 +18,7 @@ public:
 
     long save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data) override;
     long loadHeader(QString fileFrom, DDE_OSC_HEADER &header)  override;
-    long loadData(QString fileFrom, OscType::OscDataBuffer* data) override;
+    long loadData(QString fileFrom, OscType::OscDataBuffer &data) override;
 
 private:
     QString createPath(const DDE_OSC_HEADER &header);
@@ -26,8 +26,6 @@ private:
     QJsonObject headerToJson(const DDE_OSC_HEADER &h);
     long jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h);
     long jsonToData(const QJsonObject& obj, OscType::OscDataBuffer &data);
-    QList<OscType::Number32> convertJsonArrayToNumber32List(const QJsonArray &jsonArray, OscType::OscChannelValues::Type type);
-    QList<qint8> convertJsonArrayToInt8List(const QJsonArray &jsonArray);
 };
 
 #endif // OSCDATASAVER_H

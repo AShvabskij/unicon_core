@@ -16,13 +16,14 @@
 
 class MultiplyFunctor {
 public:
-    using result_type = float;
+    using result_type = QVariant;
 
     MultiplyFunctor(float scale, float offset) : scale(scale), offset(offset) {}
 
-    float operator()(const float value) const {
-            return (value * scale) + offset;
+    QVariant operator()(const QVariant& value) const {
+            return (value.toFloat() * scale) + offset;
     }
+
 
 private:
     float scale;
@@ -83,11 +84,29 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
     for (int chInd = 0; chInd < hdr.settings.channel_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
 
+        if (channel.var.id == 0) continue;
+
         OscChannelValues& chValues = buff->ch[chInd];
         chValues.channelNum = channel.chNum;
         chValues.varId = channel.var.id;
         chValues.scale = channel.gain;
         chValues.offset = channel.offset;
+
+        switch (channel.var.type) {
+        case OSC_VAR_TYPE::OSC_VAR_INT: {
+            chValues.type = OscChannelValues::IntegerType;
+        } break;
+        case OSC_VAR_TYPE::OSC_VAR_FLOAT: {
+            chValues.type = OscChannelValues::FloatType;
+        } break;
+        case OSC_VAR_TYPE::OSC_VAR_DISCRETE: {
+            chValues.type = OscChannelValues::DiscreteType;
+        } break;
+        case UNDEFINED: {
+            qWarning() << "Undefined var type" << ", id = " << channel.var.id << ", name = " << channel.var.name;
+        }
+        }
+
     }
 
     return buff;
@@ -128,6 +147,8 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     for (int chInd = 0; chInd < hdr.settings.channel_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
 
+        if (channel.var.id == 0) continue;
+
         OscChannelValues& chValues = buff->ch[chInd];
 
         const OSC_DATA& chData = dat.data[channel.chNum];
@@ -135,18 +156,16 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
         switch (channel.var.type) {
         case OSC_VAR_TYPE::OSC_VAR_INT: {
             chValues.numValues.reserve(buff->valueCount + 1);
-            Number32 val;
             for (int i = 0; i < dat.data_length; i++) {
-                val.i = chData.i_buff[i];
-                chValues.numValues.append(val);
+                auto val = chData.i_buff[i];
+                chValues.append(val);
             }
         } break;
         case OSC_VAR_TYPE::OSC_VAR_FLOAT: {
             chValues.numValues.reserve(buff->valueCount + 1);
-            Number32 val;
             for (int i = 0; i < dat.data_length; i++) {
-                val.f = chData.f_buff[i];
-                chValues.numValues.append(val);
+                auto val = chData.f_buff[i];
+                chValues.append(val);
             }
         } break;
 
@@ -154,8 +173,8 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
             chValues.discrValues.reserve(buff->valueCount + 1);
             for (int i = 0; i < dat.data_length; i++) {
                 int32_t rawValue = chData.i_buff[i];
-                qint8 dVal = discreteValue(rawValue, channel.firstBit, channel.lastBit);
-                chValues.discrValues.append(dVal);
+                qint8 val = discreteValue(rawValue, channel.firstBit, channel.lastBit);
+                chValues.append(val);
             }
         } break;
         case UNDEFINED: {
@@ -217,18 +236,8 @@ QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &c
     return res;
 }
 
-void multiplyArrayByCoefficient(QList<float>& numberArray, float scale, float offset) {
-    QList<float> res = QtConcurrent::blockingMapped(numberArray, MultiplyFunctor(scale, offset));
-    numberArray = res;
-}
-
-template<typename T> QJsonArray convertToJSonArray(QList<T> values)
-{
-    QJsonArray res;
-    for (const auto &val : values) {
-        res << val;
-    }
-
+QVariantList multiplyArrayByCoefficient(QVariantList& numberArray, float scale, float offset) {
+    QVariantList res = QtConcurrent::blockingMapped(numberArray, MultiplyFunctor(scale, offset));
     return res;
 }
 
@@ -251,33 +260,12 @@ QJsonObject OscDataService::dataToJson(const OscType::OscDataBuffer& data, QVect
 
         varIdListObj << chVal.varId;
 
-        switch (chVal.type) {
-        case OscChannelValues::IntegerType: {
-            if (chVal.scale != 0.0 && chVal.scale != 1.0) {
-                auto values = chVal.fltValues(startPos);
-                multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
-                valuesArr << convertToJSonArray(values);
-            } else {
-                auto values = chVal.intValues(startPos);
-                valuesArr << convertToJSonArray(values);
-            }
-        } break;
-        case OscChannelValues::FloatType: {
-            if (chVal.scale != 0.0 && chVal.scale != 1.0) {
-                auto values = chVal.fltValues(startPos);
-                multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
-                valuesArr << convertToJSonArray(values);
-            } else {
-                auto values = chVal.intValues(startPos);
-                valuesArr << convertToJSonArray(values);
-            }
+        auto values = chVal.values(startPos);
+        if (chVal.scale != 0.0 && chVal.scale != 1.0) {
+            values= multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
+        }
 
-        } break;
-        case OscChannelValues::DiscreteType: {
-            auto values = chVal.dscrValues(startPos);
-            valuesArr << convertToJSonArray(values);
-        }
-        }
+        valuesArr << QJsonArray::fromVariantList(values);
     }
 
     res["values"] = valuesArr;

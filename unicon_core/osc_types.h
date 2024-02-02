@@ -59,47 +59,86 @@ namespace OscType {
         QList<Number32> numValues;
         QList<qint8> discrValues;
 
-        QList<int> intValues(int startPos) const {
-            QList<int> res;
-            if (type != IntegerType) return res;
-
-            QList<Number32> values = numValues.mid(startPos,  numValues.size());
-            res.reserve(values.count());
-
-            for (const Number32 &num: values) {
-                res << num.i;
-            }
-
-            return res;
-        }
-
-        QList<float> fltValues(int startPos) const {
-            QList<float> res;
-            QList<Number32> values = numValues.mid(startPos,  numValues.size());
-
-            res.reserve(values.count());
-            for (const Number32 &num: values) {
-                if (type == FloatType) {
-                    res << num.f;
-                } else if (type == IntegerType) {
+        QVariantList values(int startPos) const {
+            QVariantList res;
+            switch (type) {
+            case IntegerType: {
+                auto values = numValues.mid(startPos,  numValues.size());
+                res.reserve(values.count());
+                for (const Number32 &num: values) {
                     res << num.i;
                 }
+
+            } break;
+            case FloatType: {
+                auto values = numValues.mid(startPos,  numValues.size());
+                res.reserve(values.count());
+                for (const Number32 &num: values) {
+                    res << num.f;
+                }
+
+            } break;
+            case DiscreteType: {
+                auto values = discrValues.mid(startPos,  discrValues.size());
+                for (const auto &num: values) {
+                    res << num;
+                }
+            } break;
             }
 
             return res;
         }
 
-        QList<qint8> dscrValues(int startPos) const {
-            return discrValues.mid(startPos,  discrValues.size());
+        template<typename T> void append(const T& value) {
+             switch (type) {
+             case IntegerType: {
+                 Number32 num;
+                 num.i = value;
+                 numValues.append(num);
+             } break;
+             case FloatType: {
+                 Number32 num;
+                 num.f = value;
+                 numValues.append(num);
+             } break;
+             case DiscreteType: {
+                 discrValues.append(value);
+             } break;
+             }
+         }
+
+        void append(QVariant value) {
+            switch (type) {
+            case IntegerType: {
+                Number32 num;
+                num.i = value.toInt();
+                numValues.append(num);
+            } break;
+            case FloatType: {
+                Number32 num;
+                num.f = value.toFloat();
+                numValues.append(num);
+            } break;
+            case DiscreteType: {
+                discrValues.append(value.toInt());
+            } break;
+            }
+        }
+
+        void append(QVariantList values) {
+            for (auto value: values) {
+                append(value);
+            }
+        }
+
+        int count() {
+            return std::max(numValues.count(), discrValues.count());
         }
 
         void clear() {
             numValues.clear();
             discrValues.clear();
         }
-
-
-//      QList<OscValue> values;
     };
 
     struct OscDataBuffer
@@ -241,7 +280,7 @@ public:
     virtual ~IOscDataStorageService() {}
     virtual long save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data) = 0;
     virtual long loadHeader(QString fileFrom, DDE_OSC_HEADER &header) = 0;
-    virtual long loadData(QString fileFrom, OscType::OscDataBuffer* data) = 0;
+    virtual long loadData(QString fileFrom, OscType::OscDataBuffer& data) = 0;
 
 };
 

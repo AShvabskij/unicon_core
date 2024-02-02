@@ -226,7 +226,7 @@ QByteArray decodeByteArray(QCborStreamReader &reader)
     return result;
 }
 
-long OscDataJSonStorage::loadData(QString fileFrom, OscType::OscDataBuffer *data)
+long OscDataJSonStorage::loadData(QString fileFrom, OscType::OscDataBuffer& data)
 {
     QString path = QFileInfo(fileFrom).absolutePath();
     QString name = QFileInfo(fileFrom).baseName();
@@ -249,7 +249,7 @@ long OscDataJSonStorage::loadData(QString fileFrom, OscType::OscDataBuffer *data
     QJsonValue resValue = cborValue.toJsonValue();
     QJsonObject obj = resValue.toObject();
 
-    long ret = jsonToData(obj, *data);
+    long ret = jsonToData(obj, data);
 
     return ret;
 }
@@ -323,18 +323,8 @@ long OscDataJSonStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuf
     for (int i = 0; i < vars.count(); ++i) {
         data.ch[i].varId = vars[i].toInt();
         int valueCount = 0;
-
-        switch (data.ch[i].type)  {
-            case OscChannelValues::IntegerType:
-            case OscChannelValues::FloatType: {
-                data.ch[i].numValues << convertJsonArrayToNumber32List(values[i].toArray(), data.ch[i].type);
-                valueCount = data.ch[i].numValues.count();
-            } break;
-            case OscChannelValues::DiscreteType: {
-                data.ch[i].discrValues << convertJsonArrayToInt8List(values[i].toArray());
-                valueCount = data.ch[i].discrValues.count();
-            } break;
-        };
+        data.ch[i].append(values[i].toArray().toVariantList());
+        valueCount = data.ch[i].count();
 
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
@@ -343,35 +333,4 @@ long OscDataJSonStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuf
     data.valueCount = maxValueCount;
 
     return _return_OK;
-}
-
-QList<Number32> OscDataJSonStorage::convertJsonArrayToNumber32List(const QJsonArray &jsonArray, OscChannelValues::Type type)
-{
-    QList<Number32> res;
-    res.reserve(jsonArray.count());
-
-    for (const QJsonValue &value : jsonArray) {
-        Number32 num;
-        if (type == OscChannelValues::IntegerType) {
-            num.i = value.toInt();
-        } else if (type == OscChannelValues::IntegerType) {
-            num.f = static_cast<float>(value.toDouble());
-        }
-
-        res.append(num);
-    }
-
-    return res;
-}
-
-QList<qint8> OscDataJSonStorage::convertJsonArrayToInt8List(const QJsonArray &jsonArray)
-{
-    QList<qint8> res;
-    res.reserve(jsonArray.count());
-
-    for (const QJsonValue &value : jsonArray) {
-            res.append(static_cast<qint8>(value.toInt()));
-    }
-
-    return res;
 }
