@@ -54,6 +54,7 @@ void OscDataService::reset(DevInd ind)
     if (!buff)
         return;
 
+    qDebug() << "Deleting buffer" << ", value count = " << buff->valueCount;
     m_mutex.lock();
     delete buff;
     m_repository.remove(ind);
