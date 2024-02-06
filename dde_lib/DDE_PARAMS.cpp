@@ -508,10 +508,8 @@ void DDE_PARAMS::update()
                                   << " mod_id=" + std::to_string(cmd.module_id)
                                   << " par_id=" + std::to_string(cmd.param_id)
                                   << " nRW=" + std::to_string(cmd.nRW)
-                                  << " attempts = " + std::to_string(attempts)
                                   << ". Check if a remote device proccess is working!"
                                   << std::endl;
-
                     }
 
                     std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
