@@ -442,8 +442,9 @@ void DDE_PARAMS::update()
     //		- do while both buffer not empty
     //if timeout then request maybe be lost as it already pop out of requiest list and not proceeded
 
-    bool get_empty = false;
-    bool set_empty = false;
+    bool is_read_list_empty = false;
+
+    bool is_write_list_empty = false;
     bool timeout = false;
     uint32_t attempts = 0;
     static std::string lastError;
@@ -451,11 +452,11 @@ void DDE_PARAMS::update()
     int res = 0;
 
     std::fill_n(cmd_ind_arr, MAX_DEV_SUPPORT, 0);
-    while (!get_empty) {
+    while (!is_read_list_empty) {
         int res = pop_read_request(get_params);// list_read.front();
 
         if (res != _return_OK) {
-            get_empty = true;
+            is_read_list_empty = true;
             continue;
         }
 
@@ -466,6 +467,7 @@ void DDE_PARAMS::update()
 
         uint16_t device_id = get_params.device_id;
         int cmd_ind = cmd_ind_arr[device_id]++;
+
         assert(cmd_ind < MAX_DEV_CMD_CNT);
         assert(device_id < MAX_DEV_SUPPORT);
 
@@ -477,54 +479,54 @@ void DDE_PARAMS::update()
     }
 
     for (uint16_t device_id = 0; device_id < DEVICE_ID_MAX; device_id++) {
-        res= 0;
-        attempts = 0;
+        res= 0; attempts = 0;
         int cmd_ind = cmd_ind_arr[device_id];
         if (cmd_ind > 0) {
-            while ((res != 1) && (!timeout)) {
+            while ((res != _return_OK) && (!timeout)) {
                 res = PARAMS_DATA_write_cmd(device_id, cmd_arr[device_id], cmd_ind);
 
-                if (res != 1) {
+                if (res != _return_OK) {
                     attempts++;
+
+                    int waitTime = 100;
+                    if (attempts > 3) {
+                        waitTime = waitTime * 10;
+                    }
 
                     if (attempts > 5) {
                         err_read_cmd_counter++;
+                        timeout = true;
 
                         DDE_SET_PARAMS_DATA set_err;
                         set_err.device_id = device_id;
                         set_err.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
                         set_err.param_id = DDE_DEV0_MODULE0_PARAM14_READ_CMD_ERR_COUNTER;
                         set_err.ivalue = static_cast<uint32_t>(err_read_cmd_counter);
-
-                        string error = "Error remote reading cmd! dev_id=" + std::to_string(device_id) +
-                                        " mod_id=" + std::to_string(cmd.module_id) +
-                                        " par_id=" + std::to_string(cmd.param_id) +
-                                        " nRW=" + std::to_string(cmd.nRW) +
-                                        " attempts = " + std::to_string(attempts) +
-                                        ". Check if a remote device proccess is working!";
-                        if (lastError.compare(error.c_str()) != 0) { // A.S : To avoid multiple logging the same error
-                            lastError = error.c_str();
-                            std::cout << lastError.c_str() << std::endl;
-                        }
-
                         direct_write(set_err);
-                        timeout = true;
+
+                        std::cout << "Error remote reading cmd! dev_id=" + std::to_string(device_id)
+                                  << " mod_id=" + std::to_string(cmd.module_id)
+                                  << " par_id=" + std::to_string(cmd.param_id)
+                                  << " nRW=" + std::to_string(cmd.nRW)
+                                  << " attempts = " + std::to_string(attempts)
+                                  << ". Check if a remote device proccess is working!"
+                                  << std::endl;
+
                     }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                } else {
-                    lastError = "";
+
+                    std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
                 }
             }
         }
     }
 
     timeout = false;
-    while (!set_empty || timeout) {
+    while (!is_write_list_empty) {
 
         res = pop_write_request(set_params);// list_write.front();
 
         if (res != _return_OK) {
-            set_empty = true;
+            is_write_list_empty = true;
             continue;
         }
 
@@ -533,10 +535,12 @@ void DDE_PARAMS::update()
         cmd.param_id = set_params.param_id;
         cmd.ivalue = set_params.ivalue;
         cmd.nRW = 1; // "write" cmd
+
         res = 0; attempts = 0;
-        while ((res != 1) && (!timeout)) {
+        while ((res != _return_OK) && (!timeout)) {
             res = PARAMS_DATA_write_cmd(device_id, &cmd, 1);
-            if (res != 1) {
+
+            if (res != _return_OK) {
                 attempts++;
                 if (attempts > 5)
                 {
