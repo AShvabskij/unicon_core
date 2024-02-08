@@ -297,7 +297,7 @@ _dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
 
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 {
-    // check that requiest is not already in the queue.If it is do not push it to avoid list_read oversizing.
+    // check that requiest is already in the queue. If it is in the queue do not push it to avoid list_read oversizing.
     std::lock_guard<std::mutex> lock{ m_mutex };
     for(auto it = list_read.crbegin();it!=list_read.crend();it++)
     {

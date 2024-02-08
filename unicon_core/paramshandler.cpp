@@ -13,6 +13,9 @@ const QString CMD_SYSTEM_INIT = "system_init";
 const int DATA_YELD_INTERVAL_MSC = 100;
 const int STREAM_OBJECT_LIMIT = 60000;//*100;
 const float ZERO_SCALE = 0.0f;
+const int MIN_GROUP_ELEMENTS_REQUESTED = 3;
+
+static int streamParamCount = 0;
 
 bool operator==(const ParamID& a, const ParamID& b) {
     return a.devId == b.devId &&
@@ -218,14 +221,36 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     Param p;
-    p.ID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
+    DevID devID = {sysType, static_cast<quint16>(deviceId)};
+    p.ID = {devID, moduleId, paramId};
     long ret = getParamHeader(p.ID, &p);
-    if (ret <= _return_FAIL) {
+    if (ret != _return_OK) {
         return;
     }
 
     sendActualParamValue(p, requestId);
     m_capturedParams << p;
+
+    int count = 0;
+    if (!m_capturedModules.contains(p.ID.moduleId)) {
+
+        for (const Param& p_ : m_capturedParams) {
+            if (p_.ID.moduleId == p.ID.moduleId) {
+                count ++;
+            }
+        }
+
+        DDE_GET_PARAMS_HEADER moduleHeader;
+        ret = getModuleHeader(devID, moduleId, moduleHeader);
+
+        if (ret != _return_OK) {
+            return;
+        }
+
+        if (count >= (moduleHeader.el_count/3) && count >= MIN_GROUP_ELEMENTS_REQUESTED) {  // if more than a third of the group is requestied
+            m_capturedModules[moduleId] = moduleHeader;
+        }
+    }
 
     int freq = cmdBody.value("frequency").toInt();
     int interval = (freq == 0) ? DATA_YELD_INTERVAL_MSC : (1000 / freq);
@@ -291,7 +316,6 @@ void ParamsHandler::handleCloseAllStreams(const QJsonObject &request)
         m_capturedParams = params;
     } else if (!m_capturedParams.isEmpty()) {
         stopPooling();
-        m_capturedParams .clear();
     }
 
     return;
@@ -376,8 +400,6 @@ void ParamsHandler::startPooling(int intervalMsc)
     m_streamTimer->setInterval(intervalMsc);
     m_streamTimer->start();
 
-    memset(&m_lastModHeader, 0, sizeof(m_lastModHeader));
-
     // connect(this, SIGNAL(requestStreamValue()), this, SLOT(slotTimerAlarm()), Qt::QueuedConnection);
     //  emit requestStreamValue();
 }
@@ -385,7 +407,9 @@ void ParamsHandler::startPooling(int intervalMsc)
 void ParamsHandler::stopPooling()
 {
     m_streamTimer->stop();
-    memset(&m_lastModHeader, 0, sizeof(m_lastModHeader));
+    m_capturedParams .clear();
+    m_capturedModules.clear();
+    streamParamCount = 0;
 }
 
 void ParamsHandler::streamParamsValue()
@@ -394,38 +418,29 @@ void ParamsHandler::streamParamsValue()
         return;
     }
 
-    QMap<int, ParamList> modules;
     QList<ParamValue> sentValues;
-
-    for (const Param& p : m_capturedParams) {
-        ParamID modId = {p.ID.devId, p.ID.moduleId, 0};
-
-        modules[modId.uid()].append(p);
-    }
 
     int error = 0;
     _dde_func_return_t res = _return_OK;
+
     ParamValueList allValues;
     ParamList singleParams;
+    DevID devID = m_capturedParams.first().ID.devId;
 
-    const int GROUP_PARAMS_COUNT_MIN = 3;
-    for (const int modKey: modules.keys()) {
-        if (modules[modKey].count() >= GROUP_PARAMS_COUNT_MIN) {
-            ParamID pID = modules[modKey].value(0).ID;
-            ParamID modId = {pID.devId, pID.moduleId, 0};
+    for (const Param& p : m_capturedParams) {
+        if (!m_capturedModules.contains(p.ID.moduleId)) {
+            singleParams.append(p);
+        }
+    }
 
-            ParamValueList values = getModuleValues(modId, res); // request all values of the group
-            error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
-            if (error != 0) {
-                for (auto value : values) value.error = error;
-            }
-
-            allValues.append(values);
+    for (const int modId: m_capturedModules.keys()) {
+        ParamValueList values = getModuleValues(devID, modId, res); // request all values of the group
+        error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
+        if (error != 0) {
+            for (auto value : values) value.error = error;
         }
 
-        else {
-            singleParams.append(modules[modKey]);
-        }
+        allValues.append(values);
     }
 
     for (const Param &p : singleParams) {
@@ -453,6 +468,12 @@ void ParamsHandler::streamParamsValue()
 
     emit stream(responseList);
 
+    if (streamParamCount !=sentValues.count()) {
+        streamParamCount = sentValues.count();
+        qDebug() << "\nStreaming param values" << ", param count =" << streamParamCount;
+    }
+
+    int i = 0;
     for (const ParamValue& val : sentValues) {
         if (!val.isActual()) {
             const int delta = val.timestamp -  QDateTime::currentMSecsSinceEpoch();
@@ -460,7 +481,16 @@ void ParamsHandler::streamParamsValue()
                 qWarning() << "The param value actuality is exceeded, " << val.paramID.logStr() << ", actuality = " << delta << "\n";
             }
         }
+
+        QTextStream(stdout) << "[" << val.paramID.moduleId << "." << val.paramID.id << "]=" << val.value.toString();
+        if (++i != sentValues.count()) {
+            QTextStream(stdout) << ",";
+        }
     }
+
+    QTextStream(stdout) << "\n" ;
+
+
 
     return;
 }
@@ -512,32 +542,34 @@ long ParamsHandler::getParamValue(const Param& p, ParamValue* out)
     return getParamValue(p.ID, out);
 }
 
-ParamValueList ParamsHandler::getModuleValues(const ParamID& groupId, _dde_func_return_t& isOk)
+ParamValueList ParamsHandler::getModuleValues(const DevID &devID, int moduleId, _dde_func_return_t& isOk)
 {
-    if (m_lastModHeader.module_id != groupId.moduleId && m_lastModHeader.device_id != groupId.devId.id) {
-        memset(&m_lastModHeader, 0, sizeof(m_lastModHeader));
+    _dde_func_return_t res = _return_OK;
 
-        m_lastModHeader.device_id = static_cast<uint16_t>(groupId.devId.id);
-        m_lastModHeader.module_id = static_cast<uint16_t>(groupId.moduleId);
-        m_lastModHeader.param_id = 0;
+    int module_elCount = 0;
+    if (!m_capturedModules.contains(moduleId)) {
+        DDE_GET_PARAMS_HEADER modHeader;
+        res = getModuleHeader(devID, moduleId, modHeader);
+        module_elCount = modHeader.el_count;
+    } else {
+        module_elCount = m_capturedModules[moduleId].el_count;
+    }
 
-        _dde_func_return_t res = (*m_dde)(groupId.devId.type)->get_params_header(m_lastModHeader);
-
-        if (res != _return_OK) {
-            isOk = res;
-            return ParamValueList();
-        }
+    if (res != _return_OK) {
+        isOk = res;
+        return ParamValueList();
     }
 
     Q_ASSERT(m_data);
     memset(m_data, 0, sizeof(*m_data));
 
-    m_data->device_id = static_cast<uint16_t>(groupId.devId.id);
-    m_data->module_id = static_cast<uint16_t>(groupId.moduleId);
-    m_data->el_count = m_lastModHeader.el_count;
+    m_data->device_id = static_cast<uint16_t>(devID.id);
+    m_data->module_id = static_cast<uint16_t>(moduleId);
+    m_data->el_count = module_elCount;
     m_data->param_id = 0;
 
-    _dde_func_return_t res = (*m_dde)(groupId.devId.type)->get_params_data(*m_data);
+//  qDebug() << QString("Get mod values") + " [" +  QString::number(m_data->device_id) + "." +  QString::number(m_data->module_id) + "]" << ", elems=" << module_elCount;
+    res = (*m_dde)(devID.type)->get_params_data(*m_data);
 
     if (res != _return_OK) {
         isOk = res;
@@ -545,11 +577,12 @@ ParamValueList ParamsHandler::getModuleValues(const ParamID& groupId, _dde_func_
     }
 
     ParamValueList resList;
-    resList.reserve(PARAMS_COUNT_MAX);
+    resList.reserve(module_elCount+1);
 
-    for (int i = 0; i <= PARAMS_ID_MAX; i++ ) {
+    for (int i = 0; i < module_elCount; i++ ) {
         ParamValue val;
-        res = convertValue(groupId, m_data->el[i], &val);
+        ParamID ID = {devID, moduleId, i};
+        res = convertValue(ID, m_data->el[i], &val);
         val.paramID.id = i;
         if (res == _return_OK && val.isValid()) {
             resList << val;
@@ -570,6 +603,8 @@ long ParamsHandler::getParamValue(const ParamID& paramId, ParamValue* out)
     m_data->device_id = static_cast<uint16_t>(paramId.devId.id);
     m_data->module_id = static_cast<uint16_t>(paramId.moduleId);
     m_data->param_id = static_cast<uint16_t>(paramId.id);
+
+//  qDebug() << QString("Get par value") + " [" + QString::number(m_data->device_id) + "." <<  QString::number(m_data->module_id) + "." +QString::number(m_data->param_id) << "]";
 
     _dde_func_return_t res = (*m_dde)(paramId.devId.type)->get_params_data(*m_data);
 
@@ -661,6 +696,20 @@ long ParamsHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamLi
     }
 
     return _return_OK;
+}
+
+long ParamsHandler::getModuleHeader(const DevID& devId, int moduleId, DDE_GET_PARAMS_HEADER& ret)
+{
+
+    memset(&ret, 0, sizeof(DDE_GET_PARAMS_HEADER));
+
+    ret.device_id = static_cast<uint16_t>(devId.id);
+    ret.module_id = static_cast<uint16_t>(moduleId);
+    ret.param_id = 0;
+
+    _dde_func_return_t res = (*m_dde)(devId.type)->get_params_header(ret);
+
+    return res;
 }
 
 QJsonObject ParamsHandler::createHeaderObj(int requestId, const ParamList& params)

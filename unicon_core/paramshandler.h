@@ -114,11 +114,12 @@ private:
 
     long getParamValue(const Param &p, ParamValue* out);
     long getParamValue(const ParamID &paramId, ParamValue* out);
-    ParamValueList getModuleValues(const ParamID& groupId, long &isOk);
+    ParamValueList getModuleValues(const DevID &devId, int moduleId, long &isOk);
 
     long getParamHeader(const ParamID& paramId, Param *out);
     long getParamHeaders(const DevID& deviceId, int moduleId, ParamList *out);
     long setParamValue(const ParamValue &value);
+    long getModuleHeader(const DevID& devId, int moduleId, DDE_GET_PARAMS_HEADER& ret);
 
     long convertValue(const ParamID &paramId, const GLIO_ELEMENT_VALUE &el, ParamValue *out);
     QJsonObject createHeaderObj(int requestId, const ParamList &params);
@@ -132,12 +133,12 @@ private:
     void stopStreamParamValue(const Param &param);
     Q_SLOT void sendActualParamValue(const Param &param, int requestId, int error = 0);
 
-    ParamList m_capturedParams;
+    ParamList m_capturedParams; // all params captured by opened streams
+    QMap<int, DDE_GET_PARAMS_HEADER> m_capturedModules; // Modules (groups) of captured parameters
 
     int m_streamValCount = 0;
     QTimer* m_streamTimer;
     mutable DDE_GET_PARAMS_HEADER* m_header = nullptr;
-    mutable DDE_GET_PARAMS_HEADER  m_lastModHeader;
     mutable DDE_GET_PARAMS_DATA *m_data = nullptr;
 
 };

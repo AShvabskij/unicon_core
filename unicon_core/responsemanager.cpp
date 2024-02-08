@@ -23,6 +23,8 @@ int ResponseManager::send(QJsonObject response)
         strDataToSend = dataToSend;
     }
 
+//    qDebug() << "Response:" << response;
+
     for (QWebSocket *client : m_clients) {
         if (needBinary) {
             client->sendBinaryMessage(dataToSend);
