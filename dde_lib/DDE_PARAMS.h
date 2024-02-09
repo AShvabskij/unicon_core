@@ -6,6 +6,7 @@
 #include "cpp_inc.h"
 
 #include <mutex>
+#include <condition_variable>
 
 //#define SUB_INDEX_MAX	0x3f
 //#define ADDRESS_MAX		0xfff
@@ -64,7 +65,11 @@ private:
 
     std::deque <DDE_GET_PARAMS_DATA> list_read;
     std::deque <DDE_SET_PARAMS_DATA> list_write;
-    std::mutex m_mutex;
+    std::mutex m_guardMutex;
+    std::mutex m_waitMutex;
+
+    std::condition_variable m_condition;
+
     short err_write_cmd_counter = 0;
     short err_read_cmd_counter = 0;
 

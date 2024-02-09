@@ -298,7 +298,8 @@ _dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
 {
     // check that requiest is already in the queue. If it is in the queue do not push it to avoid list_read oversizing.
-    std::lock_guard<std::mutex> lock{ m_mutex };
+    std::lock_guard<std::mutex> guardLock{ m_guardMutex };
+
     for(auto it = list_read.crbegin();it!=list_read.crend();it++)
     {
         if (it->device_id == p.device_id && it->module_id == p.module_id && it->param_id == p.param_id && it->header_reset == p.header_reset) {
@@ -313,8 +314,10 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
     //1) Add request to queue
     if (list_read.size() < list_read_max) {
         if (isValidData(p)) {
+            std::unique_lock<std::mutex> waitLock{ m_waitMutex };
             list_read.push_back(p);
-            assert(list_read.size() <= list_read_max);
+            waitLock.unlock();
+            m_condition.notify_all();
         }
         else {
             std::cout << "Failed to add data into reading list. Invalid data \n";
@@ -338,8 +341,11 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
 {
     //1) Add request to queue
     if (list_write.size() < list_write_max) {
-        std::lock_guard<std::mutex> lock{ m_mutex };
+        std::lock_guard<std::mutex> guardLock{ m_guardMutex };
+        std::unique_lock<std::mutex> waitLock{ m_waitMutex };
         list_write.push_back(p);
+        waitLock.unlock();
+        m_condition.notify_all();
     }
     else {
         std::cout << "Command queue (to set data) is overflowed\n";
@@ -357,7 +363,7 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
 
     if (list_read.empty()) return _return_FAIL;
 
-    std::lock_guard<std::mutex> lock{ m_mutex };
+    std::lock_guard<std::mutex> lock{ m_guardMutex };
     p = std::move(list_read.front());
     list_read.pop_front();
 
@@ -368,7 +374,7 @@ _dde_func_return_t DDE_PARAMS::pop_write_request(DDE_SET_PARAMS_DATA& p)
 {
     if (list_write.empty()) return _return_FAIL;
 
-    std::lock_guard<std::mutex> lock{ m_mutex };
+    std::lock_guard<std::mutex> lock{ m_guardMutex };
     p = std::move(list_write.front());
     list_write.pop_front();
 
@@ -452,12 +458,17 @@ void DDE_PARAMS::update()
     int res = 0;
 
     std::fill_n(cmd_ind_arr, MAX_DEV_SUPPORT, 0);
+
+
+    std::unique_lock<std::mutex> waitLock{ m_waitMutex };
+    m_condition.wait(waitLock);
+
     while (!is_read_list_empty) {
         int res = pop_read_request(get_params);// list_read.front();
 
         if (res != _return_OK) {
             is_read_list_empty = true;
-            continue;
+            break;
         }
 
         cmd.module_id = get_params.module_id;
@@ -480,10 +491,10 @@ void DDE_PARAMS::update()
 
     for (uint16_t device_id = 0; device_id < DEVICE_ID_MAX; device_id++) {
         res= 0; attempts = 0;
-        int cmd_ind = cmd_ind_arr[device_id];
-        if (cmd_ind > 0) {
+        int cmd_cnt = cmd_ind_arr[device_id];
+        if (cmd_cnt > 0) {
             while ((res != _return_OK) && (!timeout)) {
-                res = PARAMS_DATA_write_cmd(device_id, cmd_arr[device_id], cmd_ind);
+                res = PARAMS_DATA_write_cmd(device_id, cmd_arr[device_id], cmd_cnt);
 
                 if (res != _return_OK) {
                     attempts++;
