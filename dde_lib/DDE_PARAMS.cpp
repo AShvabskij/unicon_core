@@ -185,7 +185,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
 {
     assert(p.device_id <= DEVICE_ID_MAX);
     assert(p.module_id <= MODULES_ID_MAX);
-    assert(p.param_id <= PARAMS_ID_MAX);
+    assert(p.param_id <= PARAMS_ID_MAX + 1);
 
     string dev_name = create_device_name(p.device_id);
 
@@ -223,7 +223,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
        res = _paramDescr->get(&p, db_type::txt);
 
     }
-    
+
     return res;
 }
 
@@ -234,7 +234,7 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
     //assert(p.el.device_id < DEVICE_ID_MAX);
     assert(p.module_id <= MODULES_ID_MAX);
     assert(p.param_id <= PARAMS_ID_MAX);
-    
+
     //we need check if parameter presented and lately decide to replace or add
     DDE_GET_PARAMS_HEADER hdr;
     hdr.device_id = p.device_id;
@@ -248,7 +248,7 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
         res = _paramDescr->get(&hdr, db_type::usual);
         if (res!= _return_OK)
         res = _paramDescr->set(&p, db_type::usual);
-        
+
         //if tesxtual descrtipion exist add another table
     if (p.txtValues[0] != nullptr) {
             res = _paramDescr->get(&hdr, db_type::txt);
@@ -257,8 +257,6 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
         }
     }
 
-    
-    
     if (res != _return_OK) return res;
 
     GLIO_ELEMENT_DESCR el;
@@ -305,6 +303,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
         if (it->device_id == p.device_id && it->module_id == p.module_id && it->param_id == p.param_id && it->header_reset == p.header_reset) {
             // the command is already in list, so return ok
             direct_read(p);
+            m_condition.notify_all();
             return _return_OK;
         }
     }
@@ -315,9 +314,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
     //1) Add request to queue
     if (list_read.size() < list_read_max) {
         if (isValidData(p)) {
-            std::unique_lock<std::mutex> waitLock{ m_waitMutex };
             list_read.push_back(p);
-            waitLock.unlock();
             m_condition.notify_all();
         }
         else {
@@ -343,9 +340,7 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
     //1) Add request to queue
     if (list_write.size() < list_write_max) {
         std::lock_guard<std::mutex> guardLock{ m_guardMutex };
-        std::unique_lock<std::mutex> waitLock{ m_waitMutex };
         list_write.push_back(p);
-        waitLock.unlock();
         m_condition.notify_all();
     }
     else {
@@ -457,12 +452,16 @@ void DDE_PARAMS::update()
     static std::string lastError;
     int cmd_ind_arr[MAX_DEV_SUPPORT];
     int res = 0;
+    const int WAIT_TIMEOUT_MSC = 300;
 
     std::fill_n(cmd_ind_arr, MAX_DEV_SUPPORT, 0);
 
-
     std::unique_lock<std::mutex> waitLock{ m_waitMutex };
-    m_condition.wait(waitLock);
+    auto waitres = m_condition.wait_for(waitLock, std::chrono::milliseconds(WAIT_TIMEOUT_MSC)); // wait for list or write queue is not empty for 300msec
+    if (waitres ==  std::cv_status::timeout) {
+        return;
+    }
+
 
     while (!is_read_list_empty) {
         int res = pop_read_request(get_params);// list_read.front();
@@ -500,12 +499,7 @@ void DDE_PARAMS::update()
                 if (res != _return_OK) {
                     attempts++;
 
-                    int waitTime = 100;
                     if (attempts > 3) {
-                        waitTime = waitTime * 10;
-                    }
-
-                    if (attempts > 5) {
                         err_read_cmd_counter++;
                         timeout = true;
 
@@ -524,6 +518,7 @@ void DDE_PARAMS::update()
                                   << std::endl;
                     }
 
+                    int waitTime = 100;
                     std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
                 }
             }
