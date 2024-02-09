@@ -9,7 +9,7 @@ class IDDE
 {
 public:
 
-    virtual ~IDDE() {};
+    virtual ~IDDE() {}
 
     virtual _dde_func_return_t init(const char* system_type) = 0;
     virtual const char* system_type() = 0;
@@ -34,7 +34,7 @@ class IDDE_PARAMS
 {
 public:
 
-    virtual ~IDDE_PARAMS() {};
+    virtual ~IDDE_PARAMS() {}
 
     virtual _dde_func_return_t init(const char* sys_type) = 0;
     virtual _dde_func_return_t get(DDE_GET_PARAMS_HEADER& p) = 0;
@@ -49,7 +49,7 @@ public:
 class IDDE_EVLOG
 {
 public:
-    virtual ~IDDE_EVLOG() {};
+    virtual ~IDDE_EVLOG() {}
 
     virtual _dde_func_return_t init() = 0;
     virtual _dde_func_return_t get(DDE_GET_EVLOG_HEADER&p) = 0;
@@ -60,7 +60,7 @@ public:
 class IDDE_OSC // top level interface to access osc
 {
 public:
-    virtual ~IDDE_OSC() {};
+    virtual ~IDDE_OSC() {}
 
     virtual _dde_func_return_t init(const char* system_type) = 0;
     virtual _dde_func_return_t open(uint16_t id) = 0;
@@ -78,7 +78,7 @@ public:
 class DDE_OSC_STUB : public IDDE_OSC
 {
 public:
-    virtual ~DDE_OSC_STUB() {};
+    virtual ~DDE_OSC_STUB() {}
 
     virtual _dde_func_return_t init(const char* ) { return _return_OK;};
     virtual _dde_func_return_t open(uint16_t ) { return _return_OK; };
@@ -96,7 +96,7 @@ public:
 class IOscFileService // Interface for working with the oscilloscope data file
 {
 public:
-    virtual ~IOscFileService() {};
+    virtual ~IOscFileService() {}
 
     virtual _dde_func_return_t open(uint16_t device_id, const char* fileName) = 0;
     virtual _dde_func_return_t close() = 0;

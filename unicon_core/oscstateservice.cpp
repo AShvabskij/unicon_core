@@ -164,7 +164,8 @@ void OscStateMachine::update(DevInd devId)
 
 long OscStateMachine::getData(const DDE_OSC_HEADER &hdr, DDE_GET_OSC_DATA& getDat)
 {
-    memset(&getDat, 0, sizeof(DDE_GET_OSC_DATA));
+    memset(&getDat, 0, sizeof(DDE_GET_OSC_DATA)); // this command results to compiler warning
+    // getDat = DDE_GET_OSC_DATA(); // you must not do it so, because it results to memory corruption
     getDat.device_id = hdr.device_id;
 
     _dde_func_return_t res = m_dde->get_osc_data(getDat);

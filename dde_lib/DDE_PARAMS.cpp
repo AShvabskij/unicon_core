@@ -303,6 +303,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
     for(auto it = list_read.crbegin();it!=list_read.crend();it++)
     {
         if (it->device_id == p.device_id && it->module_id == p.module_id && it->param_id == p.param_id && it->header_reset == p.header_reset) {
+            // the command is already in list, so return ok
             direct_read(p);
             return _return_OK;
         }
