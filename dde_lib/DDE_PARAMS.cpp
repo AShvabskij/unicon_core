@@ -444,24 +444,26 @@ void DDE_PARAMS::update()
     //		- do while both buffer not empty
     //if timeout then request maybe be lost as it already pop out of requiest list and not proceeded
 
-    bool is_read_list_empty = false;
 
-    bool is_write_list_empty = false;
     bool timeout = false;
     uint32_t attempts = 0;
     static std::string lastError;
     int cmd_ind_arr[MAX_DEV_SUPPORT];
     int res = 0;
-    const int WAIT_TIMEOUT_MSC = 300;
+    const int WAIT_TIMEOUT_MSC = 100;
 
     std::fill_n(cmd_ind_arr, MAX_DEV_SUPPORT, 0);
 
-    std::unique_lock<std::mutex> waitLock{ m_waitMutex };
-    auto waitres = m_condition.wait_for(waitLock, std::chrono::milliseconds(WAIT_TIMEOUT_MSC)); // wait for list or write queue is not empty for 300msec
-    if (waitres ==  std::cv_status::timeout) {
-        return;
-    }
+    bool is_read_list_empty = list_read.empty();
+    bool is_write_list_empty = list_write.empty();
 
+    if (is_read_list_empty && is_write_list_empty) {
+        std::unique_lock<std::mutex> waitLock{ m_waitMutex };
+        auto waitres = m_condition.wait_for(waitLock, std::chrono::milliseconds(WAIT_TIMEOUT_MSC)); // wait for pushing new get/set commands
+        if (waitres ==  std::cv_status::timeout) {
+            return;
+        }
+    }
 
     while (!is_read_list_empty) {
         int res = pop_read_request(get_params);// list_read.front();
@@ -471,20 +473,19 @@ void DDE_PARAMS::update()
             break;
         }
 
+
+        uint16_t device_id = get_params.device_id;
+        int cmd_ind = cmd_ind_arr[device_id]++;
+        assert(cmd_ind < MAX_DEV_CMD_CNT);
+        assert(device_id < MAX_DEV_SUPPORT);
+
+        DDE_PARAMS_CMD& cmd = cmd_arr[device_id][cmd_ind];
         cmd.module_id = get_params.module_id;
         cmd.param_id = get_params.param_id;
         cmd.ivalue = get_params.el_count;
         cmd.nRW = 0; // "read" cmd
 
-        uint16_t device_id = get_params.device_id;
-        int cmd_ind = cmd_ind_arr[device_id]++;
-
-        assert(cmd_ind < MAX_DEV_CMD_CNT);
-        assert(device_id < MAX_DEV_SUPPORT);
-
-        cmd_arr[device_id][cmd_ind] = cmd;
-
-        if (cmd_ind_arr[device_id] >= MAX_DEV_CMD_CNT) {
+        if (cmd_ind >= MAX_DEV_CMD_CNT) {
             break;
         }
     }
