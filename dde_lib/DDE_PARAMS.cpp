@@ -447,7 +447,6 @@ void DDE_PARAMS::update()
 
     bool timeout = false;
     uint32_t attempts = 0;
-    static std::string lastError;
     int cmd_ind_arr[MAX_DEV_SUPPORT];
     int res = 0;
     const int WAIT_TIMEOUT_MSC = 100;
@@ -485,7 +484,7 @@ void DDE_PARAMS::update()
         cmd.ivalue = get_params.el_count;
         cmd.nRW = 0; // "read" cmd
 
-        if (cmd_ind >= MAX_DEV_CMD_CNT) {
+        if (cmd_ind >= MAX_DEV_CMD_CNT-1) {
             break;
         }
     }
