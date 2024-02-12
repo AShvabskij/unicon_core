@@ -486,7 +486,7 @@ void DDE_PARAMS::update()
 
     for (uint16_t device_id = 0; device_id < DEVICE_ID_MAX; device_id++) {
         int cmd_cnt = cmd_ind_arr[device_id];
-        write_cmd(device_id, cmd_arr[device_id], cmd_cnt);
+        write_cmd_array(device_id, cmd_arr[device_id], cmd_cnt);
     }
 
     while (!is_write_list_empty) {
@@ -505,11 +505,11 @@ void DDE_PARAMS::update()
         cmd.nRW = 1; // "write" cmd
 
         int cmd_cnt = 1;
-        res = write_cmd(device_id, &cmd, cmd_cnt);
+        res = write_cmd_array(device_id, &cmd, cmd_cnt);
     }
 }
 
-_dde_func_return_t DDE_PARAMS::write_cmd(uint8_t device_id, DDE_PARAMS_CMD *cmdArray, int cmd_cnt = 1)
+_dde_func_return_t DDE_PARAMS::write_cmd_array(uint8_t device_id, DDE_PARAMS_CMD *cmdArray, int cmd_cnt = 1)
 {
     if (cmd_cnt <= 0)
         return _return_OK;
