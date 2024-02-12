@@ -247,7 +247,7 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
             return;
         }
 
-        if (count >= (moduleHeader.el_count/3) && count >= MIN_GROUP_ELEMENTS_REQUESTED) {  // if more than a third of the group is requestied
+        if (count >= (moduleHeader.el_count/2) && count >= MIN_GROUP_ELEMENTS_REQUESTED) {  // if more than a third of the group is requestied
             m_capturedModules[moduleId] = moduleHeader;
         }
     }
