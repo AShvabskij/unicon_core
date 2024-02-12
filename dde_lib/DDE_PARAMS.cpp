@@ -426,9 +426,6 @@ inline time_t DDE_PARAMS::systemTime()
     return timeMsc;
 }
 
-
-
-
 void DDE_PARAMS::update()
 {
 
@@ -457,11 +454,14 @@ void DDE_PARAMS::update()
     bool is_write_list_empty = list_write.empty();
 
     if (is_read_list_empty && is_write_list_empty) {
+        return;
+/*
         std::unique_lock<std::mutex> waitLock{ m_waitMutex };
         auto waitres = m_condition.wait_for(waitLock, std::chrono::milliseconds(WAIT_TIMEOUT_MSC)); // wait for pushing new get/set commands
         if (waitres ==  std::cv_status::timeout) {
             return;
         }
+*/
     }
 
     while (!is_read_list_empty) {
