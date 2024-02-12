@@ -432,8 +432,7 @@ void DDE_PARAMS::update()
     DDE_GET_PARAMS_DATA get_params;
     DDE_SET_PARAMS_DATA set_params;
     DDE_PARAMS_CMD cmd;
-    DDE_PARAMS_CMD cmd_arr[MAX_DEV_SUPPORT][MAX_DEV_CMD_CNT];
-
+    DDE_PARAMS_CMD cmd_arr[MAX_DEV_SUPPORT][MAX_DEV_CMD_CNT]; // List of commands for each device
 
     //proceed GET and SET buffers - there are many options here.
     //A&D	- cmd_flag may hang as bottom service may be not active, so what to do?
@@ -442,12 +441,8 @@ void DDE_PARAMS::update()
     //if timeout then request maybe be lost as it already pop out of requiest list and not proceeded
 
 
-    bool timeout = false;
-    uint32_t attempts = 0;
+    _dde_func_return_t res = _return_OK;
     int cmd_ind_arr[MAX_DEV_SUPPORT];
-    int res = 0;
-    const int WAIT_TIMEOUT_MSC = 100;
-
     std::fill_n(cmd_ind_arr, MAX_DEV_SUPPORT, 0);
 
     bool is_read_list_empty = list_read.empty();
@@ -490,42 +485,10 @@ void DDE_PARAMS::update()
     }
 
     for (uint16_t device_id = 0; device_id < DEVICE_ID_MAX; device_id++) {
-        res= 0; attempts = 0;
         int cmd_cnt = cmd_ind_arr[device_id];
-        if (cmd_cnt > 0) {
-            while ((res != _return_OK) && (!timeout)) {
-                res = PARAMS_DATA_write_cmd(device_id, cmd_arr[device_id], cmd_cnt);
-
-                if (res != _return_OK) {
-                    attempts++;
-
-                    if (attempts > 3) {
-                        err_read_cmd_counter++;
-                        timeout = true;
-
-                        DDE_SET_PARAMS_DATA set_err;
-                        set_err.device_id = device_id;
-                        set_err.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
-                        set_err.param_id = DDE_DEV0_MODULE0_PARAM14_READ_CMD_ERR_COUNTER;
-                        set_err.ivalue = static_cast<uint32_t>(err_read_cmd_counter);
-                        direct_write(set_err);
-
-                        std::cout << "Error remote reading cmd! dev_id=" + std::to_string(device_id)
-                                  << " mod_id=" + std::to_string(cmd.module_id)
-                                  << " par_id=" + std::to_string(cmd.param_id)
-                                  << " nRW=" + std::to_string(cmd.nRW)
-                                  << ". Check if a remote device proccess is working!"
-                                  << std::endl;
-                    }
-
-                    int waitTime = 100;
-                    std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
-                }
-            }
-        }
+        write_cmd(device_id, cmd_arr[device_id], cmd_cnt);
     }
 
-    timeout = false;
     while (!is_write_list_empty) {
 
         res = pop_write_request(set_params);// list_write.front();
@@ -541,29 +504,50 @@ void DDE_PARAMS::update()
         cmd.ivalue = set_params.ivalue;
         cmd.nRW = 1; // "write" cmd
 
-        res = 0; attempts = 0;
-        while ((res != _return_OK) && (!timeout)) {
-            res = PARAMS_DATA_write_cmd(device_id, &cmd, 1);
+        int cmd_cnt = 1;
+        res = write_cmd(device_id, &cmd, cmd_cnt);
+    }
+}
 
-            if (res != _return_OK) {
-                attempts++;
-                if (attempts > 5)
-                {
-                    err_write_cmd_counter++;
+_dde_func_return_t DDE_PARAMS::write_cmd(uint8_t device_id, DDE_PARAMS_CMD *cmdArray, int cmd_cnt = 1)
+{
+    if (cmd_cnt <= 0)
+        return _return_OK;
 
-                    DDE_SET_PARAMS_DATA set_err;
-                    set_err.device_id = device_id;
-                    set_err.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
-                    set_err.param_id = DDE_DEV0_MODULE0_PARAM15_WRIT_CMD_ERR_COUNTER;
-                    set_err.ivalue = static_cast<uint32_t>(err_write_cmd_counter);
+    bool timeout = false;
+    uint32_t attempts = 0;
+    _dde_func_return_t res = _return_FAIL;
+    const int WAIT_TIMEOUT_MSC = 100;
 
-                    direct_write(set_err);
-                    timeout = true;
-                }
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    while ((res != _return_OK) && (!timeout)) {
+        res = PARAMS_DATA_write_cmd(device_id, cmdArray, cmd_cnt);
+
+        if (res != _return_OK) {
+            attempts++;
+
+            if (attempts > 3) {
+                err_read_cmd_counter++;
+                timeout = true;
+
+                DDE_SET_PARAMS_DATA set_err;
+                set_err.device_id = device_id;
+                set_err.module_id = DDE_DEV0_MODULE0_DESCRIPTION;
+                set_err.param_id = DDE_DEV0_MODULE0_PARAM14_READ_CMD_ERR_COUNTER;
+                set_err.ivalue = static_cast<uint32_t>(err_read_cmd_counter);
+                direct_write(set_err);
+
+                DDE_PARAMS_CMD& cmd = cmdArray[0];
+                std::cout << "Error remote reading cmd! dev_id=" + std::to_string(device_id)
+                          << " mod_id=" + std::to_string(cmd.module_id)
+                          << " par_id=" + std::to_string(cmd.param_id)
+                          << " nRW=" + std::to_string(cmd.nRW)
+                          << ". Check if a remote device proccess is working!"
+                          << std::endl;
             }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIMEOUT_MSC));
         }
     }
 
-    if (timeout == true) std::cout << ("while ((get_empty && set_empty) || timeout) resulted with timeout");
+    return res;
 }

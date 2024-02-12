@@ -60,6 +60,8 @@ private:
     void addTestLinks();
     void checkTestData();
 
+    _dde_func_return_t write_cmd_array(uint8_t device_id, DDE_PARAMS_CMD* cmdArray, int cmd_cnt);
+
     std::thread *thr_params;
     ParamDescr* _paramDescr;
 
