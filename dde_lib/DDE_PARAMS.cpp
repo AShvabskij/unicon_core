@@ -185,7 +185,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
 {
     assert(p.device_id <= DEVICE_ID_MAX);
     assert(p.module_id <= MODULES_ID_MAX);
-    assert(p.param_id <= PARAMS_ID_MAX + 1);
+    assert(p.param_id <= PARAMS_ID_MAX);
 
     string dev_name = create_device_name(p.device_id);
 

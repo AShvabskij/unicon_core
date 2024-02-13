@@ -663,11 +663,10 @@ long ParamsHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamLi
 
     if (res <= _return_FAIL) return res;
 
-    int ind = 0;
+    int pId = 1;
     int count = 0;
-    while (count < m_header->el_count && ind < PARAMS_COUNT_MAX) {
-        ind++;
-        GLIO_ELEMENT_DESCR& elem = m_header->el_descr[ind];
+    while (count < m_header->el_count && pId <= PARAMS_ID_MAX) {
+        GLIO_ELEMENT_DESCR& elem = m_header->el_descr[pId];
         Param p;
 
         if (elem.id != 0) {
@@ -685,7 +684,7 @@ long ParamsHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamLi
                 }
             }
         } else {
-            p.ID = {deviceId, moduleId, ind};
+            p.ID = {deviceId, moduleId, pId};
             p.name = "______res_____";
             p.writable = 0;
             p.valueFormat = 0;
@@ -693,6 +692,7 @@ long ParamsHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamLi
 
         *out << p;
         count++;
+        pId++;
     }
 
     return _return_OK;
