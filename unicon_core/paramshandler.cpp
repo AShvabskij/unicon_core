@@ -274,6 +274,10 @@ void ParamsHandler::handleCloseStream(const QJsonObject &request)
     int moduleId = cmdBody.value("module_id").toInt();
     int paramId  = cmdBody.value("param_id").toInt();
 
+    if (moduleId == 0 && paramId == 0) {
+        handleCloseAllStreams(request);
+    }
+
     ParamID pID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
 
     for (const Param &p: m_capturedParams) {
