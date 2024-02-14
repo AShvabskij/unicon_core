@@ -309,6 +309,7 @@ void ParamsHandler::handleCloseAllStreams(const QJsonObject &request)
         return;
     }
 
+
     ParamList params;
     for (const Param &p: m_capturedParams) {
         if (p.ID.devId.type != sysType) {
@@ -316,10 +317,11 @@ void ParamsHandler::handleCloseAllStreams(const QJsonObject &request)
         }
     }
 
+    stopPooling();
+
     if (!params.isEmpty()) {
         m_capturedParams = params;
-    } else if (!m_capturedParams.isEmpty()) {
-        stopPooling();
+        startPooling();
     }
 
     return;
@@ -401,7 +403,9 @@ void ParamsHandler::startPooling(int intervalMsc)
 
     m_streamValCount = 0;
 
-    m_streamTimer->setInterval(intervalMsc);
+    if (intervalMsc > 0) {
+        m_streamTimer->setInterval(intervalMsc);
+    }
     m_streamTimer->start();
 
     // connect(this, SIGNAL(requestStreamValue()), this, SLOT(slotTimerAlarm()), Qt::QueuedConnection);
