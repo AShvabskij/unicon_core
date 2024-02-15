@@ -247,8 +247,22 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
             return;
         }
 
-        if (count >= (moduleHeader.el_count/2) && count >= MIN_GROUP_ELEMENTS_REQUESTED) {  // if more than a third of the group is requestied
-            m_capturedModules[moduleId] = moduleHeader;
+        if (count >= MIN_GROUP_ELEMENTS_REQUESTED) {
+            switch (sysType) {
+            case SysType::UAVCAN:
+                if (count == moduleHeader.el_count) { // только если запрашивается целиком группа
+                    m_capturedModules[moduleId] = moduleHeader;
+                } break;
+            case SysType::MODBUS:
+            case SysType::CONNEX_MVCP:
+                if (count >= (moduleHeader.el_count/2)) {  // if more than a half of the group is requestied
+                    m_capturedModules[moduleId] = moduleHeader;
+                }
+            default:
+                if (count >= (moduleHeader.el_count/3)) {  // if more than a third of the group is requestied
+                    m_capturedModules[moduleId] = moduleHeader;
+                }
+            }
         }
     }
 
