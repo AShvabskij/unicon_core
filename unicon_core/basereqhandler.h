@@ -16,6 +16,7 @@ public:
     virtual int handle(const QJsonObject& request);
     virtual void setNext(IReqHandler* next);
     void setResponseManager(ResponseManager* response);
+    virtual void handleClose() {};
 
 protected:
     SysType sysTypeId(const QJsonObject& request);

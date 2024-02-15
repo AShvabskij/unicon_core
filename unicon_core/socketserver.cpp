@@ -142,6 +142,8 @@ void SocketServer::onCloseConnection()
         m_response->unregisterClient(pClient);
         pClient->deleteLater();
     }
+
+    m_request->processClose();
 }
 
 void SocketServer::processMessage(const QString &message)

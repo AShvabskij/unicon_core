@@ -70,6 +70,11 @@ int ParamsHandler::handle(const QJsonObject &request)
     return 1;
 }
 
+void ParamsHandler::handleClose()
+{
+    stopPooling();
+}
+
 void ParamsHandler::handleGetHeader(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();

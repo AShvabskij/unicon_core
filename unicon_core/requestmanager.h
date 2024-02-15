@@ -18,6 +18,7 @@ public:
     }
 
     int processRequest(const QJsonObject& request);
+    int processClose();
     int registerHandler(IReqHandler* handler);
     void start();
     void stop();

@@ -19,6 +19,15 @@ int RequestManager::processRequest(const QJsonObject& request)
     return 0;
 }
 
+int RequestManager::processClose()
+{
+    for (IReqHandler* handler : m_handlerList) {
+            handler->handleClose();
+    }
+
+    return 0;
+}
+
 int RequestManager::registerHandler(IReqHandler *handler)
 {
     Q_ASSERT(handler);

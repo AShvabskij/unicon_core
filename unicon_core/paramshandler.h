@@ -97,6 +97,7 @@ public:
     ~ParamsHandler();
 
     virtual int handle(const QJsonObject& request);
+    virtual void handleClose();
 
 signals:
     void requestStreamValue();
