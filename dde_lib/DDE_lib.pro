@@ -11,9 +11,7 @@ CONFIG += c++17
 
 SOURCES += \
     DDE_OSC_DISPATCHER.cpp \
-    DDE_TOP.cpp \
     DDE_EVLOG.cpp \
-    DDE_OSC.cpp \
     DDE_OSC_EMUL.cpp \
     DDE_OSC_FILE.cpp \
     DDE_PARAMS_EMUL.cpp \
@@ -21,12 +19,14 @@ SOURCES += \
     DDE_EMUL.cpp \
     csvfile.cpp \
     services/oscfileservice.cpp \
-    services/oscipcservice.cpp \
     services/oscpagebinservice.cpp \
     services/oscpagetxtservice.cpp
 
 unix: SOURCES += \
-    DDE_PARAMS.cpp
+    DDE_PARAMS.cpp \
+    DDE_TOP.cpp \
+    DDE_OSC.cpp \
+    services/oscipcservice.cpp
 
 HEADERS += \
     DDE_DEVICES_TYPE.h \
