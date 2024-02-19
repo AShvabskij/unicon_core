@@ -15,25 +15,33 @@ StreamManager::~StreamManager()
 
 int StreamManager::stream(const QList<QJsonObject>& valueList)
 {
-    //  QJsonDocument doc(value);
-    //  QString strJson(doc.toJson(QJsonDocument::Compact));
-
-
     for (QWebSocket *client : m_clients) {
-        for (const QJsonObject& value : valueList) {
-            QCborValue v = QCborValue::fromJsonValue(value);
-            QByteArray dataToSend = v.toCbor(QCborValue::UseFloat);
+        if (client == m_clients.last()) {
+            for (const QJsonObject& value : valueList) {
+                QCborValue v = QCborValue::fromJsonValue(value);
+                QByteArray dataToSend = v.toCbor(QCborValue::UseFloat);
+                client->sendBinaryMessage(dataToSend);
+                qint64 bytes = client->bytesToWrite();
+                // qDebug << " bytes to write = " << bytes << "\n" ;
+                // qDebug() << "Response:" << value;
+                m_totalBytes += bytes;
+            }
+        } else {
+            // only one client have a right to receive stream messages, other - denied
+            QJsonObject answer;
+            answer["type"] = "sys";
+            answer["status"] = "2"; // disable web client
 
-            //      client->sendTextMessage(strJson);
-            client->sendBinaryMessage(dataToSend);
-            qint64 bytes = client->bytesToWrite();
-//          qDebug << " bytes to write = " << bytes << "\n" ;
-//          qDebug() << "Response:" << value;
-            m_totalBytes += bytes;
+            QJsonDocument doc(answer);
+
+            QString strJson(doc.toJson(QJsonDocument::Compact));
+            client->sendTextMessage(strJson);
         }
+
 
         client->flush();
     }
+
 
     return 0;
 }
