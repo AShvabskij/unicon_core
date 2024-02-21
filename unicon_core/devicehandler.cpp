@@ -240,6 +240,55 @@ long DeviceHandler::requestDevice(Device& device)
     return _return_OK;
 }
 
+long DeviceHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamList *out)
+{
+    Q_ASSERT(out);
+
+    DDE_GET_PARAMS_HEADER header;
+
+    header.device_id = static_cast<uint16_t>(deviceId.id);
+    header.module_id = static_cast<uint16_t>(moduleId);
+    header.param_id = 0;
+
+    _dde_func_return_t res = (*m_dde)(deviceId.type)->get_params_header(header);
+
+    if (res <= _return_FAIL) return res;
+
+    int pId = 1;
+    int count = 0;
+    while (count < header.el_count && pId <= PARAMS_ID_MAX) {
+        GLIO_ELEMENT_DESCR& elem = header.el_descr[pId];
+        Param p;
+
+        if (elem.id != 0) {
+            p.ID = {deviceId, moduleId, elem.id};
+            p.name = elem.name;
+            p.desc = elem.descr;
+            p.valueUnit = elem.dim;
+            p.writable = elem.writable;
+            p.valueFormat = elem.format;
+            p.valueScale = elem.scale;
+
+            for (int ind = 0; ind < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++ind) {
+                if (elem.txtValues[ind] != nullptr) {
+                    p.valueTexts[elem.txtSubIndexes[ind]] = elem.txtValues[ind];
+                }
+            }
+        } else {
+            p.ID = {deviceId, moduleId, pId};
+            p.name = "______res_____";
+            p.writable = 0;
+            p.valueFormat = 0;
+        }
+
+        *out << p;
+        count++;
+        pId++;
+    }
+
+    return _return_OK;
+}
+
 QString DeviceHandler::getDeviceName(const DevID& deviceId)
 {
     QString retName = "";
@@ -302,6 +351,7 @@ void DeviceHandler::handleReqModuleHeader(SysType sysType, int deviceId, int mod
     module.desc = header.el_descr[0].descr;
 
     int ind = 0;
+    int pId = 1;
     int count = 0;
     while (count < header.el_count && ind < PARAMS_COUNT_MAX) {
         ind++;
@@ -311,7 +361,33 @@ void DeviceHandler::handleReqModuleHeader(SysType sysType, int deviceId, int mod
             continue;
         }
 
-        module.params << elem.id;
+        Param p;
+
+        if (elem.id != 0) {
+            p.ID = {deviceId, moduleId, elem.id};
+            p.name = elem.name;
+            p.desc = elem.descr;
+            p.valueUnit = elem.dim;
+            p.writable = elem.writable;
+            p.valueFormat = elem.format;
+            p.valueScale = elem.scale;
+
+            for (int ind = 0; ind < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++ind) {
+                if (elem.txtValues[ind] != nullptr) {
+                    p.valueTexts[elem.txtSubIndexes[ind]] = elem.txtValues[ind];
+                }
+            }
+        } else {
+            p.ID = {deviceId, moduleId, pId};
+            p.name = "______res_____";
+            p.writable = 0;
+            p.valueFormat = 0;
+        }
+
+        // *out << p;
+        pId++;
+
+        module.params << p;
         count++;
     }
 
@@ -381,8 +457,8 @@ QJsonObject DeviceHandler::createResponse(int requestId, const Module& module)
     body["desc"] = module.desc;
 
     QJsonArray params;
-    for (int paramId : module.params) {
-        params << paramId;
+    for (Param p : module.params) {
+        params << p.toJsonObject();
     }
 
     body["params"] = params;

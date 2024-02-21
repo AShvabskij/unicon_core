@@ -744,30 +744,7 @@ QJsonObject ParamsHandler::createHeaderObj(int requestId, const ParamList& param
     QJsonArray body;
 
     for (const Param& param : params) {
-        QJsonObject obj;
-        obj["device_id"] = param.ID.devId.id;
-        obj["module_id"] = param.ID.moduleId;
-        obj["param_id"] = param.ID.id;
-        obj["u_id"] = param.ID.uid();
-
-        obj["name"] = param.name;
-        obj["desc"] = param.desc;
-        obj["value_unit"] = param.valueUnit;
-        obj["value_format"] = param.valueFormat;
-        obj["value_scale"] = double(param.valueScale);
-        obj["rw"] = param.writable ? "W" : "R";
-        obj["value_texts"] = [](const QMap<int, QString>& txtValues ) {
-            QJsonObject json;
-            QMapIterator<int, QString> i(txtValues);
-            while (i.hasNext()) {
-                i.next();
-                json.insert(QString::number(i.key()), i.value());
-            }
-            return json;
-        }(param.valueTexts);
-
-        body << obj;
-
+        body << param.toJsonObject();
     }
 
     QJsonObject res;

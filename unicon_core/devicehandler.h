@@ -3,40 +3,6 @@
 
 #include "basereqhandler.h"
 
-struct Device
-{
-    DevID ID = {SysType::Undefined, 0};
-    QString name; // name of similar devices : DEVICE_NAME + HW_REV + SW_REV, f.e. "DCDC00010002"
-    QString instanceName; // unique device instance name: name + ID
-    QString desc;
-    SysType sysType  = Undefined;
-    QVector<int> modules;
-
-    Device() = default;
-
-    Device(DevID ID) {
-        this->ID = ID;
-        sysType = ID.type;
-    }
-
-    bool isValid() {
-        return ID.isValid();
-    }
-    bool isEmpty() {
-        return modules.count() == 0;
-    }
-};
-typedef QVector<Device> DeviceList;
-
-struct Module
-{
-    int id = 0;
-    int deviceId = 0;
-    QString name;
-    QString desc;
-    QVector<int> params;
-};
-
 struct SystemStatus
 {
     QMap<SysType, bool> statusList;
