@@ -26,7 +26,6 @@ private:
     _dde_func_return_t mutex_init();
     int get_page_state(uint16_t id, uint8_t pageNum);
     _dde_func_return_t set_page_state(uint16_t id, uint8_t pageNum, uint8_t state);
-    bool isValidOscChannel(const GLIO_OSC_CHANNEL& ch);
     bool isValidOscChannel(const OSC_CHANNEL& ch);
 
 };

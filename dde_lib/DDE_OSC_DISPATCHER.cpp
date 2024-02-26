@@ -33,10 +33,10 @@ _dde_func_return_t DDE_OSC_DISPATCHER::open(uint16_t oscId)
     return m_osc->open(oscId);
 }
 
-_dde_func_return_t DDE_OSC_DISPATCHER::close()
+_dde_func_return_t DDE_OSC_DISPATCHER::close(uint16_t oscId)
 {
     assert(m_osc);
-    return m_osc->close();
+    return m_osc->close(oscId);
 }
 
 _dde_func_return_t DDE_OSC_DISPATCHER::get(DDE_OSC_HEADER& p)

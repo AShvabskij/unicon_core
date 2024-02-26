@@ -97,14 +97,16 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
 
 _dde_func_return_t DDE_OSC::open(uint16_t device_id)
 {
+    DDE_OSC_HEADER header;
+
     _dde_func_return_t res = _return_OK;
-    m_header = DDE_OSC_HEADER();
-    m_header.device_id = device_id;
-    res = m_headerSrv->get_header(device_id, m_header);
+    header = DDE_OSC_HEADER();
+    header.device_id = device_id;
+    res = m_headerSrv->get_header(device_id, header);
 
     if (res != _return_OK) return res;
 
-    assert(m_header.device_id == device_id);
+    assert(header.device_id == device_id);
 
     static int colors[4];
     colors[0] = 0xffff00;
@@ -113,18 +115,18 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
     colors[3] = 0x01ffff;
 
     for (int i = 0; i < OSC_MAX_VARS; i++) {
-        if (m_header.channels[i].var.color != 0) {
+        if (header.channels[i].var.color != 0) {
             continue;
         }
 
-        if (m_header.channels[i].var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
-            m_header.channels[i].var.color = colors[0];
+        if (header.channels[i].var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
+            header.channels[i].var.color = colors[0];
         } else {
-            m_header.channels[i].var.color = colors[i % 4];
+            header.channels[i].var.color = colors[i % 4];
         }
     }
 
-    res = m_headerSrv->set_header(device_id, m_header);
+    res = m_headerSrv->set_header(device_id, header);
     if (res != _return_OK) return res;
 
     OSC_STATE state = m_headerSrv->get_state(device_id);
@@ -137,32 +139,29 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
     return res;
 }
 
-_dde_func_return_t DDE_OSC::close()
+_dde_func_return_t DDE_OSC::close(uint16_t devId)
 {
-    uint16_t devId = m_header.device_id;
     OSC_STATE state = m_headerSrv->get_state(devId);
     state.user_enabled = false;
     m_headerSrv->set_state(devId, state);
 
     _dde_func_return_t res = m_dataSrv->close();
 
-    m_header = DDE_OSC_HEADER();
     return res;
 }
 
 _dde_func_return_t DDE_OSC::get(DDE_OSC_HEADER& h)
 {
     _dde_func_return_t res = _return_OK;
-    if (m_header.device_id != h.device_id) {
-        res = open(h.device_id); // the device has changed, need to open a new one
-        if (res != _return_OK) return res;
+    OSC_STATE state = m_headerSrv->get_state(h.device_id);
+
+    if (state.user_enabled == false) {
+        res = open(h.device_id); // prepare device to read/write osc data
+        if (res != _return_OK)
+            return res;
     }
 
-    res = m_headerSrv->get_header(m_header.device_id, m_header); // header should be updated
-
-    if (res != _return_OK) return res;
-
-    memcpy(&h, &m_header, sizeof (DDE_OSC_HEADER));
+    res = m_headerSrv->get_header(h.device_id, h);
 
     return res;
 }
@@ -172,12 +171,11 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     _dde_func_return_t res = _return_OK;
     uint16_t devId = dat.device_id;
 
-    if (m_header.device_id != devId || dat.header_updated == 1) {
-        m_header.device_id = devId;
-        res = m_headerSrv->get_header(devId, m_header);
+    OSC_SETTING settings;
+    m_headerSrv->get_settings(devId, settings);
+    if (settings.channel_count == 0) {
+        cout << DDE_LOG_PREFIX << "Get data error, channel count = 0" << endl;
     }
-
-    assert(m_header.device_id == devId);
 
     int pageNum = m_headerSrv->get_page_ready_to_read(devId);
     dat.data_length = 0;
@@ -187,13 +185,15 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
         return _return_Busy;
     }
 
-    cout << DDE_LOG_PREFIX << "Reading page = " << std::to_string(pageNum) << endl;
+    cout << DDE_LOG_PREFIX << "Read data from page = " << std::to_string(pageNum) 
+        << ", length = " << dat.data_length
+        << ", count = " << settings.channel_count << endl;
 
     res = m_dataSrv->open(devId, pageNum, false);
     if (res != _return_OK) return res;
 
     bool eof = false;
-    res = m_dataSrv->readNextData(dat, m_header.settings.channel_count, eof);
+    res = m_dataSrv->readNextData(dat, settings.channel_count, eof);
     dat.next_ready = (res == _return_OK) && !eof;
 
     if (res != _return_OK || eof) {
@@ -219,16 +219,15 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
         clear_pages(devId);
     }
 
-    if (m_header.device_id != dat.device_id  || dat.header_updated == 1) {
-        m_header.device_id = devId;
-        res = m_headerSrv->get_header(devId, m_header);
+    if (dat.data_length == 0) return _return_OK; // there is nothing to save
+
+    OSC_SETTING settings;
+    m_headerSrv->get_settings(devId, settings);
+    if (settings.channel_count == 0) {
+        cout << DDE_LOG_PREFIX << "Set data error, channel count = 0" << endl;
     }
 
-    assert(m_header.device_id == devId);
-
     if (res != _return_OK) return res;
-
-    if(dat.data_length == 0) return _return_OK; // there is nothing to save
 
     int pageNum = m_headerSrv->get_page_ready_to_write(devId);
     if (pageNum < 0) { // there is not free pages
@@ -241,13 +240,15 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
         return _return_FAIL;
     }
 
-    cout << DDE_LOG_PREFIX << "Writing page = " << pageNum << endl;
+    cout << DDE_LOG_PREFIX << "Write data to page = " << std::to_string(pageNum)
+        << ", length = " << dat.data_length
+        << ", count = " << settings.channel_count << endl;
 
     res = m_dataSrv->open(devId, pageNum, true);
     if (res != _return_OK) return res;
 
     bool get_eof = false;
-    res = m_dataSrv->addData(dat, m_header.settings.channel_count, get_eof);
+    res = m_dataSrv->addData(dat, settings.channel_count, get_eof);
 
     if (res != _return_OK) return res;
 
