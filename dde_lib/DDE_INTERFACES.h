@@ -63,8 +63,8 @@ public:
     virtual ~IDDE_OSC() {}
 
     virtual _dde_func_return_t init(const char* system_type) = 0;
-    virtual _dde_func_return_t open(uint16_t id) = 0;
-    virtual _dde_func_return_t close() = 0;
+    virtual _dde_func_return_t open(uint16_t device_id) = 0;
+    virtual _dde_func_return_t close(uint16_t device_id) = 0;
 
     virtual _dde_func_return_t get(DDE_OSC_HEADER&) = 0;
     virtual _dde_func_return_t set(const DDE_OSC_HEADER&) = 0;
@@ -82,7 +82,7 @@ public:
 
     virtual _dde_func_return_t init(const char* ) { return _return_OK;};
     virtual _dde_func_return_t open(uint16_t ) { return _return_OK; };
-    virtual _dde_func_return_t close() { return _return_OK; };
+    virtual _dde_func_return_t close(uint16_t) { return _return_OK; };
 
     virtual _dde_func_return_t get(DDE_OSC_HEADER& ) { return _return_OK; };
     virtual _dde_func_return_t set(const DDE_OSC_HEADER& ) { return _return_OK; };

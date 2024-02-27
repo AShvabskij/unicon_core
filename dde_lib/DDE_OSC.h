@@ -14,7 +14,7 @@ public:
 
     virtual _dde_func_return_t init(const char* /*system_type*/);
     virtual _dde_func_return_t open(uint16_t device_id);
-    virtual _dde_func_return_t close();
+    virtual _dde_func_return_t close(uint16_t device_id);
 
     virtual _dde_func_return_t get(DDE_OSC_HEADER& h);
     virtual _dde_func_return_t get(DDE_GET_OSC_DATA& dat);
@@ -29,6 +29,5 @@ private:
 
     IOscPageService* m_dataSrv = nullptr;
     IOscHeaderService* m_headerSrv = nullptr;
-    DDE_OSC_HEADER m_header; // current header to read osc data. todo: May be it is reduntant and could be removed
     std::string m_sysName = "";
 };
