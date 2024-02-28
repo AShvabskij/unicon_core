@@ -245,7 +245,7 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
         if (count >= MIN_GROUP_ELEMENTS_REQUESTED) {
             bool captureModule = false;
             DDE_GET_PARAMS_HEADER module;
-            ret = getModuleParams(devID, moduleId, module);
+            ret = getModuleHeader(devID, moduleId, module);
 
             Q_ASSERT(module.el_count > 0 && ret == _return_OK);
 
@@ -576,7 +576,7 @@ ParamValueList ParamsHandler::getModuleValues(const DevID &devID, int moduleId, 
     int module_elCount = 0;
     if (!m_capturedModules.contains(moduleId)) {
         DDE_GET_PARAMS_HEADER modHeader;
-        res = getModuleParams(devID, moduleId, modHeader);
+        res = getModuleHeader(devID, moduleId, modHeader);
         module_elCount = modHeader.el_count;
     } else {
         module_elCount = m_capturedModules[moduleId].el_count;
@@ -681,7 +681,7 @@ long ParamsHandler::getParamHeader(const ParamID& paramId, Param *out)
     return _return_FAIL;
 }
 
-long ParamsHandler::getModuleParams(const DevID& devId, int moduleId, DDE_GET_PARAMS_HEADER& ret)
+long ParamsHandler::getModuleHeader(const DevID& devId, int moduleId, DDE_GET_PARAMS_HEADER& ret)
 {
 
     memset(&ret, 0, sizeof(DDE_GET_PARAMS_HEADER));
