@@ -2,46 +2,7 @@
 #define PARAMSHANDLER_H
 
 #include "basereqhandler.h"
-
-struct ParamID
-{
-    DevID devId;
-    int moduleId;
-    int id;
-
-    bool isValid() const {
-        return id != 0 && moduleId != 0 && devId.isValid();
-    }
-
-    int uid() const {
-        return (devId.id << 12) + (moduleId << 6) + id;
-    }
-
-    QString logStr() const {
-        return QString("device id = %0, moduleId = %1, paramId = %2").arg(devId.id).arg(moduleId).arg(id);
-    }
-};
-
-bool operator==(const ParamID& a, const ParamID& b);
-
-struct Param
-{
-    ParamID ID = {DevID(), 0, 0};
-
-    QString name = "";
-    QString desc = "";
-    QString valueUnit = "";
-    QMap<int, QString> valueTexts;
-    int valueFormat = 0;
-    float valueScale = 0.0;
-    bool writable = false;
-
-    bool operator == (const Param& p) const {
-        return this->ID == p.ID;
-    }
-};
-
-typedef QVector<Param> ParamList;
+#include "device_types.h"
 
 struct ParamValue
 {
@@ -118,7 +79,6 @@ private:
     ParamValueList getModuleValues(const DevID &devId, int moduleId, long &isOk);
 
     long getParamHeader(const ParamID& paramId, Param *out);
-    long getParamHeaders(const DevID& deviceId, int moduleId, ParamList *out);
     long setParamValue(const ParamValue &value);
     long getModuleHeader(const DevID& devId, int moduleId, DDE_GET_PARAMS_HEADER& ret);
 
