@@ -93,16 +93,13 @@ void ParamsHandler::handleGetHeader(const QJsonObject &request)
     ParamList params;
     long ret = true;
 
-    DevID devID = {sysType, static_cast<quint16>(deviceId)};
-    if (paramId == 0) {
-        ret = getParamHeaders(devID, moduleId, &params);
-    } else {
-        Param p;
-        p.ID = {devID, moduleId, paramId};
-        ret = getParamHeader(p.ID, &p);
-        if (ret > 0) {
-            params << p;
-        }
+    DevID devID = {sysType, static_cast<DevInd>(deviceId)};
+    Param p;
+    p.ID = {devID, moduleId, paramId};
+
+    ret = getParamHeader(p.ID, &p);
+    if (ret > 0) {
+        params << p;
     }
 
     QJsonObject response = createHeaderObj(requestId, params);
@@ -245,28 +242,31 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
             }
         }
 
-        DDE_GET_PARAMS_HEADER moduleHeader;
-        ret = getModuleHeader(devID, moduleId, moduleHeader);
-
-        if (ret != _return_OK) {
-            return;
-        }
-
         if (count >= MIN_GROUP_ELEMENTS_REQUESTED) {
+            bool captureModule = false;
+            DDE_GET_PARAMS_HEADER module;
+            ret = getModuleParams(devID, moduleId, module);
+
+            Q_ASSERT(module.el_count > 0 && ret == _return_OK);
+
             switch (sysType) {
             case SysType::UAVCAN:
-                if (count == moduleHeader.el_count) { // только если запрашивается целиком группа
-                    m_capturedModules[moduleId] = moduleHeader;
+                if (count == module.el_count) { // только если запрашивается целиком группа
+                    captureModule = true;
                 } break;
             case SysType::MODBUS:
             case SysType::CONNEX_MVCP:
-                if (count >= (moduleHeader.el_count/2)) {  // if more than a half of the group is requestied
-                    m_capturedModules[moduleId] = moduleHeader;
+                if (count >= (module.el_count/2)) {  // if more than a half of the group is requestied
+                    captureModule = true;
                 }
             default:
-                if (count >= (moduleHeader.el_count/3)) {  // if more than a third of the group is requestied
-                    m_capturedModules[moduleId] = moduleHeader;
+                if (count >= (module.el_count/3)) {  // if more than a third of the group is requestied
+                    captureModule = true;
                 }
+            }
+
+            if (captureModule) {
+                m_capturedModules[moduleId] = module;
             }
         }
     }
@@ -576,7 +576,7 @@ ParamValueList ParamsHandler::getModuleValues(const DevID &devID, int moduleId, 
     int module_elCount = 0;
     if (!m_capturedModules.contains(moduleId)) {
         DDE_GET_PARAMS_HEADER modHeader;
-        res = getModuleHeader(devID, moduleId, modHeader);
+        res = getModuleParams(devID, moduleId, modHeader);
         module_elCount = modHeader.el_count;
     } else {
         module_elCount = m_capturedModules[moduleId].el_count;
@@ -678,54 +678,7 @@ long ParamsHandler::getParamHeader(const ParamID& paramId, Param *out)
     return _return_FAIL;
 }
 
-long ParamsHandler::getParamHeaders(const DevID &deviceId, int moduleId, ParamList *out)
-{
-    Q_ASSERT(out);
-
-    m_header->device_id = static_cast<uint16_t>(deviceId.id);
-    m_header->module_id = static_cast<uint16_t>(moduleId);
-    m_header->param_id = 0;
-
-    _dde_func_return_t res = (*m_dde)(deviceId.type)->get_params_header(*m_header);
-
-    if (res <= _return_FAIL) return res;
-
-    int pId = 1;
-    int count = 0;
-    while (count < m_header->el_count && pId <= PARAMS_ID_MAX) {
-        GLIO_ELEMENT_DESCR& elem = m_header->el_descr[pId];
-        Param p;
-
-        if (elem.id != 0) {
-            p.ID = {deviceId, moduleId, elem.id};
-            p.name = elem.name;
-            p.desc = elem.descr;
-            p.valueUnit = elem.dim;
-            p.writable = elem.writable;
-            p.valueFormat = elem.format;
-            p.valueScale = elem.scale;
-
-            for (int ind = 0; ind < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++ind) {
-                if (elem.txtValues[ind] != nullptr) {
-                    p.valueTexts[elem.txtSubIndexes[ind]] = elem.txtValues[ind];
-                }
-            }
-        } else {
-            p.ID = {deviceId, moduleId, pId};
-            p.name = "______res_____";
-            p.writable = 0;
-            p.valueFormat = 0;
-        }
-
-        *out << p;
-        count++;
-        pId++;
-    }
-
-    return _return_OK;
-}
-
-long ParamsHandler::getModuleHeader(const DevID& devId, int moduleId, DDE_GET_PARAMS_HEADER& ret)
+long ParamsHandler::getModuleParams(const DevID& devId, int moduleId, DDE_GET_PARAMS_HEADER& ret)
 {
 
     memset(&ret, 0, sizeof(DDE_GET_PARAMS_HEADER));

@@ -79,9 +79,8 @@ private:
     ParamValueList getModuleValues(const DevID &devId, int moduleId, long &isOk);
 
     long getParamHeader(const ParamID& paramId, Param *out);
-    long getParamHeaders(const DevID& deviceId, int moduleId, ParamList *out);
     long setParamValue(const ParamValue &value);
-    long getModuleHeader(const DevID& devId, int moduleId, DDE_GET_PARAMS_HEADER& ret);
+    long getModuleParams(const DevID& devId, int moduleId, DDE_GET_PARAMS_HEADER& ret);
 
     long convertValue(const ParamID &paramId, const GLIO_ELEMENT_VALUE &el, ParamValue *out);
     QJsonObject createHeaderObj(int requestId, const ParamList &params);
