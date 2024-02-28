@@ -89,6 +89,8 @@ void Core::start()
 
 void Core::thread_proc(SysType sysType)
 {
+    Q_UNUSED(sysType);
+
     QThread::msleep(1000);
 
     while (1)

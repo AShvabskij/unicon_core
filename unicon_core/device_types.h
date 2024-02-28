@@ -102,6 +102,18 @@ struct Param
 
 typedef QVector<Param> ParamList;
 
+struct Module
+{
+    int id = 0;
+    int deviceId = 0;
+    QString name;
+    QString desc;
+    ParamList params;
+};
+
+typedef QVector<Module> ModuleList;
+
+
 struct Device
 {
     DevID ID = {SysType::Undefined, 0};
@@ -109,7 +121,7 @@ struct Device
     QString instanceName; // unique device instance name: name + ID
     QString desc;
     SysType sysType  = Undefined;
-    QVector<int> modules;
+    ModuleList modules;
 
     Device() = default;
 
@@ -126,14 +138,5 @@ struct Device
     }
 };
 typedef QVector<Device> DeviceList;
-
-struct Module
-{
-    int id = 0;
-    int deviceId = 0;
-    QString name;
-    QString desc;
-    ParamList params;
-};
 
 #endif // DEVICE_TYPES_H

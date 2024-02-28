@@ -258,7 +258,7 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
             case SysType::CONNEX_MVCP:
                 if (count >= (module.el_count/2)) {  // if more than a half of the group is requestied
                     captureModule = true;
-                }
+                } break;
             default:
                 if (count >= (module.el_count/3)) {  // if more than a third of the group is requestied
                     captureModule = true;

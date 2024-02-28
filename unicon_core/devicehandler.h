@@ -26,7 +26,9 @@ private:
     void handleReqDeviceHeader(SysType sysType, int deviceId, int requestId);
     void handleReqModuleHeader(SysType sysType, int deviceId, int moduleId, int requestId);
 
-    long requestDevice(Device& device);
+    long requestDevice(SysType sysType, DevInd deviceId, Device& device);
+    long requestModule(SysType sysType, DevInd deviceId, int moduleId, Module& module);
+
     QString getDeviceName(const DevID &deviceId);
     QString getDeviceInstanceName(const DevID& deviceId);
     QString getDeviceDescr(const DevID& deviceId);
