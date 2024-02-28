@@ -665,10 +665,13 @@ long ParamsHandler::getParamHeader(const ParamID& paramId, Param *out)
             out->valueFormat = elem.format;
             out->valueScale = elem.scale;
 
-            for (int ind = 0; ind < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++ind) {
-                if (elem.txtValues[ind] != nullptr) {
-                    out->valueTexts[elem.txtSubIndexes[ind]] = elem.txtValues[ind];
+            for (int txtInd = 0; txtInd < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++txtInd) {
+                char* txt = elem.txtValues[txtInd];
+                if (txt == nullptr) {
+                    break;
                 }
+
+                out->valueTexts[elem.txtSubIndexes[txtInd]] = txt;
             }
 
             return _return_OK;

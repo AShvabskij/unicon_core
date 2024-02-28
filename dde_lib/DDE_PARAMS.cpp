@@ -204,6 +204,8 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
     if (p.param_id == 0) {
         int el_count = p.el_count;
         for (int ii = 0; ii < el_count; ii++) {
+            std::fill_n(p.el_descr[ii].txtValues, DDE_PARAMS_TXTVALUES_MAX_COUNT, nullptr);
+
             if (p.el_descr[ii].format == 5) {
                 p.param_id = ii;
                 res = _paramDescr->get(&p, db_type::txt);
@@ -219,8 +221,10 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
         p.param_id = 0;
     }
      else  {
-       if (p.el_descr[0].format == 5) //Single element always return in 0 item
-       res = _paramDescr->get(&p, db_type::txt);
+        std::fill_n(p.el_descr[0].txtValues, DDE_PARAMS_TXTVALUES_MAX_COUNT, nullptr);
+
+        if (p.el_descr[0].format == 5) //Single element always return in 0 item
+            res = _paramDescr->get(&p, db_type::txt);
 
     }
 

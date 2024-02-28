@@ -254,16 +254,15 @@ long DeviceHandler::requestModule(SysType sysType, DevInd deviceId, int moduleId
     module.name = header.el_descr[0].name;
     module.desc = header.el_descr[0].descr;
 
-    int ind = 0;
     int pId = 1;
-    int count = 0;
-    while (count < header.el_count && ind < PARAMS_COUNT_MAX) {
-        ind++;
-        GLIO_ELEMENT_DESCR& elem = header.el_descr[ind];
+    for (int ind = 0, count = 0; ind <= PARAMS_ID_MAX && count < header.el_count; ++ind) {
 
-        if (elem.id == 0) {
-            continue;
+        if (ind == 0) {
+            count++;
+            continue; // zero index is system reserved parameter
         }
+
+        GLIO_ELEMENT_DESCR& elem = header.el_descr[ind];
 
         Param p;
 
@@ -276,11 +275,16 @@ long DeviceHandler::requestModule(SysType sysType, DevInd deviceId, int moduleId
             p.valueFormat = elem.format;
             p.valueScale = elem.scale;
 
-            for (int ind = 0; ind < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++ind) {
-                if (elem.txtValues[ind] != nullptr) {
-                    p.valueTexts[elem.txtSubIndexes[ind]] = elem.txtValues[ind];
+            for (int txtInd = 0; txtInd < DDE_PARAMS_TXTVALUES_MAX_COUNT; ++txtInd) {
+                char* txt = elem.txtValues[txtInd];
+                if (txt == nullptr) {
+                    break;
                 }
+
+                p.valueTexts[elem.txtSubIndexes[txtInd]] = txt;
             }
+
+            count++; // count only assigned params with id != 0
         } else {
             p.ID = {devID, moduleId, pId};
             p.name = "______res_____";
@@ -291,7 +295,6 @@ long DeviceHandler::requestModule(SysType sysType, DevInd deviceId, int moduleId
         pId++;
 
         module.params << p;
-        count++;
     }
 
     return _return_OK;
