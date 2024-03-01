@@ -186,8 +186,8 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     }
 
     cout << DDE_LOG_PREFIX << "Read data from page = " << std::to_string(pageNum) 
-        << ", length = " << std::to_string((dat.data_length)
-        << ", count = " << std::to_string(settings.channel_count) << endl;
+        << ", length = " << (dat.data_length)
+        << ", count = " << static_cast<int>(settings.channel_count) << endl;
 
     res = m_dataSrv->open(devId, pageNum, false);
     if (res != _return_OK) return res;
@@ -241,8 +241,8 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
     }
 
     cout << DDE_LOG_PREFIX << "Write data to page = " << std::to_string(pageNum)
-        << ", length = " << std::to_string(dat.data_length)
-        << ", count = " << std::to_string(settings.channel_count) << endl;
+        << ", length = " << dat.data_length
+        << ", count = " << static_cast<int>(settings.channel_count) << endl;
 
     res = m_dataSrv->open(devId, pageNum, true);
     if (res != _return_OK) return res;
