@@ -7,7 +7,7 @@ const QString CMD_SYSTEM_STATUS = "system_status";
 const QString CMD_SYSTEM_INIT = "system_init";
 const QString CMD_DEVICE_LINKS = "device_links";
 const QString CMD_MODULE_HEADER = "module_header";
-const QString CMD_TYPE = "get";
+const QString CMD_TYPE_GET = "get";
 
 bool operator==(const DevID& a, const DevID& b) {
     return a.type == b.type &&
@@ -24,21 +24,21 @@ int DeviceHandler::handle(const QJsonObject& request)
     QString cmdName = cmdObj.value("name").toString();
     QString cmdType = cmdObj.value("type").toString();
 
-    if (cmdName == CMD_DEVICE_HEADER && cmdType == CMD_TYPE) {
+    if (cmdName == CMD_DEVICE_HEADER && cmdType == CMD_TYPE_GET) {
         handleDeviceHeader(request);
-    } else if (cmdName == CMD_MODULE_HEADER && cmdType == CMD_TYPE) {
+    } else if (cmdName == CMD_MODULE_HEADER && cmdType == CMD_TYPE_GET) {
         handleModuleHeader(request);
-    } else if (cmdName == CMD_DEVICE_HEADERS && cmdType == CMD_TYPE) {
+    } else if (cmdName == CMD_DEVICE_HEADERS && cmdType == CMD_TYPE_GET) {
         int requestId = request.value("request_id").toInt();
         SysType sysType = sysTypeId(request);
 
         handleReqDevices(sysType, requestId);
-    } else if (cmdName == CMD_SYSTEM_STATUS && cmdType == CMD_TYPE) {
+    } else if (cmdName == CMD_SYSTEM_STATUS && cmdType == CMD_TYPE_GET) {
         handleSystemStatus(request);
     } else if (cmdName == CMD_SYSTEM_INIT) {
         handleSystemInit(request);
         BaseReqHandler::handle(request); // handle by a next handler
-    } else if (cmdName == CMD_DEVICE_LINKS && cmdType == CMD_TYPE) {
+    } else if (cmdName == CMD_DEVICE_LINKS && cmdType == CMD_TYPE_GET) {
         handleDeviceLinks(request);
     } else {
         BaseReqHandler::handle(request);

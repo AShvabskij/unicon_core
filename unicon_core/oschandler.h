@@ -23,11 +23,13 @@ private slots:
 
 private:
     int handleGetHeader(const QJsonObject &request);
+    int handleSetHeader(const QJsonObject &request);
     int handleGetChannel(const QJsonObject &request);
     int handleOpenStream(const QJsonObject &request);
     int handleCloseStream(const QJsonObject &request);
 
     long getHeader(const DevID& deviceID, int oscId, OscType::OscHeader *out);
+    long setHeader(const DevID& deviceID, const OscType::OscSettings &settings);
 
     QJsonObject createHeaderObj(int requestId, const OscType::OscHeader& header);
     QJsonObject createChannelObj(int requestId, const OscType::OscChannelDescr& ch);

@@ -16,7 +16,7 @@ namespace OscType {
     const int MAX_DATA_COUNT = 1000000;
 
     enum TriggerModeEnum {
-        Single, Continues, Stream
+        Single = 1, Continues = 2, Stream = 3
     };
 
     enum ReasonEnum {
@@ -212,7 +212,8 @@ namespace OscType {
     {
         quint16 oscId;
 
-        int timeResolution_us; // 1000 = 1ms, time to calculate value times, decresing data timestamp
+        int timeResolution_us; // 1000 = 1ms, time to calculate value times
+        int displayResolution_ms = 10000; // 1000 = 1s, time for X axis to display waveforms
         TriggerModeEnum trigerMode;
         ReasonEnum reason;
         QDateTime trigDTime; // osc starting time

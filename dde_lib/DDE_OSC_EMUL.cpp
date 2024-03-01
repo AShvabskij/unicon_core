@@ -7,11 +7,13 @@ const int CHANNELS_MAX = 16;
 const int BUFFER_MAX = 5000;
 const int DATA_YELD_INTERVAL_MSC = 100;
 const int RESOLUTION_MKS = (DATA_YELD_INTERVAL_MSC * 1000) / BUFFER_MAX;
+const int DISPALY_RESOLUTION_MS = 10000;
 
 _dde_func_return_t DDE_OSC_EMUL::get(DDE_OSC_HEADER& p)
 {
     p.settings.reason = 0;
     p.settings.time_resolution_us = RESOLUTION_MKS;
+    p.settings.display_resolution_ms = DISPALY_RESOLUTION_MS;
 
     p.settings.trig_time = std::time(nullptr);
     m_lastDataTimeNs = systemTimeNs();

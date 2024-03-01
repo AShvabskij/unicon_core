@@ -66,7 +66,8 @@ union OSC_DATA
 
 struct OSC_SETTING
 {
-    uint32_t time_resolution_us = 0; // 1000 = 1ms
+    uint32_t time_resolution_us = 0; // 1000 = 1ms, time to calculate value times
+    uint32_t display_resolution_ms = 0; // // 1000 = 1s, time for X axis to display waveforms
     uint32_t triger_mode = 0; //single, continues, stream
     uint32_t reason = 0;
     time_t trig_time = 0; // osc starting time

@@ -6,7 +6,7 @@
 #include <iostream>
 
 const QString CMD_PARAMS_HEADER = "param_header";
-const QString CMD_TYPE = "get";
+const QString CMD_TYPE_GET = "get";
 const QString CMD_PARAMS_DATA = "param_data";
 const QString CMD_SYSTEM_INIT = "system_init";
 
@@ -45,7 +45,7 @@ int ParamsHandler::handle(const QJsonObject &request)
     QString cmdName = cmdObj.value("name").toString();
     QString cmdType = cmdObj.value("type").toString();
 
-    if (cmdName == CMD_PARAMS_HEADER && cmdType == CMD_TYPE) {
+    if (cmdName == CMD_PARAMS_HEADER && cmdType == CMD_TYPE_GET) {
         handleGetHeader(request);
 
     } else if (cmdName == CMD_PARAMS_DATA) {

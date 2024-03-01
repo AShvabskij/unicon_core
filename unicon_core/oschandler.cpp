@@ -6,7 +6,8 @@ const QString CMD_OSC_HEADER = "osc_header";
 const QString CMD_OSC_CHANNEL = "osc_channel";
 const QString CMD_TYPE_OPEN_STREAM = "open_stream";
 const QString CMD_TYPE_CLOSE_STREAM = "close_stream";
-const QString CMD_TYPE = "get";
+const QString CMD_TYPE_GET = "get";
+const QString CMD_TYPE_SET = "set";
 const QString CMD_OSC_DATA = "osc_data";
 
 using namespace OscType;
@@ -29,6 +30,7 @@ QJsonObject headerToJson(const OscHeader& h) {
     res["name"] = h.name;
     res["trig_time"] = h.settings.trigDTime.toMSecsSinceEpoch();
     res["resolution_us"] = h.settings.timeResolution_us;
+    res["display_resolution_ms"] = h.settings.displayResolution_ms;
 
     QJsonArray channelsObj;
     for (quint8 chInd : h.analogChannels.keys()) {
@@ -37,6 +39,7 @@ QJsonObject headerToJson(const OscHeader& h) {
         obj["ch_num"] = ch.channelNum;
         obj["var_id"] = ch.varId;
         obj["name"] = ch.varName;
+//      obj["user_name"] = ch.userName;
         obj["scale"] = ch.scale;
         obj["min"] = ch.min;
         obj["max"] = ch.max;
@@ -78,10 +81,13 @@ int OscHandler::handle(const QJsonObject &request)
     QString cmdName = cmdObj.value("name").toString();
     QString cmdType = cmdObj.value("type").toString();
 
-    if (cmdName == CMD_OSC_HEADER && cmdType == CMD_TYPE) {
+    if (cmdName == CMD_OSC_HEADER && cmdType == CMD_TYPE_GET) {
         return handleGetHeader(request);
 
-    } else if (cmdName == CMD_OSC_CHANNEL && cmdType == CMD_TYPE) {
+    } else if (cmdName == CMD_OSC_HEADER && cmdType == CMD_TYPE_SET) {
+        return handleSetHeader(request);
+
+    } else if (cmdName == CMD_OSC_CHANNEL && cmdType == CMD_TYPE_GET) {
         return handleGetChannel(request);
 
     } else if (cmdName == CMD_OSC_DATA) {
@@ -111,6 +117,7 @@ void OscHandler::onReceivedData(quint16 ind)
 
 int OscHandler::handleGetHeader(const QJsonObject &request)
 {
+    long ret = _return_OK;
     int requestId = request.value("request_id").toInt();
     SysType sysType = sysTypeId(request);
     QJsonObject cmdBody = request.value("body").toObject();
@@ -122,12 +129,73 @@ int OscHandler::handleGetHeader(const QJsonObject &request)
     int deviceId = cmdBody.value("device_id").toInt();
     int oscId = cmdBody.value("osc_id").toInt();
     Q_ASSERT(deviceId >= 0);
-    
-    OscHeader header;
-    DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
-    long ret = getHeader(devId, oscId, &header);
 
-    QJsonObject response = createHeaderObj(requestId, header);
+    try {
+        OscHeader header;
+        DevID devID = {sysType, static_cast<uint16_t>(deviceId)};
+        ret = getHeader(devID, oscId, &header);
+
+        QJsonObject response = createHeaderObj(requestId, header);
+        send(response);
+    } catch (...) {
+        qWarning() << "Osc exception when handling get header request"
+                   << " sys type = " << sysType
+                   << " device id = " << deviceId;
+
+        int error = (ret != _return_OK) ? static_cast<int>(ret != 0 ? ret : -1): 0;
+        DevID devID = {sysType, static_cast<uint16_t>(deviceId)};
+        QJsonObject response = createAnswerObj(requestId, devID, QJsonObject(), error);
+        send(response);
+    }
+
+    return ret;
+}
+
+int OscHandler::handleSetHeader(const QJsonObject &request)
+{
+    long ret = _return_OK;
+    int requestId = request.value("request_id").toInt();
+    SysType sysType = sysTypeId(request);
+    QJsonObject cmdBody = request.value("body").toObject();
+
+    if (requestId <= 0 || cmdBody.isEmpty()) {
+        return -1;
+    }
+
+    int deviceId = cmdBody.value("device_id").toInt();
+    int oscId = cmdBody.value("osc_id").toInt();
+    DevID devID = {sysType, static_cast<uint16_t>(deviceId)};
+
+    Q_ASSERT(deviceId >= 0);
+
+    try {
+
+        OscHeader header;
+        long ret = getHeader(devID, oscId, &header);
+        if (ret != _return_OK) {
+            throw;
+        }
+
+        int displayResolution = cmdBody.value("display_resolution_ms").toInt();
+        if (displayResolution > 0) {
+            header.settings.displayResolution_ms = displayResolution;
+        }
+
+        int trig_mode = cmdBody.value("trig_mode").toInt();
+        if (trig_mode > 0) {
+            header.settings.trigerMode = static_cast<OscType::TriggerModeEnum>(trig_mode);
+        }
+
+        ret = setHeader(devID, header.settings);
+
+    }  catch (...) {
+        qWarning() << "Osc exception when handling set header request"
+                   << " sys type = " << devID.type
+                   << " device id = " << devID.id;
+    }
+
+    int error = (ret != _return_OK) ? static_cast<int>(ret != 0 ? ret : -1): 0;
+    QJsonObject response = createAnswerObj(requestId, devID, QJsonObject(), error);
     send(response);
 
     return ret;
@@ -287,17 +355,34 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
         }
     }
 
-    OscSettings settings;
+    OscSettings& settings = out->settings;
     settings.oscId = oscId;
     settings.reason = (ReasonEnum)header.settings.reason;
     settings.timeResolution_us = header.settings.time_resolution_us;
+    settings.displayResolution_ms = header.settings.display_resolution_ms > 0 ? header.settings.display_resolution_ms : settings.displayResolution_ms;
     std::time_t time = header.settings.trig_time;
     settings.trigDTime = QDateTime::fromTime_t(time);
     if (!settings.trigDTime.isValid()) {
         settings.trigDTime = QDateTime();
     }
 
-    out->settings = settings;
+    return _return_OK;
+}
+
+long OscHandler::setHeader(const DevID& deviceID, const OscSettings& settings)
+{
+    DDE_OSC_HEADER header;
+    header.device_id = deviceID.id;
+
+    _dde_func_return_t res = (*m_dde)(deviceID.type)->get_osc_header(header);
+    if (res < 0) {
+        return res;
+    }
+
+    header.settings.display_resolution_ms = settings.displayResolution_ms;
+    header.settings.triger_mode = settings.trigerMode;
+
+    res = (*m_dde)(deviceID.type)->set_osc_header(header);
 
     return _return_OK;
 }
