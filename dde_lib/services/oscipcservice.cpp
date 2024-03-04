@@ -265,7 +265,11 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint16_t id, uint
 int OscIPCHeaderService::get_page_ready_to_read(uint16_t id)
 {
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
-    if (!dat) return _return_FAIL;
+    if (!dat) return -1;
+
+    if (dat->state.user_enabled == false) {
+        return -1;
+    }
 
     // pthread_mutex_lock(&dat->shm_mutex);
     uint8_t currPage = dat->state.currPageRead;
@@ -302,6 +306,10 @@ int OscIPCHeaderService::get_page_ready_to_write(uint16_t id)
 {
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return -1;
+
+    if (dat->state.user_enabled == false) {
+        return -1;
+    }
 
     // pthread_mutex_lock(&dat->shm_mutex);
 

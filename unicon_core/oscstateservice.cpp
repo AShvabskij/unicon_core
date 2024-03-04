@@ -25,6 +25,7 @@ void OscStateService::init(QList<DevInd> devList)
 
         if (!m_devIdList.contains(devId)) {
             m_oscState[devId] = new OscStateMachine(m_dde, m_dataSrv);
+            m_oscState[devId]->init(devId);
             m_devIdList.append(devId);
         }
     }
@@ -160,6 +161,18 @@ void OscStateMachine::update(DevInd devId)
     }
 
     return;
+}
+
+void OscStateMachine::init(DevInd devId)
+{
+    m_header = DDE_OSC_HEADER();
+    m_header.device_id = devId;
+    auto res = m_dde->get_osc_header(m_header);
+    if (res == _return_FAIL) {
+        qWarning() << "Error getting header from osc, id = " << m_header.device_id;
+        m_state = Error;
+        return;
+    }
 }
 
 long OscStateMachine::getData(const DDE_OSC_HEADER &hdr, DDE_GET_OSC_DATA& getDat)

@@ -28,12 +28,12 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
     m_sysName = sysName;
 
     _dde_func_return_t res = m_headerSrv->init(sysName);
-/*
+
     for (int id = 0; id < MAX_DEV_SUPPORT; id ++) {
         OSC_STATE state = m_headerSrv->get_state(id);
 
         for (int pageNum = 0; pageNum < OSC_PAGE_MAX; pageNum++) {
-            state.pageMask[pageNum] = 0;
+            state.pageMask[pageNum] = 1; // lock pages for writing
         }
 
         state.user_enabled = false;
@@ -43,7 +43,7 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
 
         assert(res == _return_OK);
     }
-*/
+
     //---- A&S for tests only-------------------------------------
 /*
     DDE_OSC_HEADER hdr;
@@ -214,11 +214,11 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 {
     _dde_func_return_t res = _return_OK;
     uint16_t devId = dat.device_id;
-
+/*
     if (dat.sof) {
         clear_pages(devId);
     }
-
+*/
     if (dat.data_length == 0) return _return_OK; // there is nothing to save
 
     OSC_SETTING settings;
@@ -274,7 +274,7 @@ _dde_func_return_t DDE_OSC::clear_pages(uint16_t id)
     OSC_STATE state = m_headerSrv->get_state(id);
 
     for (int pageNum = 0; pageNum < OSC_PAGE_MAX; pageNum++) {
-        state.pageMask[pageNum] = 0;
+        state.pageMask[pageNum] = 0; // unlock pages for writing
     }
 
     state.currPageWrite = 0;

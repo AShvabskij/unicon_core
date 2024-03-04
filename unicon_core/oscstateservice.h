@@ -42,6 +42,7 @@ class OscStateMachine
 public:
     OscStateMachine(IDDE *dde, IOscDataService *dataSrv);
     void update(DevInd devId);
+    void init(DevInd devId);
 
 private:
 
