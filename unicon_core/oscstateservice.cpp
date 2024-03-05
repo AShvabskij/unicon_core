@@ -86,12 +86,10 @@ void OscStateMachine::update(DevInd devId)
     }
 
     case Getting: {
-        qDebug() << "Osc getting state";
-
         int iterations = 0;
         do {
             iterations++;
-            if (iterations > OSC_PAGE_MAX) {
+            if (iterations > 2) {
                 break;
             }
 
