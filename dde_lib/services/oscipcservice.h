@@ -16,6 +16,7 @@ public:
     _dde_func_return_t set_state(uint16_t id, const OSC_STATE& setDat);
     _dde_func_return_t get_settings(uint16_t id, OSC_SETTING& getDat);
     _dde_func_return_t set_settings(uint16_t id, const OSC_SETTING& setDat);
+    int get_ch_count(uint16_t id);
 
     int get_page_ready_to_read(uint16_t id);
     _dde_func_return_t set_page_ready_to_write(uint16_t id, uint8_t pageNum);

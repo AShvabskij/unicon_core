@@ -80,7 +80,7 @@ typedef struct
     uint8_t currPageRead = 0; // pages ready to read
     uint8_t currPageWrite = 0; // pages ready to write
 
-    bool user_enabled = false;
+    bool enabled = false;
     bool overflowed = false;
 
 } OSC_STATE;

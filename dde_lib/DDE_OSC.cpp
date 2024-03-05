@@ -32,11 +32,12 @@ _dde_func_return_t DDE_OSC::init(const char * sysName)
     for (int id = 0; id < MAX_DEV_SUPPORT; id ++) {
         OSC_STATE state = m_headerSrv->get_state(id);
 
+/*
         for (int pageNum = 0; pageNum < OSC_PAGE_MAX; pageNum++) {
             state.pageMask[pageNum] = 1; // lock pages for writing
         }
-
-        state.user_enabled = false;
+*/
+        state.enabled = false;
         state.currPageRead = 0;
         state.currPageWrite = 0;
         res = m_headerSrv->set_state(id, state);
@@ -130,11 +131,17 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
     if (res != _return_OK) return res;
 
     OSC_STATE state = m_headerSrv->get_state(device_id);
-    state.user_enabled = true;
+    state.enabled = true;
 
     res = m_headerSrv->set_state(device_id, state);
 
-    clear_pages(device_id);
+    if (res == _return_OK) {
+        res = create_pages(device_id);
+    }
+
+    if (res == _return_OK) {
+        res = clear_pages(device_id);
+    }
 
     return res;
 }
@@ -142,7 +149,7 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
 _dde_func_return_t DDE_OSC::close(uint16_t devId)
 {
     OSC_STATE state = m_headerSrv->get_state(devId);
-    state.user_enabled = false;
+    state.enabled = false;
     m_headerSrv->set_state(devId, state);
 
     _dde_func_return_t res = m_dataSrv->close();
@@ -155,13 +162,13 @@ _dde_func_return_t DDE_OSC::get(DDE_OSC_HEADER& h)
     _dde_func_return_t res = _return_OK;
     OSC_STATE state = m_headerSrv->get_state(h.device_id);
 
-    if (state.user_enabled == false) {
+    if (state.enabled == false) {
         res = open(h.device_id); // prepare device to read/write osc data
-        if (res != _return_OK)
-            return res;
     }
 
-    res = m_headerSrv->get_header(h.device_id, h);
+    if (res == _return_OK) {
+        res = m_headerSrv->get_header(h.device_id, h);
+    }
 
     return res;
 }
@@ -171,11 +178,7 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
     _dde_func_return_t res = _return_OK;
     uint16_t devId = dat.device_id;
 
-    OSC_SETTING settings;
-    m_headerSrv->get_settings(devId, settings);
-    if (settings.channel_count == 0) {
-        cout << DDE_LOG_PREFIX << "Get data error, channel count = 0" << endl;
-    }
+    int channel_count = m_headerSrv->get_ch_count(devId);
 
     int pageNum = m_headerSrv->get_page_ready_to_read(devId);
     dat.data_length = 0;
@@ -185,16 +188,18 @@ _dde_func_return_t DDE_OSC::get(DDE_GET_OSC_DATA& dat)
         return _return_Busy;
     }
 
-    cout << DDE_LOG_PREFIX << "Read data from page = " << std::to_string(pageNum) 
-        << ", length = " << (dat.data_length)
-        << ", count = " << static_cast<int>(settings.channel_count) << endl;
-
     res = m_dataSrv->open(devId, pageNum, false);
     if (res != _return_OK) return res;
 
     bool eof = false;
-    res = m_dataSrv->readNextData(dat, settings.channel_count, eof);
+    res = m_dataSrv->readNextData(dat, channel_count, eof);
     dat.next_ready = (res == _return_OK) && !eof;
+
+    if (res == _return_OK) {
+        cout << DDE_LOG_PREFIX << "Read data from page = " << std::to_string(pageNum)
+            << ", length = " << (dat.data_length)
+            << ", count = " << static_cast<int>(channel_count) << endl;
+    }
 
     if (res != _return_OK || eof) {
         m_dataSrv->close();
@@ -282,6 +287,18 @@ _dde_func_return_t DDE_OSC::clear_pages(uint16_t id)
     state.overflowed = false;
 
     _dde_func_return_t res = m_headerSrv->set_state(id, state);
+
+    return res;
+}
+
+_dde_func_return_t DDE_OSC::create_pages(uint16_t devId)
+{
+    _dde_func_return_t res = _return_OK;
+
+    for (int pageNum = 0; pageNum < OSC_PAGE_MAX; pageNum++) {
+        res = m_dataSrv->open(devId, pageNum, true);
+        m_dataSrv->close();
+    }
 
     return res;
 }

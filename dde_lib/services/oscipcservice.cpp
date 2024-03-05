@@ -184,6 +184,14 @@ _dde_func_return_t OscIPCHeaderService::get_settings(uint16_t id, OSC_SETTING& g
     return _return_OK;
 }
 
+int OscIPCHeaderService::get_ch_count(uint16_t id)
+{
+    auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
+    if (!dat) return _return_FAIL;
+
+    return dat->settings.channel_count;
+}
+
 _dde_func_return_t OscIPCHeaderService::set_settings(uint16_t id, const OSC_SETTING& setDat)
 {
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
@@ -267,7 +275,7 @@ int OscIPCHeaderService::get_page_ready_to_read(uint16_t id)
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return -1;
 
-    if (dat->state.user_enabled == false) {
+    if (dat->state.enabled == false) {
         return -1;
     }
 
@@ -307,7 +315,7 @@ int OscIPCHeaderService::get_page_ready_to_write(uint16_t id)
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return -1;
 
-    if (dat->state.user_enabled == false) {
+    if (dat->state.enabled == false) {
         return -1;
     }
 

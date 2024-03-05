@@ -135,6 +135,7 @@ public:
     virtual _dde_func_return_t set_state(uint16_t id, const OSC_STATE&) = 0;
     virtual _dde_func_return_t get_settings(uint16_t id, OSC_SETTING&) = 0;
     virtual _dde_func_return_t set_settings(uint16_t id, const OSC_SETTING&) = 0;
+    virtual int get_ch_count(uint16_t id) = 0;
 
     virtual int get_page_ready_to_read(uint16_t id) = 0;
     virtual _dde_func_return_t set_page_ready_to_write(uint16_t id, uint8_t pageNum) = 0;

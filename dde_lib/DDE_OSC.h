@@ -24,8 +24,8 @@ public:
     virtual void update();
 private:
 
-    _dde_func_return_t open_page(uint16_t id, int pageNum);
     _dde_func_return_t clear_pages(uint16_t id);
+    _dde_func_return_t create_pages(uint16_t devId);
 
     IOscPageService* m_dataSrv = nullptr;
     IOscHeaderService* m_headerSrv = nullptr;

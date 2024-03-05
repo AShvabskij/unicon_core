@@ -86,42 +86,45 @@ void OscStateMachine::update(DevInd devId)
     }
 
     case Getting: {
-        auto res = getData(m_header, m_ddeData);
+        do {
 
-        if (res == _return_Busy) {
-            m_state = Busy;
-            return;
-        }
+            auto res = getData(m_header, m_ddeData);
 
-        if (res != _return_OK) {
-            qWarning() << "Error getting data from the osc, id = " << m_header.device_id;
-            m_state = Error;
-            return;
-        }
-
-        res = m_dataSrv->appendData(m_header, m_ddeData);
-
-        if (res != _return_OK) {
-            qWarning() << "Error getting buffer for the osc, id = " << m_header.device_id;
-            m_state = Error;
-            return;
-        }
-
-        if (m_ddeData.sof) {
-            m_sof = m_ddeData.sof;
-        }
-
-        if (m_ddeData.eof) {
-            if (m_sof) {
-                m_state = Saving;
-            } else {
-                m_state = Normal;
+            if (res == _return_Busy) {
+                m_state = Busy;
+                return;
             }
-        }
 
-        if (m_ddeData.header_updated && m_state == Getting) {
-            m_state = Updated;
-        }
+            if (res != _return_OK) {
+                qWarning() << "Error getting data from the osc, id = " << m_header.device_id;
+                m_state = Error;
+                return;
+            }
+
+            res = m_dataSrv->appendData(m_header, m_ddeData);
+
+            if (res != _return_OK) {
+                qWarning() << "Error getting buffer for the osc, id = " << m_header.device_id;
+                m_state = Error;
+                return;
+            }
+
+            if (m_ddeData.sof) {
+                m_sof = m_ddeData.sof;
+            }
+
+            if (m_ddeData.eof) {
+                if (m_sof) {
+                    m_state = Saving;
+                } else {
+                    m_state = Normal;
+                }
+            }
+
+            if (m_state == Getting && m_ddeData.header_updated) {
+                m_state = Updated;
+            }
+        } while (m_state == Getting && m_ddeData.next_ready == true);
 
         break;
     }
@@ -160,6 +163,8 @@ void OscStateMachine::update(DevInd devId)
     default: break;
     }
 
+    qDebug() << "Osc current state = " << m_state;
+
     return;
 }
 
@@ -167,10 +172,9 @@ void OscStateMachine::init(DevInd devId)
 {
     m_header = DDE_OSC_HEADER();
     m_header.device_id = devId;
-    auto res = m_dde->get_osc_header(m_header);
+    auto res = m_dde->get_osc_header(m_header); // open device and prepare device to read/write osc data
     if (res == _return_FAIL) {
         qWarning() << "Error getting header from osc, id = " << m_header.device_id;
-        m_state = Error;
         return;
     }
 }
