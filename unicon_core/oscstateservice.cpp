@@ -86,7 +86,14 @@ void OscStateMachine::update(DevInd devId)
     }
 
     case Getting: {
+        qDebug() << "Osc getting state";
+
+        int iterations = 0;
         do {
+            iterations++;
+            if (iterations > OSC_PAGE_MAX) {
+                break;
+            }
 
             auto res = getData(m_header, m_ddeData);
 
@@ -162,8 +169,6 @@ void OscStateMachine::update(DevInd devId)
     }
     default: break;
     }
-
-    qDebug() << "Osc current state = " << m_state;
 
     return;
 }

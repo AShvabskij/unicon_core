@@ -219,18 +219,10 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 {
     _dde_func_return_t res = _return_OK;
     uint16_t devId = dat.device_id;
-/*
-    if (dat.sof) {
-        clear_pages(devId);
-    }
-*/
+
     if (dat.data_length == 0) return _return_OK; // there is nothing to save
 
-    OSC_SETTING settings;
-    m_headerSrv->get_settings(devId, settings);
-    if (settings.channel_count == 0) {
-        cout << DDE_LOG_PREFIX << "Set data error, channel count = 0" << endl;
-    }
+    int channel_count = m_headerSrv->get_ch_count(devId);
 
     if (res != _return_OK) return res;
 
@@ -247,13 +239,13 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
 
     cout << DDE_LOG_PREFIX << "Write data to page = " << std::to_string(pageNum)
         << ", length = " << dat.data_length
-        << ", count = " << static_cast<int>(settings.channel_count) << endl;
+        << ", count = " << static_cast<int>(channel_count) << endl;
 
     res = m_dataSrv->open(devId, pageNum, true);
     if (res != _return_OK) return res;
 
     bool get_eof = false;
-    res = m_dataSrv->addData(dat, settings.channel_count, get_eof);
+    res = m_dataSrv->addData(dat, channel_count, get_eof);
 
     if (res != _return_OK) return res;
 
