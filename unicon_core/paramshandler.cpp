@@ -14,6 +14,7 @@ const int DATA_YELD_INTERVAL_MSC = 100;
 const int STREAM_OBJECT_LIMIT = 60000;//*100;
 const float ZERO_SCALE = 0.0f;
 const int MIN_GROUP_ELEMENTS_REQUESTED = 3;
+const int DEFAULT_PARAM_FREQUENCY = 4;
 
 static int streamParamCount = 0;
 
@@ -219,18 +220,91 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
     }
 
     int deviceId = cmdBody.value("device_id").toInt();
-    int moduleId = cmdBody.value("module_id").toInt();
-    int paramId  = cmdBody.value("param_id").toInt();
+    int moduleId = cmdBody.keys().contains("module_id") ? cmdBody.value("module_id").toInt() : -1;
+    int paramId  = cmdBody.keys().contains("param_id") ? cmdBody.value("param_id").toInt() : -1;
+    QJsonArray params = cmdBody.value("params").toArray();
+    int freq = cmdBody.keys().contains("frequency") ? cmdBody.value("frequency").toInt() : DEFAULT_PARAM_FREQUENCY;
 
-    Param p;
     DevID devID = {sysType, static_cast<quint16>(deviceId)};
-    p.ID = {devID, moduleId, paramId};
-    long ret = getParamHeader(p.ID, &p);
-    if (ret != _return_OK) {
-        return;
+
+    long ret = _return_OK;
+
+    if (paramId != -1) {
+        Param p;
+        p.ID = {devID, moduleId, paramId};
+        ret = getParamHeader(p.ID, &p);
+        if (ret == _return_OK) {
+//          sendActualParamValue(p, requestId);
+            openParamStream(p, freq);
+        }
+
+    } else if (moduleId != -1) { // capture the whole module
+        ParamList capturedParams;
+        DDE_GET_PARAMS_HEADER module_header;
+        ret = getModuleHeader(devID, moduleId, module_header);
+        Q_ASSERT(module_header.el_count > 0 && ret == _return_OK);
+
+        for (const GLIO_ELEMENT_DESCR& elem : module_header.el_descr) {
+            Param p;
+            p.ID = {devID, moduleId, elem.id};
+
+            ret = getParamHeader(p.ID, &p);
+            Q_ASSERT(ret == _return_OK);
+            capturedParams << p;
+        }
+
+        openParamStreams(capturedParams, freq);
+
+    } else { // capture params from different modules
+        ParamList capturedParams;
+        for (const QJsonValue val : params) {
+            QJsonObject obj = val.toObject();
+            int moduleId = obj.value("module_id").toInt();
+            int paramId  = obj.value("param_id").toInt();
+
+            Param p;
+            p.ID = {devID, moduleId, paramId};
+            ret = getParamHeader(p.ID, &p);
+            if (ret == _return_OK) {
+                capturedParams << p;
+            }
+        }
+
+        openParamStreams(capturedParams, freq);
     }
 
-    sendActualParamValue(p, requestId);
+    // send empty valid response
+    int error = (ret != _return_OK) ? static_cast<int>(ret != 0 ? ret : -1): 0;
+    QJsonObject response = createValueObj(requestId, ParamValue(), error);
+    send(response);
+
+    return;
+}
+
+long ParamsHandler::openParamStream(const Param& p, int freq)
+{
+    long res = captureParam(p);
+
+    if (res != _return_OK) {
+        return res;
+    }
+
+    int interval = (freq == 0) ? DATA_YELD_INTERVAL_MSC : (1000 / freq);
+    startPooling(interval);
+
+    return res;
+}
+
+long ParamsHandler::captureParam(const Param& p)
+{
+    if (!p.ID.isValid()) {
+        return _return_FAIL;
+    }
+
+    if (m_capturedParams.contains(p)) {
+        return _return_OK;
+    }
+
     m_capturedParams << p;
 
     int count = 0;
@@ -245,11 +319,12 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
         if (count >= MIN_GROUP_ELEMENTS_REQUESTED) {
             bool captureModule = false;
             DDE_GET_PARAMS_HEADER module;
-            ret = getModuleHeader(devID, moduleId, module);
+
+            long ret = getModuleHeader(p.ID.devId, p.ID.moduleId, module);
 
             Q_ASSERT(module.el_count > 0 && ret == _return_OK);
 
-            switch (sysType) {
+            switch (p.ID.devId.type) {
             case SysType::UAVCAN:
                 if (count == module.el_count) { // только если запрашивается целиком группа
                     captureModule = true;
@@ -266,17 +341,27 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
             }
 
             if (captureModule) {
-                m_capturedModules[moduleId] = module;
+                m_capturedModules[p.ID.moduleId] = module;
             }
         }
     }
 
-    int freq = cmdBody.value("frequency").toInt();
-    int interval = (freq == 0) ? DATA_YELD_INTERVAL_MSC : (1000 / freq);
+    return _return_OK;
+}
 
+long ParamsHandler::openParamStreams(ParamList params, int freq)
+{
+    stopPooling();
+
+    for (const Param& p : params) {
+        long res = captureParam(p);
+        if (res != _return_OK) return res;
+    }
+
+    int interval = (freq == 0) ? DATA_YELD_INTERVAL_MSC : (1000 / freq);
     startPooling(interval);
 
-    return;
+    return _return_OK;
 }
 
 void ParamsHandler::handleCloseStream(const QJsonObject &request)
