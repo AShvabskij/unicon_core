@@ -326,7 +326,7 @@ long ParamsHandler::captureParam(const Param& p)
 
             switch (p.ID.devId.type) {
             case SysType::UAVCAN:
-                if (count == module.el_count) { // только если запрашивается целиком группа
+                if (count >= (module.el_count - 1)) { // только если запрашивается целиком группа
                     captureModule = true;
                 } break;
             case SysType::MODBUS:
