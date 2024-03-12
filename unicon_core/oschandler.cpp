@@ -29,6 +29,7 @@ QJsonObject headerToJson(const OscHeader& h) {
     res["desc"] = h.desc;
     res["name"] = h.name;
     res["trig_time"] = h.settings.trigDTime.toMSecsSinceEpoch();
+    res["reason"] = h.settings.reason;
     res["resolution_us"] = h.settings.timeResolution_us;
     res["display_resolution_ms"] = h.settings.displayResolution_ms;
 

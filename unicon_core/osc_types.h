@@ -150,6 +150,8 @@ namespace OscType {
         int lastDataPos = 0;
         OscChannelValues ch[OSC_MAX_VARS + 1];
         qlonglong timestamp = 0;
+        qlonglong trig_time = 0;
+        int reason = 0;
         bool eof = false;
         bool sof = false;
 
