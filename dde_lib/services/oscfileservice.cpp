@@ -135,6 +135,7 @@ int OscFileService::loadHeader(uint16_t device_id, const char* fileName)
 
     if (res == _return_OK) {
         m_fileName = fileName;
+        m_header->settings.trig_time = std::time(0);
     } else {
         delete m_header;
         m_header = nullptr;
