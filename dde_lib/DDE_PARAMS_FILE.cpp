@@ -36,7 +36,7 @@ _dde_func_return_t DDE_PARAMS_FILE::init(const char* sys_type)
 void DDE_PARAMS_FILE::setTestDevice()
 {
     int devices_count = 4;
-    int devices_step = 10;
+    int devices_step = 1;
 
     for (int i = 1; i <= devices_count * devices_step; i = i + devices_step) {
         for (int ii = 1; ii <= 4; ii++) {
@@ -71,7 +71,7 @@ _dde_func_return_t DDE_PARAMS_FILE::setTestData()
 
     int res = 0;
     int devices_count = 4;
-    int devices_step = 10;
+    int devices_step = 1;
 
     CsvFile* file = new CsvFile();
     assert(file);
@@ -182,13 +182,13 @@ void DDE_PARAMS_FILE::setTestLinks()
             case 1:
                 setDat.ivalue = 1;
                 break;
-            case 11:
+            case 2:
                 setDat.ivalue = 1;
                 break;
-            case 21:
+            case 3:
                 setDat.ivalue = 1;
                 break;
-            case 31:
+            case 4:
                 setDat.ivalue = 1;
                 break;
         default: setDat.ivalue = 0;
