@@ -82,7 +82,9 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
     OscDataBuffer* buff = new OscDataBuffer();
 
     buff->id = hdr.device_id;
-    buff->timestamp = hdr.settings.trig_time;
+    buff->timestamp = 0;
+    buff->trig_time = hdr.settings.trig_time;
+    buff->reason = hdr.settings.reason;
 
     for (int chInd = 0; chInd < hdr.settings.channel_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
@@ -142,6 +144,8 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     buff->eof = dat.eof;
     buff->sof = dat.sof;
     buff->timestamp = 0;
+    buff->trig_time = hdr.settings.trig_time;
+    buff->reason = hdr.settings.reason;
 
     if (dat.data_length == 0) {
         m_mutex.unlock();
@@ -254,6 +258,8 @@ QJsonObject OscDataService::dataToJson(const OscType::OscDataBuffer& data, QVect
 
     res["d_id"] = data.id;
     res["time"] = data.timestamp;
+    res["trig_time"] = data.trig_time;
+    res["reason"] = data.reason;
     res["eof"] = data.eof ? "1" : "0";
     res["sof"] = data.sof ? "1" : "0";
 
