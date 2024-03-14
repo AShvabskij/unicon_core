@@ -318,7 +318,8 @@ void OscHandler::streamData()
     // response["body"] = data;
 
   if (objCountResult > 0) {
-      QTextStream(stdout) << "Osc stream values. Count =" << response["values"].toArray().takeAt(0).toArray().count()
+      QTextStream(stdout) << "Osc streaming, dev id = " << m_capturedOsc.deviceID.id
+                          << " Count =" << response["values"].toArray().takeAt(0).toArray().count()
                           << ", eof = " << response["eof"].toString()
                           <<  ", time(us) = " << response["time"].toInt() << "\n" ;
 
