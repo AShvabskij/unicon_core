@@ -19,8 +19,9 @@ SOURCES += \
         core.cpp \
         basereqhandler.cpp \
         devicehandler.cpp \
-        oscdatajsonstorage.cpp \
         oscdataservice.cpp \
+        oscdatastorage.cpp \
+        oscdatastorage_v1_2.cpp \
         oschandler.cpp \
         oscstateservice.cpp \
         paramshandler.cpp \
@@ -39,8 +40,9 @@ HEADERS += \
     devicehandler.h \
     ireqhandler.h \
     osc_types.h \
-    oscdatajsonstorage.h \
     oscdataservice.h \
+    oscdatastorage.h \
+    oscdatastorage_v1_2.h \
     oschandler.h \
     oscstateservice.h \
     paramshandler.h \

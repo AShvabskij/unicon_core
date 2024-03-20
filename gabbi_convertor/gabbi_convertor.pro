@@ -15,7 +15,8 @@ INCLUDEPATH += $$PWD/../dde_lib
 DEPENDPATH += $$PWD/../dde_lib
 
 SOURCES += \
-        ../unicon_core/oscdatajsonstorage.cpp \
+        ../unicon_core/oscdatastorage.cpp \
+        ../unicon_core/oscdatastorage_v1_2.cpp \
         main.cpp
 
 # Default rules for deployment.

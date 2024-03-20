@@ -14,7 +14,9 @@
 #include <iostream>
 #include <memory>
 
-#include <oscdatajsonstorage.h>
+#include <oscdatastorage.h>
+#include <oscdatastorage_v1_2.h>
+
 #include <oscdataservice.h>
 #include "DDE_TYPES.h"
 
@@ -140,12 +142,13 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
              if (chVal.varId == 0)
                  continue;
 
-             if (i >= chVal.values.count()) {
+             if (i >= chVal.count()) {
                  rec << 0;
                  break;
              }
 
-             int value = denormalizeValue(chVal.values[i].toFloat());
+             QVariant val = chVal.value(i);
+             int value = denormalizeValue(val.toFloat());
              rec << QString::number(value);
          }
 
@@ -157,33 +160,52 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
 
 long doConvert(QString fileFrom, QString fileTo)
 {
-    IOscDataStorageService* datFile = new OscDataJSonStorage();
+    QList<IOscDataStorageService*> datServiceCollection;
+    datServiceCollection.append(new OscDataStorage());
+    datServiceCollection.append(new OscDataStorage_v1_2());
 
-    DDE_OSC_HEADER hdr;
-    long res = datFile->loadHeader(fileFrom, hdr);
+    long res = _return_OK;
+    bool isHandled = false;
+    for (IOscDataStorageService* datService : datServiceCollection) {
 
-    if (res <= 0)
-        return res;
+        res = datService->checkVersion(fileFrom);
+        if (res <= 0)
+            continue;
 
-    OscType::OscDataBuffer* datBuff = createDataBuffer(hdr);
-    res = datFile->loadData(fileFrom, datBuff);
+        isHandled = true;
 
-    if (res <= 0)
-        return res;
+        DDE_OSC_HEADER hdr;
+        res = datService->loadHeader(fileFrom, hdr);
 
-    QFile file( fileTo );
+        if (res != _return_OK)
+            break;
 
-    if(!file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
-    {
-         QTextStream(stdout) << "file open failed: " << fileTo << ENDL;
-         return _return_FAIL;
+        OscType::OscDataBuffer* datBuff = createDataBuffer(hdr);
+        res = datService->loadData(fileFrom, *datBuff);
+
+        if (res != _return_OK)
+            break;
+
+        QFile file( fileTo );
+
+        if(!file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
+        {
+             QTextStream(stdout) << "file open failed: " << fileTo << ENDL;
+             return _return_FAIL;
+        }
+
+        QTextStream iStream( &file );
+        iStream.setCodec( "utf-8" );
+
+        res = generateContent(hdr, *datBuff, iStream);
+        file.close();
+
+        break;
     }
 
-    QTextStream iStream( &file );
-    iStream.setCodec( "utf-8" );
-
-    res = generateContent(hdr, *datBuff, iStream);
-    file.close();
+    if (res != _return_OK && !isHandled ) {
+        QTextStream(stdout) << "There is not any suitable converter for the file!" << ENDL;
+    }
 
     return res;
 }

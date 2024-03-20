@@ -1,4 +1,4 @@
-#include "oscdatajsonstorage.h"
+#include "oscdatastorage.h"
 
 #include <QDateTime>
 #include <QVariant>
@@ -10,6 +10,8 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QCborValue>
+#include <QCborMap>
+#include <QCborArray>
 #include <QCborStreamReader>
 #include <QCborStreamWriter>
 #include <QDataStream>
@@ -21,27 +23,49 @@
 #define ENDL "\n"
 #endif
 
+const int DATA_VERSION = 1;
+const int DATA_SUBVERSION = 1;
+
 namespace {
-QString colorToString(const int &c)
-{
-    QString ret = QString("#%1")
-            .arg(QString::number(c, 16).rightJustified(6, '0'));
+    QString colorToString(const int &c)
+    {
+        QString ret = QString("#%1")
+                .arg(QString::number(c, 16).rightJustified(6, '0'));
 
-    return ret;
+        return ret;
 
+    }
+
+    int stringToColor(QString hexColor)
+    {
+        hexColor = hexColor.remove("#");
+        int retColor = hexColor.toUInt(nullptr, 16);
+        return retColor;
+    }
+
+    QString OSC_VAR_TYPE_TO_STRING(OSC_VAR_TYPE type)
+    {
+        switch (type) {
+            case OSC_VAR_TYPE::OSC_VAR_FLOAT: return "FLT";
+            case OSC_VAR_TYPE::OSC_VAR_INT: return "INT";
+            case OSC_VAR_TYPE::OSC_VAR_DISCRETE: return "BIT";
+        default: return "";
+        }
+    }
+
+    OSC_VAR_TYPE OSC_VAR_TYPE_FROM_STRING(QString type)
+    {
+        if (type == "FLT") return OSC_VAR_TYPE::OSC_VAR_FLOAT;
+        if (type == "INT") return OSC_VAR_TYPE::OSC_VAR_INT;
+        if (type == "BIT") return OSC_VAR_TYPE::OSC_VAR_DISCRETE;
+
+        return OSC_VAR_TYPE::UNDEFINED;
+    }
 }
 
 using namespace OscType;
 
-int stringToColor(QString hexColor)
-{
-    hexColor = hexColor.remove("#");
-    int retColor = hexColor.toUInt(nullptr, 16);
-    return retColor;
-}
-}
-
-long OscDataJSonStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data)
+long OscDataStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data)
 {
     QTextStream(stdout) << "Saving osc data, device id = " << header.device_id << ENDL;
 
@@ -58,7 +82,7 @@ long OscDataJSonStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDa
         if (!res)
             return res;
 
-        QJsonObject datjsonObj = data.serializeToJSon();
+        QJsonObject datjsonObj = serializeToJSon(data);
 
         QString datFile = path + "/" + baseFileName + ".dat";
         res = saveObj(datFile, datjsonObj, true);
@@ -66,7 +90,7 @@ long OscDataJSonStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDa
         return res;
 }
 
-QString OscDataJSonStorage::createPath(const DDE_OSC_HEADER &)
+QString OscDataStorage::createPath(const DDE_OSC_HEADER &)
 {
     QDateTime now = QDateTime::currentDateTime();
     QString year = "Y" + QString::number(now.date().year());
@@ -86,7 +110,7 @@ QString OscDataJSonStorage::createPath(const DDE_OSC_HEADER &)
     return path;
 }
 
-long OscDataJSonStorage::saveObj(const QString fileName, const QJsonObject &obj, bool useBinaryFormat)
+long OscDataStorage::saveObj(const QString fileName, const QJsonObject &obj, bool useBinaryFormat)
 {
     _dde_func_return_t res = _return_OK;
 
@@ -123,26 +147,7 @@ long OscDataJSonStorage::saveObj(const QString fileName, const QJsonObject &obj,
     return res;
 }
 
-QString OSC_VAR_TYPE_TO_STRING(OSC_VAR_TYPE type)
-{
-    switch (type) {
-        case OSC_VAR_TYPE::OSC_VAR_FLOAT: return "FLT";
-        case OSC_VAR_TYPE::OSC_VAR_INT: return "INT";
-        case OSC_VAR_TYPE::OSC_VAR_DISCRETE: return "BIT";
-    default: return "";
-    }
-}
-
-OSC_VAR_TYPE OSC_VAR_TYPE_FROM_STRING(QString type)
-{
-    if (type == "FLT") return OSC_VAR_TYPE::OSC_VAR_FLOAT;
-    if (type == "INT") return OSC_VAR_TYPE::OSC_VAR_INT;
-    if (type == "BIT") return OSC_VAR_TYPE::OSC_VAR_DISCRETE;
-
-    return OSC_VAR_TYPE::UNDEFINED;
-}
-
-QJsonObject OscDataJSonStorage::headerToJson(const DDE_OSC_HEADER &h)
+QJsonObject OscDataStorage::headerToJson(const DDE_OSC_HEADER &h)
 {
     QJsonObject res;
 
@@ -182,7 +187,7 @@ QJsonObject OscDataJSonStorage::headerToJson(const DDE_OSC_HEADER &h)
     return res;
 }
 
-long OscDataJSonStorage::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
+long OscDataStorage::checkVersion(QString fileFrom)
 {
     QString path = QFileInfo(fileFrom).absolutePath();
     QString name = QFileInfo(fileFrom).baseName();
@@ -198,16 +203,43 @@ long OscDataJSonStorage::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
 
     QTextStream inStream( &file );
     QString content = inStream.readAll();
+    file.close();
+
+    QJsonDocument d = QJsonDocument::fromJson(content.toUtf8());
+    QJsonObject obj = d.object();
+
+    int ver = obj["version"].toVariant().toInt();
+    int sub_ver = obj["sub_version"].toVariant().toInt();
+
+    long res = checkVersion(ver, sub_ver);
+
+    return res;
+}
+
+long OscDataStorage::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
+{
+    QString path = QFileInfo(fileFrom).absolutePath();
+    QString name = QFileInfo(fileFrom).baseName();
+
+    QString headerFile = path + QDir::separator() + name + ".hdr";
+    QFile file( headerFile );
+
+    if(!file.open( QIODevice::ReadOnly | QIODevice::Text ))
+    {
+        QTextStream(stdout) << "file open failed: " << headerFile << ENDL;
+        return _return_FAIL;
+    }
+
+    QTextStream inStream( &file );
+    QString content = inStream.readAll();
+    file.close();
 
     QJsonDocument d = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject obj = d.object();
 
     long ret = jsonToHeader(obj, header);
-    if (ret <=0 )
-        return ret;
 
-
-    return _return_OK;
+    return ret;
 }
 
 QByteArray decodeByteArray(QCborStreamReader &reader)
@@ -226,7 +258,7 @@ QByteArray decodeByteArray(QCborStreamReader &reader)
     return result;
 }
 
-long OscDataJSonStorage::loadData(QString fileFrom, OscType::OscDataBuffer& data)
+long OscDataStorage::loadData(QString fileFrom, OscType::OscDataBuffer& data)
 {
     QString path = QFileInfo(fileFrom).absolutePath();
     QString name = QFileInfo(fileFrom).baseName();
@@ -246,28 +278,77 @@ long OscDataJSonStorage::loadData(QString fileFrom, OscType::OscDataBuffer& data
     file.close();
 
     QCborValue cborValue = QCborValue::fromCbor(bytes);
+/*
     QJsonValue resValue = cborValue.toJsonValue();
     QJsonObject obj = resValue.toObject();
-
-    long ret = jsonToData(obj, data);
+*/
+    long ret = decodeData(cborValue, data);
 
     return ret;
 }
 
-long OscDataJSonStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
+QJsonObject OscDataStorage::serializeToJSon(const OscDataBuffer& dat) const
 {
-    uint8_t ver = obj["version"].toVariant().toUInt();
-    uint8_t sub_ver = obj["sub_version"].toVariant().toUInt();
+    QJsonObject res;
+    QJsonArray valuesObj;
+    QList<int> varIdList;
+    QJsonArray varIdListObj;
 
+    res["version"] = DATA_VERSION;
+    res["sub_version"] = DATA_SUBVERSION;
+
+    res["d_id"] = dat.id;
+    res["time"] = dat.timestamp;
+
+    for (const OscChannelValues& chVal : dat.ch) {
+        if (chVal.varId == 0) continue;
+
+        varIdList << chVal.varId;
+        varIdListObj << chVal.varId;
+    }
+    res["vars"] = varIdListObj;
+
+    for (const OscChannelValues& chVal : dat.ch) {
+        if (!varIdList.contains(chVal.varId))
+                continue;
+
+        switch (chVal.type) {
+            case OscChannelValues::IntegerType:
+                for (int i=0; i< chVal.numValues.count(); i++) {
+                    valuesObj << chVal.numValues[i].i;
+                } break;
+            case OscChannelValues::FloatType:
+                for (int i=0; i< chVal.numValues.count(); i++) {
+                    valuesObj << chVal.numValues[i].f;
+                } break;
+
+            case OscChannelValues::DiscreteType:
+                for (int i=0; i< chVal.discrValues.count(); i++) {
+                    valuesObj << chVal.discrValues[i];
+                }
+        };
+    }
+
+    res["values"] = valuesObj;
+
+    return res;
+}
+
+long OscDataStorage::checkVersion(int ver, int subVer)
+{
     if (ver != DATA_VERSION) {
-        QTextStream(stdout) << "The json header version " <<  ver << " is not supported" <<  ", the current version is " << DATA_SUBVERSION << ENDL;
         return -1;
     }
 
-    if (sub_ver > DATA_SUBVERSION) {
-        QTextStream(stdout) << "The json header version " << sub_ver <<  "is an older version of the current version " << DATA_SUBVERSION << ENDL;
+    if (subVer != DATA_SUBVERSION) {
+        return -1;
     }
 
+    return _return_OK;
+}
+
+long OscDataStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
+{
     h.device_id = obj["device_id"].toVariant().toInt();
     h.settings.reason = obj["reason"].toVariant().toInt();
     h.settings.trig_time = obj["trig_time"].toVariant().toInt();
@@ -299,7 +380,7 @@ long OscDataJSonStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
     return _return_OK;
 }
 
-long OscDataJSonStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuffer &data)
+long OscDataStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuffer &data)
 {
     uint8_t ver = obj["version"].toVariant().toUInt();
     uint8_t sub_ver = obj["sub_version"].toVariant().toUInt();
@@ -335,3 +416,42 @@ long OscDataJSonStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuf
 
     return _return_OK;
 }
+
+long OscDataStorage::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuffer &data)
+{
+    QCborMap obj = sourceDat.toMap();
+    uint8_t ver = obj.value("version").toVariant().toUInt();
+    uint8_t sub_ver = obj.value("version").toVariant().toUInt();
+
+    if (ver != DATA_VERSION) {
+        QTextStream(stdout) << "The json data version " <<  ver << " is not supported" <<  ", the current supported version is " << DATA_VERSION << ENDL;
+        return -1;
+    }
+
+    if (sub_ver > DATA_SUBVERSION) {
+        QTextStream(stdout) << "The json data version " << sub_ver <<  " is an older version of the current version " << DATA_SUBVERSION << ENDL;
+    }
+
+    data.id =  obj.value("d_id").toInteger();
+    data.timestamp = obj.value("time").toVariant().toLongLong();
+    QCborArray vars = obj.value("vars").toArray();
+    QCborArray values = obj.value("values").toArray();
+
+    int maxValueCount = 0;
+
+    for (int i = 0; i < vars.size(); ++i) {
+        data.ch[i].varId = vars[i].toInteger();
+        int valueCount = 0;
+        data.ch[i].append(values[i].toArray().toVariantList());
+        valueCount = data.ch[i].count();
+
+        maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
+    };
+
+
+    data.valueCount = maxValueCount;
+    data.maxCount = maxValueCount;
+
+    return _return_OK;
+}
+

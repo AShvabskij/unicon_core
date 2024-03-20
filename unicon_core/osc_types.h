@@ -11,8 +11,6 @@
 
 namespace OscType {
 
-    const int DATA_VERSION = 1;
-    const int DATA_SUBVERSION = 1;
     const int MAX_DATA_COUNT = 1000000;
 
     enum TriggerModeEnum {
@@ -58,6 +56,20 @@ namespace OscType {
 
         QList<Number32> numValues;
         QList<qint8> discrValues;
+
+        QVariant value(int pos) const {
+            switch (type) {
+            case IntegerType:
+                return QVariant::fromValue(numValues.value(pos).i);
+            case FloatType: {
+                return QVariant::fromValue(numValues.value(pos).f);
+            } break;
+            case OscType::OscChannelValues::DiscreteType: {
+                return QVariant::fromValue(discrValues.value(pos));
+            } break;
+            default: return QVariant();
+            }
+        };
 
         QVariantList values(int startPos) const {
             QVariantList res;
@@ -131,7 +143,7 @@ namespace OscType {
             }
         }
 
-        int count() {
+        int count() const {
             return std::max(numValues.count(), discrValues.count());
         }
 
@@ -160,53 +172,6 @@ namespace OscType {
                 return true;
 
             return false;
-        }
-
-        QJsonObject serializeToJSon() const
-        {
-            QJsonObject res;
-            QJsonArray valuesObj;
-            QList<int> varIdList;
-            QJsonArray varIdListObj;
-
-            res["version"] = DATA_VERSION;
-            res["sub_version"] = DATA_SUBVERSION;
-
-            res["d_id"] = this->id;
-            res["time"] = this->timestamp;
-
-            for (const OscChannelValues& chVal : this->ch) {
-                if (chVal.varId == 0) continue;
-
-                varIdList << chVal.varId;
-                varIdListObj << chVal.varId;
-            }
-            res["vars"] = varIdListObj;
-
-            for (const OscChannelValues& chVal : this->ch) {
-                if (!varIdList.contains(chVal.varId))
-                        continue;
-
-                switch (chVal.type) {
-                    case OscChannelValues::IntegerType:
-                        for (int i=0; i< chVal.numValues.count(); i++) {
-                            valuesObj << chVal.numValues[i].i;
-                        } break;
-                    case OscChannelValues::FloatType:
-                        for (int i=0; i< chVal.numValues.count(); i++) {
-                            valuesObj << chVal.numValues[i].f;
-                        } break;
-
-                    case OscChannelValues::DiscreteType:
-                        for (int i=0; i< chVal.discrValues.count(); i++) {
-                            valuesObj << chVal.discrValues[i];
-                        }
-                };
-            }
-
-            res["values"] = valuesObj;
-
-            return res;
         }
     };
 
@@ -283,9 +248,9 @@ class IOscDataStorageService
 public:
     virtual ~IOscDataStorageService() {}
     virtual long save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data) = 0;
+    virtual long checkVersion(QString fileFrom) = 0;
     virtual long loadHeader(QString fileFrom, DDE_OSC_HEADER &header) = 0;
     virtual long loadData(QString fileFrom, OscType::OscDataBuffer& data) = 0;
-
 };
 
 #endif // OSCTYPES_H
