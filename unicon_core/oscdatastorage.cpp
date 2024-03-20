@@ -291,6 +291,7 @@ QJsonObject OscDataStorage::serializeToJSon(const OscDataBuffer& dat) const
 {
     QJsonObject res;
     QJsonArray valuesObj;
+    QJsonArray allValues;
     QList<int> varIdList;
     QJsonArray varIdListObj;
 
@@ -300,7 +301,7 @@ QJsonObject OscDataStorage::serializeToJSon(const OscDataBuffer& dat) const
     res["d_id"] = dat.id;
     res["time"] = dat.timestamp;
 
-    for (const OscChannelValues& chVal : dat.ch) {
+    for (const OscChannelValues& chVal : dat.chArray) {
         if (chVal.varId == 0) continue;
 
         varIdList << chVal.varId;
@@ -308,7 +309,7 @@ QJsonObject OscDataStorage::serializeToJSon(const OscDataBuffer& dat) const
     }
     res["vars"] = varIdListObj;
 
-    for (const OscChannelValues& chVal : dat.ch) {
+    for (const OscChannelValues& chVal : dat.chArray) {
         if (!varIdList.contains(chVal.varId))
                 continue;
 
@@ -327,9 +328,11 @@ QJsonObject OscDataStorage::serializeToJSon(const OscDataBuffer& dat) const
                     valuesObj << chVal.discrValues[i];
                 }
         };
+
+        allValues.append(valuesObj);
     }
 
-    res["values"] = valuesObj;
+    res["values"] = allValues;
 
     return res;
 }
@@ -402,17 +405,16 @@ long OscDataStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuffer 
     int maxValueCount = 0;
 
     for (int i = 0; i < vars.count(); ++i) {
-        data.ch[i].varId = vars[i].toInt();
+        data.chArray[i].varId = vars[i].toInt();
         int valueCount = 0;
-        data.ch[i].append(values[i].toArray().toVariantList());
-        valueCount = data.ch[i].count();
+        data.chArray[i].append(values[i].toArray().toVariantList());
+        valueCount = data.chArray[i].count();
 
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
 
 
     data.valueCount = maxValueCount;
-    data.maxCount = maxValueCount;
 
     return _return_OK;
 }
@@ -440,17 +442,15 @@ long OscDataStorage::decodeData(const QCborValue& sourceDat,  OscType::OscDataBu
     int maxValueCount = 0;
 
     for (int i = 0; i < vars.size(); ++i) {
-        data.ch[i].varId = vars[i].toInteger();
+        data.chArray[i].varId = vars[i].toInteger();
         int valueCount = 0;
-        data.ch[i].append(values[i].toArray().toVariantList());
-        valueCount = data.ch[i].count();
+        data.chArray[i].append(values[i].toArray().toVariantList());
+        valueCount = data.chArray[i].count();
 
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
 
-
     data.valueCount = maxValueCount;
-    data.maxCount = maxValueCount;
 
     return _return_OK;
 }

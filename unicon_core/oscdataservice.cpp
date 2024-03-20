@@ -72,7 +72,7 @@ void OscDataService::clearDataBuffer(OscType::OscDataBuffer* buff)
     buff->timestamp = 0;
     buff->lastDataPos = 0;
 
-    for (OscChannelValues& chValues : buff->ch) {
+    for (OscChannelValues& chValues : buff->chArray) {
         chValues.clear();
     }
 }
@@ -91,7 +91,7 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
 
         if (channel.var.id == 0) continue;
 
-        OscChannelValues& chValues = buff->ch[chInd];
+        OscChannelValues& chValues = buff->chArray[chInd];
         chValues.channelNum = channel.chNum;
         chValues.varId = channel.var.id;
         chValues.scale = channel.gain;
@@ -153,14 +153,13 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     }
 
     buff->valueCount += dat.data_length;
-    buff->maxCount = buff->maxCount < buff->valueCount ? buff->valueCount : buff->maxCount;
 
     for (int chInd = 0; chInd < hdr.settings.channel_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
 
         if (channel.var.id == 0) continue;
 
-        OscChannelValues& chValues = buff->ch[chInd];
+        OscChannelValues& chValues = buff->chArray[chInd];
 
         const OSC_DATA& chData = dat.data[channel.chNum];
 
@@ -263,7 +262,7 @@ QJsonObject OscDataService::dataToJson(const OscType::OscDataBuffer& data, QVect
     res["eof"] = data.eof ? "1" : "0";
     res["sof"] = data.sof ? "1" : "0";
 
-    for (const OscChannelValues& chVal : data.ch) {
+    for (const OscChannelValues& chVal : data.chArray) {
         if (chVal.varId == 0) continue;
         if (!vars.empty() && !vars.contains(chVal.varId)) {
             continue;
