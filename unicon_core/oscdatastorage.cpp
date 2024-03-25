@@ -290,7 +290,6 @@ long OscDataStorage::loadData(QString fileFrom, OscType::OscDataBuffer& data)
 QJsonObject OscDataStorage::serializeToJSon(const OscDataBuffer& dat) const
 {
     QJsonObject res;
-    QJsonArray valuesObj;
     QJsonArray allValues;
     QList<int> varIdList;
     QJsonArray varIdListObj;
@@ -310,6 +309,8 @@ QJsonObject OscDataStorage::serializeToJSon(const OscDataBuffer& dat) const
     res["vars"] = varIdListObj;
 
     for (const OscChannelValues& chVal : dat.chArray) {
+        QJsonArray valuesObj;
+
         if (!varIdList.contains(chVal.varId))
                 continue;
 
