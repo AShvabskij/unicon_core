@@ -87,6 +87,7 @@ private slots:
 
 private:
 
+    bool checkIP(const QHostAddress &address) const;
     QJsonObject jsonFromString(const QString& in);
     QByteArray byteArrayFromJson(const QJsonObject& in);
 

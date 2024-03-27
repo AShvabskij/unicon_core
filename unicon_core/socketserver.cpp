@@ -57,6 +57,7 @@
 
 #include "paramshandler.h"
 #include "devicehandler.h"
+#include <QTcpSocket>
 
 using namespace std;
 
@@ -91,11 +92,11 @@ void SocketServer::start()
 
     if (m_socketServer->listen(QHostAddress::Any, m_port))
     {
-        QString ip_adress;
-        const QHostAddress &localhost = QHostAddress(QHostAddress::LocalHost);
+        QString ip_adress = "";
         for (const QHostAddress &address: QNetworkInterface::allAddresses()) {
-            if (address.protocol() == QAbstractSocket::IPv4Protocol && address != localhost) {
-                 ip_adress = address.toString();
+            if (checkIP(address)) {
+                ip_adress = address.toString();
+//              break;
             }
         }
 
@@ -161,6 +162,40 @@ void SocketServer::processMessage(const QString &message)
 void SocketServer::binaryProcessMessage(const QByteArray &message)
 {
     QTextStream(stdout) << "binary process message" << message;
+}
+
+bool SocketServer::checkIP(const QHostAddress &address) const
+{
+    if (address.protocol() != QAbstractSocket::IPv4Protocol) {
+        return false;
+    }
+
+    const QHostAddress &localhost = QHostAddress(QHostAddress::LocalHost);
+
+    if ( address == localhost) {
+        return false;
+    }
+/*
+    QTcpSocket tcpSocket;
+    tcpSocket.connectToHost("10.9.0.1", 51820);
+
+    // Display connection status
+    if (!tcpSocket.waitForConnected()) {
+        return false;
+    }
+*/
+
+    QHostAddress mainVpnHost ("10.9.0.1");
+    if (address.isInSubnet(mainVpnHost, 24) ) {
+        return true;
+    }
+
+    QHostAddress rezVpnHost ("10.8.0.1");
+    if (address.isInSubnet(rezVpnHost, 24) ) {
+        return true;
+    }
+
+    return true;
 }
 
 QJsonObject SocketServer::jsonFromString(const QString& in)
