@@ -86,8 +86,8 @@ private slots:
     void binaryProcessMessage(const QByteArray &message);
 
 private:
-
-    bool checkIP(const QHostAddress &address) const;
+    
+    QHostAddress resolveIP(QList<QHostAddress> addressList) const;
     QJsonObject jsonFromString(const QString& in);
     QByteArray byteArrayFromJson(const QJsonObject& in);
 

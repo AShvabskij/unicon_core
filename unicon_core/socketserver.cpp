@@ -94,13 +94,10 @@ void SocketServer::start()
 
     if (m_socketServer->listen(QHostAddress::Any, m_port))
     {
-        QString ip_adress = "";
-        for (const QHostAddress &address: QNetworkInterface::allAddresses()) {
-            if (checkIP(address)) {
-                ip_adress = address.toString();
-                break;
-            }
-        }
+
+        QList<QHostAddress> allAddresses = QNetworkInterface::allAddresses();
+        QHostAddress resolvedAddress = resolveIP(allAddresses);
+        m_ip = resolvedAddress.toString();
 
         QTextStream(stdout) << "Socket Server " << m_ip <<  " listening on port " << m_port << '\n';
         connect(m_socketServer, &QWebSocketServer::newConnection,
@@ -176,46 +173,49 @@ void SocketServer::binaryProcessMessage(const QByteArray &message)
     QTextStream(stdout) << "binary process message" << message;
 }
 
-bool SocketServer::checkIP(const QHostAddress &address) const
+QHostAddress SocketServer::resolveIP( QList<QHostAddress> addressList) const
 {
-    if (address.protocol() != QAbstractSocket::IPv4Protocol) {
-        return false;
-    }
-
-    const QHostAddress &localhost = QHostAddress(QHostAddress::LocalHost);
-
-    if ( address == localhost) {
-        return false;
-    }
-
-
     QTcpSocket tcpSocket;
+    QHostAddress mainVpnHost("10.9.0.1");
 
-    QHostAddress mainVpnHost ("10.9.0.1");
-    if (address.isInSubnet(mainVpnHost, 24) ) {
-        tcpSocket.connectToHost(mainVpnHost, 22);
-        if (tcpSocket.waitForConnected()) {
-            return true;
+    for (const QHostAddress& address : addressList) {
+        if (address.isInSubnet(mainVpnHost, 24)) {
+            tcpSocket.connectToHost(mainVpnHost, 22);
+            if (tcpSocket.waitForConnected()) {
+                    return address;
+            }
+            break;
+        }
+
+    }
+
+    QHostAddress rezVpnHost("10.8.0.1");
+
+    for (const QHostAddress& address : addressList) {
+        if (address.isInSubnet(rezVpnHost, 24)) {
+            tcpSocket.connectToHost(rezVpnHost, 22);
+            if (tcpSocket.waitForConnected()) {
+                    return address;
+            }
+            break;
+        }
+
+    }
+
+    for (const QHostAddress& address : addressList) {
+        if (address.protocol() != QAbstractSocket::IPv4Protocol ||
+            address == QHostAddress(QHostAddress::LocalHost)) {
+            continue;
+        }
+        if (address.isLinkLocal() || address.isSiteLocal()) {
+            return address;
+        }
+        if (address.isGlobal() ) {
+            return address;
         }
     }
 
-    QHostAddress rezVpnHost ("10.8.0.1");
-    if (address.isInSubnet(rezVpnHost, 24) ) {
-        tcpSocket.connectToHost(rezVpnHost, 22);
-        if (tcpSocket.waitForConnected()) {
-            return true;
-        }
-    }
-
-    if (address.isLinkLocal() || address.isSiteLocal()) {
-        return true;
-    }
-
-    if (address.isGlobal() || address.isLoopback()) {
-        return true;
-    }
-
-    return false;
+    return QHostAddress();
 }
 
 QJsonObject SocketServer::jsonFromString(const QString& in)
