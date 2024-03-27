@@ -31,6 +31,8 @@ const int MAX_VALUE = 0xFFFE; // from zero to 15
 #define ENDL "\n"
 #endif
 
+using namespace OscType;
+
 OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
 {
     OscType::OscDataBuffer* buff = new OscType::OscDataBuffer();
@@ -47,6 +49,7 @@ OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
         OscType::OscChannelValues& chValues = buff->chArray[chInd];
         chValues.channelNum = channel.chNum;
         chValues.varId = channel.var.id;
+        chValues.type = channel.var.type;
         chValues.scale = channel.gain;
         chValues.offset = channel.offset;
     }
@@ -84,6 +87,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
      QStringList varIndexes;
      QStringList varNames;
      QStringList varNumOfSets;
+     QMap<int/*var_id*/, int/*bitNum*/> discrVarsBits;
 
      for (int i= 0; i < hdr.settings.channel_count; ++i) {
          auto& ch = hdr.channels[i];
@@ -108,8 +112,9 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
                  << QString::number(ch.gain) << QString::number(ch.offset)
                  << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
                  << "TRUE";
-         }
-         else if (ch.var.type == OSC_VAR_DISCRETE) {
+         } else if (ch.var.type == OSC_VAR_DISCRETE) {
+             discrVarsBits[ch.var.id] = ch.firstBit;
+
              line << QString("&") + QString(ch.var.name)
                  << QString("L") + QString::number(numOfSet)
                  << QString::number(chNumOfSet).rightJustified(2, '0')
@@ -132,24 +137,49 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
      res << "* " << SEP << varNames.join(SEP)  << ENDL;
      res << "* " << SEP << varNumOfSets.join(SEP)  << ENDL;
 
+     QMap<int/*channel*/, QVariant/*value*/> chValues;
+
      for (int i = 0; i < data.valueCount; i++) {
          QStringList rec;
          rec << QString::number(i + 1);
 
-         for (int chNum = 0; chNum <= OSC_MAX_VARS; chNum++) {
-             const OscType::OscChannelValues& chVal = data.chArray[chNum];
+         for (int ind = 0; ind <= OSC_MAX_VARS; ind++) {
+             const OscType::OscChannelValues& var = data.chArray[ind];
 
-             if (chVal.varId == 0)
+             if (var.varId == 0)
                  continue;
 
-             if (i >= chVal.count()) {
-                 rec << 0;
+             if (i >= var.count()) {
                  break;
              }
 
-             QVariant val = chVal.value(i);
-             int value = denormalizeValue(val.toFloat());
-             rec << QString::number(value);
+             switch (var.type) {
+                 case OSC_VAR_INT:
+                 case OSC_VAR_FLOAT: {
+                     QVariant val = var.value(i);
+                     chValues[var.channelNum] = val;
+                 } break;
+
+                 case OSC_VAR_DISCRETE: {
+
+                     int value = chValues[var.channelNum].toInt();
+                     int bitNum = discrVarsBits[var.varId];
+                     int bitMask = 1 << bitNum;
+                     int bitValue = var.value(i).toInt();
+
+                     value = (bitValue == 0) ? (value & ~bitMask) : (value | bitMask);
+
+                     chValues[var.channelNum] = value;
+
+                 } break;
+             case UNDEFINED: {}
+             };
+         }
+
+         for (int key : chValues.keys() ) {
+             QVariant value = chValues[key];
+             int n = denormalizeValue(value.toFloat());
+             rec << QString::number(n);
          }
 
          res << rec.join(",") << ENDL;
