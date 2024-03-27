@@ -61,6 +61,8 @@
 
 using namespace std;
 
+const QString CMD_GET_IP = "GET_IP";
+
 QT_USE_NAMESPACE
 
 static QString getIdentifier(QWebSocket *peer)
@@ -100,7 +102,7 @@ void SocketServer::start()
             }
         }
 
-        QTextStream(stdout) << "Socket Server " << ip_adress <<  " listening on port " << m_port << '\n';
+        QTextStream(stdout) << "Socket Server " << m_ip <<  " listening on port " << m_port << '\n';
         connect(m_socketServer, &QWebSocketServer::newConnection,
                 this, &SocketServer::onNewConnection);
     } else {
@@ -151,6 +153,16 @@ void SocketServer::processMessage(const QString &message)
 {
     QTextStream(stdout) << "process message " << message << "\n";
     QJsonObject jsObject = jsonFromString(message);
+
+    if (!jsObject.keys().contains("request_id") && jsObject.keys().contains("cmd")) {
+        if(jsObject.value("cmd") == CMD_GET_IP) {
+            QJsonObject obj;
+            obj["ip"] = m_ip;
+            m_response->send(obj);
+        }
+
+        return;
+    }
 
     if (!jsObject.keys().contains("request_id") || !jsObject.keys().contains("cmd")) {
         return;

@@ -92,6 +92,7 @@ private:
     QByteArray byteArrayFromJson(const QJsonObject& in);
 
     quint16 m_port = 1235;
+    QString m_ip = "";
     QWebSocketServer *m_socketServer = nullptr;
     RequestManager* m_request = nullptr;
     ResponseManager* m_response = nullptr;
