@@ -96,25 +96,20 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
         chValues.varId = channel.var.id;
         chValues.scale = channel.gain;
         chValues.offset = channel.offset;
+        chValues.type = channel.var.type;
 
         switch (channel.var.type) {
-        case OSC_VAR_TYPE::OSC_VAR_INT: {
-            chValues.type = OscChannelValues::IntegerType;
-            chValues.numValues.reserve(MAX_DATA_COUNT);
-        } break;
+        case OSC_VAR_TYPE::OSC_VAR_INT:
         case OSC_VAR_TYPE::OSC_VAR_FLOAT: {
-            chValues.type = OscChannelValues::FloatType;
             chValues.numValues.reserve(MAX_DATA_COUNT);
         } break;
         case OSC_VAR_TYPE::OSC_VAR_DISCRETE: {
-            chValues.type = OscChannelValues::DiscreteType;
             chValues.discrValues.reserve(MAX_DATA_COUNT);
         } break;
         case UNDEFINED: {
             qWarning() << "Undefined var type" << ", id = " << channel.var.id << ", name = " << channel.var.name;
         }
         }
-
     }
 
     return buff;

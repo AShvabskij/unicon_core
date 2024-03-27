@@ -315,16 +315,16 @@ QJsonObject OscDataStorage::serializeToJSon(const OscDataBuffer& dat) const
                 continue;
 
         switch (chVal.type) {
-            case OscChannelValues::IntegerType:
+            case OSC_VAR_INT:
                 for (int i=0; i< chVal.numValues.count(); i++) {
                     valuesObj << chVal.numValues[i].i;
                 } break;
-            case OscChannelValues::FloatType:
+            case OSC_VAR_FLOAT:
                 for (int i=0; i< chVal.numValues.count(); i++) {
                     valuesObj << chVal.numValues[i].f;
                 } break;
 
-            case OscChannelValues::DiscreteType:
+            case OSC_VAR_DISCRETE:
                 for (int i=0; i< chVal.discrValues.count(); i++) {
                     valuesObj << chVal.discrValues[i];
                 }
@@ -366,8 +366,8 @@ long OscDataStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
         auto& ch = h.channels[ind];
 
         ch.chNum = elem["ch_num"].toInt();
-        ch.firstBit = elem["firstBit"].toInt();
-        ch.lastBit = elem["lastBit"].toInt();
+        ch.firstBit = elem["first_bit"].toInt();
+        ch.lastBit = elem["last_bit"].toInt();
         ch.gain = elem["gain"].toInt();
         ch.offset = elem["offset"].toInt();
 
@@ -447,7 +447,10 @@ long OscDataStorage::decodeData(const QCborValue& sourceDat,  OscType::OscDataBu
         int valueCount = 0;
         data.chArray[i].append(values[i].toArray().toVariantList());
         valueCount = data.chArray[i].count();
-
+/*
+        if (data.chArray[i].type == OSC_VAR_DISCRETE)
+            break;
+*/
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
 

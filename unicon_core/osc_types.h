@@ -52,19 +52,19 @@ namespace OscType {
         float scale = 0.0;
         float offset = 0.0;
 
-        enum Type { IntegerType, FloatType, DiscreteType } type = FloatType;
+        OSC_VAR_TYPE type = OSC_VAR_FLOAT;
 
         QList<Number32> numValues;
         QList<qint8> discrValues;
 
         QVariant value(int pos) const {
             switch (type) {
-            case IntegerType:
+            case OSC_VAR_INT:
                 return QVariant::fromValue(numValues.value(pos).i);
-            case FloatType: {
+            case OSC_VAR_FLOAT: {
                 return QVariant::fromValue(numValues.value(pos).f);
             } break;
-            case OscType::OscChannelValues::DiscreteType: {
+            case OSC_VAR_DISCRETE: {
                 return QVariant::fromValue(discrValues.value(pos));
             } break;
             default: return QVariant();
@@ -74,7 +74,7 @@ namespace OscType {
         QVariantList values(int startPos) const {
             QVariantList res;
             switch (type) {
-            case IntegerType: {
+            case OSC_VAR_INT: {
                 auto values = numValues.mid(startPos,  numValues.size());
                 res.reserve(values.count());
                 for (const Number32 &num: values) {
@@ -82,7 +82,7 @@ namespace OscType {
                 }
 
             } break;
-            case FloatType: {
+            case OSC_VAR_FLOAT: {
                 auto values = numValues.mid(startPos,  numValues.size());
                 res.reserve(values.count());
                 for (const Number32 &num: values) {
@@ -90,12 +90,13 @@ namespace OscType {
                 }
 
             } break;
-            case DiscreteType: {
+            case OSC_VAR_DISCRETE: {
                 auto values = discrValues.mid(startPos,  discrValues.size());
                 for (const auto &num: values) {
                     res << num;
                 }
             } break;
+            case UNDEFINED: {}
             }
 
             return res;
@@ -103,43 +104,67 @@ namespace OscType {
 
         template<typename T> void append(const T& value) {
              switch (type) {
-             case IntegerType: {
+             case OSC_VAR_INT: {
                  Number32 num;
                  num.i = value;
                  numValues.append(num);
              } break;
-             case FloatType: {
+             case OSC_VAR_FLOAT: {
                  Number32 num;
                  num.f = value;
                  numValues.append(num);
              } break;
-             case DiscreteType: {
+             case OSC_VAR_DISCRETE: {
                  discrValues.append(value);
              } break;
+             case UNDEFINED: {}
              }
          }
 
         void append(QVariant value) {
             switch (type) {
-            case IntegerType: {
+            case OSC_VAR_INT: {
                 Number32 num;
                 num.i = value.toInt();
                 numValues.append(num);
             } break;
-            case FloatType: {
+            case OSC_VAR_FLOAT: {
                 Number32 num;
                 num.f = value.toFloat();
                 numValues.append(num);
             } break;
-            case DiscreteType: {
+            case OSC_VAR_DISCRETE: {
                 discrValues.append(value.toInt());
             } break;
+            case UNDEFINED: {}
             }
         }
 
         void append(QVariantList values) {
-            for (auto value: values) {
-                append(value);
+            switch (type) {
+            case OSC_VAR_INT: {
+                numValues.reserve(values.count());
+                for (const auto& val: values) {
+                    Number32 num;
+                    num.i = val.toInt();
+                    numValues.append(num);
+                }
+            } break;
+            case OSC_VAR_FLOAT: {
+                numValues.reserve(values.count());
+                for (const auto& val: values) {
+                    Number32 num;
+                    num.f = val.toFloat();
+                    numValues.append(num);
+                }
+            } break;
+            case OSC_VAR_DISCRETE: {
+                discrValues.reserve(values.count());
+                for (const auto& val: values) {
+                    discrValues.append(val.toInt());
+                }
+            } break;
+            case UNDEFINED: {}
             }
         }
 
