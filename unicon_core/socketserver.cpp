@@ -195,21 +195,22 @@ QHostAddress SocketServer::resolveIP( QList<QHostAddress> addressList) const
         if (address.isInSubnet(rezVpnHost, 24)) {
             tcpSocket.connectToHost(rezVpnHost, 22);
             if (tcpSocket.waitForConnected()) {
-                    return address;
+                return address;
             }
             break;
         }
-
     }
 
     for (const QHostAddress& address : addressList) {
         if (address.protocol() != QAbstractSocket::IPv4Protocol ||
-            address == QHostAddress(QHostAddress::LocalHost)) {
+                address == QHostAddress(QHostAddress::LocalHost)) {
             continue;
         }
+/*
         if (address.isLinkLocal() || address.isSiteLocal()) {
             return address;
         }
+*/
         if (address.isGlobal() ) {
             return address;
         }
