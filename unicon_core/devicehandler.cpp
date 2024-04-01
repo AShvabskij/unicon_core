@@ -215,7 +215,10 @@ long DeviceHandler::requestDevice(SysType sysType, DevInd deviceId, Device& devi
     device.instanceName = getDeviceInstanceName(device.ID);
     device.name = getDeviceName(device.ID);
 
-    if (device.name.isEmpty()) return _return_OK;
+    if (device.name.isEmpty()) {
+        qWarning() << "Device name is not set (name is empty), id = " << device.ID.id;
+        return _return_OK;
+    }
 
     device.desc = getDeviceDescr(device.ID); // todo: получать из другого сервиса
 
