@@ -1,7 +1,7 @@
 #ifndef DEVICE_TYPES_H
 #define DEVICE_TYPES_H
 
-#define MAX_DEV_SUPPORT  (32+1)
+#define MAX_DEV_SUPPORT  (16+1)
 
 //#include <QtTypes>
 #include <QVariantList>
