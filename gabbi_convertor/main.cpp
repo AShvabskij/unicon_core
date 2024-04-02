@@ -157,7 +157,8 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
                  case OSC_VAR_INT:
                  case OSC_VAR_FLOAT: {
                      QVariant val = var.value(i);
-                     chValues[var.channelNum] = val;
+                     int n = denormalizeValue(val.toFloat());
+                     chValues[var.channelNum] = n;
                  } break;
 
                  case OSC_VAR_DISCRETE: {
@@ -178,8 +179,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
 
          for (int key : chValues.keys() ) {
              QVariant value = chValues[key];
-             int n = denormalizeValue(value.toFloat());
-             rec << QString::number(n);
+             rec << QString::number(value.toInt());
          }
 
          res << rec.join(",") << ENDL;
