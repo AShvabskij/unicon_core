@@ -98,7 +98,7 @@ private:
     Q_SLOT void sendActualParamValue(const Param &param, int requestId, int error = 0);
 
     ParamList m_capturedParams; // all params captured by opened streams
-    QMap<int, DDE_GET_PARAMS_HEADER> m_capturedModules; // Modules (groups) of captured parameters
+    QMap<int/*modId*/, DDE_GET_PARAMS_HEADER> m_capturedModules[MAX_DEV_SUPPORT]; // Modules (groups) of captured parameters
 
     int m_streamValCount = 0;
     QTimer* m_streamTimer;

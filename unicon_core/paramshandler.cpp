@@ -308,7 +308,8 @@ long ParamsHandler::captureParam(const Param& p)
     m_capturedParams << p;
 
     int count = 0;
-    if (!m_capturedModules.contains(p.ID.moduleId)) {
+    DevInd devInd = p.ID.devId.id;
+    if (!m_capturedModules[devInd].contains(p.ID.moduleId)) {
 
         for (const Param& p_ : m_capturedParams) {
             if (p_.ID.moduleId == p.ID.moduleId) {
@@ -341,7 +342,7 @@ long ParamsHandler::captureParam(const Param& p)
             }
 
             if (captureModule) {
-                m_capturedModules[p.ID.moduleId] = module;
+                m_capturedModules[devInd][p.ID.moduleId] = module;
             }
         }
     }
@@ -519,7 +520,10 @@ void ParamsHandler::stopPooling()
 {
     m_streamTimer->stop();
     m_capturedParams .clear();
-    m_capturedModules.clear();
+    for (DevInd devInd = 0; devInd < MAX_DEV_SUPPORT; devInd++) {
+        m_capturedModules[devInd].clear();
+    }
+
     streamParamCount = 0;
 }
 
@@ -536,22 +540,26 @@ void ParamsHandler::streamParamsValue()
 
     ParamValueList allValues;
     ParamList singleParams;
-    DevID devID = m_capturedParams.first().ID.devId;
+    SysType sysType = m_capturedParams.first().ID.devId.type;
 
     for (const Param& p : m_capturedParams) {
-        if (!m_capturedModules.contains(p.ID.moduleId)) {
+        if (!m_capturedModules[p.ID.devId.id].contains(p.ID.moduleId)) {
             singleParams.append(p);
         }
     }
 
-    for (const int modId: m_capturedModules.keys()) {
-        ParamValueList values = getModuleValues(devID, modId, res); // request all values of the group
-        error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
-        if (error != 0) {
-            for (auto value : values) value.error = error;
-        }
+    for (DevInd devInd = 0; devInd < MAX_DEV_SUPPORT; devInd++) {
+        for (const int modId: m_capturedModules[devInd].keys()) {
+            DevID devID = {sysType, devInd};
 
-        allValues.append(values);
+            ParamValueList values = getModuleValues(devID, modId, res); // request all values of the group
+            error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
+            if (error != 0) {
+                for (auto value : values) value.error = error;
+            }
+
+            allValues.append(values);
+        }
     }
 
     for (const Param &p : singleParams) {
@@ -600,8 +608,6 @@ void ParamsHandler::streamParamsValue()
     }
 
     QTextStream(stdout) << "\n" ;
-
-
 
     return;
 }
@@ -658,12 +664,14 @@ ParamValueList ParamsHandler::getModuleValues(const DevID &devID, int moduleId, 
     _dde_func_return_t res = _return_OK;
 
     int module_elCount = 0;
-    if (!m_capturedModules.contains(moduleId)) {
+    DevInd devInd = devID.id;
+
+    if (!m_capturedModules[devInd].contains(moduleId)) {
         DDE_GET_PARAMS_HEADER modHeader;
         res = getModuleHeader(devID, moduleId, modHeader);
         module_elCount = modHeader.el_count;
     } else {
-        module_elCount = m_capturedModules[moduleId].el_count;
+        module_elCount = m_capturedModules[devInd][moduleId].el_count;
     }
 
     if (res != _return_OK) {
