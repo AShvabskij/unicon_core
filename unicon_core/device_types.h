@@ -1,7 +1,7 @@
 #ifndef DEVICE_TYPES_H
 #define DEVICE_TYPES_H
 
-#define MAX_DEV_SUPPORT  (16+1)
+#define MAX_DEV_SUPPORT  (32+1)
 
 //#include <QtTypes>
 #include <QVariantList>
@@ -43,7 +43,7 @@ struct ParamID
     int id;
 
     bool isValid() const {
-        return id != 0 && moduleId != 0 && devId.isValid();
+        return id != 0 && moduleId >= 0 && devId.isValid();
     }
 
     int uid() const {
