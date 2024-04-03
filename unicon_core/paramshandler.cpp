@@ -225,13 +225,13 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
     QJsonArray params = cmdBody.value("params").toArray();
     int freq = cmdBody.keys().contains("frequency") ? cmdBody.value("frequency").toInt() : DEFAULT_PARAM_FREQUENCY;
 
-    DevID devID = {sysType, static_cast<quint16>(deviceId)};
-
     long ret = _return_OK;
 
     if (paramId != -1) {
         Param p;
+        DevID devID = {sysType, static_cast<quint16>(deviceId)};
         p.ID = {devID, moduleId, paramId};
+
         ret = getParamHeader(p.ID, &p);
         if (ret == _return_OK) {
 //          sendActualParamValue(p, requestId);
@@ -241,11 +241,14 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
     } else if (moduleId != -1) { // capture the whole module
         ParamList capturedParams;
         DDE_GET_PARAMS_HEADER module_header;
+        DevID devID = {sysType, static_cast<quint16>(deviceId)};
+
         ret = getModuleHeader(devID, moduleId, module_header);
         Q_ASSERT(module_header.el_count > 0 && ret == _return_OK);
 
         for (const GLIO_ELEMENT_DESCR& elem : module_header.el_descr) {
             Param p;
+            DevID devID = {sysType, static_cast<quint16>(deviceId)};
             p.ID = {devID, moduleId, elem.id};
 
             ret = getParamHeader(p.ID, &p);
