@@ -21,6 +21,12 @@ bool BaseReqHandler::canHandle(const QJsonObject &request)
         return false;
     }
 
+    int requestId = request.value("request_id").toInt();
+
+    if (requestId <= 0) {
+        return false;
+    }
+
     return true;
 }
 

@@ -328,6 +328,7 @@ QJsonObject OscDataStorage::serializeToJSon(const OscDataBuffer& dat) const
                 for (int i=0; i< chVal.discrValues.count(); i++) {
                     valuesObj << chVal.discrValues[i];
                 }
+            case UNDEFINED: {}
         };
 
         allValues.append(valuesObj);

@@ -83,11 +83,9 @@ void ParamsHandler::handleClose()
 void ParamsHandler::handleGetHeader(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = sysTypeId(request);
-
     QJsonObject cmdBody = request.value("body").toObject();
 
-    if (requestId <= 0 || cmdBody.isEmpty()) {
+    if (cmdBody.isEmpty()) {
         return;
     }
 
@@ -98,7 +96,7 @@ void ParamsHandler::handleGetHeader(const QJsonObject &request)
     ParamList params;
     long ret = true;
 
-    DevID devID = {sysType, static_cast<DevInd>(deviceId)};
+    DevID devID = {m_sysType, static_cast<DevInd>(deviceId)};
     Param p;
     p.ID = {devID, moduleId, paramId};
 
@@ -114,10 +112,9 @@ void ParamsHandler::handleGetHeader(const QJsonObject &request)
 void ParamsHandler::handleGetValue(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = sysTypeId(request);
     QJsonObject cmdBody = request.value("body").toObject();
 
-    if (requestId <= 0 || cmdBody.isEmpty()) {
+    if (cmdBody.isEmpty()) {
         return;
     }
 
@@ -126,7 +123,7 @@ void ParamsHandler::handleGetValue(const QJsonObject &request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     ParamValue val;
-    val.paramID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
+    val.paramID = {{m_sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
 
     long res = getParamValue(val.paramID, &val);
     int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
@@ -138,11 +135,10 @@ void ParamsHandler::handleGetValue(const QJsonObject &request)
 void ParamsHandler::handleSetValue(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = sysTypeId(request);
 
     QJsonObject cmdBody = request.value("body").toObject();
 
-    if (requestId <= 0 || cmdBody.isEmpty()) {
+    if (cmdBody.isEmpty()) {
         return;
     }
 
@@ -151,7 +147,7 @@ void ParamsHandler::handleSetValue(const QJsonObject &request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     Param p;
-    p.ID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
+    p.ID = {{m_sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
     _dde_func_return_t ret = getParamHeader(p.ID, &p);
     if (ret <= _return_FAIL) {
         return;
@@ -216,10 +212,9 @@ long ParamsHandler::setParamValue(const ParamValue& value)
 void ParamsHandler::handleOpenStream(const QJsonObject& request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = sysTypeId(request);
     QJsonObject cmdBody = request.value("body").toObject();
 
-    if (requestId <= 0 || cmdBody.isEmpty()) {
+    if (cmdBody.isEmpty()) {
         return;
     }
 
@@ -233,7 +228,7 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
 
     if (paramId != -1) {
         Param p;
-        DevID devID = {sysType, static_cast<quint16>(deviceId)};
+        DevID devID = {m_sysType, static_cast<quint16>(deviceId)};
         p.ID = {devID, moduleId, paramId};
 
         ret = getParamHeader(p.ID, &p);
@@ -245,14 +240,14 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
     } else if (moduleId != -1) { // capture the whole module
         ParamList capturedParams;
         DDE_GET_PARAMS_HEADER module_header;
-        DevID devID = {sysType, static_cast<quint16>(deviceId)};
+        DevID devID = {m_sysType, static_cast<quint16>(deviceId)};
 
         ret = getModuleHeader(devID, moduleId, module_header);
         Q_ASSERT(module_header.el_count > 0 && ret == _return_OK);
 
         for (const GLIO_ELEMENT_DESCR& elem : module_header.el_descr) {
             Param p;
-            DevID devID = {sysType, static_cast<quint16>(deviceId)};
+            DevID devID = {m_sysType, static_cast<quint16>(deviceId)};
             p.ID = {devID, moduleId, elem.id};
 
             ret = getParamHeader(p.ID, &p);
@@ -269,7 +264,7 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
             int moduleId = obj.value("module_id").toInt();
             int paramId  = obj.value("param_id").toInt();
             DevInd deviceId  = obj.value("device_id").toInt();
-            DevID devID = {sysType, static_cast<quint16>(deviceId)};
+            DevID devID = {m_sysType, static_cast<quint16>(deviceId)};
 
             Param p;
             p.ID = {devID, moduleId, paramId};
@@ -377,10 +372,9 @@ long ParamsHandler::openParamStreams(ParamList params, int freq)
 void ParamsHandler::handleCloseStream(const QJsonObject &request)
 {
     int requestId = request.value("request_id").toInt();
-    SysType sysType = sysTypeId(request);
     QJsonObject cmdBody = request.value("body").toObject();
 
-    if (requestId <= 0 || cmdBody.isEmpty()) {
+    if (cmdBody.isEmpty()) {
         return;
     }
 
@@ -392,7 +386,7 @@ void ParamsHandler::handleCloseStream(const QJsonObject &request)
         handleCloseAllStreams(request);
     }
 
-    ParamID pID = {{sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
+    ParamID pID = {{m_sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
 
     for (const Param &p: m_capturedParams) {
         if (p.ID == pID) {
@@ -414,16 +408,12 @@ void ParamsHandler::handleCloseStream(const QJsonObject &request)
     return;
 }
 
-void ParamsHandler::handleCloseAllStreams(const QJsonObject &request)
+void ParamsHandler::handleCloseAllStreams(const QJsonObject&/*request*/)
 {
-    int requestId = request.value("request_id").toInt();
-    SysType sysType = sysTypeId(request);
 
-    if (requestId <= 0) {
-        return;
-    }
+    stopPooling();
 
-
+/*
     ParamList params;
     for (const Param &p: m_capturedParams) {
         if (p.ID.devId.type != sysType) {
@@ -437,6 +427,7 @@ void ParamsHandler::handleCloseAllStreams(const QJsonObject &request)
         m_capturedParams = params;
         startPooling();
     }
+*/
 
     return;
 }
@@ -549,7 +540,6 @@ void ParamsHandler::streamParamsValue()
 
     ParamValueList allValues;
     ParamList singleParams;
-    SysType sysType = m_capturedParams.first().ID.devId.type;
 
     for (const Param& p : m_capturedParams) {
         if (!m_capturedModules[p.ID.devId.id].contains(p.ID.moduleId)) {
@@ -559,7 +549,7 @@ void ParamsHandler::streamParamsValue()
 
     for (DevInd devInd = 0; devInd < MAX_DEV_SUPPORT; devInd++) {
         for (const int modId: m_capturedModules[devInd].keys()) {
-            DevID devID = {sysType, devInd};
+            DevID devID = {m_sysType, devInd};
 
             ParamValueList values = getModuleValues(devID, modId, res); // request all values of the group
             error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1) : 0;
