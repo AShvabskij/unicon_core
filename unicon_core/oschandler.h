@@ -12,7 +12,7 @@ class OscHandler : public BaseReqHandler
 {
     Q_OBJECT
 public:
-    OscHandler(IDDE_Dispatcher* , IOscDataService* buffSrv);
+    OscHandler(IDDE_Dispatcher* , SysType sysType, IOscDataService* buffSrv);
     virtual int handle(const QJsonObject& request);
 
 signals:

@@ -1,8 +1,9 @@
 #include "basereqhandler.h"
 
-BaseReqHandler::BaseReqHandler(IDDE_Dispatcher *dde)
+BaseReqHandler::BaseReqHandler(IDDE_Dispatcher *dde, SysType sysType)
 {
     m_dde = dde;
+    m_sysType = sysType;
 }
 
 int BaseReqHandler::handle(const QJsonObject &request)
@@ -12,6 +13,15 @@ int BaseReqHandler::handle(const QJsonObject &request)
     }
 
     return 1;
+}
+
+bool BaseReqHandler::canHandle(const QJsonObject &request)
+{
+    if (sysTypeId(request) != m_sysType) {
+        return false;
+    }
+
+    return true;
 }
 
 void BaseReqHandler::setNext(IReqHandler *next)

@@ -24,7 +24,7 @@ bool operator==(const ParamID& a, const ParamID& b) {
             a.id == b.id;
 }
 
-ParamsHandler::ParamsHandler(IDDE_Dispatcher* dde): BaseReqHandler(dde)
+ParamsHandler::ParamsHandler(IDDE_Dispatcher* dde, SysType sysType): BaseReqHandler(dde, sysType)
 {
     m_streamTimer = new QTimer(this);
     m_streamTimer->setTimerType(Qt::PreciseTimer);
@@ -42,6 +42,10 @@ ParamsHandler::~ParamsHandler()
 
 int ParamsHandler::handle(const QJsonObject &request)
 {
+    if (!canHandle(request)) {
+        return BaseReqHandler::handle(request);
+    }
+
     QJsonObject cmdObj = request.value("cmd").toObject();
     QString cmdName = cmdObj.value("name").toString();
     QString cmdType = cmdObj.value("type").toString();

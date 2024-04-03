@@ -54,7 +54,7 @@ class ParamsHandler : public BaseReqHandler
 {
     Q_OBJECT
 public:
-    ParamsHandler(IDDE_Dispatcher*);
+    ParamsHandler(IDDE_Dispatcher*, SysType sysType);
     ~ParamsHandler();
 
     virtual int handle(const QJsonObject& request);

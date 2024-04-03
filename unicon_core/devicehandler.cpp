@@ -14,7 +14,7 @@ bool operator==(const DevID& a, const DevID& b) {
             a.id == b.id;
 }
 
-DeviceHandler::DeviceHandler(IDDE_Dispatcher* dde): BaseReqHandler(dde)
+DeviceHandler::DeviceHandler(IDDE_Dispatcher* dde, SysType sysType): BaseReqHandler(dde, sysType)
 {
 }
 
