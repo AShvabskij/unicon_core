@@ -261,6 +261,8 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
             QJsonObject obj = val.toObject();
             int moduleId = obj.value("module_id").toInt();
             int paramId  = obj.value("param_id").toInt();
+            DevInd deviceId  = obj.value("device_id").toInt();
+            DevID devID = {sysType, static_cast<quint16>(deviceId)};
 
             Param p;
             p.ID = {devID, moduleId, paramId};
