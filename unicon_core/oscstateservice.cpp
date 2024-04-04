@@ -64,7 +64,7 @@ void OscStateMachine::update(DevInd devId)
 
         if (res != _return_OK) return;
 
-        if (m_header.settings.trig_time > 0 && m_header.settings.reason > 0) {
+        if (m_header.settings.trig_time > 0) {
             m_dataSrv->reset(m_header.device_id);
             m_errCounter = 0;
             m_state = Getting;
