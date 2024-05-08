@@ -410,24 +410,7 @@ void ParamsHandler::handleCloseStream(const QJsonObject &request)
 
 void ParamsHandler::handleCloseAllStreams(const QJsonObject&/*request*/)
 {
-
     stopPooling();
-
-/*
-    ParamList params;
-    for (const Param &p: m_capturedParams) {
-        if (p.ID.devId.type != sysType) {
-            params.append(p);
-        }
-    }
-
-    stopPooling();
-
-    if (!params.isEmpty()) {
-        m_capturedParams = params;
-        startPooling();
-    }
-*/
 
     return;
 }
