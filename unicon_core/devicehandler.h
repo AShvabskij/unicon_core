@@ -12,7 +12,7 @@ struct SystemStatus
 class DeviceHandler : public BaseReqHandler
 {
 public:
-    DeviceHandler(IDDE_Dispatcher*);
+    DeviceHandler(IDDE_Dispatcher*, SysType sysType);
     virtual int handle(const QJsonObject &request);
     long requestDeviceLinks(SysType sysType, QList<DevInd> &links);
 

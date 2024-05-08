@@ -52,9 +52,9 @@ void Core::start()
     OscDataService* oscService = new OscDataService(OscDataStorage::instance());
     m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), oscService);
 
-    ParamsHandler* params = new ParamsHandler(m_ddeDisp);
-    DeviceHandler* device = new DeviceHandler(m_ddeDisp);
-    OscHandler* osc = new OscHandler(m_ddeDisp, oscService);
+    ParamsHandler* params = new ParamsHandler(m_ddeDisp, m_sysType);
+    DeviceHandler* device = new DeviceHandler(m_ddeDisp, m_sysType);
+    OscHandler* osc = new OscHandler(m_ddeDisp, m_sysType, oscService);
 
     RequestManager::instance()->registerHandler(device);
     RequestManager::instance()->registerHandler(params);

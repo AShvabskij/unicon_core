@@ -71,13 +71,17 @@ QJsonObject headerToJson(const OscHeader& h) {
 }
 }
 
-OscHandler::OscHandler(IDDE_Dispatcher* dde, IOscDataService *dataSrv): BaseReqHandler(dde)
+OscHandler::OscHandler(IDDE_Dispatcher* dde, SysType sysType, IOscDataService *dataSrv): BaseReqHandler(dde, sysType)
 {
     m_dataSrv = dataSrv;
 }
 
 int OscHandler::handle(const QJsonObject &request)
 {
+    if (!canHandle(request)) {
+        return BaseReqHandler::handle(request);
+    }
+
     QJsonObject cmdObj = request.value("cmd").toObject();
     QString cmdName = cmdObj.value("name").toString();
     QString cmdType = cmdObj.value("type").toString();
