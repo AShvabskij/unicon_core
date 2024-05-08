@@ -146,18 +146,18 @@ void ParamsHandler::handleSetValue(const QJsonObject &request)
     int moduleId = cmdBody.value("module_id").toInt();
     int paramId  = cmdBody.value("param_id").toInt();
 
-    Param p;
-    p.ID = {{m_sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
-    _dde_func_return_t ret = getParamHeader(p.ID, &p);
-    if (ret <= _return_FAIL) {
+    ParamValue val;
+    val.paramID = {{m_sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
+
+    _dde_func_return_t res = getParamValue(val.paramID, &val); // to correctly fill in ParamValue fields such as format and scale
+    if (res <= _return_FAIL) {
         return;
     }
 
-    ParamValue val(p);
     val.value = cmdBody.value("value").toVariant();
     val.timestamp = QDateTime::currentMSecsSinceEpoch();
 
-    long res = setParamValue(val);
+    res = setParamValue(val);
     int error = (res != _return_OK) ? static_cast<int>(res != 0 ? res : -1): 0;
 
     QJsonObject response = createValueObj(requestId, val, error);
