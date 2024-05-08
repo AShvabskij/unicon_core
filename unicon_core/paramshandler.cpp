@@ -583,7 +583,7 @@ void ParamsHandler::streamParamsValue()
             }
         }
 
-        QTextStream(stdout) << "[" << val.paramID.moduleId << "." << val.paramID.id << "]=" << val.value.toString();
+        QTextStream(stdout) << "[" << val.paramID.devId.id << "." << val.paramID.moduleId << "." << val.paramID.id << "]=" << val.value.toString();
         if (++i != sentValues.count()) {
             QTextStream(stdout) << ",";
         }
