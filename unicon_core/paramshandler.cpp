@@ -577,8 +577,10 @@ void ParamsHandler::streamParamsValue()
     int i = 0;
     for (const ParamValue& val : sentValues) {
         if (!val.isActual()) {
-            const int delta = val.timestamp -  QDateTime::currentMSecsSinceEpoch();
-            if (delta > -10000) {
+            int currTimeMsec = QDateTime::currentMSecsSinceEpoch();
+            const int delta = val.timestamp > 0 ? currTimeMsec - val.timestamp : 0;
+
+            if (delta > 10000) {
                 qWarning() << "The param value actuality is exceeded, " << val.paramID.logStr() << ", actuality = " << delta << "\n";
             }
         }
