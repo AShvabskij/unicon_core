@@ -56,10 +56,10 @@ void OscDataService::reset(DevInd ind)
 
     qDebug() << "Clearing buffer" << ", value count = " << buff->valueCount;
     m_mutex.lock();
-    clearDataBuffer(buff);
+//  clearDataBuffer(buff);
 
-//  delete buff;
-//  m_repository.remove(ind);
+    delete buff;
+    m_repository.remove(ind);
     m_mutex.unlock();
 }
 
