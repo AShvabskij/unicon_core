@@ -73,7 +73,7 @@ long OscDataStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBu
         QString path =  createPath(header);
         QJsonObject jsonObj = headerToJson(header);
 
-        QDateTime trigTime = QDateTime::fromTime_t(static_cast<uint>(header.settings.trig_time));
+        QDateTime trigTime = QDateTime::fromMSecsSinceEpoch(header.settings.trig_time, Qt::LocalTime);
         QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
 
         QString headerFile = path + "/" + baseFileName + ".hdr";
@@ -139,7 +139,8 @@ long OscDataStorage::saveObj(const QString fileName, const QJsonObject &obj, boo
         QByteArray bytes = doc.toJson(QJsonDocument::Compact);
 
         QTextStream iStream( &file );
-        iStream.setCodec( "utf-8" );
+        iStream.setEncoding(QStringConverter::Utf8);
+//      iStream.setCodec( "utf-8" );
         iStream << bytes;
     }
 

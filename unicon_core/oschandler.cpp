@@ -367,7 +367,7 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     settings.timeResolution_us = header.settings.time_resolution_us;
     settings.displayResolution_ms = header.settings.display_resolution_ms > 0 ? header.settings.display_resolution_ms : settings.displayResolution_ms;
     std::time_t time = header.settings.trig_time;
-    settings.trigDTime = QDateTime::fromTime_t(time);
+    settings.trigDTime = QDateTime::fromMSecsSinceEpoch(time, Qt::LocalTime);
     if (!settings.trigDTime.isValid()) {
         settings.trigDTime = QDateTime();
     }

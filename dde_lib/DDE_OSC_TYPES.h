@@ -2,7 +2,10 @@
 
 #include <cstdint>
 #include <time.h>
+
+#ifdef __linux__
 #include <pthread.h>
+#endif
 
 #define OSC_VAR_NAME_LENGTH 64
 #define OSC_VAR_USER_NAME_LENGTH 64
@@ -147,6 +150,7 @@ struct GLIO_OSC_CHANNEL
     uint8_t lastBit = 0;
 };
 
+#ifdef __linux__
 typedef struct
 {
     pthread_mutex_t shm_mutex;
@@ -156,3 +160,5 @@ typedef struct
     GLIO_OSC_CHANNEL channel[OSC_MAX_CHANNELS + 1];
 
 } GLIO_OSC_HEADER;
+#endif
+

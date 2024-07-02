@@ -1,7 +1,5 @@
 #include "core.h"
 
-#include <iostream>
-
 #ifdef __WIN32__
 #include "DDE_EMUL.h"
 #else
@@ -84,7 +82,10 @@ void Core::start()
     m_oscStateService->init(links);
 
     m_sysService->start();
-    QtConcurrent::run(this, &Core::thread_proc, m_sysType);
+    QtConcurrent::run(&Core::thread_proc, m_sysType);
+    qint64 t = QDateTime::currentMSecsSinceEpoch() / 1000;
+    QDateTime time = QDateTime::fromMSecsSinceEpoch(t);
+    qDebug () << time.date().year();
 }
 
 void Core::thread_proc(SysType sysType)

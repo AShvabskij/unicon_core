@@ -72,13 +72,13 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
 {
      QTextStream& res = stream;
 
-     QDateTime trigTime = QDateTime::fromTime_t(static_cast<uint>(hdr.settings.trig_time));
+     QDateTime trigTime = QDateTime::fromMSecsSinceEpoch(hdr.settings.trig_time);
      QString plotName = QString("%1_%2_%3").arg(hdr.device_id).arg(hdr.settings.reason).arg(trigTime.toString("hh:mm:ss:zzz"));
      double resolution_sec = (double)hdr.settings.time_resolution_us / (1000 * 1000);
 
      res << ".PlotName," << plotName << "," << ENDL;
-     res << ".Date," << QDateTime(QDateTime::fromTime_t(static_cast<uint>(hdr.settings.trig_time))).date().toString() << "," << ENDL;
-     res << ".Time," << QDateTime(QDateTime::fromTime_t(static_cast<uint>(hdr.settings.trig_time))).time().toString() << "," << ENDL;
+     res << ".Date," << trigTime.date().toString() << "," << ENDL;
+     res << ".Time," << trigTime.time().toString() << "," << ENDL;
      res << ".Ts," << resolution_sec << ","  << ENDL;
 
      res << ENDL;
@@ -225,7 +225,7 @@ long doConvert(QString fileFrom, QString fileTo)
         }
 
         QTextStream iStream( &file );
-        iStream.setCodec( "utf-8" );
+        iStream.setEncoding(QStringConverter::Utf8);
 
         res = generateContent(hdr, *datBuff, iStream);
         file.close();
