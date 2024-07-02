@@ -29,7 +29,7 @@ OscFileService::~OscFileService()
 _dde_func_return_t OscFileService::open(uint16_t device_id, const char* fileName)
 {
     if (m_header && m_header->device_id == device_id && m_fileName == fileName) {
-        m_header->settings.trig_time = std::time(0) * 1000;
+        m_header->settings.trig_time = std::time(0);
         return _return_OK; // already opened
     }
 
@@ -136,7 +136,7 @@ int OscFileService::loadHeader(uint16_t device_id, const char* fileName)
 
     if (res == _return_OK) {
         m_fileName = fileName;
-        m_header->settings.trig_time = std::time(0) * 1000;
+        m_header->settings.trig_time = std::time(0);
     } else {
         delete m_header;
         m_header = nullptr;
@@ -394,7 +394,7 @@ int OscFileService::parseHeader(const std::ifstream& fileStream, FILE_HEADER& he
 
                 ss >> get_time(t, "%H:%M:%S");
 
-                header.settings.trig_time = std::time(0) * 1000; // *t; TODO A&D correction
+                header.settings.trig_time = std::time(0); // *t; TODO A&D correction
             }
 
             if (elems[0] == ".Ts") {
@@ -417,7 +417,7 @@ int OscFileService::parseHeader(const std::ifstream& fileStream, FILE_HEADER& he
         }
 
         header.vars[++chInd] = var;
-        header.settings.channel_count = chInd + 1;
+        header.settings.channels_count = chInd + 1;
     }
 
     return res;

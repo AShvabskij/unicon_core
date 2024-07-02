@@ -69,7 +69,7 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
 
     if (!rec) return _return_FAIL;
 
-    for (int i = 0; i < rec->settings.channel_count; i++) {
+    for (int i = 0; i < rec->settings.channels_count; i++) {
 
         OSC_CHANNEL& channel = hdr.channels[i];
 
@@ -143,7 +143,7 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint16_t id, const DDE_OSC_HE
     }
 
     rec.settings = hdr.settings;
-    rec.settings.channel_count = count;
+    rec.settings.channels_count = count;
 
     int res = osc_mem_setData(id, reinterpret_cast<unsigned char*>(&rec), sizeof(GLIO_OSC_HEADER));
 //  // pthread_mutex_unlock(&dat->shm_mutex);
@@ -189,7 +189,7 @@ int OscIPCHeaderService::get_ch_count(uint16_t id)
     auto dat = reinterpret_cast<GLIO_OSC_HEADER*>(osc_mem_getData(id));
     if (!dat) return _return_FAIL;
 
-    return dat->settings.channel_count;
+    return dat->settings.channels_count;
 }
 
 _dde_func_return_t OscIPCHeaderService::set_settings(uint16_t id, const OSC_SETTING& setDat)

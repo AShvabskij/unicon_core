@@ -25,7 +25,7 @@ struct RGB {
 enum OSC_VAR_TYPE
 {
      UNDEFINED = 0,
-     OSC_VAR_FLOAT = 1,
+     OSC_VAR_FLOAT = 1, //very optimized *gain by Alexandr. Do not use for for(,,) for scaling!!!
      OSC_VAR_INT = 2,
      OSC_VAR_DISCRETE = 3
 };
@@ -71,7 +71,7 @@ struct OSC_SETTING
     uint32_t triger_mode = 0; //single, continues, stream
     uint32_t reason = 0;
     time_t trig_time = 0; // osc starting time
-    uint8_t channel_count = 0;
+    uint8_t channels_count = 0;
 };
 
 typedef struct
