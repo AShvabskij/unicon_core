@@ -394,7 +394,7 @@ int OscFileService::parseHeader(const std::ifstream& fileStream, FILE_HEADER& he
 
                 ss >> get_time(t, "%H:%M:%S");
 
-                header.settings.trig_time = std::time(0) * 1000; // *t; TODO A&D correction
+                header.settings.trig_time = std::time(0) * 1000;
             }
 
             if (elems[0] == ".Ts") {
@@ -417,7 +417,7 @@ int OscFileService::parseHeader(const std::ifstream& fileStream, FILE_HEADER& he
         }
 
         header.vars[++chInd] = var;
-        header.settings.channel_count = chInd + 1;
+        header.settings.channels_count = chInd + 1;
     }
 
     return res;

@@ -77,8 +77,8 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
      double resolution_sec = (double)hdr.settings.time_resolution_us / (1000 * 1000);
 
      res << ".PlotName," << plotName << "," << ENDL;
-     res << ".Date," << trigTime.date().toString() << "," << ENDL;
-     res << ".Time," << trigTime.time().toString() << "," << ENDL;
+     res << ".Date," << QDateTime(QDateTime::fromTime_t(static_cast<uint>(hdr.settings.trig_time))).date().toString("yyyy-MM-dd") << "," << ENDL;
+     res << ".Time," << QDateTime(QDateTime::fromTime_t(static_cast<uint>(hdr.settings.trig_time))).time().toString("hh:mm:ss:zzz") << "," << ENDL;
      res << ".Ts," << resolution_sec << ","  << ENDL;
 
      res << ENDL;
@@ -103,13 +103,14 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
 
          if (ch.var.type == OSC_VAR_FLOAT || ch.var.type == OSC_VAR_INT) {
              int lastBit = (ch.lastBit > 0 && ch.lastBit < MAX_BIT_NUM) ? ch.lastBit : MAX_BIT_NUM;
+             float gain = (ch.gain != 0.0 && ch.gain != 1.0) ? ch.gain : ch.var.scale;
 
              line << QString("@") + QString(ch.var.name)
                  << QString("L") + QString::number(numOfSet)
                  << QString::number(chNumOfSet).rightJustified(2, '0')
                  << QString("D") + QString::number(ch.firstBit).rightJustified(2, '0')
                  << QString("D") + QString::number(lastBit).rightJustified(2, '0')
-                 << QString::number(ch.gain) << QString::number(ch.offset)
+                 << QString::number(gain) << QString::number(ch.offset)
                  << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
                  << "TRUE";
          } else if (ch.var.type == OSC_VAR_DISCRETE) {

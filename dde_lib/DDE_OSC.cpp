@@ -220,7 +220,7 @@ _dde_func_return_t DDE_OSC::set(const DDE_SET_OSC_DATA& dat)
     _dde_func_return_t res = _return_OK;
     uint16_t devId = dat.device_id;
 
-    if (dat.data_length == 0) return _return_OK; // there is nothing to save
+    //TODO header_updated flag ignored  if (dat.data_length < 0) return _return_OK; // there is nothing to save
 
     int channel_count = m_headerSrv->get_ch_count(devId);
 

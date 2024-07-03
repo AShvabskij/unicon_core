@@ -56,10 +56,10 @@ void OscDataService::reset(DevInd ind)
 
     qDebug() << "Clearing buffer" << ", value count = " << buff->valueCount;
     m_mutex.lock();
-    clearDataBuffer(buff);
+//  clearDataBuffer(buff);
 
-//  delete buff;
-//  m_repository.remove(ind);
+    delete buff;
+    m_repository.remove(ind);
     m_mutex.unlock();
 }
 
@@ -86,7 +86,7 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
     buff->trig_time = hdr.settings.trig_time;
     buff->reason = hdr.settings.reason;
 
-    for (int chInd = 0; chInd < hdr.settings.channel_count; chInd++) {
+    for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
 
         if (channel.var.id == 0) continue;
@@ -149,7 +149,7 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
 
     buff->valueCount += dat.data_length;
 
-    for (int chInd = 0; chInd < hdr.settings.channel_count; chInd++) {
+    for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
 
         if (channel.var.id == 0) continue;

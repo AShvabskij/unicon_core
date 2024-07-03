@@ -348,7 +348,7 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     out->analogChannels.clear();
     out->discreteChannels.clear();
 
-    for (int chInd = 0; chInd < header.settings.channel_count; chInd++) {
+    for (int chInd = 0; chInd < header.settings.channels_count; chInd++) {
         const OSC_CHANNEL& channel = header.channels[chInd];
         if (channel.var.id <= 0) {
             continue;

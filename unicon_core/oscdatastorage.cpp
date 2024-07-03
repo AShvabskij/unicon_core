@@ -160,7 +160,7 @@ QJsonObject OscDataStorage::headerToJson(const DDE_OSC_HEADER &h)
     res["resolution_us"] = QString::number(h.settings.time_resolution_us);
 
     QJsonArray channelsObj;
-    for (int chInd = 0; chInd < h.settings.channel_count; chInd++) {
+    for (int chInd = 0; chInd < h.settings.channels_count; chInd++) {
         const OSC_CHANNEL& ch = h.channels[chInd];
         QJsonObject obj;
         obj["ch_num"] = ch.chNum;
@@ -362,8 +362,8 @@ long OscDataStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
     h.settings.time_resolution_us = obj["resolution_us"].toVariant().toInt();
 
     QJsonArray arr = obj["channels"].toArray();
-    h.settings.channel_count = arr.count();
-    for (int ind = 0; ind < h.settings.channel_count; ind++) {
+    h.settings.channels_count = arr.count();
+    for (int ind = 0; ind < h.settings.channels_count; ind++) {
         QJsonObject elem = arr[ind].toObject();
         auto& ch = h.channels[ind];
 

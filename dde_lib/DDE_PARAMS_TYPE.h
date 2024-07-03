@@ -26,7 +26,11 @@
 #define     DDE_DEV0_MODULE0_PARAM3_SW_REV           3
 #define     DDE_DEV0_MODULE0_PARAM4_HASH             4
 #define     DDE_DEV0_MODULE0_PARAM5_NODE             5
-#define     DDE_DEV0_MODULE0_PARAM5_9_RESERVED       9
+#define     DDE_DEV0_MODULE0_PARAM6_RESERVED       6
+#define     DDE_DEV0_MODULE0_PARAM7_RESERVED       7
+#define     DDE_DEV0_MODULE0_PARAM8_RESERVED       8
+#define     DDE_DEV0_MODULE0_PARAM9_RESERVED       9
+
 
 #define     DDE_DEV0_MODULE0_PARAM10_LINK                 10
 #define     DDE_DEV0_MODULE0_PARAM11_RX_ERR_COUNTER       11
