@@ -77,17 +77,6 @@ struct OSC_SETTING
     uint8_t channels_count = 0;
 };
 
-typedef struct
-{
-    uint8_t pageMask[OSC_PAGE_MAX+1]; // pages ready to be read or written
-    uint8_t currPageRead = 0; // pages ready to read
-    uint8_t currPageWrite = 0; // pages ready to write
-
-    bool enabled = false;
-    bool overflowed = false;
-
-} OSC_STATE;
-
 struct DDE_OSC_HEADER
 {
     uint16_t device_id = 0; // todo rename to osc_id
@@ -149,6 +138,30 @@ struct GLIO_OSC_CHANNEL
     uint8_t firstBit = 0;
     uint8_t lastBit = 0;
 };
+
+#ifdef __linux__
+    typedef struct
+    {
+        uint8_t pageMask[OSC_PAGE_MAX+1]; // pages ready to be read or written
+        uint8_t currPageRead = 0; // pages ready to read
+        uint8_t currPageWrite = 0; // pages ready to write
+
+        bool enabled = false;
+        bool overflowed = false;
+
+    } OSC_STATE;
+#else
+    struct OSC_STATE
+    {
+        uint8_t pageMask[OSC_PAGE_MAX+1]; // pages ready to be read or written
+        uint8_t currPageRead = 0; // pages ready to read
+        uint8_t currPageWrite = 0; // pages ready to write
+
+        bool enabled = false;
+        bool overflowed = false;
+    } ;
+
+#endif
 
 #ifdef __linux__
 typedef struct

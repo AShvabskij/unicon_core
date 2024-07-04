@@ -17,7 +17,6 @@
 #include <oscdatastorage.h>
 #include <oscdatastorage_v1_2.h>
 
-#include <oscdataservice.h>
 #include "DDE_TYPES.h"
 
 const int SET_SIZE = 16;
@@ -40,7 +39,7 @@ OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
     buff->id = hdr.device_id;
     buff->timestamp = hdr.settings.trig_time;
 
-    for (int chInd = 0; chInd < hdr.settings.channel_count; chInd++) {
+    for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
         if (channel.var.id <= 0) {
             continue;
@@ -70,42 +69,43 @@ int denormalizeValue(float value)
 
 long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& data, QTextStream& stream)
 {
-     QTextStream& res = stream;
+    QTextStream& res = stream;
 
-     QDateTime trigTime = QDateTime::fromMSecsSinceEpoch(hdr.settings.trig_time);
-     QString plotName = QString("%1_%2_%3").arg(hdr.device_id).arg(hdr.settings.reason).arg(trigTime.toString("hh:mm:ss:zzz"));
-     double resolution_sec = (double)hdr.settings.time_resolution_us / (1000 * 1000);
+    QDateTime trigTime = QDateTime::fromMSecsSinceEpoch(hdr.settings.trig_time);
+    QString plotName = QString("%1_%2_%3").arg(hdr.device_id).arg(hdr.settings.reason).arg(trigTime.toString("hh:mm:ss:zzz"));
+    double resolution_sec = (double)hdr.settings.time_resolution_us / (1000 * 1000);
 
-     res << ".PlotName," << plotName << "," << ENDL;
-     res << ".Date," << QDateTime(QDateTime::fromTime_t(static_cast<uint>(hdr.settings.trig_time))).date().toString("yyyy-MM-dd") << "," << ENDL;
-     res << ".Time," << QDateTime(QDateTime::fromTime_t(static_cast<uint>(hdr.settings.trig_time))).time().toString("hh:mm:ss:zzz") << "," << ENDL;
-     res << ".Ts," << resolution_sec << ","  << ENDL;
+    res << ".PlotName," << plotName << "," << ENDL;
+    QDateTime date = QDateTime::fromSecsSinceEpoch(hdr.settings.trig_time);
+    res << ".Date," << date.date().toString("yyyy-MM-dd") << "," << ENDL;
+    res << ".Time," << date.time().toString("hh:mm:ss:zzz") << "," << ENDL;
+    res << ".Ts," << resolution_sec << ","  << ENDL;
 
-     res << ENDL;
+    res << ENDL;
 
-     int numOfSet = 1;
-     QStringList varIndexes;
-     QStringList varNames;
-     QStringList varNumOfSets;
-     QMap<int/*var_id*/, int/*bitNum*/> discrVarsBits;
+    int numOfSet = 1;
+    QStringList varIndexes;
+    QStringList varNames;
+    QStringList varNumOfSets;
+    QMap<int/*var_id*/, int/*bitNum*/> discrVarsBits;
 
-     for (int i= 0; i < hdr.settings.channel_count; ++i) {
-         auto& ch = hdr.channels[i];
+    for (int i= 0; i < hdr.settings.channels_count; ++i) {
+        auto& ch = hdr.channels[i];
 
-         if (ch.var.id <= 0)
-             continue;
+        if (ch.var.id <= 0)
+            continue;
 
-         int chNumOfSet = (ch.chNum + 1) - (numOfSet - 1) * SET_SIZE;
+        int chNumOfSet = (ch.chNum + 1) - (numOfSet - 1) * SET_SIZE;
 
-         QStringList line;
+        QStringList line;
 
-         QRgb rgb = ch.var.color;
+        QRgb rgb = ch.var.color;
 
-         if (ch.var.type == OSC_VAR_FLOAT || ch.var.type == OSC_VAR_INT) {
-             int lastBit = (ch.lastBit > 0 && ch.lastBit < MAX_BIT_NUM) ? ch.lastBit : MAX_BIT_NUM;
-             float gain = (ch.gain != 0.0 && ch.gain != 1.0) ? ch.gain : ch.var.scale;
+        if (ch.var.type == OSC_VAR_FLOAT || ch.var.type == OSC_VAR_INT) {
+            int lastBit = (ch.lastBit > 0 && ch.lastBit < MAX_BIT_NUM) ? ch.lastBit : MAX_BIT_NUM;
+            float gain = (ch.gain != 0.0 && ch.gain != 1.0) ? ch.gain : ch.var.scale;
 
-             line << QString("@") + QString(ch.var.name)
+            line << QString("@") + QString(ch.var.name)
                  << QString("L") + QString::number(numOfSet)
                  << QString::number(chNumOfSet).rightJustified(2, '0')
                  << QString("D") + QString::number(ch.firstBit).rightJustified(2, '0')
@@ -113,78 +113,78 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
                  << QString::number(gain) << QString::number(ch.offset)
                  << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
                  << "TRUE";
-         } else if (ch.var.type == OSC_VAR_DISCRETE) {
-             discrVarsBits[ch.var.id] = ch.firstBit;
+        } else if (ch.var.type == OSC_VAR_DISCRETE) {
+            discrVarsBits[ch.var.id] = ch.firstBit;
 
-             line << QString("&") + QString(ch.var.name)
+            line << QString("&") + QString(ch.var.name)
                  << QString("L") + QString::number(numOfSet)
                  << QString::number(chNumOfSet).rightJustified(2, '0')
                  << QString("D") + QString::number(ch.firstBit).rightJustified(2, '0')
                  << QString("BIT")
                  << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
                  << "TRUE";
-         }
+        }
 
-         res << line.join(SEP) << ENDL;
+        res << line.join(SEP) << ENDL;
 
-         varIndexes << QString::number(i);
-         varNames << ch.var.name;
-         varNumOfSets <<  QString("L") + QString::number(numOfSet) + "_" + QString::number(chNumOfSet).rightJustified(2, '0');
-     }
+        varIndexes << QString::number(i);
+        varNames << ch.var.name;
+        varNumOfSets <<  QString("L") + QString::number(numOfSet) + "_" + QString::number(chNumOfSet).rightJustified(2, '0');
+    }
 
-     res << ENDL << ENDL;
+    res << ENDL << ENDL;
 
-     res << "* " << SEP << varIndexes.join(SEP) << ENDL;
-     res << "* " << SEP << varNames.join(SEP)  << ENDL;
-     res << "* " << SEP << varNumOfSets.join(SEP)  << ENDL;
+    res << "* " << SEP << varIndexes.join(SEP) << ENDL;
+    res << "* " << SEP << varNames.join(SEP)  << ENDL;
+    res << "* " << SEP << varNumOfSets.join(SEP)  << ENDL;
 
-     QMap<int/*channel*/, QVariant/*value*/> chValues;
+    QMap<int/*channel*/, QVariant/*value*/> chValues;
 
-     for (int i = 0; i < data.valueCount; i++) {
-         QStringList rec;
-         rec << QString::number(i + 1);
+    for (int i = 0; i < data.valueCount; i++) {
+        QStringList rec;
+        rec << QString::number(i + 1);
 
-         for (int ind = 0; ind <= OSC_MAX_VARS; ind++) {
-             const OscType::OscChannelValues& var = data.chArray[ind];
+        for (int ind = 0; ind <= OSC_MAX_VARS; ind++) {
+            const OscType::OscChannelValues& var = data.chArray[ind];
 
-             if (var.varId == 0)
-                 continue;
+            if (var.varId == 0)
+                continue;
 
-             if (i >= var.count()) {
-                 break;
-             }
+            if (i >= var.count()) {
+                break;
+            }
 
-             switch (var.type) {
-                 case OSC_VAR_INT:
-                 case OSC_VAR_FLOAT: {
-                     QVariant val = var.value(i);
-                     int n = denormalizeValue(val.toFloat());
-                     chValues[var.channelNum] = n;
-                 } break;
+            switch (var.type) {
+            case OSC_VAR_INT:
+            case OSC_VAR_FLOAT: {
+                QVariant val = var.value(i);
+                int n = denormalizeValue(val.toFloat());
+                chValues[var.channelNum] = n;
+            } break;
 
-                 case OSC_VAR_DISCRETE: {
+            case OSC_VAR_DISCRETE: {
 
-                     int value = chValues[var.channelNum].toInt();
-                     int bitNum = discrVarsBits[var.varId];
-                     int bitMask = 1 << bitNum;
-                     int bitValue = var.value(i).toInt();
+                int value = chValues[var.channelNum].toInt();
+                int bitNum = discrVarsBits[var.varId];
+                int bitMask = 1 << bitNum;
+                int bitValue = var.value(i).toInt();
 
-                     value = (bitValue == 0) ? (value & ~bitMask) : (value | bitMask);
+                value = (bitValue == 0) ? (value & ~bitMask) : (value | bitMask);
 
-                     chValues[var.channelNum] = value;
+                chValues[var.channelNum] = value;
 
-                 } break;
-             case UNDEFINED: {}
-             };
-         }
+            } break;
+            case UNDEFINED: {}
+            };
+        }
 
-         for (int key : chValues.keys() ) {
-             QVariant value = chValues[key];
-             rec << QString::number(value.toInt());
-         }
+        for (int key : chValues.keys() ) {
+            QVariant value = chValues[key];
+            rec << QString::number(value.toInt());
+        }
 
-         res << rec.join(",") << ENDL;
-     }
+        res << rec.join(",") << ENDL;
+    }
 
     return 1;
 }
@@ -221,8 +221,8 @@ long doConvert(QString fileFrom, QString fileTo)
 
         if(!file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
         {
-             QTextStream(stdout) << "file open failed: " << fileTo << ENDL;
-             return _return_FAIL;
+            QTextStream(stdout) << "file open failed: " << fileTo << ENDL;
+            return _return_FAIL;
         }
 
         QTextStream iStream( &file );
@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
-//  std::cout << "Hello, world!" << std::endl;
+    //  std::cout << "Hello, world!" << std::endl;
 
     QCoreApplication::setApplicationName("GabbiConverter");
     QCoreApplication::setApplicationVersion("1.0");
