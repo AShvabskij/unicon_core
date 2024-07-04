@@ -74,7 +74,7 @@ struct OSC_SETTING
     uint8_t channels_count = 0;
 };
 
-typedef struct
+struct OSC_STATE
 {
     uint8_t pageMask[OSC_PAGE_MAX+1]; // pages ready to be read or written
     uint8_t currPageRead = 0; // pages ready to read
@@ -83,7 +83,7 @@ typedef struct
     bool enabled = false;
     bool overflowed = false;
 
-} OSC_STATE;
+};
 
 struct DDE_OSC_HEADER
 {
