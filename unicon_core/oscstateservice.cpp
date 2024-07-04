@@ -69,6 +69,7 @@ void OscStateMachine::update(DevInd devId)
             m_errCounter = 0;
             m_state = Getting;
             m_sof = false;
+            m_eof = false;
         } else {
             m_idleCounter = 0;
             m_state = Idle;
@@ -106,6 +107,13 @@ void OscStateMachine::update(DevInd devId)
                 return;
             }
 
+            if (m_eof) {
+                m_dataSrv->clear(m_header.device_id);
+                m_errCounter = 0;
+                m_eof = false;
+                m_sof = false;
+            }
+
             res = m_dataSrv->appendData(m_header, m_ddeData);
 
             if (res != _return_OK) {
@@ -119,10 +127,9 @@ void OscStateMachine::update(DevInd devId)
             }
 
             if (m_ddeData.eof) {
+                m_eof = true;
                 if (m_sof) {
                     m_state = Saving;
-                } else {
-                    m_state = Normal;
                 }
             }
 
@@ -144,7 +151,7 @@ void OscStateMachine::update(DevInd devId)
 
     case Saving: {
         m_dataSrv->save(m_header);
-        m_state = Normal;
+        m_state = Getting;
         break;
     }
     case Updated: {

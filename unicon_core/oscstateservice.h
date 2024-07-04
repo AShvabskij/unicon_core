@@ -53,6 +53,7 @@ private:
     DDE_OSC_HEADER m_header;
     DDE_GET_OSC_DATA m_ddeData;
     bool m_sof = false;
+    bool m_eof = false;
     int m_errCounter = 0;
     int m_busyCounter = 0;
     int m_idleCounter = 0;
