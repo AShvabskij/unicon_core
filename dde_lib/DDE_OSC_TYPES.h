@@ -151,30 +151,6 @@ struct GLIO_OSC_CHANNEL
 };
 
 #ifdef __linux__
-    typedef struct
-    {
-        uint8_t pageMask[OSC_PAGE_MAX+1]; // pages ready to be read or written
-        uint8_t currPageRead = 0; // pages ready to read
-        uint8_t currPageWrite = 0; // pages ready to write
-
-        bool enabled = false;
-        bool overflowed = false;
-
-    } OSC_STATE;
-#else
-    struct OSC_STATE
-    {
-        uint8_t pageMask[OSC_PAGE_MAX+1]; // pages ready to be read or written
-        uint8_t currPageRead = 0; // pages ready to read
-        uint8_t currPageWrite = 0; // pages ready to write
-
-        bool enabled = false;
-        bool overflowed = false;
-    } ;
-
-#endif
-
-#ifdef __linux__
 typedef struct
 {
     pthread_mutex_t shm_mutex;
