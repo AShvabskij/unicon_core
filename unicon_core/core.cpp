@@ -82,7 +82,7 @@ void Core::start()
     m_oscStateService->init(links);
 
     m_sysService->start();
-    QtConcurrent::run(&Core::thread_proc, m_sysType);
+    auto future = QtConcurrent::run(&Core::thread_proc, this, m_sysType);
     qint64 t = QDateTime::currentMSecsSinceEpoch() / 1000;
     QDateTime time = QDateTime::fromMSecsSinceEpoch(t);
     qDebug () << time.date().year();
