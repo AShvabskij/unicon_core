@@ -1,9 +1,9 @@
 #ifndef OSC_DATA_H
 #define OSC_DATA_H
 
-#include "DDE_TOP.h"
+#include "DDE_INTERFACES.h"
 #include "DDE_OSC_TYPES.h"
-#include "DDE_DEVICES_TYPE.h"
+
 #include "osc_types.h"
 
 #include <QTimer>

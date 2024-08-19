@@ -6,8 +6,6 @@
 
 #include <QCoreApplication>
 
-#include "oscdataservice.h"
-
 const int MAX_OSC_ERROR_COUNT = 10;
 const int MAX_OSC_IDLE_COUNT = 10;
 

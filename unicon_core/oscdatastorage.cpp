@@ -70,10 +70,11 @@ long OscDataStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBu
     QTextStream(stdout) << "Saving osc data, device id = " << header.device_id << ENDL;
 
     //  const char* home = getenv("HOME");
-        QString path =  createPath(header);
+        QDateTime now = QDateTime::currentDateTime();
+        QString path =  createFolder(now);
         QJsonObject jsonObj = headerToJson(header);
 
-        QDateTime trigTime = QDateTime::fromMSecsSinceEpoch(header.settings.trig_time, Qt::LocalTime);
+        QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, Qt::LocalTime);
         QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
 
         QString headerFile = path + "/" + baseFileName + ".hdr";
@@ -90,15 +91,9 @@ long OscDataStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBu
         return res;
 }
 
-QString OscDataStorage::createPath(const DDE_OSC_HEADER &)
+QString OscDataStorage::createFolder(const QDateTime dateTime)
 {
-    QDateTime now = QDateTime::currentDateTime();
-    QString year = "Y" + QString::number(now.date().year());
-    QString abbreviatedMonth = now.toString("MMM");
-    QString dayOfMonth = abbreviatedMonth + "_" + QString::number(now.date().day());
-
-    QString dataLoggerPath =  QString("./DataLogger/"); // qApp->applicationDirPath()
-    QString path = dataLoggerPath + year + "/" + abbreviatedMonth + "/" + dayOfMonth;
+    QString path = getFolderPath(dateTime);
 
     QDir dir;
     bool res = dir.mkpath(path);
@@ -106,6 +101,18 @@ QString OscDataStorage::createPath(const DDE_OSC_HEADER &)
     if (!res) {
         qWarning() << "Couldn't create folder:" + path;
     }
+
+    return path;
+}
+
+QString OscDataStorage::getFolderPath(const QDateTime dateTime)
+{
+    QString year = "Y" + QString::number(dateTime.date().year());
+    QString abbreviatedMonth = dateTime.toString("MMM");
+    QString dayOfMonth = abbreviatedMonth + "_" + QString::number(dateTime.date().day());
+
+    QString dataLoggerPath =  QString("./DataLogger/"); // qApp->applicationDirPath()
+    QString path = dataLoggerPath + year + "/" + abbreviatedMonth + "/" + dayOfMonth;
 
     return path;
 }
@@ -157,6 +164,7 @@ QJsonObject OscDataStorage::headerToJson(const DDE_OSC_HEADER &h)
     res["device_id"] = h.device_id;
     res["id"] = h.device_id;
     res["trig_time"] = QString::number(h.settings.trig_time);
+    res["reason"] = QString::number(h.settings.reason);
     res["resolution_us"] = QString::number(h.settings.time_resolution_us);
 
     QJsonArray channelsObj;
@@ -286,6 +294,44 @@ long OscDataStorage::loadData(QString fileFrom, OscType::OscDataBuffer& data)
     long ret = decodeData(cborValue, data);
 
     return ret;
+}
+
+long OscDataStorage::loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data)
+{
+    QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, Qt::LocalTime);
+    QString path =  createFolder(trigTime);
+    QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
+
+    QString datFile = path + QDir::separator() + baseFileName + ".dat";
+
+    long ret = loadData(datFile, data);
+
+    return ret;
+}
+
+QList<DDE_OSC_HEADER> OscDataStorage::headerList(QDate date)
+{
+    QList<DDE_OSC_HEADER> headers;
+    QString path =  getFolderPath(QDateTime(date, QTime()));
+    QDir dir(path);
+    // if (!dir.exists(path)) {
+    //     return headers;
+    // }
+
+    QStringList fileList = dir.entryList(QStringList() << "*.hdr", QDir::Files);
+
+    for (QString file: fileList) {
+        DDE_OSC_HEADER hdr;
+        file = path + QDir::separator() + file;
+        long res = loadHeader(file, hdr);
+        if (res != _return_OK) {
+            continue;
+        }
+
+        headers.append(hdr);
+    }
+
+    return headers;
 }
 
 QJsonObject OscDataStorage::serializeToJSon(const OscDataBuffer& dat) const

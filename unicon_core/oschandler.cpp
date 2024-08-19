@@ -107,6 +107,11 @@ int OscHandler::handle(const QJsonObject &request)
     return BaseReqHandler::handle(request);
 }
 
+void OscHandler::setService(OscHistoryService *s)
+{
+    m_historySrv = s;
+}
+
 void OscHandler::onReceivedData(quint16 ind)
 {
     if (m_capturedOsc.id != ind) {
@@ -114,10 +119,31 @@ void OscHandler::onReceivedData(quint16 ind)
         return;
     }
 
-    m_streamValCount++;
-//  qDebug() << "Osc received data frames = " << m_streamValCount << "\n";
-
     streamData();
+}
+
+void OscHandler::onReceivedHistoryData(quint16 ind)
+{
+    Q_ASSERT(m_capturedOsc.deviceID.isValid());
+
+    if (m_capturedOsc.id != ind) {
+        qWarning() << "\nOsc error on receive data, not valid osc id = " << ind;
+        return;
+    }
+
+    int objCountResult = 0;
+    QJsonObject response = m_dataSrv->historyData(m_capturedOsc.id, m_capturedVars, objCountResult);
+    response["type"] = "osc";
+
+    if (objCountResult > 0) {
+        QTextStream(stdout) << "Osc streaming history data, dev id = " << m_capturedOsc.deviceID.id
+                            << " trigger time =" << QDateTime::fromSecsSinceEpoch(response["trig_time"].toInt()).toString("yyyy-MM-dd hh:mm:ss")
+                            << " reason =" << response["reason"].toInt()
+                            << " Count =" << response["values"].toArray().takeAt(0).toArray().count()
+                            <<  ", time(us) = " << response["time"].toInt() << "\n" ;
+
+        emit stream(QList<QJsonObject>() << response);
+    }
 }
 
 int OscHandler::handleGetHeader(const QJsonObject &request)
@@ -135,13 +161,31 @@ int OscHandler::handleGetHeader(const QJsonObject &request)
     int oscId = cmdBody.value("osc_id").toInt();
     Q_ASSERT(deviceId >= 0);
 
-    try {
-        OscHeader header;
-        DevID devID = {sysType, static_cast<uint16_t>(deviceId)};
-        ret = getHeader(devID, oscId, &header);
+    bool historyNeed = cmdBody.contains("step");
+    QDate historyDate =  QDateTime::currentDateTime().date(); //m_capturedOsc.deviceID.isValid() ? m_capturedOsc.settings.trigDTime.date() : QDate();
+    int historyStep = historyNeed ? cmdBody.value("step").toInt() : 0;
 
-        QJsonObject response = createHeaderObj(requestId, header);
-        send(response);
+    OscHeader header;
+    DevID devID = {sysType, static_cast<uint16_t>(deviceId)};
+    header.deviceID = devID;
+
+    try {
+
+        if (historyNeed) {
+            DDE_OSC_HEADER dde_hdr;
+            ret = m_historySrv->getHeader(devID, historyDate, historyStep, dde_hdr);
+            if (ret == _return_OK) {
+                ret = convertHeader(dde_hdr, &header);
+            }
+
+        } else {
+            ret = getHeader(devID, &header);
+        }
+
+        if (ret != _return_OK) {
+            throw;
+        }
+
     } catch (...) {
         qWarning() << "Osc exception when handling get header request"
                    << " sys type = " << sysType
@@ -151,7 +195,11 @@ int OscHandler::handleGetHeader(const QJsonObject &request)
         DevID devID = {sysType, static_cast<uint16_t>(deviceId)};
         QJsonObject response = createAnswerObj(requestId, devID, QJsonObject(), error);
         send(response);
+        return ret;
     }
+
+    QJsonObject response = createHeaderObj(requestId, header);
+    send(response);
 
     return ret;
 }
@@ -176,7 +224,7 @@ int OscHandler::handleSetHeader(const QJsonObject &request)
     try {
 
         OscHeader header;
-        long ret = getHeader(devID, oscId, &header);
+        long ret = getHeader(devID, &header);
         if (ret != _return_OK) {
             throw;
         }
@@ -223,7 +271,7 @@ int OscHandler::handleGetChannel(const QJsonObject &request)
 
     OscHeader header;
     DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
-    long ret = getHeader(devId, oscId, &header);
+    long ret = getHeader(devId, &header);
 
     const OscChannelDescr& chDescr = header.channel(chNum);
     QJsonObject response = createChannelObj(requestId, chDescr);
@@ -244,30 +292,37 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
 
     int deviceId = cmdBody.value("device_id").toInt();
     int oscId = cmdBody.value("osc_id").toInt();
+    bool historyNeed = cmdBody.contains("step");
+    int step = historyNeed ? cmdBody.value("step").toInt() : 0;
+    QDate historyDate =  QDateTime::currentDateTime().date(); //m_capturedOsc.deviceID.isValid() ? m_capturedOsc.settings.trigDTime.date() : QDate();
+
     QJsonArray oscVars = cmdBody.value("osc_vars").toArray();
+    QVector<int> capturedVars;
+    for (const QJsonValue val : oscVars) {
+        capturedVars << val.toInt();
+    }
 
     if (m_capturedOsc.deviceID.id > 0) {
         stopStreamData();
     }
 
-    OscHeader header;
-    DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
-    long ret = getHeader(devId, oscId, &header);
+    DevID devID = {sysType, static_cast<uint16_t>(deviceId)};
+    long ret = _return_OK;
 
-    if (ret == _return_OK) {
-        QVector<int> capturedVars;
-        for (const QJsonValue val : oscVars) {
-            capturedVars << val.toInt();
-        }
-
-        startStreamData(header, capturedVars);
+    if (historyNeed) {
+        ret = startHistoryData(devID, capturedVars, historyDate, step);
+    } else {
+        ret = startStreamData(devID, capturedVars, oscId);
     }
 
-    int error = (ret != _return_OK) ? static_cast<int>(ret != 0 ? ret : -1): 0;
-    QJsonObject response = createAnswerObj(requestId, devId, QJsonObject(), error);
-    send(response);
+    if (ret != _return_OK) {
+        int error = static_cast<int>(ret != 0 ? ret : -1);
+        QJsonObject response = createAnswerObj(requestId, devID, QJsonObject(), error);
+        send(response);
+        return error;
+    }
 
-    return error;
+    return 0;
 }
 
 int OscHandler::handleCloseStream(const QJsonObject &request)
@@ -293,15 +348,45 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
     return 0;
 }
 
-void OscHandler::startStreamData(const OscHeader &header, QVector<int> oscVars)
+long OscHandler::startStreamData(const DevID &devID, QVector<int> oscVars, const int& oscId)
 {
+    OscHeader header;
+    long ret = getHeader(devID, &header);
+
+    if (ret != _return_OK) {
+        return ret;
+    }
+
     m_capturedOsc = header;
     m_capturedVars = oscVars;
-    m_streamValCount = 0;
 
     QObject* src = dynamic_cast<QObject*>(m_dataSrv);
     Q_ASSERT(src);
     QMetaObject::Connection con = connect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)), Qt::AutoConnection);
+}
+
+long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDate historyDate, int step)
+{
+    DDE_OSC_HEADER dde_hdr;
+    long res = m_historySrv->getHeader(devID, historyDate, step, dde_hdr);
+    if (res != _return_OK) {
+        return res;
+    }
+
+    m_capturedOsc.deviceID = devID;
+    convertHeader(dde_hdr, &m_capturedOsc);
+
+    m_capturedVars = oscVars;
+
+    res = m_historySrv->loadData(dde_hdr);
+    if (res != _return_OK) {
+        qWarning() << "No OSC data is found for requested header";
+        return res;
+    }
+
+    QObject* src = dynamic_cast<QObject*>(m_dataSrv);
+    Q_ASSERT(src);
+    QMetaObject::Connection con = connect(src, SIGNAL(historyReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)), Qt::AutoConnection);
 }
 
 void OscHandler::stopStreamData()
@@ -331,7 +416,7 @@ void OscHandler::streamData()
   }
 }
 
-long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
+long OscHandler::getHeader(const DevID& deviceID, OscHeader *out)
 {
     DDE_OSC_HEADER header;
     header.device_id = deviceID.id;
@@ -342,6 +427,13 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     }
 
     out->deviceID = deviceID;
+    res = convertHeader(header, out);
+
+    return res;
+}
+
+long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *out)
+{
     out->id = header.device_id;
     out->name = "osc";
     out->desc = "osc desc";
@@ -362,11 +454,16 @@ long OscHandler::getHeader(const DevID& deviceID, int oscId, OscHeader *out)
     }
 
     OscSettings& settings = out->settings;
-    settings.oscId = oscId;
+    settings.oscId = header.device_id; // let's assume oscId is equivalent to device_id
     settings.reason = (ReasonEnum)header.settings.reason;
     settings.timeResolution_us = header.settings.time_resolution_us;
     settings.displayResolution_ms = header.settings.display_resolution_ms > 0 ? header.settings.display_resolution_ms : settings.displayResolution_ms;
     std::time_t time = header.settings.trig_time;
+
+    if (QDateTime::fromMSecsSinceEpoch(time).date().year() == 1970) {
+        time = time * 1000; // assume time is in seconds, need to convert to msec
+    }
+
     settings.trigDTime = QDateTime::fromMSecsSinceEpoch(time, Qt::LocalTime);
     if (!settings.trigDTime.isValid()) {
         settings.trigDTime = QDateTime();

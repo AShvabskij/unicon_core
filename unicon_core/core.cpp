@@ -14,6 +14,7 @@
 
 #include "oscdataservice.h"
 #include "oscdatastorage.h"
+#include "oschistoryservice.h".h"
 
 #include <QObject>
 #include <QtWebSockets>
@@ -49,10 +50,13 @@ void Core::start()
 
     OscDataService* oscService = new OscDataService(OscDataStorage::instance());
     m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), oscService);
+    OscHistoryService* oscHistoryService = new OscHistoryService(oscService, OscDataStorage::instance());
+
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp, m_sysType);
     DeviceHandler* device = new DeviceHandler(m_ddeDisp, m_sysType);
     OscHandler* osc = new OscHandler(m_ddeDisp, m_sysType, oscService);
+    osc->setService(oscHistoryService);
 
     RequestManager::instance()->registerHandler(device);
     RequestManager::instance()->registerHandler(params);
@@ -83,9 +87,6 @@ void Core::start()
 
     m_sysService->start();
     auto future = QtConcurrent::run(&Core::thread_proc, this, m_sysType);
-    qint64 t = QDateTime::currentMSecsSinceEpoch() / 1000;
-    QDateTime time = QDateTime::fromMSecsSinceEpoch(t);
-    qDebug () << time.date().year();
 }
 
 void Core::thread_proc(SysType sysType)

@@ -71,7 +71,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
 {
     QTextStream& res = stream;
 
-    QDateTime trigTime = QDateTime::fromMSecsSinceEpoch(hdr.settings.trig_time);
+    QDateTime trigTime = QDateTime::fromSecsSinceEpoch(hdr.settings.trig_time);
     QString plotName = QString("%1_%2_%3").arg(hdr.device_id).arg(hdr.settings.reason).arg(trigTime.toString("hh:mm:ss:zzz"));
     double resolution_sec = (double)hdr.settings.time_resolution_us / (1000 * 1000);
 
