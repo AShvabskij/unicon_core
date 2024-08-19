@@ -26,11 +26,14 @@ public:
     void clear(DevInd id) override;
     void reset(DevInd ind) override;
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
-    long appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& dat) override;
     QJsonObject serialisedData(DevInd ind, QVector<int> vars, int &cnt) override;
-    QJsonObject historyData(DevInd ind, QVector<int> vars, int &cnt) override;
     long save(const DDE_OSC_HEADER &hdr) override;
     OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) override;
+
+    // methods to move to another service
+    long appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& dat) override;
+    QJsonObject historyData(DevInd ind, QVector<int> vars, int &cnt) override;
+
 
 signals:
     void dataReceived(quint16 ind) override;
