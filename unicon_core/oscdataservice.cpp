@@ -83,8 +83,13 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
 
     buff->id = hdr.device_id;
     buff->timestamp = 0;
-    buff->trig_time = hdr.settings.trig_time;
     buff->reason = hdr.settings.reason;
+
+    std::time_t time = hdr.settings.trig_time;
+    if (QDateTime::fromMSecsSinceEpoch(time).date().year() == 1970) {
+        time = time * 1000; // assume time is in seconds, need to convert to msec
+    }
+    buff->trig_time = time;
 
     for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
@@ -139,8 +144,8 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     buff->eof = dat.eof;
     buff->sof = dat.sof;
     buff->timestamp = 0;
-    buff->trig_time = hdr.settings.trig_time;
-    buff->reason = hdr.settings.reason;
+    // buff->trig_time = hdr.settings.trig_time;
+    // buff->reason = hdr.settings.reason;
 
     if (dat.data_length == 0) {
         m_mutex.unlock();
@@ -286,6 +291,62 @@ long OscDataService::save(const DDE_OSC_HEADER& hdr)
     m_mutex.lock();
     long res = m_dataSaver->save(hdr, *datBuff);
     m_mutex.unlock();
+
+    return res;
+}
+
+long OscDataService::appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& dat)
+{
+
+    if (m_historyBuff) {
+        delete m_historyBuff;
+    }
+
+    m_historyBuff = createDataBuffer(hdr);
+
+
+    m_historyBuff->eof = dat.eof;
+    m_historyBuff->timestamp = dat.timestamp;
+    m_historyBuff->reason = hdr.settings.reason;
+    m_historyBuff->valueCount = dat.valueCount;
+
+    std::time_t time = hdr.settings.trig_time;
+    if (QDateTime::fromMSecsSinceEpoch(time).date().year() == 1970) {
+        time = time * 1000; // assume time is in seconds, need to convert to msec
+    }
+    m_historyBuff->trig_time = time;
+
+    for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
+        const OSC_CHANNEL& channel = hdr.channels[chInd];
+
+        if (channel.var.id == 0) continue;
+
+        m_historyBuff->chArray[chInd] = dat.chArray[chInd];
+    }
+
+    emit historyReceived(m_historyBuff->id);
+
+    return _return_OK;
+}
+
+QJsonObject OscDataService::historyData(DevInd ind, QVector<int> vars, int &cnt)
+{
+    Q_ASSERT(m_historyBuff);
+
+    if (m_historyBuff->id != ind) {
+        cnt = 0;
+        return QJsonObject();
+    }
+
+    if (m_historyBuff->lastDataPos == m_historyBuff->valueCount) {
+        cnt = 0;
+        return QJsonObject();
+    }
+
+    QJsonObject res = dataToJson(*m_historyBuff, vars, m_historyBuff->lastDataPos);
+
+    cnt = m_historyBuff->valueCount - m_historyBuff->lastDataPos;
+    m_historyBuff->lastDataPos = m_historyBuff->valueCount;
 
     return res;
 }

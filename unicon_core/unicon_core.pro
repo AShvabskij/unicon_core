@@ -23,6 +23,7 @@ SOURCES += \
         oscdatastorage.cpp \
         oscdatastorage_v1_2.cpp \
         oschandler.cpp \
+        oschistoryservice.cpp \
         oscstateservice.cpp \
         paramshandler.cpp \
         requestmanager.cpp \
@@ -44,6 +45,7 @@ HEADERS += \
     oscdatastorage.h \
     oscdatastorage_v1_2.h \
     oschandler.h \
+    oschistoryservice.h \
     oscstateservice.h \
     paramshandler.h \
     requestmanager.h \

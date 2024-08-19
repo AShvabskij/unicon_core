@@ -6,6 +6,7 @@
 #include "osc_types.h"
 #include "oscdataservice.h"
 
+#include <OscHistoryService.h>
 #include <QTimer>
 
 class OscHandler : public BaseReqHandler
@@ -14,12 +15,14 @@ class OscHandler : public BaseReqHandler
 public:
     OscHandler(IDDE_Dispatcher* , SysType sysType, IOscDataService* buffSrv);
     virtual int handle(const QJsonObject& request);
+    void setService(OscHistoryService* s);
 
 signals:
     void requestStreamValue();
 
 private slots:
     void onReceivedData(quint16 ind);
+    void onReceivedHistoryData(quint16 ind);
 
 private:
     int handleGetHeader(const QJsonObject &request);
@@ -28,7 +31,8 @@ private:
     int handleOpenStream(const QJsonObject &request);
     int handleCloseStream(const QJsonObject &request);
 
-    long getHeader(const DevID& deviceID, int oscId, OscType::OscHeader *out);
+    long getHeader(const DevID& deviceID, OscType::OscHeader *out);
+    long convertHeader(const DDE_OSC_HEADER& header, OscType::OscHeader *out);
     long setHeader(const DevID& deviceID, const OscType::OscSettings &settings);
 
     QJsonObject createHeaderObj(int requestId, const OscType::OscHeader& header);
@@ -37,14 +41,16 @@ private:
     OscType::OscChannelDescr createChannelDescr(const OSC_CHANNEL &channel);
     qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
 
-    void startStreamData(const OscType::OscHeader& header, QVector<int> oscVars);
+    long startStreamData(const DevID& devID, QVector<int> oscVars, const int &oscId);
+    long startHistoryData(const DevID &devID, QVector<int> oscVars, QDate historyDate, int step);
+
     void stopStreamData();
     void streamData();
 
     OscType::OscHeader m_capturedOsc;
     QVector<int> m_capturedVars;
     int m_streamValCount = 0;
-
+    OscHistoryService* m_historySrv;
     IOscDataService* m_dataSrv;
 };
 

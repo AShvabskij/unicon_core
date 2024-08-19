@@ -26,12 +26,15 @@ public:
     void clear(DevInd id) override;
     void reset(DevInd ind) override;
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
+    long appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& dat) override;
     QJsonObject serialisedData(DevInd ind, QVector<int> vars, int &cnt) override;
+    QJsonObject historyData(DevInd ind, QVector<int> vars, int &cnt) override;
     long save(const DDE_OSC_HEADER &hdr) override;
     OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) override;
 
 signals:
     void dataReceived(quint16 ind) override;
+    void historyReceived(quint16 ind) override;
 
 private:
 
@@ -44,6 +47,7 @@ private:
     QMap<DevInd, OscType::OscDataBuffer*> m_repository;
     QMutex m_mutex;
     IOscDataStorageService* m_dataSaver = nullptr;
+    OscType::OscDataBuffer* m_historyBuff = nullptr;
 };
 
 #endif // OSCDATASERVICE_H
