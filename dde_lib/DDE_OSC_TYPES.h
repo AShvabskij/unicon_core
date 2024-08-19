@@ -147,6 +147,7 @@ struct GLIO_OSC_CHANNEL
     uint8_t lastBit = 0;
 };
 
+#ifdef __linux__
 typedef struct
 {
     pthread_mutex_t shm_mutex;
