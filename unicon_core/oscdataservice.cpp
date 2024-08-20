@@ -298,12 +298,13 @@ long OscDataService::save(const DDE_OSC_HEADER& hdr)
 long OscDataService::appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& dat)
 {
 
+    m_historyMutex.lock();
+
     if (m_historyBuff) {
         delete m_historyBuff;
     }
 
     m_historyBuff = createDataBuffer(hdr);
-
 
     m_historyBuff->eof = dat.eof;
     m_historyBuff->timestamp = dat.timestamp;
@@ -324,6 +325,8 @@ long OscDataService::appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscTyp
         m_historyBuff->chArray[chInd] = dat.chArray[chInd];
     }
 
+    m_historyMutex.unlock();
+
     emit historyReceived(m_historyBuff->id);
 
     return _return_OK;
@@ -332,6 +335,8 @@ long OscDataService::appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscTyp
 QJsonObject OscDataService::historyData(DevInd ind, QVector<int> vars, int &cnt)
 {
     Q_ASSERT(m_historyBuff);
+
+    m_historyMutex.lock();
 
     if (m_historyBuff->id != ind) {
         cnt = 0;
@@ -348,5 +353,6 @@ QJsonObject OscDataService::historyData(DevInd ind, QVector<int> vars, int &cnt)
     cnt = m_historyBuff->valueCount - m_historyBuff->lastDataPos;
     m_historyBuff->lastDataPos = m_historyBuff->valueCount;
 
+    m_historyMutex.unlock();
     return res;
 }

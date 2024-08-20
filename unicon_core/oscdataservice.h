@@ -34,7 +34,6 @@ public:
     long appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& dat) override;
     QJsonObject historyData(DevInd ind, QVector<int> vars, int &cnt) override;
 
-
 signals:
     void dataReceived(quint16 ind) override;
     void historyReceived(quint16 ind) override;
@@ -49,6 +48,7 @@ private:
 
     QMap<DevInd, OscType::OscDataBuffer*> m_repository;
     QMutex m_mutex;
+    QMutex m_historyMutex;
     IOscDataStorageService* m_dataSaver = nullptr;
     OscType::OscDataBuffer* m_historyBuff = nullptr;
 };

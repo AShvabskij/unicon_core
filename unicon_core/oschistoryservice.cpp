@@ -20,6 +20,9 @@ long OscHistoryService::loadData(const DDE_OSC_HEADER& hdr)
 
     dat->eof = true; // ??
     res = m_dataSrv->appendToHistoryData(hdr, *dat);
+
+    delete dat;
+
     return res;
 }
 

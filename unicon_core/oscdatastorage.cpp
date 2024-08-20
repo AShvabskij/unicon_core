@@ -67,8 +67,6 @@ using namespace OscType;
 
 long OscDataStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data)
 {
-    QTextStream(stdout) << "Saving osc data, device id = " << header.device_id << ENDL;
-
     //  const char* home = getenv("HOME");
         QDateTime now = QDateTime::currentDateTime();
         QString path =  createFolder(now);
@@ -78,15 +76,22 @@ long OscDataStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBu
         QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
 
         QString headerFile = path + "/" + baseFileName + ".hdr";
+
         _dde_func_return_t res = saveObj(headerFile, jsonObj);
 
-        if (!res)
+
+        if (res != _return_OK) {
             return res;
+        }
 
         QJsonObject datjsonObj = serializeToJSon(data);
 
         QString datFile = path + "/" + baseFileName + ".dat";
+
         res = saveObj(datFile, datjsonObj, true);
+        if (res == _return_OK) {
+            qInfo() << "Saved osc data, device id = " << header.device_id << " to file: " << headerFile << ENDL;
+        }
 
         return res;
 }

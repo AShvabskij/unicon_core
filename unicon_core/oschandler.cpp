@@ -136,13 +136,15 @@ void OscHandler::onReceivedHistoryData(quint16 ind)
     response["type"] = "osc";
 
     if (objCountResult > 0) {
-        QTextStream(stdout) << "Osc streaming history data, dev id = " << m_capturedOsc.deviceID.id
-                            << " trigger time =" << QDateTime::fromSecsSinceEpoch(response["trig_time"].toInt()).toString("yyyy-MM-dd hh:mm:ss")
+        qInfo() << "Osc streaming history data, dev id = " << m_capturedOsc.deviceID.id
+                            << " trigger time =" << QDateTime::fromMSecsSinceEpoch(response["trig_time"].toInt()).toString("yyyy-MM-dd hh:mm:ss")
                             << " reason =" << response["reason"].toInt()
                             << " Count =" << response["values"].toArray().takeAt(0).toArray().count()
                             <<  ", time(us) = " << response["time"].toInt() << "\n" ;
 
         emit stream(QList<QJsonObject>() << response);
+
+        qDebug() << "Osc finished streaming history data, dev id = " << m_capturedOsc.deviceID.id;
     }
 }
 
@@ -351,10 +353,10 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
 long OscHandler::startStreamData(const DevID &devID, QVector<int> oscVars, const int& oscId)
 {
     OscHeader header;
-    long ret = getHeader(devID, &header);
+    long res = getHeader(devID, &header);
 
-    if (ret != _return_OK) {
-        return ret;
+    if (res != _return_OK) {
+        return res;
     }
 
     m_capturedOsc = header;
@@ -363,10 +365,14 @@ long OscHandler::startStreamData(const DevID &devID, QVector<int> oscVars, const
     QObject* src = dynamic_cast<QObject*>(m_dataSrv);
     Q_ASSERT(src);
     QMetaObject::Connection con = connect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)), Qt::AutoConnection);
+
+    return res;
 }
 
 long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDate historyDate, int step)
 {
+    qDebug() << "Start history data, dev id = " << m_capturedOsc.deviceID.id << "step = " << step;
+
     DDE_OSC_HEADER dde_hdr;
     long res = m_historySrv->getHeader(devID, historyDate, step, dde_hdr);
     if (res != _return_OK) {
@@ -378,15 +384,20 @@ long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDat
 
     m_capturedVars = oscVars;
 
+    QObject* src = dynamic_cast<QObject*>(m_dataSrv);
+    Q_ASSERT(src);
+
+    auto con = connect(src, SIGNAL(historyReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)), Qt::AutoConnection);
+
     res = m_historySrv->loadData(dde_hdr);
+    qDebug() << "Osc loaded history data, dev id = " << m_capturedOsc.deviceID.id << "step = " << step;
+
     if (res != _return_OK) {
         qWarning() << "No OSC data is found for requested header";
         return res;
     }
 
-    QObject* src = dynamic_cast<QObject*>(m_dataSrv);
-    Q_ASSERT(src);
-    QMetaObject::Connection con = connect(src, SIGNAL(historyReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)), Qt::AutoConnection);
+    return res;
 }
 
 void OscHandler::stopStreamData()
@@ -395,6 +406,8 @@ void OscHandler::stopStreamData()
     m_capturedVars.clear();
     QObject* src = dynamic_cast<QObject*>(m_dataSrv);
     disconnect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)));
+    disconnect(src, SIGNAL(historyReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)));
+    qDebug() << "Stop stream data, device id = " << m_capturedOsc.deviceID.id;
 }
 
 void OscHandler::streamData()
