@@ -6,7 +6,7 @@
 #include "osc_types.h"
 #include "oscdataservice.h"
 
-#include <OscHistoryService.h>
+#include "oschistoryservice.h"
 #include <QTimer>
 
 class OscHandler : public BaseReqHandler

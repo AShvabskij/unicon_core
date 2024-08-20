@@ -157,3 +157,4 @@ typedef struct
     GLIO_OSC_CHANNEL channel[OSC_MAX_CHANNELS + 1];
 
 } GLIO_OSC_HEADER;
+#endif

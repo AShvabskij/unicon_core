@@ -16,7 +16,7 @@
 
 #include "oscdataservice.h"
 #include "oscdatastorage.h"
-#include "oschistoryservice.h".h"
+#include "oschistoryservice.h"
 
 #include <QObject>
 #include <QtWebSockets>
@@ -88,7 +88,12 @@ void Core::start()
     m_oscStateService->init(links);
 
     m_sysService->start();
+
+#ifdef __linux__
+    QtConcurrent::run(this, &Core::thread_proc, m_sysType);
+#else
     auto future = QtConcurrent::run(&Core::thread_proc, this, m_sysType);
+#endif
 }
 
 void Core::thread_proc(SysType sysType)
