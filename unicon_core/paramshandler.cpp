@@ -471,7 +471,7 @@ long ParamsHandler::convertValue(const ParamID& paramId, const GLIO_ELEMENT_VALU
         memcpy(ascii, &el.ivalue, sizeof(ascii));
         ascii[sizeof(el.ivalue)] = '\0';
 
-        res.value = ascii;
+        res.value = QString(ascii);
     }; break;
     default: {
         if (el.ivalue > 0 && paramId.id > 0) {
@@ -575,9 +575,14 @@ void ParamsHandler::streamParamsValue()
     }
 
     int i = 0;
-    for (const ParamValue& val : sentValues) {
+    for (ParamValue& val : sentValues) {
         if (!val.isActual()) {
-            int currTimeMsec = QDateTime::currentMSecsSinceEpoch();
+            qlonglong currTimeMsec = QDateTime::currentMSecsSinceEpoch();
+            QDateTime time = QDateTime::fromMSecsSinceEpoch(val.timestamp);
+            if (time.date().year() == 1970) {
+                val.timestamp = val.timestamp * 1000; // assume val.timestamp is in seconds, need to convert to msec
+            }
+
             const int delta = val.timestamp > 0 ? currTimeMsec - val.timestamp : 0;
 
             if (delta > 10000) {

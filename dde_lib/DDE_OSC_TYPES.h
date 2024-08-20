@@ -2,7 +2,10 @@
 
 #include <cstdint>
 #include <time.h>
+
+#ifdef __linux__
 #include <pthread.h>
+#endif
 
 #define OSC_VAR_NAME_LENGTH 64
 #define OSC_VAR_USER_NAME_LENGTH 64
@@ -158,3 +161,4 @@ typedef struct
 
 } GLIO_OSC_HEADER;
 #endif
+

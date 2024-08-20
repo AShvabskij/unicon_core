@@ -14,7 +14,7 @@ struct ParamValue
 
     int format = GLIO_ELEMENT_FORMAT_ENUM::FORMAT_UNDEFINED;
     float scale = 0.0;
-    static const int MAX_PARAM_VALUE_ACTUALITY_MS = 500;
+    static const int MAX_PARAM_VALUE_ACTUALITY_MS = 2000;
 
     QJsonObject toJsonValue() const {
         QJsonObject el;
@@ -38,6 +38,9 @@ struct ParamValue
 
     bool isActual() const {
         auto actuality = QDateTime::currentMSecsSinceEpoch();
+ //       auto t = timestamp * 1000;
+
+        if (QDateTime::currentMSecsSinceEpoch() > timestamp * 1000)
         actuality -= timestamp > 0 ? timestamp : actuality;
 
         if (actuality > MAX_PARAM_VALUE_ACTUALITY_MS) {

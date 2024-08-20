@@ -151,7 +151,8 @@ long OscDataStorage::saveObj(const QString fileName, const QJsonObject &obj, boo
         QByteArray bytes = doc.toJson(QJsonDocument::Compact);
 
         QTextStream iStream( &file );
-        iStream.setCodec( "utf-8" );
+        iStream.setEncoding(QStringConverter::Utf8);
+//      iStream.setCodec( "utf-8" );
         iStream << bytes;
     }
 

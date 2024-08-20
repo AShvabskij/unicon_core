@@ -1,7 +1,5 @@
 #include "core.h"
 
-#include <iostream>
-
 #ifdef __WIN32__
 #include "DDE_EMUL.h"
 #else

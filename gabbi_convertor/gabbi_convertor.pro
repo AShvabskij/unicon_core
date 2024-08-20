@@ -10,19 +10,19 @@ CONFIG -= app_bundle
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 INCLUDEPATH += $$PWD/../unicon_core
-DEPENDPATH += $$PWD/../unicon_core
+
 INCLUDEPATH += $$PWD/../dde_lib
-DEPENDPATH += $$PWD/../dde_lib
 
 SOURCES += \
         ../unicon_core/oscdatastorage.cpp \
         ../unicon_core/oscdatastorage_v1_2.cpp \
         main.cpp
 
+HEADERS += \
+        ../unicon_core/dde_lib/DDE_TYPES.h \
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-HEADERS += \
-    ../unicon_core/oscdatajsonstorage.h
