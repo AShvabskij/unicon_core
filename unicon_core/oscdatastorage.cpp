@@ -304,12 +304,23 @@ long OscDataStorage::loadData(QString fileFrom, OscType::OscDataBuffer& data)
 long OscDataStorage::loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data)
 {
     QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, Qt::LocalTime);
-    QString path =  createFolder(trigTime);
+    QString path =  getFolderPath(trigTime);
     QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
 
     QString datFile = path + QDir::separator() + baseFileName + ".dat";
 
     long ret = loadData(datFile, data);
+
+    if (ret == _return_FAIL) {
+        // Заплатка для случая, когда reason в заголовке (header.settings.reason) отсутствует
+        QString baseFileMask = QString("%1-*-%3").arg(header.device_id).arg(trigTime.toString("hh_mm_ss"));
+        QString datFileMask = path + QDir::separator() + baseFileMask + ".dat";
+
+        QDir dir(path);
+        QStringList fileList = dir.entryList(QStringList() << datFileMask, QDir::Files);
+        datFile = fileList.first();
+        ret = loadData(datFile, data);
+    }
 
     return ret;
 }
