@@ -136,7 +136,7 @@ void OscHandler::onReceivedHistoryData(quint16 ind)
     response["type"] = "osc";
 
     if (objCountResult > 0) {
-        qInfo() << "Osc streaming history data, dev id = " << m_capturedOsc.deviceID.id
+         QTextStream(stdout) << "Osc streaming history data, dev id = " << m_capturedOsc.deviceID.id
                             << " trigger time =" << QDateTime::fromMSecsSinceEpoch(response["trig_time"].toInt()).toString("yyyy-MM-dd hh:mm:ss")
                             << " reason =" << response["reason"].toInt()
                             << " Count =" << response["values"].toArray().takeAt(0).toArray().count()

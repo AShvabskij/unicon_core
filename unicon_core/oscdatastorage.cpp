@@ -151,8 +151,12 @@ long OscDataStorage::saveObj(const QString fileName, const QJsonObject &obj, boo
         QByteArray bytes = doc.toJson(QJsonDocument::Compact);
 
         QTextStream iStream( &file );
+
+#ifdef __linux__
+        iStream.setCodec( "utf-8" );
+#else
         iStream.setEncoding(QStringConverter::Utf8);
-//      iStream.setCodec( "utf-8" );
+#endif
         iStream << bytes;
     }
 
@@ -304,12 +308,32 @@ long OscDataStorage::loadData(QString fileFrom, OscType::OscDataBuffer& data)
 long OscDataStorage::loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data)
 {
     QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, Qt::LocalTime);
-    QString path =  createFolder(trigTime);
+    QString path =  getFolderPath(trigTime);
     QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
 
     QString datFile = path + QDir::separator() + baseFileName + ".dat";
 
     long ret = loadData(datFile, data);
+
+    if (ret == _return_FAIL && header.settings.reason == 0) {
+        // Заплатка для случая, когда reason в заголовке (header.settings.reason) отсутствует
+
+        QDir dir(path);
+        QStringList fileList = dir.entryList(QStringList() << "*.dat", QDir::Files);
+        for (QString fileName: fileList) {
+            QString firstPart = QString("%1-").arg(header.device_id);
+            int pos = fileName.indexOf(firstPart);
+            if (fileName.contains(trigTime.toString("hh_mm_ss")) && pos == 0) {
+                datFile = path + QDir::separator() + fileName;
+                break;
+            }
+        }
+
+        qDebug() << "datFile = " << datFile;
+        if (!datFile.isEmpty()) {
+            ret = loadData(datFile, data);
+        }
+    }
 
     return ret;
 }
