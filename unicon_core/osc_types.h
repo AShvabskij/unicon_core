@@ -57,6 +57,8 @@ namespace OscType {
         QList<Number32> numValues;
         QList<qint8> discrValues;
 
+        int lastDataPos = 0;
+
         QVariant value(int pos) const {
             switch (type) {
             case OSC_VAR_INT:
@@ -175,6 +177,7 @@ namespace OscType {
         void clear() {
             numValues.clear();
             discrValues.clear();
+            lastDataPos = 0;
         }
     };
 

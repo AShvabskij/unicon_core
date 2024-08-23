@@ -364,7 +364,10 @@ long OscHandler::startStreamData(const DevID &devID, QVector<int> oscVars, const
 
     QObject* src = dynamic_cast<QObject*>(m_dataSrv);
     Q_ASSERT(src);
+
     QMetaObject::Connection con = connect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)), Qt::AutoConnection);
+
+    streamData(); // Send all buffered data firstly
 
     return res;
 }
@@ -416,17 +419,20 @@ void OscHandler::streamData()
 
     int objCountResult = 0;
     QJsonObject response = m_dataSrv->serialisedData(m_capturedOsc.id, m_capturedVars, objCountResult);
+
+    if (response.isEmpty() /*objCountResult > 0*/) {
+        return;
+    }
+
+    QTextStream(stdout) << "Osc streaming, dev id = " << m_capturedOsc.deviceID.id
+                        << " Count =" << response["values"].toArray().takeAt(0).toArray().count()
+                        << ", eof = " << response["eof"].toString()
+                        <<  ", time(us) = " << response["time"].toInt() << "\n" ;
+
     response["type"] = "osc";
     // response["body"] = data;
 
-  if (objCountResult > 0) {
-      QTextStream(stdout) << "Osc streaming, dev id = " << m_capturedOsc.deviceID.id
-                          << " Count =" << response["values"].toArray().takeAt(0).toArray().count()
-                          << ", eof = " << response["eof"].toString()
-                          <<  ", time(us) = " << response["time"].toInt() << "\n" ;
-
-        emit stream(QList<QJsonObject>() << response);
-  }
+    emit stream(QList<QJsonObject>() << response);
 }
 
 long OscHandler::getHeader(const DevID& deviceID, OscHeader *out)

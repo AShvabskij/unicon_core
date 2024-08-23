@@ -249,7 +249,7 @@ QVariantList multiplyArrayByCoefficient(QVariantList& numberArray, float scale, 
     return res;
 }
 
-QJsonObject OscDataService::dataToJson(const OscType::OscDataBuffer& data, QVector<int> vars, int startPos) const
+QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int> vars, int startPos) const
 {
     QJsonObject res;
     QJsonArray valuesArr;
@@ -262,18 +262,25 @@ QJsonObject OscDataService::dataToJson(const OscType::OscDataBuffer& data, QVect
     res["eof"] = data.eof ? "1" : "0";
     res["sof"] = data.sof ? "1" : "0";
 
-    for (const OscChannelValues& chVal : data.chArray) {
+    for (OscChannelValues& chVal : data.chArray) {
         if (chVal.varId == 0) continue;
-        if (!vars.empty() && !vars.contains(chVal.varId)) {
+        if (!vars.isEmpty() && !vars.contains(chVal.varId)) {
+            continue;
+        }
+
+        int startPos = chVal.lastDataPos;
+        if (startPos == chVal.count()) {
             continue;
         }
 
         varIdListObj << chVal.varId;
 
-        auto values = chVal.values(startPos);
+        QVariantList values = chVal.values(startPos);
         if (chVal.scale != 0.0 && chVal.scale != 1.0) {
             values= multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
         }
+
+        chVal.lastDataPos = chVal.count();
 
         valuesArr << QJsonArray::fromVariantList(values);
     }
@@ -281,7 +288,11 @@ QJsonObject OscDataService::dataToJson(const OscType::OscDataBuffer& data, QVect
     res["values"] = valuesArr;
     res["vars"] = varIdListObj;
 
-    return res;
+   if (varIdListObj.isEmpty()) {
+        return QJsonObject();
+   }
+
+   return res;
 }
 
 long OscDataService::save(const DDE_OSC_HEADER& hdr)
