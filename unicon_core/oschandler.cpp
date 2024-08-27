@@ -297,6 +297,7 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
     bool historyNeed = cmdBody.contains("step");
     int step = historyNeed ? cmdBody.value("step").toInt() : 0;
     QDate historyDate =  QDateTime::currentDateTime().date(); //m_capturedOsc.deviceID.isValid() ? m_capturedOsc.settings.trigDTime.date() : QDate();
+    bool getDataNeed = cmdBody.contains("getData");
 
     QJsonArray oscVars = cmdBody.value("osc_vars").toArray();
     QVector<int> capturedVars;
@@ -313,18 +314,17 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
 
     if (historyNeed) {
         ret = startHistoryData(devID, capturedVars, historyDate, step);
+    } else if (getDataNeed) {
+        ret = getData(devID, capturedVars);
     } else {
         ret = startStreamData(devID, capturedVars, oscId);
     }
 
-    if (ret != _return_OK) {
-        int error = static_cast<int>(ret != 0 ? ret : -1);
-        QJsonObject response = createAnswerObj(requestId, devID, QJsonObject(), error);
-        send(response);
-        return error;
-    }
+    int res = static_cast<int>(ret != 0 ? ret : -1);
+    QJsonObject response = createAnswerObj(requestId, devID, QJsonObject(), res);
+    send(response);
 
-    return 0;
+    return ret;
 }
 
 int OscHandler::handleCloseStream(const QJsonObject &request)
@@ -350,6 +350,21 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
     return 0;
 }
 
+long OscHandler::getData(const DevID &devID, QVector<int> oscVars)
+{
+    int objCountResult = 0;
+    QJsonObject response = m_dataSrv->serialisedData(devID.id, oscVars, objCountResult);
+
+    if (response.isEmpty() /*objCountResult > 0*/) {
+        return _return_OK;
+    }
+
+    response["type"] = "osc";
+    emit stream(QList<QJsonObject>() << response);
+
+    return _return_OK;
+}
+
 long OscHandler::startStreamData(const DevID &devID, QVector<int> oscVars, const int& oscId)
 {
     OscHeader header;
@@ -371,7 +386,6 @@ long OscHandler::startStreamData(const DevID &devID, QVector<int> oscVars, const
 
     return res;
 }
-
 long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDate historyDate, int step)
 {
     qDebug() << "Start history data, dev id = " << m_capturedOsc.deviceID.id << "step = " << step;
