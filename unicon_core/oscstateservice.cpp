@@ -114,7 +114,7 @@ void OscStateMachine::update(DevInd devId)
                 }
             }
 
-            auto res = m_dataSrv->appendData(m_header, m_ddeData);
+            auto res = m_dataSrv->appendData(m_header, m_ddeData); // Maybe to extract it to the Adding State
 
             if (res != _return_OK) {
                 qWarning() << "Error getting buffer for the osc, id = " << m_header.device_id;
