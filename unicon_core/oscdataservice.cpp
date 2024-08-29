@@ -122,6 +122,11 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
 
 long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat)
 {
+    Q_ASSERT(dat.device_id == hdr.device_id);
+    if (dat.device_id != hdr.device_id) {
+        return _return_FAIL;
+    }
+
     OscType::OscDataBuffer* buff = m_repository.value(hdr.device_id, nullptr);
     if (!buff) {
         buff = createDataBuffer(hdr);

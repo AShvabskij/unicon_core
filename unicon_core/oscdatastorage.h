@@ -33,6 +33,9 @@ protected:
     virtual long jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h);
     virtual long jsonToData(const QJsonObject& obj, OscType::OscDataBuffer &data);
     virtual long decodeData(const QCborValue& sourceDat,  OscType::OscDataBuffer &data);
+
+private:
+    QStringList getSortedFilesByCreationDate(const QString &dirPath, QString mask);
 };
 
 #endif // OSCDATASAVER_H

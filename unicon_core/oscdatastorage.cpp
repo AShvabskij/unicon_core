@@ -342,12 +342,8 @@ QList<DDE_OSC_HEADER> OscDataStorage::headerList(QDate date)
 {
     QList<DDE_OSC_HEADER> headers;
     QString path =  getFolderPath(QDateTime(date, QTime()));
-    QDir dir(path);
-    // if (!dir.exists(path)) {
-    //     return headers;
-    // }
 
-    QStringList fileList = dir.entryList(QStringList() << "*.hdr", QDir::Files);
+    QStringList fileList = getSortedFilesByCreationDate(path, "*.hdr");
 
     for (QString file: fileList) {
         DDE_OSC_HEADER hdr;
@@ -361,6 +357,40 @@ QList<DDE_OSC_HEADER> OscDataStorage::headerList(QDate date)
     }
 
     return headers;
+}
+
+QStringList OscDataStorage::getSortedFilesByCreationDate(const QString &dirPath, QString mask)
+{
+    QDir dir(dirPath);
+
+    // Check if directory exists
+    if (!dir.exists()) {
+        qDebug() << "Directory does not exist:" << dirPath;
+        return QStringList();
+    }
+
+    // Get the list of files with a specific extension (e.g., *.hdr)
+    QStringList fileList = dir.entryList(QStringList() << mask, QDir::Files);
+
+    // Create a list of QFileInfo objects to hold file information
+    QList<QFileInfo> fileInfoList;
+    for (const QString &fileName : fileList) {
+        QFileInfo fileInfo(dir.absoluteFilePath(fileName));
+        fileInfoList.append(fileInfo);
+    }
+
+    // Sort the list by creation date and time
+    std::sort(fileInfoList.begin(), fileInfoList.end(), [](const QFileInfo &a, const QFileInfo &b) {
+        return a.birthTime() > b.birthTime();
+    });
+
+    // Convert the sorted QFileInfo list back to a QStringList
+    QStringList sortedFileList;
+    for (const QFileInfo &fileInfo : fileInfoList) {
+        sortedFileList.append(fileInfo.fileName());
+    }
+
+    return sortedFileList;
 }
 
 QJsonObject OscDataStorage::serializeToJSon(const OscDataBuffer& dat) const
