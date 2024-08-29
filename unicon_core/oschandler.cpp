@@ -493,7 +493,7 @@ long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *out)
     settings.displayResolution_ms = header.settings.display_resolution_ms > 0 ? header.settings.display_resolution_ms : settings.displayResolution_ms;
     std::time_t time = header.settings.trig_time;
 
-    if (QDateTime::fromMSecsSinceEpoch(time).date().year() == 1970) {
+    if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
         time = time * 1000; // assume time is in seconds, need to convert to msec
     }
 

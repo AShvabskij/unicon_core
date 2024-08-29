@@ -86,7 +86,7 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
     buff->reason = hdr.settings.reason;
 
     std::time_t time = hdr.settings.trig_time;
-    if (QDateTime::fromMSecsSinceEpoch(time).date().year() == 1970) {
+    if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
         time = time * 1000; // assume time is in seconds, need to convert to msec
     }
     buff->trig_time = time;
@@ -323,7 +323,7 @@ long OscDataService::appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscTyp
     m_historyBuff->valueCount = dat.valueCount;
 
     std::time_t time = hdr.settings.trig_time;
-    if (QDateTime::fromMSecsSinceEpoch(time).date().year() == 1970) {
+    if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
         time = time * 1000; // assume time is in seconds, need to convert to msec
     }
     m_historyBuff->trig_time = time;
