@@ -365,7 +365,6 @@ QStringList OscDataStorage::getSortedFilesByCreationDate(const QString &dirPath,
 
     // Check if directory exists
     if (!dir.exists()) {
-        qDebug() << "Directory does not exist:" << dirPath;
         return QStringList();
     }
 
