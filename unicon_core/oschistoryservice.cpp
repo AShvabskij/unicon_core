@@ -11,9 +11,9 @@ long OscHistoryService::loadData(const DDE_OSC_HEADER& hdr)
 {
     OscType::OscDataBuffer* dat = m_dataSrv->get(hdr.device_id);
 
-    if (dat != nullptr && dat->trig_time == hdr.settings.trig_time) {
-        return _return_OK;
-    }
+    // if (dat != nullptr && dat->trig_time == hdr.settings.trig_time) {
+    //     return _return_OK;
+    // }
 
     dat = m_dataSrv->createDataBuffer(hdr);
     long res = m_dataSaver->loadData(hdr, *dat);
