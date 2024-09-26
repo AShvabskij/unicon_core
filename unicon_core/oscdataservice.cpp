@@ -86,7 +86,7 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
     buff->reason = hdr.settings.reason;
 
     std::time_t time = hdr.settings.trig_time;
-    if (QDateTime::fromMSecsSinceEpoch(time).date().year() == 1970) {
+    if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
         time = time * 1000; // assume time is in seconds, need to convert to msec
     }
     buff->trig_time = time;
@@ -122,6 +122,11 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
 
 long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat)
 {
+    Q_ASSERT(dat.device_id == hdr.device_id);
+    if (dat.device_id != hdr.device_id) {
+        return _return_FAIL;
+    }
+
     OscType::OscDataBuffer* buff = m_repository.value(hdr.device_id, nullptr);
     if (!buff) {
         buff = createDataBuffer(hdr);
@@ -225,15 +230,10 @@ qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastB
 QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &cnt)
 {
     OscType::OscDataBuffer* buff = m_repository.value(ind);
-    Q_ASSERT(buff);
+    if (!buff) return QJsonObject();
 
     m_mutex.lock();
 
-    if (buff->lastDataPos == buff->valueCount) {
-        cnt = 0;
-        m_mutex.unlock();
-        return QJsonObject();
-    }
 
     QJsonObject res = dataToJson(*buff, vars, buff->lastDataPos);
 
@@ -249,39 +249,50 @@ QVariantList multiplyArrayByCoefficient(QVariantList& numberArray, float scale, 
     return res;
 }
 
-QJsonObject OscDataService::dataToJson(const OscType::OscDataBuffer& data, QVector<int> vars, int startPos) const
+QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int> vars, int startPos) const
 {
-    QJsonObject res;
     QJsonArray valuesArr;
     QJsonArray varIdListObj;
 
-    res["d_id"] = data.id;
-    res["time"] = data.timestamp;
-    res["trig_time"] = data.trig_time;
-    res["reason"] = data.reason;
-    res["eof"] = data.eof ? "1" : "0";
-    res["sof"] = data.sof ? "1" : "0";
-
-    for (const OscChannelValues& chVal : data.chArray) {
+    for (OscChannelValues& chVal : data.chArray) {
         if (chVal.varId == 0) continue;
-        if (!vars.empty() && !vars.contains(chVal.varId)) {
+        if (!vars.isEmpty() && !vars.contains(chVal.varId)) {
+            continue;
+        }
+
+        int startPos = chVal.lastDataPos;
+        if (startPos == chVal.count()) {
             continue;
         }
 
         varIdListObj << chVal.varId;
 
-        auto values = chVal.values(startPos);
+        QVariantList values = chVal.values(startPos);
         if (chVal.scale != 0.0 && chVal.scale != 1.0) {
             values= multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
         }
 
+        chVal.lastDataPos = chVal.count();
+
         valuesArr << QJsonArray::fromVariantList(values);
     }
 
-    res["values"] = valuesArr;
-    res["vars"] = varIdListObj;
 
-    return res;
+   if (varIdListObj.isEmpty()) {
+        return QJsonObject();
+   }
+
+   QJsonObject res;
+   res["d_id"] = data.id;
+   res["time"] = data.timestamp;
+   res["trig_time"] = data.trig_time;
+   res["reason"] = data.reason;
+   res["eof"] = data.eof ? "1" : "0";
+   res["sof"] = data.sof ? "1" : "0";
+   res["values"] = valuesArr;
+   res["vars"] = varIdListObj;
+
+   return res;
 }
 
 long OscDataService::save(const DDE_OSC_HEADER& hdr)
@@ -312,7 +323,7 @@ long OscDataService::appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscTyp
     m_historyBuff->valueCount = dat.valueCount;
 
     std::time_t time = hdr.settings.trig_time;
-    if (QDateTime::fromMSecsSinceEpoch(time).date().year() == 1970) {
+    if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
         time = time * 1000; // assume time is in seconds, need to convert to msec
     }
     m_historyBuff->trig_time = time;

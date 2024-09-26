@@ -47,6 +47,7 @@ public:
 private:
 
     long getData(const DDE_OSC_HEADER& hdr, DDE_GET_OSC_DATA &getDat);
+    DDE_OSC_HEADER getHeader(DevInd devId);
 
     IDDE* m_dde = nullptr;
     STATE m_state = Normal;

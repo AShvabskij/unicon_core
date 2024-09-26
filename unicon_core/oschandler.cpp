@@ -297,6 +297,7 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
     bool historyNeed = cmdBody.contains("step");
     int step = historyNeed ? cmdBody.value("step").toInt() : 0;
     QDate historyDate =  QDateTime::currentDateTime().date(); //m_capturedOsc.deviceID.isValid() ? m_capturedOsc.settings.trigDTime.date() : QDate();
+    bool getDataNeed = cmdBody.contains("getData");
 
     QJsonArray oscVars = cmdBody.value("osc_vars").toArray();
     QVector<int> capturedVars;
@@ -313,18 +314,17 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
 
     if (historyNeed) {
         ret = startHistoryData(devID, capturedVars, historyDate, step);
+    } else if (getDataNeed) {
+        ret = getData(devID, capturedVars);
     } else {
         ret = startStreamData(devID, capturedVars, oscId);
     }
 
-    if (ret != _return_OK) {
-        int error = static_cast<int>(ret != 0 ? ret : -1);
-        QJsonObject response = createAnswerObj(requestId, devID, QJsonObject(), error);
-        send(response);
-        return error;
-    }
+    int res = static_cast<int>(ret != 0 ? ret : -1);
+    QJsonObject response = createAnswerObj(requestId, devID, QJsonObject(), res);
+    send(response);
 
-    return 0;
+    return ret;
 }
 
 int OscHandler::handleCloseStream(const QJsonObject &request)
@@ -350,6 +350,21 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
     return 0;
 }
 
+long OscHandler::getData(const DevID &devID, QVector<int> oscVars)
+{
+    int objCountResult = 0;
+    QJsonObject response = m_dataSrv->serialisedData(devID.id, oscVars, objCountResult);
+
+    if (response.isEmpty() /*objCountResult > 0*/) {
+        return _return_OK;
+    }
+
+    response["type"] = "osc";
+    emit stream(QList<QJsonObject>() << response);
+
+    return _return_OK;
+}
+
 long OscHandler::startStreamData(const DevID &devID, QVector<int> oscVars, const int& oscId)
 {
     OscHeader header;
@@ -364,11 +379,13 @@ long OscHandler::startStreamData(const DevID &devID, QVector<int> oscVars, const
 
     QObject* src = dynamic_cast<QObject*>(m_dataSrv);
     Q_ASSERT(src);
+
     QMetaObject::Connection con = connect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)), Qt::AutoConnection);
+
+    streamData(); // Send all buffered data firstly
 
     return res;
 }
-
 long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDate historyDate, int step)
 {
     qDebug() << "Start history data, dev id = " << m_capturedOsc.deviceID.id << "step = " << step;
@@ -416,17 +433,20 @@ void OscHandler::streamData()
 
     int objCountResult = 0;
     QJsonObject response = m_dataSrv->serialisedData(m_capturedOsc.id, m_capturedVars, objCountResult);
+
+    if (response.isEmpty() /*objCountResult > 0*/) {
+        return;
+    }
+
+    QTextStream(stdout) << "Osc streaming, dev id = " << m_capturedOsc.deviceID.id
+                        << " Count =" << response["values"].toArray().takeAt(0).toArray().count()
+                        << ", eof = " << response["eof"].toString()
+                        <<  ", time(us) = " << response["time"].toInt() << "\n" ;
+
     response["type"] = "osc";
     // response["body"] = data;
 
-  if (objCountResult > 0) {
-      QTextStream(stdout) << "Osc streaming, dev id = " << m_capturedOsc.deviceID.id
-                          << " Count =" << response["values"].toArray().takeAt(0).toArray().count()
-                          << ", eof = " << response["eof"].toString()
-                          <<  ", time(us) = " << response["time"].toInt() << "\n" ;
-
-        emit stream(QList<QJsonObject>() << response);
-  }
+    emit stream(QList<QJsonObject>() << response);
 }
 
 long OscHandler::getHeader(const DevID& deviceID, OscHeader *out)
@@ -473,7 +493,7 @@ long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *out)
     settings.displayResolution_ms = header.settings.display_resolution_ms > 0 ? header.settings.display_resolution_ms : settings.displayResolution_ms;
     std::time_t time = header.settings.trig_time;
 
-    if (QDateTime::fromMSecsSinceEpoch(time).date().year() == 1970) {
+    if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
         time = time * 1000; // assume time is in seconds, need to convert to msec
     }
 
