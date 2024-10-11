@@ -316,27 +316,7 @@ long OscDataService::appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscTyp
         delete m_historyBuff;
     }
 
-    m_historyBuff = createDataBuffer(hdr);
-
-    m_historyBuff->eof = dat.eof;
-    m_historyBuff->timestamp = dat.timestamp;
-    m_historyBuff->reason = hdr.settings.reason;
-    m_historyBuff->valueCount = dat.valueCount;
-
-    std::time_t time = hdr.settings.trig_time;
-    if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
-        time = time * 1000; // assume time is in seconds, need to convert to msec
-    }
-    m_historyBuff->trig_time = time;
-
-    for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
-        const OSC_CHANNEL& channel = hdr.channels[chInd];
-
-        if (channel.var.id == 0) continue;
-
-        m_historyBuff->chArray[chInd] = dat.chArray[chInd];
-    }
-
+    *m_historyBuff = std::move(dat);
     m_historyMutex.unlock();
 
     return _return_OK;

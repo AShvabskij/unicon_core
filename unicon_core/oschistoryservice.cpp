@@ -21,12 +21,12 @@ long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
             dat->eof = true; // ??
             res = m_dataSrv->appendToHistoryData(hdr, *dat);
         }
-
-        delete dat;
     }
 
     if (res == _return_OK) {
         emit historyReceived(hdr.device_id);
+    } else {
+        delete dat;
     }
 
     return res;
