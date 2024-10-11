@@ -16,6 +16,7 @@
 #include <QDir>
 
 #include "oscdatastorage_v1_2.h"
+#include "DDE_TYPES.h"
 
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
 #define ENDL Qt::endl

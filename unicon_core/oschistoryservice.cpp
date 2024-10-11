@@ -7,27 +7,27 @@ OscHistoryService::OscHistoryService(IOscDataService *dataSrv, IOscDataStorageSe
     m_dataSaver = dataSaver;
 }
 
-long OscHistoryService::loadData(const DDE_OSC_HEADER& hdr)
+long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
 {
-    OscType::OscDataBuffer* dat = m_dataSrv->get(hdr.device_id);
+    OscType::OscDataBuffer* dat = m_dataSrv->getHistoryData(hdr);
 
-    // if (dat != nullptr && dat->trig_time == hdr.settings.trig_time) {
-    //     return _return_OK;
-    // }
+    long res = _return_OK;
 
-    dat = m_dataSrv->createDataBuffer(hdr);
-    long res = m_dataSaver->loadData(hdr, *dat);
+    if (dat == nullptr) {
+        dat = m_dataSrv->createDataBuffer(hdr);
+        res = m_dataSaver->loadData(hdr, *dat);
 
-    if (res != _return_OK) {
-        return res;
+        if (res == _return_OK) {
+            dat->eof = true; // ??
+            res = m_dataSrv->appendToHistoryData(hdr, *dat);
+        }
+
+        delete dat;
     }
 
-    m_dataSrv->reset(hdr.device_id);
-
-    dat->eof = true; // ??
-    res = m_dataSrv->appendToHistoryData(hdr, *dat);
-
-    delete dat;
+    if (res == _return_OK) {
+        emit historyReceived(hdr.device_id);
+    }
 
     return res;
 }

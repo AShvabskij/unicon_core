@@ -3,7 +3,6 @@
 
 #include "device_types.h"
 #include "DDE_OSC_TYPES.h"
-#include "DDE_TYPES.h"
 
 #include <QJsonObject>
 #include <QJsonArray>
@@ -266,11 +265,11 @@ public:
 
     virtual long appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& dat) = 0;
     virtual QJsonObject historyData(DevInd ind, QVector<int> vars, int &cnt) = 0;
+    virtual OscType::OscDataBuffer* getHistoryData(const DDE_OSC_HEADER& hdr) = 0;
 
 
 // signals:
     virtual void dataReceived(quint16 ind) = 0;
-    virtual void historyReceived(quint16 ind) = 0;
 
 };
 

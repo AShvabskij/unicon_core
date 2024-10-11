@@ -33,13 +33,12 @@ public:
     // methods to move to another service
     long appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& dat) override;
     QJsonObject historyData(DevInd ind, QVector<int> vars, int &cnt) override;
+    virtual OscType::OscDataBuffer* getHistoryData(const DDE_OSC_HEADER& hdr) override;
 
 signals:
     void dataReceived(quint16 ind) override;
-    void historyReceived(quint16 ind) override;
 
 private:
-
     void  clearDataBuffer(OscType::OscDataBuffer* buff);
     long saveData(const DDE_OSC_HEADER& header, const OscType::OscDataBuffer& data);
     qint8 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);

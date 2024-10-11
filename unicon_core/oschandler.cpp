@@ -401,13 +401,11 @@ long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDat
 
     m_capturedVars = oscVars;
 
-    QObject* src = dynamic_cast<QObject*>(m_dataSrv);
+
+    QObject* src = dynamic_cast<QObject*>(m_historySrv);
     Q_ASSERT(src);
 
     auto con = connect(src, SIGNAL(historyReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)), Qt::AutoConnection);
-
-    res = m_historySrv->loadData(dde_hdr);
-    qDebug() << "Osc loaded history data, dev id = " << m_capturedOsc.deviceID.id << "step = " << step;
 
     if (res != _return_OK) {
         qWarning() << "No OSC data is found for requested header";

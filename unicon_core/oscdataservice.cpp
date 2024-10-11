@@ -1,4 +1,5 @@
 #include "oscdataservice.h"
+#include "DDE_TYPES.h"
 
 #include <QDateTime>
 #include <QVariant>
@@ -338,8 +339,6 @@ long OscDataService::appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscTyp
 
     m_historyMutex.unlock();
 
-    emit historyReceived(m_historyBuff->id);
-
     return _return_OK;
 }
 
@@ -366,4 +365,13 @@ QJsonObject OscDataService::historyData(DevInd ind, QVector<int> vars, int &cnt)
 
     m_historyMutex.unlock();
     return res;
+}
+
+OscDataBuffer *OscDataService::getHistoryData(const DDE_OSC_HEADER& hdr)
+{
+    if (m_historyBuff != nullptr && m_historyBuff->trig_time == hdr.settings.trig_time) {
+        return m_historyBuff;
+    }
+
+    return nullptr;
 }

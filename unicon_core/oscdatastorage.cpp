@@ -1,4 +1,5 @@
 #include "oscdatastorage.h"
+#include "DDE_TYPES.h"
 
 #include <QDateTime>
 #include <QVariant>

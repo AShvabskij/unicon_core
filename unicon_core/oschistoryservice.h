@@ -10,12 +10,13 @@
 #include <QJsonObject>
 #include <QMap>
 
-class OscHistoryService
+class OscHistoryService: public QObject
 {
+     Q_OBJECT
 public:
     OscHistoryService(IOscDataService* dataSrv, IOscDataStorageService* dataSaver);
 
-    long loadData(const DDE_OSC_HEADER &hdr);
+    long requestData(const DDE_OSC_HEADER &hdr);
     long getHeader(const DevID &devID, QDate dateDate, int step, DDE_OSC_HEADER& header);
 
 private:
@@ -24,6 +25,9 @@ private:
     IOscDataStorageService* m_dataSaver = nullptr;
 
     DDE_OSC_HEADER m_header;
+
+signals:
+    void historyReceived(quint16 ind);
 
 };
 
