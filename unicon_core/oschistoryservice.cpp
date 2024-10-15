@@ -9,24 +9,29 @@ OscHistoryService::OscHistoryService(IOscDataService *dataSrv, IOscDataStorageSe
 
 long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
 {
-    OscType::OscDataBuffer* dat = m_dataSrv->getHistoryData(hdr);
-
     long res = _return_OK;
+    OscType::OscDataBuffer* dat = m_dataSrv->getHistoryData(hdr);
 
     if (dat == nullptr) {
         dat = m_dataSrv->createDataBuffer(hdr);
         res = m_dataSaver->loadData(hdr, *dat);
-
-        if (res == _return_OK) {
-            dat->eof = true; // ??
-            res = m_dataSrv->appendToHistoryData(hdr, *dat);
+        if (res != _return_OK) {
+            delete dat;
+            return res;
         }
     }
 
+    Q_ASSERT(dat);
+    if (dat == nullptr) {
+        return _return_FAIL;
+    }
+
+    dat->eof = true; // ??
+    dat->resetPos();
+    res = m_dataSrv->appendToHistoryData(hdr, std::move(*dat));
+
     if (res == _return_OK) {
         emit historyReceived(hdr.device_id);
-    } else {
-        delete dat;
     }
 
     return res;

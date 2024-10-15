@@ -38,6 +38,7 @@ OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
 
     buff->id = hdr.device_id;
     buff->timestamp = hdr.settings.trig_time;
+    buff->trig_time = hdr.settings.trig_time;
 
     for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];

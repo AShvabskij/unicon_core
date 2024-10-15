@@ -420,9 +420,8 @@ void OscHandler::stopStreamData()
 {
     m_capturedOsc = OscHeader();
     m_capturedVars.clear();
-    QObject* src = dynamic_cast<QObject*>(m_dataSrv);
-    disconnect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)));
-    disconnect(src, SIGNAL(historyReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)));
+    disconnect(dynamic_cast<QObject*>(m_dataSrv), SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)));
+    disconnect(dynamic_cast<QObject*>(m_historySrv), SIGNAL(historyReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)));
     qDebug() << "Stop stream data, device id = " << m_capturedOsc.deviceID.id;
 }
 

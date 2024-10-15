@@ -31,9 +31,9 @@ public:
     OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) override;
 
     // methods to move to another service
-    long appendToHistoryData(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& dat) override;
+    long appendToHistoryData(const DDE_OSC_HEADER& hdr, OscType::OscDataBuffer &&dat) override;
     QJsonObject historyData(DevInd ind, QVector<int> vars, int &cnt) override;
-    virtual OscType::OscDataBuffer* getHistoryData(const DDE_OSC_HEADER& hdr) override;
+    virtual OscType::OscDataBuffer getHistoryData(const DDE_OSC_HEADER& hdr) override;
 
 signals:
     void dataReceived(quint16 ind) override;
@@ -49,7 +49,7 @@ private:
     QMutex m_mutex;
     QMutex m_historyMutex;
     IOscDataStorageService* m_dataSaver = nullptr;
-    OscType::OscDataBuffer* m_historyBuff = nullptr;
+    OscType::OscDataBuffer m_historyBuff;
 };
 
 #endif // OSCDATASERVICE_H
