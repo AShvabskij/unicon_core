@@ -330,9 +330,8 @@ QJsonObject OscDataService::historyData(DevInd ind, QVector<int> vars, int &cnt)
 
     QJsonObject res = dataToJson(m_historyBuff, vars, 0);
 
-    cnt = m_historyBuff.valueCount;
-    m_historyBuff.lastDataPos = m_historyBuff.valueCount;
-
+    cnt = res["values"].toArray().takeAt(0).toArray().count();
+    m_historyBuff.lastDataPos = cnt;
     m_historyMutex.unlock();
     return res;
 }
