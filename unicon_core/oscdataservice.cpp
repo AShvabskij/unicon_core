@@ -342,30 +342,7 @@ QJsonObject OscDataService::historyData(DevInd ind, QVector<int> vars, int &cnt)
     return res;
 }
 
-QJsonObject OscDataService::restartData(DevInd ind, QVector<int> vars, int &cnt)
-{
-    if (m_historyBuff.id != ind) {
-        cnt = 0;
-        return QJsonObject();
-    }
-
-    if (m_historyBuff.lastDataPos == m_historyBuff.valueCount) {
-        cnt = 0;
-        return QJsonObject();
-    }
-
-    m_historyMutex.lock();
-
-    QJsonObject res = dataToJson(m_historyBuff, vars, m_historyBuff.lastDataPos);
-
-    cnt = m_historyBuff.valueCount - m_historyBuff.lastDataPos;
-    m_historyBuff.lastDataPos = m_historyBuff.valueCount;
-
-    m_historyMutex.unlock();
-    return res;
-}
-
-OscDataBuffer OscDataService::getHistoryData(const DDE_OSC_HEADER& hdr)
+OscDataBuffer* OscDataService::getHistoryData(const DDE_OSC_HEADER& hdr)
 {
     std::time_t time = hdr.settings.trig_time;
     if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
@@ -373,8 +350,8 @@ OscDataBuffer OscDataService::getHistoryData(const DDE_OSC_HEADER& hdr)
     }
 
     if (m_historyBuff.trig_time == time) {
-        return m_historyBuff;
+        return &m_historyBuff;
     }
 
-    return OscDataBuffer();
+    return nullptr;
 }

@@ -207,6 +207,13 @@ namespace OscType {
         bool isValid() {
             return id > 0 && id <= MAX_DEV_SUPPORT && trig_time > 0;
         }
+
+        void resetPos() {
+            lastDataPos = 0;
+            for (OscChannelValues& chVal : chArray) {
+                chVal.lastDataPos = 0;
+            }
+        }
     };
 
     struct OscSettings
@@ -273,7 +280,7 @@ public:
 
     virtual long appendToHistoryData(const DDE_OSC_HEADER& hdr, OscType::OscDataBuffer&& dat) = 0;
     virtual QJsonObject historyData(DevInd ind, QVector<int> vars, int &cnt) = 0;
-    virtual OscType::OscDataBuffer getHistoryData(const DDE_OSC_HEADER& hdr) = 0;
+    virtual OscType::OscDataBuffer* getHistoryData(const DDE_OSC_HEADER& hdr) = 0;
 
 
 // signals:

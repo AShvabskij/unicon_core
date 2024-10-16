@@ -33,7 +33,7 @@ public:
     // methods to move to another service
     long appendToHistoryData(const DDE_OSC_HEADER& hdr, OscType::OscDataBuffer &&dat) override;
     QJsonObject historyData(DevInd ind, QVector<int> vars, int &cnt) override;
-    virtual OscType::OscDataBuffer getHistoryData(const DDE_OSC_HEADER& hdr) override;
+    virtual OscType::OscDataBuffer* getHistoryData(const DDE_OSC_HEADER& hdr) override;
 
 signals:
     void dataReceived(quint16 ind) override;
