@@ -326,16 +326,11 @@ QJsonObject OscDataService::historyData(DevInd ind, QVector<int> vars, int &cnt)
         return QJsonObject();
     }
 
-    if (m_historyBuff.lastDataPos == m_historyBuff.valueCount) {
-        cnt = 0;
-        return QJsonObject();
-    }
-
     m_historyMutex.lock();
 
-    QJsonObject res = dataToJson(m_historyBuff, vars, m_historyBuff.lastDataPos);
+    QJsonObject res = dataToJson(m_historyBuff, vars, 0);
 
-    cnt = m_historyBuff.valueCount - m_historyBuff.lastDataPos;
+    cnt = m_historyBuff.valueCount;
     m_historyBuff.lastDataPos = m_historyBuff.valueCount;
 
     m_historyMutex.unlock();

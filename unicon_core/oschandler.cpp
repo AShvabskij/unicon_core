@@ -132,19 +132,22 @@ void OscHandler::onReceivedHistoryData(quint16 ind)
     }
 
     int objCountResult = 0;
-    QJsonObject response = m_dataSrv->historyData(m_capturedOsc.id, m_capturedVars, objCountResult);
-    response["type"] = "osc";
+    for (auto var: m_capturedVars) {
+        QVector<int> vars;
+        vars.append(var);
+        QJsonObject response = m_dataSrv->historyData(m_capturedOsc.id, vars, objCountResult);
+        response["type"] = "osc";
 
-    if (objCountResult > 0) {
-         QTextStream(stdout) << "Osc streaming history data, dev id = " << m_capturedOsc.deviceID.id
-                            << " trigger time =" << QDateTime::fromMSecsSinceEpoch(response["trig_time"].toInt()).toString("yyyy-MM-dd hh:mm:ss")
-                            << " reason =" << response["reason"].toInt()
-                            << " Count =" << response["values"].toArray().takeAt(0).toArray().count()
-                            <<  ", time(us) = " << response["time"].toInt() << "\n" ;
+        if (!response.empty()) {
+            QTextStream(stdout) << "Osc streaming history data, dev id = " << m_capturedOsc.deviceID.id
+                                << " trigger time =" << QDateTime::fromMSecsSinceEpoch(response["trig_time"].toInt()).toString("yyyy-MM-dd hh:mm:ss")
+                                << " reason =" << response["reason"].toInt()
+                                << " Count =" << objCountResult
+                                <<  ", time(us) = " << response["time"].toInt() << "\n" ;
 
-        emit stream(QList<QJsonObject>() << response);
-
-        qDebug() << "Osc finished streaming history data, dev id = " << m_capturedOsc.deviceID.id;
+            emit stream(QList<QJsonObject>() << response);
+            qDebug() << "Osc finished streaming history data, dev id = " << m_capturedOsc.deviceID.id;
+        }
     }
 }
 
