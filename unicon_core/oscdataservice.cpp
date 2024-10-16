@@ -250,11 +250,12 @@ QVariantList multiplyArrayByCoefficient(QVariantList& numberArray, float scale, 
     return res;
 }
 
-QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int> vars, int startPos) const
+QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int> vars, int cnt) const
 {
     QJsonArray valuesArr;
     QJsonArray varIdListObj;
 
+    bool isEof = false;
     for (OscChannelValues& chVal : data.chArray) {
         if (chVal.varId == 0) continue;
         if (!vars.isEmpty() && !vars.contains(chVal.varId)) {
@@ -268,12 +269,13 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
 
         varIdListObj << chVal.varId;
 
-        QVariantList values = chVal.values(startPos);
+        QVariantList values = chVal.values(startPos, cnt);
         if (chVal.scale != 0.0 && chVal.scale != 1.0) {
             values= multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
         }
 
-        chVal.lastDataPos = chVal.count();
+        chVal.lastDataPos = startPos + values.count();
+        isEof = chVal.lastDataPos >= chVal.count();
 
         valuesArr << QJsonArray::fromVariantList(values);
     }
@@ -288,7 +290,7 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
    res["time"] = data.timestamp;
    res["trig_time"] = data.trig_time;
    res["reason"] = data.reason;
-   res["eof"] = data.eof ? "1" : "0";
+   res["eof"] = data.eof && isEof ? "1" : "0";
    res["sof"] = data.sof ? "1" : "0";
    res["values"] = valuesArr;
    res["vars"] = varIdListObj;
@@ -328,7 +330,7 @@ QJsonObject OscDataService::historyData(DevInd ind, QVector<int> vars, int &cnt)
 
     m_historyMutex.lock();
 
-    QJsonObject res = dataToJson(m_historyBuff, vars, 0);
+    QJsonObject res = dataToJson(m_historyBuff, vars, cnt);
 
     cnt = res["values"].toArray().takeAt(0).toArray().count();
     m_historyBuff.lastDataPos = cnt;

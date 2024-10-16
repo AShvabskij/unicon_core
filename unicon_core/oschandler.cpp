@@ -131,11 +131,10 @@ void OscHandler::onReceivedHistoryData(quint16 ind)
         return;
     }
 
-    int objCountResult = 0;
-    for (auto var: m_capturedVars) {
-        QVector<int> vars;
-        vars.append(var);
-        QJsonObject response = m_dataSrv->historyData(m_capturedOsc.id, vars, objCountResult);
+    int valCount = 100;
+    while (true) {
+        int objCountResult = valCount;
+        QJsonObject response = m_dataSrv->historyData(m_capturedOsc.id, m_capturedVars, objCountResult);
         response["type"] = "osc";
 
         if (!response.empty()) {
@@ -147,6 +146,10 @@ void OscHandler::onReceivedHistoryData(quint16 ind)
 
             emit stream(QList<QJsonObject>() << response);
             qDebug() << "Osc finished streaming history data, dev id = " << m_capturedOsc.deviceID.id;
+        }
+
+        if (objCountResult < valCount) {
+            break;
         }
     }
 }

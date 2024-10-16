@@ -72,11 +72,12 @@ namespace OscType {
             }
         };
 
-        QVariantList values(int startPos) const {
+        QVariantList values(int startPos, int cnt = 0) const {
             QVariantList res;
+            cnt = cnt > 0 ? cnt : numValues.size();
             switch (type) {
             case OSC_VAR_INT: {
-                auto values = numValues.mid(startPos,  numValues.size());
+                auto values = numValues.mid(startPos,  cnt);
                 res.reserve(values.count());
                 for (const Number32 &num: values) {
                     res << num.i;
@@ -84,7 +85,7 @@ namespace OscType {
 
             } break;
             case OSC_VAR_FLOAT: {
-                auto values = numValues.mid(startPos,  numValues.size());
+                auto values = numValues.mid(startPos,  cnt);
                 res.reserve(values.count());
                 for (const Number32 &num: values) {
                     res << num.f;
@@ -92,7 +93,7 @@ namespace OscType {
 
             } break;
             case OSC_VAR_DISCRETE: {
-                auto values = discrValues.mid(startPos,  discrValues.size());
+                auto values = discrValues.mid(startPos,  cnt);
                 for (const auto &num: values) {
                     res << num;
                 }
