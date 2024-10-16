@@ -263,13 +263,15 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
         }
 
         int startPos = chVal.lastDataPos;
-        if (startPos == chVal.count()) {
+        if (startPos >= chVal.count()) {
             continue;
         }
 
-        varIdListObj << chVal.varId;
-
         QVariantList values = chVal.values(startPos, cnt);
+        if (values.isEmpty()) {
+            continue;
+        }
+
         if (chVal.scale != 0.0 && chVal.scale != 1.0) {
             values= multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
         }
@@ -277,6 +279,7 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
         chVal.lastDataPos = startPos + values.count();
         isEof = chVal.lastDataPos >= chVal.count();
 
+        varIdListObj << chVal.varId;
         valuesArr << QJsonArray::fromVariantList(values);
     }
 
@@ -331,9 +334,13 @@ QJsonObject OscDataService::historyData(DevInd ind, QVector<int> vars, int &cnt)
     m_historyMutex.lock();
 
     QJsonObject res = dataToJson(m_historyBuff, vars, cnt);
+    if (!res.isEmpty()) {
+        cnt = res["values"].toArray().takeAt(0).toArray().count();
+    } else {
+        cnt = 0;
+    }
 
-    cnt = res["values"].toArray().takeAt(0).toArray().count();
-    m_historyBuff.lastDataPos = cnt;
+    m_historyBuff.lastDataPos = m_historyBuff.lastDataPos + cnt;
     m_historyMutex.unlock();
     return res;
 }

@@ -72,9 +72,9 @@ namespace OscType {
             }
         };
 
-        QVariantList values(int startPos, int cnt = 0) const {
+        QVariantList values(int startPos, int cnt = -1) const {
             QVariantList res;
-            cnt = cnt > 0 ? cnt : numValues.size();
+            cnt = cnt >= 0 ? cnt : -1;
             switch (type) {
             case OSC_VAR_INT: {
                 auto values = numValues.mid(startPos,  cnt);
