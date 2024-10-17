@@ -187,12 +187,14 @@ namespace OscType {
         int valueCount = 0; // // number of points in values buffer
         int valueDensity = 0; // number of points per millisec
         int lastDataPos = 0;
-        OscChannelValues chArray[OSC_MAX_VARS + 1];
         qlonglong timestamp = 0;
         qlonglong trig_time = 0;
+        qlonglong resolution_us;
         int reason = 0;
         bool eof = false;
         bool sof = false;
+
+        OscChannelValues chArray[OSC_MAX_VARS + 1];
 
         bool isOversized() {
             if (valueCount > MAX_DATA_COUNT)

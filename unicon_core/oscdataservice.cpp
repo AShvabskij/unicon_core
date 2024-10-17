@@ -85,6 +85,7 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
     buff->id = hdr.device_id;
     buff->timestamp = 0;
     buff->reason = hdr.settings.reason;
+    buff->resolution_us = hdr.settings.time_resolution_us;
 
     std::time_t time = hdr.settings.trig_time;
     if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
@@ -290,7 +291,7 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
 
    QJsonObject res;
    res["d_id"] = data.id;
-   res["time"] = data.timestamp;
+   res["time"] = valuesArr.count() * data.resolution_us;
    res["trig_time"] = data.trig_time;
    res["reason"] = data.reason;
    res["eof"] = data.eof && isEof ? "1" : "0";
