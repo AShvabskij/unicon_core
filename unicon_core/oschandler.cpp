@@ -131,15 +131,21 @@ void OscHandler::onReceivedHistoryData(quint16 ind)
         return;
     }
 
+    QElapsedTimer timer;
+    timer.start();
+
     int valCount = 6000;
     while (true) {
+        QElapsedTimer timer;
+        timer.start();
+
         int objCountResult = valCount;
-        QJsonObject response = m_dataSrv->historyData(m_capturedOsc.id, m_capturedVars, objCountResult);
+        QJsonObject response = m_dataSrv->serialisedHistoryData(m_capturedOsc.id, m_capturedVars, objCountResult);
         if (response.empty()) {
             break;
         }
 
-        QTextStream(stdout) << "Osc streaming history data, dev id = " << m_capturedOsc.deviceID.id
+        qInfo() << "Osc streaming history data, dev id = " << m_capturedOsc.deviceID.id
                             << " trigger time =" << QDateTime::fromMSecsSinceEpoch(response["trig_time"].toInt()).toString("yyyy-MM-dd hh:mm:ss")
                 << " reason =" << response["reason"].toInt()
                 << " Count =" << objCountResult
@@ -147,8 +153,12 @@ void OscHandler::onReceivedHistoryData(quint16 ind)
 
         response["type"] = "osc";
         emit stream(QList<QJsonObject>() << response);
-        qDebug() << "Osc finished streaming history data, dev id = " << m_capturedOsc.deviceID.id;
+
+        qDebug() << "emit data took" << timer.elapsed() << "milliseconds";
     }
+
+    qDebug() << "Osc finished history data, dev id = " << m_capturedOsc.deviceID.id;
+    qDebug() << "Emit all data took" << timer.elapsed() << "milliseconds";
 }
 
 int OscHandler::handleGetHeader(const QJsonObject &request)
@@ -432,22 +442,27 @@ void OscHandler::streamData()
 {
     Q_ASSERT(m_capturedOsc.deviceID.isValid());
 
-    int objCountResult = 0;
-    QJsonObject response = m_dataSrv->serialisedData(m_capturedOsc.id, m_capturedVars, objCountResult);
+    QElapsedTimer timer;
+    timer.start();
 
-    if (response.isEmpty() /*objCountResult > 0*/) {
-        return;
+    int valCount = 0;
+    while (true) {
+        int objCountResult = 5000;
+        QJsonObject response = m_dataSrv->serialisedData(m_capturedOsc.id, m_capturedVars, objCountResult);
+
+        if (response.empty()) {
+            break;
+        }
+
+        response["type"] = "osc";
+        emit stream(QList<QJsonObject>() << response);
+
+        valCount += response["values"].toArray().takeAt(0).toArray().count();
     }
+    qInfo() << "Osc streaming, dev id = " << m_capturedOsc.deviceID.id
+            << " Count =" << valCount << "\n" ;
 
-    QTextStream(stdout) << "Osc streaming, dev id = " << m_capturedOsc.deviceID.id
-                        << " Count =" << response["values"].toArray().takeAt(0).toArray().count()
-                        << ", eof = " << response["eof"].toString()
-                        <<  ", time(us) = " << response["time"].toInt() << "\n" ;
-
-    response["type"] = "osc";
-    // response["body"] = data;
-
-    emit stream(QList<QJsonObject>() << response);
+    qDebug() << "Emit all data took" << timer.elapsed() << "milliseconds";
 }
 
 long OscHandler::getHeader(const DevID& deviceID, OscHeader *out)

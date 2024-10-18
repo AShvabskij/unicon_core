@@ -190,8 +190,13 @@ _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeld
 {
     assert(m_header != nullptr);
 
+    static int iCounter = 0;
     if (!m_oscFileStream) {
-        loadData();
+        iCounter++;
+        if (iCounter % 10 == 0) {
+            loadData();
+            iCounter = 1;
+        }
     }
 
       //   waitForLoad();
@@ -200,9 +205,13 @@ _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeld
         return _return_FAIL;
     }
 
-    auto resolution_us = m_header->settings.time_resolution_us;
+    int resolution_us = m_header->settings.time_resolution_us;
     if (resolution_us != 0) {
-        p.data_length = (datYeldIntervalMsc * 1000) / resolution_us;
+        int data_length = (datYeldIntervalMsc * 1000) / resolution_us;
+        p.data_length = data_length > (OSC_DATA_BUFFER_MAX - 1) ? static_cast<uint16_t>(OSC_DATA_BUFFER_MAX - 1) : static_cast<uint16_t>(data_length);
+
+        std::cout << "Osc data length to load = " << p.data_length << "\n";
+
     } else {
         std::cout << "Osc error! Header resolution is assigned to 0 , device id = " << m_header->device_id << "\n";
     }
@@ -212,7 +221,8 @@ _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeld
     p.next_ready = true;
     p.eof = false;
 
-    for (int buffInd = 0; buffInd < p.data_length; ++buffInd) {
+    int buffInd = 0;
+    for (buffInd = 0; buffInd < p.data_length; ++buffInd) {
         string line = readLine(*m_oscFileStream);
         if (m_oscFileStream->eof()) {
             break;
