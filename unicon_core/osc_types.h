@@ -55,7 +55,7 @@ namespace OscType {
 
         QVector<float> fltValues;
         QVector<int> intValues;
-        QVector<int> discrValues;
+        QVector<qint8> discrValues;
 
         int lastDataPos = 0;
 
@@ -78,20 +78,47 @@ namespace OscType {
 
             cnt = cnt >= 0 ? cnt : -1;
 
+            auto vfltList = [](const QVector<float>& vector) {
+                QVariantList list;
+                std::for_each(vector.begin(), vector.end(), [&list](float value) {
+                    list.append(QVariant(value));
+                });
+                return list;
+            };
+
+            auto vintList = [](const QVector<int>& vector) {
+                QVariantList list;
+                std::for_each(vector.begin(), vector.end(), [&list](float value) {
+                    list.append(QVariant(value));
+                });
+                return list;
+            };
+
+            auto vdiscrList = [](const QVector<qint8>& vector) {
+                QVariantList list;
+                std::for_each(vector.begin(), vector.end(), [&list](float value) {
+                    list.append(QVariant(value));
+                });
+                return list;
+            };
+
             switch (type) {
             case OSC_VAR_INT: {
                 auto values = intValues.mid(startPos,  cnt);
-                res = QVariant::fromValue(values);
+                QVariantList vlist = vintList(values);
+                res = QVariant::fromValue(vlist);
 
             } break;
             case OSC_VAR_FLOAT: {
                 auto values = fltValues.mid(startPos,  cnt);
-                res = QVariant::fromValue(values);
+                QVariantList vlist = vfltList(values);
+                res = QVariant::fromValue(vlist);
 
             } break;
             case OSC_VAR_DISCRETE: {
                 auto values = discrValues.mid(startPos,  cnt);
-                res = QVariant::fromValue(values);
+                QVariantList vlist = vdiscrList(values);
+                res = QVariant::fromValue(vlist);
 
             } break;
             case UNDEFINED: {}
