@@ -420,12 +420,13 @@ long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDat
 void OscHandler::stopStreamData()
 {
     m_streaming = false;
+    m_future.waitForFinished(); // wait for current osc loading and sending is finished
+
     m_capturedOsc = OscHeader();
     m_capturedVars.clear();
     disconnect(dynamic_cast<QObject*>(m_dataSrv), SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)));
     disconnect(dynamic_cast<QObject*>(m_historySrv), SIGNAL(historyReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)));
 
-    m_future.waitForFinished();
 
     qDebug() << "Stop stream data, device id = " << m_capturedOsc.deviceID.id;
 }
@@ -473,11 +474,16 @@ void OscHandler::th_streamHistoryData()
     timer.start();
 
     int valCount = 0;
-    while (m_streaming) {
+    while (true) {
 
         int objCountResult = SEND_HISTORY_SIZE_MAX;
         QJsonObject response = m_dataSrv->serialisedHistoryData(m_capturedOsc.id, m_capturedVars, objCountResult);
         if (response.empty()) {
+            break;
+        }
+
+        if (!m_streaming) {
+            qDebug() << "Streaming braked, dev id = " << m_capturedOsc.deviceID.id;
             break;
         }
 
