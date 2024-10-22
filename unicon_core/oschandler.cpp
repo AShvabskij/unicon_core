@@ -12,6 +12,7 @@ const QString CMD_OSC_DATA = "osc_data";
 
 const int SEND_DATA_SIZE_MAX = 500;
 const int SEND_HISTORY_SIZE_MAX = 5000;
+const int SEND_HISTORY_SIZE_MIN = 1000;
 
 using namespace OscType;
 
@@ -470,16 +471,15 @@ void OscHandler::th_streamHistoryData()
 {
     Q_ASSERT(m_capturedOsc.deviceID.isValid());
 
-    QElapsedTimer timer;
-    timer.start();
-
     int valCount = 0;
+    int send_size = SEND_HISTORY_SIZE_MIN;
     QList<QJsonObject> list;
 
     while (true) {
+        QElapsedTimer timer;
+        timer.start();
 
-        int objCountResult = SEND_HISTORY_SIZE_MAX;
-        QJsonObject response = m_dataSrv->serialisedHistoryData(m_capturedOsc.id, m_capturedVars, objCountResult);
+        QJsonObject response = m_dataSrv->serialisedHistoryData(m_capturedOsc.id, m_capturedVars, send_size);
         if (response.empty()) {
             break;
         }
@@ -492,15 +492,18 @@ void OscHandler::th_streamHistoryData()
         valCount += response["values"].toArray().takeAt(0).toArray().count();
         response["type"] = "osc";
         list << response;
-    }
+        emit stream(list);
+        list.clear();
 
-    emit stream(list);
+        if (timer.elapsed() < 100) {
+            send_size = send_size * 2;
+        }
+    }
 
     qDebug() << "Emit all history data, dev id = " << m_capturedOsc.deviceID.id
              << " trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
              << " reason =" << m_capturedOsc.settings.reason
-             << "Count =" << valCount << "\n"
-             << "took" << timer.elapsed() << "milliseconds";
+             << "Count =" << valCount << "\n";
 }
 
 long OscHandler::getHeader(const DevID& deviceID, OscHeader *out)
