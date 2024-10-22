@@ -15,21 +15,21 @@
 #include <QCoreApplication>
 
 
-class MultiplyFunctor {
-public:
-    using result_type = QVariant;
+// class MultiplyFunctor {
+// public:
+//     using result_type = QVariant;
 
-    MultiplyFunctor(float scale, float offset) : scale(scale), offset(offset) {}
+//     MultiplyFunctor(float scale, float offset) : scale(scale), offset(offset) {}
 
-    QVariant operator()(const QVariant& value) const {
-        return (value.toFloat() * scale) + offset;
-    }
+//     QVariant operator()(const QVariant& value) const {
+//         return (value.toFloat() * scale) + offset;
+//     }
 
 
-private:
-    float scale;
-    float offset;
-};
+// private:
+//     float scale;
+//     float offset;
+// };
 
 using namespace OscType;
 
@@ -219,8 +219,8 @@ qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastB
 
 QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &cnt)
 {
-    // QElapsedTimer timer;
-    // timer.start();
+    QElapsedTimer timer;
+    timer.start();
 
     OscType::OscDataBuffer* buff = m_repository.value(ind);
     if (!buff) return QJsonObject();
@@ -240,14 +240,14 @@ QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &c
 
     m_mutex.unlock();
 
-//  qDebug() << "The serialisedData operation took" << timer.elapsed() << "milliseconds";
+    qDebug() << "The serialisedData operation took" << timer.elapsed() << "milliseconds";
     return res;
 }
 
-QVariantList multiplyArrayByCoefficient(QVariantList& numberArray, float scale, float offset) {
-    QVariantList res = QtConcurrent::blockingMapped(numberArray, MultiplyFunctor(scale, offset));
-    return res;
-}
+// QVariantList multiplyArrayByCoefficient(QVariantList& numberArray, float scale, float offset) {
+//     QVariantList res = QtConcurrent::blockingMapped(numberArray, MultiplyFunctor(scale, offset));
+//     return res;
+// }
 
 QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int> vars, int cnt) const
 {
@@ -268,13 +268,18 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
             continue;
         }
 
-        QVariantList values = chVal.values(startPos, cnt);
+        // QVariantList values = chVal.values(startPos, cnt);
+        // if (values.isEmpty()) {
+        //     continue;
+        // }
+
+        // if (chVal.scale != 0.0 && chVal.scale != 1.0) {
+        //     values= multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
+        // }
+
+        QJsonArray values = chVal.jsnValues(startPos, cnt);
         if (values.isEmpty()) {
             continue;
-        }
-
-        if (chVal.scale != 0.0 && chVal.scale != 1.0) {
-            values= multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
         }
 
         chVal.lastDataPos = startPos + values.count();
@@ -282,7 +287,9 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
         timestamp = chVal.lastDataPos * data.resolution_us;
 
         varIdListObj << chVal.varId;
-        valuesArr << QJsonArray::fromVariantList(values);
+        // valuesArr << QJsonArray::fromVariantList(values);
+        valuesArr << values;
+
     }
 
 

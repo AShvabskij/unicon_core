@@ -462,9 +462,11 @@ void OscHandler::th_streamData()
         valCount += response["values"].toArray().takeAt(0).toArray().count();
     }
 
-    qDebug() << "Emit all osc data, dev id = " << m_capturedOsc.deviceID.id
-             << "Count =" << valCount << "\n"
-             << "took" << timer.elapsed() << "milliseconds";
+    if (valCount > 0) {
+        qDebug() << "Emit all osc data, dev id = " << m_capturedOsc.deviceID.id
+                 << "Count =" << valCount << "\n"
+                 << "took" << timer.elapsed() << "milliseconds";
+    }
 }
 
 void OscHandler::th_streamHistoryData()
@@ -476,8 +478,8 @@ void OscHandler::th_streamHistoryData()
     QList<QJsonObject> list;
 
     while (true) {
-        QElapsedTimer timer;
-        timer.start();
+        // QElapsedTimer timer;
+        // timer.start();
 
         QJsonObject response = m_dataSrv->serialisedHistoryData(m_capturedOsc.id, m_capturedVars, send_size);
         if (response.empty()) {
@@ -495,9 +497,7 @@ void OscHandler::th_streamHistoryData()
         emit stream(list);
         list.clear();
 
-        if (timer.elapsed() < 100) {
-            send_size = send_size * 2;
-        }
+        send_size = std::min(send_size * 2, SEND_HISTORY_SIZE_MAX);
     }
 
     qDebug() << "Emit all history data, dev id = " << m_capturedOsc.deviceID.id

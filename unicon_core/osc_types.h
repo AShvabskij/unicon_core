@@ -74,29 +74,14 @@ namespace OscType {
         };
 
         QVariantList values(int startPos, int cnt = -1) const {
-            QVariant res;
+            QVariantList res;
 
             cnt = cnt >= 0 ? cnt : -1;
 
-            auto vfltList = [](const QVector<float>& vector) {
+            auto vList = [](const auto& vector) {
                 QVariantList list;
-                std::for_each(vector.begin(), vector.end(), [&list](float value) {
-                    list.append(QVariant(value));
-                });
-                return list;
-            };
-
-            auto vintList = [](const QVector<int>& vector) {
-                QVariantList list;
-                std::for_each(vector.begin(), vector.end(), [&list](float value) {
-                    list.append(QVariant(value));
-                });
-                return list;
-            };
-
-            auto vdiscrList = [](const QVector<qint8>& vector) {
-                QVariantList list;
-                std::for_each(vector.begin(), vector.end(), [&list](float value) {
+                list.reserve(vector.size());
+                std::for_each(vector.begin(), vector.end(), [&list](auto value) {
                     list.append(QVariant(value));
                 });
                 return list;
@@ -105,26 +90,58 @@ namespace OscType {
             switch (type) {
             case OSC_VAR_INT: {
                 auto values = intValues.mid(startPos,  cnt);
-                QVariantList vlist = vintList(values);
-                res = QVariant::fromValue(vlist);
+                res = vList(values);
 
             } break;
             case OSC_VAR_FLOAT: {
                 auto values = fltValues.mid(startPos,  cnt);
-                QVariantList vlist = vfltList(values);
-                res = QVariant::fromValue(vlist);
+                res = vList(values);
 
             } break;
             case OSC_VAR_DISCRETE: {
                 auto values = discrValues.mid(startPos,  cnt);
-                QVariantList vlist = vdiscrList(values);
-                res = QVariant::fromValue(vlist);
+                res = vList(values);
 
             } break;
             case UNDEFINED: {}
             }
 
-            return res.toList();
+            return res;
+        }
+
+        QJsonArray jsnValues(int startPos, int cnt = -1) const {
+
+            cnt = cnt >= 0 ? cnt : -1;
+
+            auto jsonList = [](const auto& vector, float scale, float offset) {
+                QJsonArray list;
+                std::for_each(vector.begin(), vector.end(), [&list, scale, offset](auto value) {
+                    QJsonValue lVal = (scale != 0.0 && scale != 1.0) ? value * scale + offset : value;
+                    list.append(lVal);
+                });
+                return list;
+            };
+
+            QJsonArray res;
+            switch (type) {
+            case OSC_VAR_INT: {
+                auto values = intValues.mid(startPos,  cnt);
+                res = jsonList(values, scale, offset);
+
+            } break;
+            case OSC_VAR_FLOAT: {
+                auto values = fltValues.mid(startPos,  cnt);
+                res = jsonList(values, scale, offset);
+
+            } break;
+            case OSC_VAR_DISCRETE: {
+                auto values = discrValues.mid(startPos,  cnt);
+                res = jsonList(values, scale, offset);
+            } break;
+            case UNDEFINED: {}
+            }
+
+            return res;
         }
 
         template<typename T> void append(const T& value) {
