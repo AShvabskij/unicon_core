@@ -67,8 +67,6 @@ long OscDataStorage_v1_2::decodeData(const QCborValue &sourceDat, OscType::OscDa
 
         data.chArray[i].varId = vars[i].toInteger();
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
-
-        qDebug() << "id = " << data.chArray[i].varId << " first = " << data.chArray[i].numValues.first().f << " last = " << data.chArray[i].numValues.last().f << "\n";
     };
 
     data.valueCount = maxValueCount;

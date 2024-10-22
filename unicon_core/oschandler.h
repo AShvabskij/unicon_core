@@ -46,13 +46,16 @@ private:
     long startHistoryData(const DevID &devID, QVector<int> oscVars, QDate historyDate, int step);
 
     void stopStreamData();
-    void streamData();
+    void th_streamData();
+    void th_streamHistoryData();
 
     OscType::OscHeader m_capturedOsc;
     QVector<int> m_capturedVars;
     int m_streamValCount = 0;
+    bool m_streaming = false;
     OscHistoryService* m_historySrv;
     IOscDataService* m_dataSrv;
+    QFuture<void> m_future;
 };
 
 #endif // OSCHANDLER_H

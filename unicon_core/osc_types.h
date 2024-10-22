@@ -53,17 +53,18 @@ namespace OscType {
 
         OSC_VAR_TYPE type = OSC_VAR_FLOAT;
 
-        QList<Number32> numValues;
-        QList<qint8> discrValues;
+        QVector<float> fltValues;
+        QVector<int> intValues;
+        QVector<int> discrValues;
 
         int lastDataPos = 0;
 
         QVariant value(int pos) const {
             switch (type) {
             case OSC_VAR_INT:
-                return QVariant::fromValue(numValues.value(pos).i);
+                return QVariant::fromValue(intValues.value(pos));
             case OSC_VAR_FLOAT: {
-                return QVariant::fromValue(numValues.value(pos).f);
+                return QVariant::fromValue(fltValues.value(pos));
             } break;
             case OSC_VAR_DISCRETE: {
                 return QVariant::fromValue(discrValues.value(pos));
@@ -73,48 +74,39 @@ namespace OscType {
         };
 
         QVariantList values(int startPos, int cnt = -1) const {
-            QVariantList res;
+            QVariant res;
+
             cnt = cnt >= 0 ? cnt : -1;
+
             switch (type) {
             case OSC_VAR_INT: {
-                auto values = numValues.mid(startPos,  cnt);
-                res.reserve(values.count());
-                for (const Number32 &num: values) {
-                    res << num.i;
-                }
+                auto values = intValues.mid(startPos,  cnt);
+                res = QVariant::fromValue(values);
 
             } break;
             case OSC_VAR_FLOAT: {
-                auto values = numValues.mid(startPos,  cnt);
-                res.reserve(values.count());
-                for (const Number32 &num: values) {
-                    res << num.f;
-                }
+                auto values = fltValues.mid(startPos,  cnt);
+                res = QVariant::fromValue(values);
 
             } break;
             case OSC_VAR_DISCRETE: {
                 auto values = discrValues.mid(startPos,  cnt);
-                for (const auto &num: values) {
-                    res << num;
-                }
+                res = QVariant::fromValue(values);
+
             } break;
             case UNDEFINED: {}
             }
 
-            return res;
+            return res.toList();
         }
 
         template<typename T> void append(const T& value) {
              switch (type) {
              case OSC_VAR_INT: {
-                 Number32 num;
-                 num.i = value;
-                 numValues.append(num);
+                 intValues.append(value);
              } break;
              case OSC_VAR_FLOAT: {
-                 Number32 num;
-                 num.f = value;
-                 numValues.append(num);
+                 fltValues.append(value);
              } break;
              case OSC_VAR_DISCRETE: {
                  discrValues.append(value);
@@ -126,14 +118,10 @@ namespace OscType {
         void append(QVariant value) {
             switch (type) {
             case OSC_VAR_INT: {
-                Number32 num;
-                num.i = value.toInt();
-                numValues.append(num);
+                intValues.append(value.toInt());
             } break;
             case OSC_VAR_FLOAT: {
-                Number32 num;
-                num.f = value.toFloat();
-                numValues.append(num);
+                fltValues.append(value.toFloat());
             } break;
             case OSC_VAR_DISCRETE: {
                 discrValues.append(value.toInt());
@@ -145,23 +133,19 @@ namespace OscType {
         void append(QVariantList values) {
             switch (type) {
             case OSC_VAR_INT: {
-                numValues.reserve(values.count());
+                intValues.reserve(values.count() + 1);
                 for (const auto& val: values) {
-                    Number32 num;
-                    num.i = val.toInt();
-                    numValues.append(num);
+                    intValues.append(val.toInt());
                 }
             } break;
             case OSC_VAR_FLOAT: {
-                numValues.reserve(values.count());
+                fltValues.reserve(values.count() + 1);
                 for (const auto& val: values) {
-                    Number32 num;
-                    num.f = val.toFloat();
-                    numValues.append(num);
+                    fltValues.append(val.toFloat());
                 }
             } break;
             case OSC_VAR_DISCRETE: {
-                discrValues.reserve(values.count());
+                discrValues.reserve(values.count() + 1);
                 for (const auto& val: values) {
                     discrValues.append(val.toInt());
                 }
@@ -170,12 +154,45 @@ namespace OscType {
             }
         }
 
+        void append(const int* arr, size_t size) {
+            intValues.reserve(size);
+            std::copy(arr, arr + size, std::back_inserter(intValues));
+       }
+
+        void append(const float* arr, size_t size) {
+            fltValues.reserve(size);
+            std::copy(arr, arr + size, std::back_inserter(fltValues));
+        }
+
+        void append(const qint8* arr, size_t size) {
+            discrValues.reserve(size);
+            std::copy(arr, arr + size, std::back_inserter(discrValues));
+        }
+
         int count() const {
-            return std::max(numValues.count(), discrValues.count());
+            return std::max(std::max(intValues.count(), fltValues.count()), discrValues.count());
+        }
+
+        void reserve(int count) {
+            switch (type) {
+            case OSC_VAR_TYPE::OSC_VAR_INT: {
+                intValues.reserve(count);
+            } break;
+            case OSC_VAR_TYPE::OSC_VAR_FLOAT: {
+                fltValues.reserve(count);
+            } break;
+            case OSC_VAR_TYPE::OSC_VAR_DISCRETE: {
+                discrValues.reserve(count);
+            } break;
+            case UNDEFINED: {
+                qWarning() << "Undefined var type" << ", id = " << varId << ", ch num = " << channelNum;
+            }
+            }
         }
 
         void clear() {
-            numValues.clear();
+            intValues.clear();
+            fltValues.clear();
             discrValues.clear();
             lastDataPos = 0;
         }

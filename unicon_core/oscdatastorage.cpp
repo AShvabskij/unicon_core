@@ -422,12 +422,12 @@ QJsonObject OscDataStorage::serializeToJSon(const OscDataBuffer& dat) const
 
         switch (chVal.type) {
             case OSC_VAR_INT:
-                for (int i=0; i< chVal.numValues.count(); i++) {
-                    valuesObj << chVal.numValues[i].i;
+                for (int i=0; i< chVal.intValues.count(); i++) {
+                    valuesObj << chVal.intValues[i];
                 } break;
             case OSC_VAR_FLOAT:
-                for (int i=0; i< chVal.numValues.count(); i++) {
-                    valuesObj << chVal.numValues[i].f;
+                for (int i=0; i< chVal.fltValues.count(); i++) {
+                    valuesObj << chVal.fltValues[i];
                 } break;
 
             case OSC_VAR_DISCRETE:

@@ -105,18 +105,7 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
         chValues.offset = channel.offset;
         chValues.type = channel.var.type;
 
-        switch (channel.var.type) {
-        case OSC_VAR_TYPE::OSC_VAR_INT:
-        case OSC_VAR_TYPE::OSC_VAR_FLOAT: {
-            chValues.numValues.reserve(MAX_DATA_COUNT);
-        } break;
-        case OSC_VAR_TYPE::OSC_VAR_DISCRETE: {
-            chValues.discrValues.reserve(MAX_DATA_COUNT);
-        } break;
-        case UNDEFINED: {
-            qWarning() << "Undefined var type" << ", id = " << channel.var.id << ", name = " << channel.var.name;
-        }
-        }
+        chValues.reserve(MAX_DATA_COUNT);
     }
 
     return buff;
@@ -163,42 +152,36 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     }
 
     buff->valueCount += dat.data_length;
+    qint8 ival_arr[dat.data_length + 1];
 
     for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
         const OSC_CHANNEL& channel = hdr.channels[chInd];
 
         if (channel.var.id == 0) continue;
 
-        OscChannelValues& chValues = buff->chArray[chInd];
-
         const OSC_DATA& chData = dat.data[channel.chNum];
+        OscChannelValues& chValues = buff->chArray[chInd];
 
         switch (channel.var.type) {
         case OSC_VAR_TYPE::OSC_VAR_INT: {
-            for (int i = 0; i < dat.data_length; i++) {
-                auto val = chData.i_buff[i];
-                chValues.append(val);
-            }
+            chValues.append(chData.i_buff, dat.data_length);
         } break;
         case OSC_VAR_TYPE::OSC_VAR_FLOAT: {
-            for (int i = 0; i < dat.data_length; i++) {
-                auto val = chData.f_buff[i];
-                chValues.append(val);
-            }
+            chValues.append(chData.f_buff, dat.data_length);
         } break;
 
         case OSC_VAR_TYPE::OSC_VAR_DISCRETE: {
-            chValues.discrValues.reserve(buff->valueCount + 1);
             for (int i = 0; i < dat.data_length; i++) {
                 int32_t rawValue = chData.i_buff[i];
-                qint8 val = discreteValue(rawValue, channel.firstBit, channel.lastBit);
-                chValues.append(val);
+                ival_arr[i] = discreteValue(rawValue, channel.firstBit, channel.lastBit);
             }
+            chValues.append(ival_arr, dat.data_length);
         } break;
         case UNDEFINED: {
             qWarning() << "Undefined var type" << ", id = " << channel.var.id << ", name = " << channel.var.name;
         }
         }
+
     }
 
     int resolution = static_cast<int>(hdr.settings.time_resolution_us);
@@ -236,8 +219,8 @@ qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastB
 
 QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &cnt)
 {
-    QElapsedTimer timer;
-    timer.start();
+    // QElapsedTimer timer;
+    // timer.start();
 
     OscType::OscDataBuffer* buff = m_repository.value(ind);
     if (!buff) return QJsonObject();
@@ -253,12 +236,11 @@ QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &c
         cnt = 0;
     }
 
-    buff->lastDataPos = m_historyBuff.lastDataPos + cnt;
-
+    buff->lastDataPos = buff->lastDataPos + cnt;
 
     m_mutex.unlock();
 
-    qDebug() << "The serialisedData operation took" << timer.elapsed() << "milliseconds";
+//  qDebug() << "The serialisedData operation took" << timer.elapsed() << "milliseconds";
     return res;
 }
 
@@ -281,7 +263,8 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
         }
 
         int startPos = chVal.lastDataPos;
-        if (startPos >= chVal.count()) {
+        int ch_val_count = chVal.count();
+        if (startPos >= ch_val_count) {
             continue;
         }
 
@@ -295,7 +278,7 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
         }
 
         chVal.lastDataPos = startPos + values.count();
-        isEof = chVal.lastDataPos >= chVal.count();
+        isEof = chVal.lastDataPos >= ch_val_count;
         timestamp = chVal.lastDataPos * data.resolution_us;
 
         varIdListObj << chVal.varId;
