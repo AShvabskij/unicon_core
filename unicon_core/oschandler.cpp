@@ -124,7 +124,7 @@ void OscHandler::onReceivedData(quint16 ind)
 
     #ifdef __linux__
     m_future.waitForFinished();
-    m_future = QtConcurrent::run(this, &OscHandler::streamData);
+    m_future = QtConcurrent::run(this, &OscHandler::th_streamData);
     #else
     m_future.waitForFinished();
     m_future = QtConcurrent::run(&OscHandler::th_streamData, this);
@@ -140,7 +140,7 @@ void OscHandler::onReceivedHistoryData(quint16 ind)
 
     #ifdef __linux__
         m_future.waitForFinished();
-        m_future = QtConcurrent::run(this, &OscHandler::streamData);
+        m_future = QtConcurrent::run(this, &OscHandler::th_streamHistoryData);
     #else
         m_future.waitForFinished();
         m_future = QtConcurrent::run(&OscHandler::th_streamHistoryData, this);
