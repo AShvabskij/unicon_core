@@ -196,6 +196,8 @@ _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeld
         if (iCounter % 10 == 0) {
             loadData();
             iCounter = 1;
+        } else {
+            return _return_Busy;
         }
     }
 
