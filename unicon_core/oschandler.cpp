@@ -474,6 +474,8 @@ void OscHandler::th_streamHistoryData()
     timer.start();
 
     int valCount = 0;
+    QList<QJsonObject> list;
+
     while (true) {
 
         int objCountResult = SEND_HISTORY_SIZE_MAX;
@@ -489,8 +491,10 @@ void OscHandler::th_streamHistoryData()
 
         valCount += response["values"].toArray().takeAt(0).toArray().count();
         response["type"] = "osc";
-        emit stream(QList<QJsonObject>() << response);
+        list << response;
     }
+
+    emit stream(list);
 
     qDebug() << "Emit all history data, dev id = " << m_capturedOsc.deviceID.id
              << " trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
