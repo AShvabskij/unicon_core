@@ -463,8 +463,8 @@ void OscHandler::th_streamData()
     }
 
     if (valCount > 0) {
-        qDebug() << "Emit osc data, dev id = " << m_capturedOsc.deviceID.id
-                 << "channels = " <<  m_capturedVars.count()
+        qDebug() << "Emit osc data, dev id =" << m_capturedOsc.deviceID.id
+                 << "channels =" <<  m_capturedVars.count()
                  << "count =" << valCount << "\n"
                  << "took" << timer.elapsed() << "milliseconds";
     }

@@ -190,8 +190,8 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     m_mutex.unlock();
 
     qDebug() << "AppendData:"
-             << "channels = " << hdr.settings.channels_count
-             << "length = " << dat.data_length
+             << "channels =" << hdr.settings.channels_count
+             << "length =" << dat.data_length
              << "took" << timer.elapsed() << "milliseconds";
 
     emit dataReceived(buff->id);
