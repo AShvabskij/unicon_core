@@ -33,14 +33,51 @@
 
 using namespace OscType;
 
-OscType::OscDataBuffer* OscDataService::get(DevInd ind)
+OscType::OscDataBuffer* OscDataService::get(const OscHeader &h)
 {
-    return m_repository.value(ind, nullptr);
+    QList<OscDataBuffer*> dev_buffers = m_repository.values(h.deviceID.id);
+    if (dev_buffers.count() == 1) {
+        return dev_buffers.first();
+    }
+
+    qlonglong trig_time = h.settings.trigDTime.toMSecsSinceEpoch();
+    int reason = h.settings.reason;
+
+    for (OscDataBuffer* b: dev_buffers) {
+        if (b->trig_time == trig_time && b->reason == reason) {
+            return b;
+        }
+    }
+
+    return nullptr;
 }
 
-void OscDataService::clear(DevInd ind)
+OscType::OscDataBuffer* OscDataService::get(const DDE_OSC_HEADER& hdr)
 {
-    OscType::OscDataBuffer* buff = m_repository.value(ind);
+    QList<OscDataBuffer*> dev_buffers = m_repository.values(hdr.device_id);
+    if (dev_buffers.count() == 1) {
+        return dev_buffers.first();
+    }
+
+    qlonglong time = hdr.settings.trig_time;
+    if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
+        time = time * 1000; // assume time is in seconds, need to convert to msec
+    }
+
+    int reason = static_cast<int>(hdr.settings.reason);
+
+    for (OscDataBuffer* b: dev_buffers) {
+        if (b->trig_time == time && b->reason == reason) {
+            return b;
+        }
+    }
+
+    return nullptr;
+}
+
+void OscDataService::clear(const DDE_OSC_HEADER& hdr)
+{
+    OscType::OscDataBuffer* buff = get(hdr);
     if (!buff)
         return;
 
@@ -49,18 +86,19 @@ void OscDataService::clear(DevInd ind)
     m_mutex.unlock();
 }
 
-void OscDataService::reset(DevInd ind)
+void OscDataService::reset(const DDE_OSC_HEADER& hdr)
 {
-    OscType::OscDataBuffer* buff = m_repository.value(ind);
-    if (!buff)
+    OscType::OscDataBuffer* buff = get(hdr);
+    if (!buff) {
         return;
+    }
 
     qDebug() << "Clearing buffer" << ", value count = " << buff->valueCount;
     m_mutex.lock();
     //  clearDataBuffer(buff);
 
+    m_repository.remove(hdr.device_id, buff);
     delete buff;
-    m_repository.remove(ind);
     m_mutex.unlock();
 }
 
@@ -121,10 +159,10 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
         return _return_FAIL;
     }
 
-    OscType::OscDataBuffer* buff = m_repository.value(hdr.device_id, nullptr);
+    OscType::OscDataBuffer* buff = get(hdr);
     if (!buff) {
         buff = createDataBuffer(hdr);
-        m_repository[hdr.device_id] = buff;
+        m_repository.insert(hdr.device_id, buff);
     }
 
     Q_ASSERT(buff);
@@ -198,6 +236,31 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     return _return_OK;
 }
 
+long OscDataService::appendBuffer(OscType::OscDataBuffer&& buff)
+{
+    OscType::OscDataBuffer* dev_buff = nullptr;
+    QList<OscDataBuffer*> dev_buffers = m_repository.values(buff.id);
+    for (OscDataBuffer* b: dev_buffers) {
+        if (b->trig_time == buff.trig_time && b->reason == buff.reason) {
+            dev_buff = b;
+            break;
+        }
+    }
+
+    if (!dev_buff) {
+        dev_buff = new OscType::OscDataBuffer();
+        m_repository.insert(dev_buff->id, dev_buff);
+    }
+
+    Q_ASSERT(dev_buff);
+
+    m_mutex.lock();
+    *dev_buff = std::move(buff);
+    m_mutex.unlock();
+
+    return _return_OK;
+}
+
 qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit)
 {
     uint32_t mask = 0x0001;
@@ -220,12 +283,12 @@ qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastB
     return static_cast<qint8>(res);
 }
 
-QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &cnt, bool& isEof)
+QJsonObject OscDataService::serialisedData(OscHeader &h, QVector<int> vars, int &cnt, bool& isEof)
 {
     QElapsedTimer timer;
     timer.start();
 
-    OscType::OscDataBuffer* buff = m_repository.value(ind);
+    OscType::OscDataBuffer* buff = get(h);
     if (!buff) return QJsonObject();
 
     m_mutex.lock();
@@ -314,59 +377,11 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
 
 long OscDataService::save(const DDE_OSC_HEADER& hdr)
 {
-    OscType::OscDataBuffer* datBuff = m_repository.value(hdr.device_id);
+    OscType::OscDataBuffer* datBuff = get(hdr);
     Q_ASSERT(datBuff);
     m_mutex.lock();
     long res = m_dataSaver->save(hdr, *datBuff);
     m_mutex.unlock();
 
     return res;
-}
-
-long OscDataService::appendToHistoryData(const DDE_OSC_HEADER& hdr, OscType::OscDataBuffer&& dat)
-{
-
-    m_historyMutex.lock();
-
-    m_historyBuff = std::move(dat);
-
-    m_historyMutex.unlock();
-
-    return _return_OK;
-}
-
-QJsonObject OscDataService::serialisedHistoryData(DevInd ind, QVector<int> vars, int &cnt_fact, bool& isEof)
-{
-    QElapsedTimer timer;
-    timer.start();
-
-    if (m_historyBuff.id != ind) {
-        cnt_fact = 0;
-        return QJsonObject();
-    }
-
-    m_historyMutex.lock();
-
-    QJsonObject res = dataToJson(m_historyBuff, vars, cnt_fact, isEof);
-    if (!res.isEmpty()) {
-        cnt_fact = res["values"].toArray().takeAt(0).toArray().count();
-    } else {
-        cnt_fact = 0;
-    }
-
-    m_historyBuff.lastDataPos = m_historyBuff.lastDataPos + cnt_fact;
-    m_historyMutex.unlock();
-
-//  qDebug() << "serialisedHistoryData took" << timer.elapsed() << "milliseconds";
-
-    return res;
-}
-
-OscDataBuffer* OscDataService::getHistoryData(DevInd ind)
-{
-    if (m_historyBuff.id == ind) {
-        return &m_historyBuff;
-    }
-
-    return nullptr;
 }

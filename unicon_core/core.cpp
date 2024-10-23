@@ -50,7 +50,9 @@ void Core::start()
 
     OscDataService* oscService = new OscDataService(OscDataStorage::instance());
     m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), oscService);
-    OscHistoryService* oscHistoryService = new OscHistoryService(oscService, OscDataStorage::instance());
+
+    OscDataService* hstDataService = new OscDataService(OscDataStorage::instance());
+    OscHistoryService* oscHistoryService = new OscHistoryService(hstDataService, OscDataStorage::instance());
 
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp, m_sysType);

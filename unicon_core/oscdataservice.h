@@ -5,7 +5,7 @@
 #include <QDebug>
 
 #include <QTimer>
-#include <QMap>
+#include <QMultiMap>
 #include <QMutex>
 
 #include "osc_types.h"
@@ -22,34 +22,32 @@ public:
 
     ~OscDataService() override {}
 
-    OscType::OscDataBuffer* get(DevInd ind) override;
-    void clear(DevInd id) override;
-    void reset(DevInd ind) override;
+    OscType::OscDataBuffer* get(const DDE_OSC_HEADER& hdr) override;
+
+    void clear(const DDE_OSC_HEADER &hdr) override;
+    void reset(const DDE_OSC_HEADER &hdr) override;
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
-    QJsonObject serialisedData(DevInd ind, QVector<int> vars, int &cnt, bool &isEof) override;
+    long appendBuffer(OscType::OscDataBuffer &&buff) override;
+
+    QJsonObject serialisedData(OscType::OscHeader& h, QVector<int> vars, int &cnt, bool &isEof) override;
     long save(const DDE_OSC_HEADER &hdr) override;
     OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) override;
-
-    // methods to move to another service
-    long appendToHistoryData(const DDE_OSC_HEADER& hdr, OscType::OscDataBuffer &&dat) override;
-    QJsonObject serialisedHistoryData(DevInd ind, QVector<int> vars, int &cnt_fact, bool &isEof) override;
-    virtual OscType::OscDataBuffer* getHistoryData(DevInd ind) override;
 
 signals:
     void dataReceived(quint16 ind) override;
 
 private:
+    OscType::OscDataBuffer* get(const OscType::OscHeader& h);
+
     void  clearDataBuffer(OscType::OscDataBuffer* buff);
     long saveData(const DDE_OSC_HEADER& header, const OscType::OscDataBuffer& data);
     inline qint8 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
     QJsonObject dataToJson(OscType::OscDataBuffer &data, QVector<int> vars, int cnt, bool &isEof) const;
     QJsonObject headerToJson(const DDE_OSC_HEADER &h);
 
-    QMap<DevInd, OscType::OscDataBuffer*> m_repository;
+    QMultiMap<DevInd, OscType::OscDataBuffer*> m_repository;
     QMutex m_mutex;
-    QMutex m_historyMutex;
     IOscDataStorageService* m_dataSaver = nullptr;
-    OscType::OscDataBuffer m_historyBuff;
 };
 
 #endif // OSCDATASERVICE_H

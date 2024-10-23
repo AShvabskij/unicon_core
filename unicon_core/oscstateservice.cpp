@@ -60,7 +60,7 @@ void OscStateMachine::update(DevInd devId)
         }
 
         if (m_header.settings.trig_time > 0) {
-            m_dataSrv->reset(m_header.device_id);
+            m_dataSrv->reset(m_header);
             m_errCounter = 0;
             m_state = Getting;
             m_sof = false;
@@ -104,7 +104,7 @@ void OscStateMachine::update(DevInd devId)
                 }
 
                 if (m_eof) {
-                    m_dataSrv->clear(m_header.device_id);
+                    m_dataSrv->clear(m_header);
                     m_errCounter = 0;
                     m_eof = false;
                     m_sof = false;

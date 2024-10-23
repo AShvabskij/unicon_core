@@ -11,14 +11,9 @@ long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
 {
     long res = _return_OK;
 
-    std::time_t time = hdr.settings.trig_time;
-    if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
-        time = time * 1000; // assume time is in seconds, need to convert to msec
-    }
+    OscType::OscDataBuffer* dat = m_dataSrv->get(hdr);
 
-    OscType::OscDataBuffer* dat = m_dataSrv->getHistoryData(hdr.device_id);
-
-    if (dat == nullptr || dat->trig_time != time) {
+    if (dat == nullptr) {
         dat = m_dataSrv->createDataBuffer(hdr);
         res = m_dataSaver->loadData(hdr, *dat);
         if (res != _return_OK) {
@@ -36,7 +31,7 @@ long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
     dat->resetPos();
     dat->timestamp = dat->valueCount  * dat->resolution_us;
 
-    res = m_dataSrv->appendToHistoryData(hdr, std::move(*dat));
+    res = m_dataSrv->appendBuffer(std::move(*dat));
 
     if (res == _return_OK) {
         emit historyReceived(hdr.device_id);

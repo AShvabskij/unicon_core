@@ -18,6 +18,9 @@ public:
 
     long requestData(const DDE_OSC_HEADER &hdr);
     long getHeader(const DevID &devID, QDate dateDate, int step, DDE_OSC_HEADER& header);
+    IOscDataService* getDataSrv() {
+        return m_dataSrv;
+    }
 
 private:
     IDDE* m_dde;

@@ -355,9 +355,16 @@ long OscHandler::getAllData(const DevID &devID, QVector<int> oscVars)
     QElapsedTimer timer;
     timer.start();
 
+    OscHeader header;
+    long res = getHeader(devID, &header);
+
+    if (res != _return_OK) {
+        return res;
+    }
+
     int obj_count = -1; // get all the data
     bool isEof = false;
-    QJsonObject response = m_dataSrv->serialisedData(devID.id, oscVars, obj_count, isEof);
+    QJsonObject response = m_dataSrv->serialisedData(header, oscVars, obj_count, isEof);
 
     if (isEof || response.isEmpty()) {
         return _return_OK;
@@ -366,9 +373,7 @@ long OscHandler::getAllData(const DevID &devID, QVector<int> oscVars)
     response["type"] = "osc";
     emit stream(QList<QJsonObject>() << response);
 
-    qDebug() << "Emit all osc data, dev id =" << m_capturedOsc.deviceID.id
-             << "trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
-             << "reason =" << m_capturedOsc.settings.reason
+    qDebug() << "Emit all osc data, dev id =" << devID.id
              << "channels =" <<  oscVars.count()
              << "count =" << obj_count
              << "took" << timer.elapsed() << "ms";
@@ -455,7 +460,7 @@ void OscHandler::th_streamData()
     while (true) {
 
         bool isEof = false;
-        QJsonObject response = m_dataSrv->serialisedData(m_capturedOsc.id, m_capturedVars, obj_count, isEof);
+        QJsonObject response = m_dataSrv->serialisedData(m_capturedOsc, m_capturedVars, obj_count, isEof);
 
         if (response.empty()) {
             break;
@@ -493,10 +498,11 @@ void OscHandler::th_streamHistoryData()
 
     int valCount = 0;
     int obj_count = SEND_HISTORY_COUNT_MIN;
+    IOscDataService* dataSrv = m_historySrv->getDataSrv();
 
     while (true) {
         bool isEof = false;
-        QJsonObject response = m_dataSrv->serialisedHistoryData(m_capturedOsc.id, m_capturedVars, obj_count, isEof);
+        QJsonObject response = dataSrv->serialisedData(m_capturedOsc, m_capturedVars, obj_count, isEof);
         if (response.empty()) {
             break;
         }
@@ -575,6 +581,7 @@ long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *out)
     }
 
     settings.trigDTime = QDateTime::fromMSecsSinceEpoch(time, Qt::LocalTime);
+    qlonglong testTime = settings.trigDTime.toMSecsSinceEpoch();
     if (!settings.trigDTime.isValid()) {
         settings.trigDTime = QDateTime();
     }

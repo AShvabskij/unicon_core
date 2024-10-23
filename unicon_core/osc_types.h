@@ -334,18 +334,14 @@ class IOscDataService
 
 public:
     virtual ~IOscDataService() {}
-    virtual OscType::OscDataBuffer* get (DevInd ind) = 0;
-    virtual void clear(DevInd ind) = 0;
-    virtual void reset(DevInd ind) = 0;
+    virtual OscType::OscDataBuffer* get(const DDE_OSC_HEADER& hdr) = 0;
+    virtual void clear(const DDE_OSC_HEADER& hdr) = 0;
+    virtual void reset(const DDE_OSC_HEADER& hdr) = 0;
     virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
-    virtual QJsonObject serialisedData(DevInd ind, QVector<int> vars, int &cnt, bool& isEof) = 0;
+    virtual long appendBuffer(OscType::OscDataBuffer &&buff) = 0;
+    virtual QJsonObject serialisedData(OscType::OscHeader& h, QVector<int> vars, int &cnt, bool& isEof) = 0;
     virtual long save(const DDE_OSC_HEADER& hdr) = 0;
     virtual OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) = 0;
-
-    virtual long appendToHistoryData(const DDE_OSC_HEADER& hdr, OscType::OscDataBuffer&& dat) = 0;
-    virtual QJsonObject serialisedHistoryData(DevInd ind, QVector<int> vars, int &cnt, bool &isEof) = 0;
-    virtual OscType::OscDataBuffer* getHistoryData(DevInd ind) = 0;
-
 
 // signals:
     virtual void dataReceived(quint16 ind) = 0;
