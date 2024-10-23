@@ -189,7 +189,10 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
 
     m_mutex.unlock();
 
-    qDebug() << "The appendData took" << timer.elapsed() << "milliseconds";
+    qDebug() << "AppendData:"
+             << "channels = " << hdr.settings.channels_count
+             << "length = " << dat.data_length
+             << "took" << timer.elapsed() << "milliseconds";
 
     emit dataReceived(buff->id);
     return _return_OK;
@@ -240,7 +243,7 @@ QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &c
 
     m_mutex.unlock();
 
-    qDebug() << "The serialisedData operation took" << timer.elapsed() << "milliseconds";
+//  qDebug() << "The serialisedData operation took" << timer.elapsed() << "milliseconds";
     return res;
 }
 
