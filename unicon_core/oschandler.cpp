@@ -10,9 +10,9 @@ const QString CMD_TYPE_GET = "get";
 const QString CMD_TYPE_SET = "set";
 const QString CMD_OSC_DATA = "osc_data";
 
-const int SEND_DATA_SIZE_MAX = 500;
-const int SEND_HISTORY_SIZE_MAX = 5000;
-const int SEND_HISTORY_SIZE_MIN = 1000;
+const int SEND_OBJ_COUNT_MAX = 500;
+const int SEND_HISTORY_COUNT_MAX = 5000;
+const int SEND_HISTORY_COUNT_MIN = 1000;
 
 using namespace OscType;
 
@@ -315,7 +315,7 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
     if (historyNeed) {
         ret = startHistoryData(devID, capturedVars, historyDate, step);
     } else if (getDataNeed) {
-        ret = getData(devID, capturedVars);
+        ret = getAllData(devID, capturedVars);
     } else {
         ret = startStreamData(devID, capturedVars, oscId);
     }
@@ -350,17 +350,28 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
     return 0;
 }
 
-long OscHandler::getData(const DevID &devID, QVector<int> oscVars)
+long OscHandler::getAllData(const DevID &devID, QVector<int> oscVars)
 {
-    int objCountResult = -1; // get all the data
-    QJsonObject response = m_dataSrv->serialisedData(devID.id, oscVars, objCountResult);
+    QElapsedTimer timer;
+    timer.start();
 
-    if (response.isEmpty() /*objCountResult > 0*/) {
+    int obj_count = -1; // get all the data
+    bool isEof = false;
+    QJsonObject response = m_dataSrv->serialisedData(devID.id, oscVars, obj_count, isEof);
+
+    if (isEof || response.isEmpty()) {
         return _return_OK;
     }
 
     response["type"] = "osc";
     emit stream(QList<QJsonObject>() << response);
+
+    qDebug() << "Emit all osc data, dev id =" << m_capturedOsc.deviceID.id
+             << " trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
+             << " reason =" << m_capturedOsc.settings.reason
+             << "channels =" <<  oscVars.count()
+             << "Count =" << obj_count
+             << "took" << timer.elapsed() << "ms";
 
     return _return_OK;
 }
@@ -440,10 +451,11 @@ void OscHandler::th_streamData()
     timer.start();
 
     int valCount = 0;
-    QList<QJsonObject> list;
+    int obj_count = SEND_OBJ_COUNT_MAX;
     while (true) {
-        int objCountResult = SEND_DATA_SIZE_MAX;
-        QJsonObject response = m_dataSrv->serialisedData(m_capturedOsc.id, m_capturedVars, objCountResult);
+
+        bool isEof = false;
+        QJsonObject response = m_dataSrv->serialisedData(m_capturedOsc.id, m_capturedVars, obj_count, isEof);
 
         if (response.empty()) {
             break;
@@ -455,34 +467,36 @@ void OscHandler::th_streamData()
         }
 
         response["type"] = "osc";
-        list << response;
-        emit stream(list);
-        list.clear();
+        emit stream(QList<QJsonObject>() << response);
 
-        valCount += response["values"].toArray().takeAt(0).toArray().count();
+        valCount += obj_count;
+
+        if (isEof) {
+            break;
+        }
     }
 
-    if (valCount > 0) {
-        qDebug() << "Emit osc data, dev id =" << m_capturedOsc.deviceID.id
-                 << "channels =" <<  m_capturedVars.count()
-                 << "count =" << valCount << "\n"
-                 << "took" << timer.elapsed() << "milliseconds";
-    }
+    qDebug() << "Emit osc data, dev id =" << m_capturedOsc.deviceID.id
+             << " trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
+             << " reason =" << m_capturedOsc.settings.reason
+             << "channels =" <<  m_capturedVars.count()
+             << "Count =" << valCount
+             << "took" << timer.elapsed() << "ms";
 }
 
 void OscHandler::th_streamHistoryData()
 {
     Q_ASSERT(m_capturedOsc.deviceID.isValid());
 
+    QElapsedTimer timer;
+    timer.start();
+
     int valCount = 0;
-    int send_size = SEND_HISTORY_SIZE_MIN;
-    QList<QJsonObject> list;
+    int obj_count = SEND_HISTORY_COUNT_MIN;
 
     while (true) {
-        // QElapsedTimer timer;
-        // timer.start();
-
-        QJsonObject response = m_dataSrv->serialisedHistoryData(m_capturedOsc.id, m_capturedVars, send_size);
+        bool isEof = false;
+        QJsonObject response = m_dataSrv->serialisedHistoryData(m_capturedOsc.id, m_capturedVars, obj_count, isEof);
         if (response.empty()) {
             break;
         }
@@ -492,19 +506,24 @@ void OscHandler::th_streamHistoryData()
             break;
         }
 
-        valCount += response["values"].toArray().takeAt(0).toArray().count();
         response["type"] = "osc";
-        list << response;
-        emit stream(list);
-        list.clear();
+        emit stream(QList<QJsonObject>() << response);
 
-        send_size = std::min(send_size * 2, SEND_HISTORY_SIZE_MAX);
+        valCount += obj_count;
+
+        if (isEof) {
+            break;
+        }
+
+        obj_count = std::min(obj_count * 2, SEND_HISTORY_COUNT_MAX);
     }
 
     qDebug() << "Emit all history data, dev id = " << m_capturedOsc.deviceID.id
              << " trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
              << " reason =" << m_capturedOsc.settings.reason
-             << "Count =" << valCount << "\n";
+             << "channels =" <<  m_capturedVars.count()
+             << "Count =" << valCount
+             << "took" << timer.elapsed() << "ms";
 }
 
 long OscHandler::getHeader(const DevID& deviceID, OscHeader *out)

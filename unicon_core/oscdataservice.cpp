@@ -192,7 +192,7 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     qDebug() << "AppendData:"
              << "channels =" << hdr.settings.channels_count
              << "length =" << dat.data_length
-             << "took" << timer.elapsed() << "milliseconds";
+             << "took" << timer.elapsed() << "ms";
 
     emit dataReceived(buff->id);
     return _return_OK;
@@ -220,7 +220,7 @@ qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastB
     return static_cast<qint8>(res);
 }
 
-QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &cnt)
+QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &cnt, bool& isEof)
 {
     QElapsedTimer timer;
     timer.start();
@@ -231,7 +231,7 @@ QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &c
     m_mutex.lock();
 
 
-    QJsonObject res = dataToJson(*buff, vars, cnt);
+    QJsonObject res = dataToJson(*buff, vars, cnt, isEof);
 
     if (!res.isEmpty()) {
         cnt = res["values"].toArray().takeAt(0).toArray().count();
@@ -252,12 +252,11 @@ QJsonObject OscDataService::serialisedData(DevInd ind, QVector<int> vars, int &c
 //     return res;
 // }
 
-QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int> vars, int cnt) const
+QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int> vars, int cnt, bool &isEof) const
 {
     QJsonArray valuesArr;
     QJsonArray varIdListObj;
 
-    bool isEof = false;
     int timestamp = 0;
     for (OscChannelValues& chVal : data.chArray) {
         if (chVal.varId == 0) continue;
@@ -338,7 +337,7 @@ long OscDataService::appendToHistoryData(const DDE_OSC_HEADER& hdr, OscType::Osc
     return _return_OK;
 }
 
-QJsonObject OscDataService::serialisedHistoryData(DevInd ind, QVector<int> vars, int &cnt_fact)
+QJsonObject OscDataService::serialisedHistoryData(DevInd ind, QVector<int> vars, int &cnt_fact, bool& isEof)
 {
     QElapsedTimer timer;
     timer.start();
@@ -350,7 +349,7 @@ QJsonObject OscDataService::serialisedHistoryData(DevInd ind, QVector<int> vars,
 
     m_historyMutex.lock();
 
-    QJsonObject res = dataToJson(m_historyBuff, vars, cnt_fact);
+    QJsonObject res = dataToJson(m_historyBuff, vars, cnt_fact, isEof);
     if (!res.isEmpty()) {
         cnt_fact = res["values"].toArray().takeAt(0).toArray().count();
     } else {
@@ -360,7 +359,7 @@ QJsonObject OscDataService::serialisedHistoryData(DevInd ind, QVector<int> vars,
     m_historyBuff.lastDataPos = m_historyBuff.lastDataPos + cnt_fact;
     m_historyMutex.unlock();
 
-    qDebug() << "serialisedHistoryData took" << timer.elapsed() << "milliseconds";
+//  qDebug() << "serialisedHistoryData took" << timer.elapsed() << "milliseconds";
 
     return res;
 }

@@ -338,12 +338,12 @@ public:
     virtual void clear(DevInd ind) = 0;
     virtual void reset(DevInd ind) = 0;
     virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
-    virtual QJsonObject serialisedData(DevInd ind, QVector<int> vars, int &cnt) = 0;
+    virtual QJsonObject serialisedData(DevInd ind, QVector<int> vars, int &cnt, bool& isEof) = 0;
     virtual long save(const DDE_OSC_HEADER& hdr) = 0;
     virtual OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) = 0;
 
     virtual long appendToHistoryData(const DDE_OSC_HEADER& hdr, OscType::OscDataBuffer&& dat) = 0;
-    virtual QJsonObject serialisedHistoryData(DevInd ind, QVector<int> vars, int &cnt) = 0;
+    virtual QJsonObject serialisedHistoryData(DevInd ind, QVector<int> vars, int &cnt, bool &isEof) = 0;
     virtual OscType::OscDataBuffer* getHistoryData(const DDE_OSC_HEADER& hdr) = 0;
 
 
