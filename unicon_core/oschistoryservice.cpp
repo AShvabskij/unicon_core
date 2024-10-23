@@ -10,9 +10,15 @@ OscHistoryService::OscHistoryService(IOscDataService *dataSrv, IOscDataStorageSe
 long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
 {
     long res = _return_OK;
-    OscType::OscDataBuffer* dat = m_dataSrv->getHistoryData(hdr);
 
-    if (dat == nullptr) {
+    std::time_t time = hdr.settings.trig_time;
+    if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
+        time = time * 1000; // assume time is in seconds, need to convert to msec
+    }
+
+    OscType::OscDataBuffer* dat = m_dataSrv->getHistoryData(hdr.device_id);
+
+    if (dat == nullptr || dat->trig_time != time) {
         dat = m_dataSrv->createDataBuffer(hdr);
         res = m_dataSaver->loadData(hdr, *dat);
         if (res != _return_OK) {
@@ -28,6 +34,8 @@ long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
 
     dat->eof = true; // ??
     dat->resetPos();
+    dat->timestamp = dat->valueCount  * dat->resolution_us;
+
     res = m_dataSrv->appendToHistoryData(hdr, std::move(*dat));
 
     if (res == _return_OK) {

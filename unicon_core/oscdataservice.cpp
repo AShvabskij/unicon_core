@@ -329,9 +329,7 @@ long OscDataService::appendToHistoryData(const DDE_OSC_HEADER& hdr, OscType::Osc
     m_historyMutex.lock();
 
     m_historyBuff = std::move(dat);
-    qDebug() << "m_historyBuff = " << &m_historyBuff << "size of = " << sizeof(m_historyBuff);
 
-    m_historyBuff.timestamp = m_historyBuff.valueCount  * m_historyBuff.resolution_us;
     m_historyMutex.unlock();
 
     return _return_OK;
@@ -364,14 +362,9 @@ QJsonObject OscDataService::serialisedHistoryData(DevInd ind, QVector<int> vars,
     return res;
 }
 
-OscDataBuffer* OscDataService::getHistoryData(const DDE_OSC_HEADER& hdr)
+OscDataBuffer* OscDataService::getHistoryData(DevInd ind)
 {
-    std::time_t time = hdr.settings.trig_time;
-    if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
-        time = time * 1000; // assume time is in seconds, need to convert to msec
-    }
-
-    if (m_historyBuff.trig_time == time) {
+    if (m_historyBuff.id == ind) {
         return &m_historyBuff;
     }
 

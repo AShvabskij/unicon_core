@@ -344,7 +344,7 @@ public:
 
     virtual long appendToHistoryData(const DDE_OSC_HEADER& hdr, OscType::OscDataBuffer&& dat) = 0;
     virtual QJsonObject serialisedHistoryData(DevInd ind, QVector<int> vars, int &cnt, bool &isEof) = 0;
-    virtual OscType::OscDataBuffer* getHistoryData(const DDE_OSC_HEADER& hdr) = 0;
+    virtual OscType::OscDataBuffer* getHistoryData(DevInd ind) = 0;
 
 
 // signals:
