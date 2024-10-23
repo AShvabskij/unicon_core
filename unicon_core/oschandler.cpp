@@ -367,10 +367,10 @@ long OscHandler::getAllData(const DevID &devID, QVector<int> oscVars)
     emit stream(QList<QJsonObject>() << response);
 
     qDebug() << "Emit all osc data, dev id =" << m_capturedOsc.deviceID.id
-             << " trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
-             << " reason =" << m_capturedOsc.settings.reason
+             << "trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
+             << "reason =" << m_capturedOsc.settings.reason
              << "channels =" <<  oscVars.count()
-             << "Count =" << obj_count
+             << "count =" << obj_count
              << "took" << timer.elapsed() << "ms";
 
     return _return_OK;
@@ -477,10 +477,10 @@ void OscHandler::th_streamData()
     }
 
     qDebug() << "Emit osc data, dev id =" << m_capturedOsc.deviceID.id
-             << " trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
-             << " reason =" << m_capturedOsc.settings.reason
+             << "trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
+             << "reason =" << m_capturedOsc.settings.reason
              << "channels =" <<  m_capturedVars.count()
-             << "Count =" << valCount
+             << "count =" << valCount
              << "took" << timer.elapsed() << "ms";
 }
 
@@ -519,8 +519,8 @@ void OscHandler::th_streamHistoryData()
     }
 
     qDebug() << "Emit all history data, dev id = " << m_capturedOsc.deviceID.id
-             << " trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
-             << " reason =" << m_capturedOsc.settings.reason
+             << "trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
+             << "reason =" << m_capturedOsc.settings.reason
              << "channels =" <<  m_capturedVars.count()
              << "Count =" << valCount
              << "took" << timer.elapsed() << "ms";
