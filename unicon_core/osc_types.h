@@ -8,6 +8,10 @@
 #include <QJsonArray>
 #include <QVector>
 
+#include <QCborValue>
+#include <QCborMap>
+#include <QCborArray>
+
 namespace OscType {
 
     const int MAX_DATA_COUNT = 1000000;
@@ -223,6 +227,34 @@ namespace OscType {
                 auto& list = discrValues;
                 std::for_each(values.begin(), values.end(), [&list](QJsonValue val) {
                     list.append(val.toInt());
+                });
+            } break;
+            case UNDEFINED: {}
+            }
+        }
+
+        void append(const QCborArray& values) {
+            switch (type) {
+            case OSC_VAR_INT: {
+                intValues.reserve(values.size() + 1);
+                auto& list = intValues;
+                std::for_each(values.begin(), values.end(), [&list](QCborValue val) {
+                    list.append(val.toInteger());
+                });
+            } break;
+            case OSC_VAR_FLOAT: {
+                fltValues.reserve(values.size() + 1);
+                auto& list = fltValues;
+                std::for_each(values.begin(), values.end(), [&list](QCborValue val) {
+                    list.append(val.toDouble());
+                });
+
+            } break;
+            case OSC_VAR_DISCRETE: {
+                discrValues.reserve(values.size() + 1);
+                auto& list = discrValues;
+                std::for_each(values.begin(), values.end(), [&list](QCborValue val) {
+                    list.append(val.toInteger());
                 });
             } break;
             case UNDEFINED: {}
