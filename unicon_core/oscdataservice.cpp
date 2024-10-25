@@ -241,7 +241,7 @@ long OscDataService::appendBuffer(OscType::OscDataBuffer&& buff)
 
     if (!dev_buff) {
         dev_buff = new OscType::OscDataBuffer();
-        m_repository.insert(dev_buff->id, dev_buff);
+        m_repository.insert(buff.id, dev_buff);
     }
 
     Q_ASSERT(dev_buff);
