@@ -17,6 +17,7 @@
 #include <QCborStreamWriter>
 #include <QDataStream>
 #include <QDir>
+#include <QElapsedTimer>
 
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
 #define ENDL Qt::endl
@@ -547,8 +548,10 @@ long OscDataStorage::decodeData(const QCborValue& sourceDat,  OscType::OscDataBu
     QCborArray vars = obj.value("vars").toArray();
     QCborArray values = obj.value("values").toArray();
 
-    int maxValueCount = 0;
+    QElapsedTimer timer;
+    timer.start();
 
+    int maxValueCount = 0;
     for (int i = 0; i < vars.size(); ++i) {
         data.chArray[i].varId = vars[i].toInteger();
         int valueCount = 0;
@@ -562,6 +565,15 @@ long OscDataStorage::decodeData(const QCborValue& sourceDat,  OscType::OscDataBu
     };
 
     data.valueCount = maxValueCount;
+
+    qDebug() << "Decode data from cbor file:"
+             << "device ind =" << data.id
+             << "timestamp =" << data.trig_time
+             << "reason =" << data.reason
+             << "vars =" << vars.size()
+             << "values =" << data.valueCount
+             << "took" << timer.elapsed() << "ms";
+
 
     return _return_OK;
 }
