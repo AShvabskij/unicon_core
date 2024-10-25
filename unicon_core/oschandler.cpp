@@ -116,6 +116,15 @@ void OscHandler::setService(OscHistoryService *s)
     m_historySrv = s;
 }
 
+void OscHandler::handleClose()
+{
+    if (m_capturedOsc.deviceID.id > 0) {
+        stopStreamData();
+    }
+
+    m_historySrv->reset();
+}
+
 void OscHandler::onReceivedData(quint16 ind)
 {
     if (m_capturedOsc.id != ind) {

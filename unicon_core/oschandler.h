@@ -16,6 +16,7 @@ public:
     OscHandler(IDDE_Dispatcher* , SysType sysType, IOscDataService* buffSrv);
     virtual int handle(const QJsonObject& request);
     void setService(OscHistoryService* s);
+    virtual void handleClose();
 
 signals:
     void requestStreamValue();

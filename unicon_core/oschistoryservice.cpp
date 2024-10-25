@@ -71,3 +71,7 @@ long OscHistoryService::getHeader(const DevID& devID, QDate dateDate, int step, 
     return res;
 }
 
+long OscHistoryService::reset()
+{
+    m_dataSrv->resetAll();
+}

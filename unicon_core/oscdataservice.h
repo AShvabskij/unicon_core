@@ -26,6 +26,8 @@ public:
 
     void clear(const DDE_OSC_HEADER &hdr) override;
     void reset(const DDE_OSC_HEADER &hdr) override;
+    void resetAll() override;
+
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
     long appendBuffer(OscType::OscDataBuffer &&buff) override;
 

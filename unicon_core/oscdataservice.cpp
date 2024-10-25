@@ -94,6 +94,19 @@ void OscDataService::reset(const DDE_OSC_HEADER& hdr)
     m_mutex.unlock();
 }
 
+void OscDataService::resetAll()
+{
+    m_mutex.lock();
+
+    for (auto ptr: m_repository.values()) {
+        //  clearDataBuffer(buff);
+        delete ptr;
+    }
+
+    m_repository.clear();
+    m_mutex.unlock();
+}
+
 void OscDataService::clearDataBuffer(OscType::OscDataBuffer* buff)
 {
     Q_ASSERT(buff);
