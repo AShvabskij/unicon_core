@@ -174,25 +174,56 @@ namespace OscType {
             }
         }
 
-        void append(QVariantList values) {
+        void append(const QVariantList& values) {
             switch (type) {
             case OSC_VAR_INT: {
                 intValues.reserve(values.count() + 1);
-                for (const auto& val: values) {
-                    intValues.append(val.toInt());
-                }
+                auto& list = intValues;
+                std::for_each(values.begin(), values.end(), [&list](QVariant val) {
+                    list.append(val.toInt());
+                });
             } break;
             case OSC_VAR_FLOAT: {
                 fltValues.reserve(values.count() + 1);
-                for (const auto& val: values) {
-                    fltValues.append(val.toFloat());
-                }
+                auto& list = fltValues;
+                std::for_each(values.begin(), values.end(), [&list](QVariant val) {
+                    list.append(val.toFloat());
+                });
             } break;
             case OSC_VAR_DISCRETE: {
                 discrValues.reserve(values.count() + 1);
-                for (const auto& val: values) {
-                    discrValues.append(val.toInt());
-                }
+                auto& list = discrValues;
+                std::for_each(values.begin(), values.end(), [&list](QVariant val) {
+                    list.append(val.toInt());
+                });
+            } break;
+            case UNDEFINED: {}
+            }
+        }
+
+        void append(const QJsonArray& values) {
+            switch (type) {
+            case OSC_VAR_INT: {
+                intValues.reserve(values.count() + 1);
+                auto& list = intValues;
+                std::for_each(values.begin(), values.end(), [&list](QJsonValue val) {
+                    list.append(val.toInt());
+                });
+            } break;
+            case OSC_VAR_FLOAT: {
+                fltValues.reserve(values.count() + 1);
+                auto& list = fltValues;
+                std::for_each(values.begin(), values.end(), [&list](QJsonValue val) {
+                    list.append(val.toDouble());
+                });
+
+            } break;
+            case OSC_VAR_DISCRETE: {
+                discrValues.reserve(values.count() + 1);
+                auto& list = discrValues;
+                std::for_each(values.begin(), values.end(), [&list](QJsonValue val) {
+                    list.append(val.toInt());
+                });
             } break;
             case UNDEFINED: {}
             }

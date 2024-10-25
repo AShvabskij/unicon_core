@@ -36,10 +36,6 @@ using namespace OscType;
 OscType::OscDataBuffer* OscDataService::get(const OscHeader &h)
 {
     QList<OscDataBuffer*> dev_buffers = m_repository.values(h.deviceID.id);
-    if (dev_buffers.count() == 1) {
-        return dev_buffers.first();
-    }
-
     qlonglong trig_time = h.settings.trigDTime.toMSecsSinceEpoch();
     int reason = h.settings.reason;
 
@@ -55,10 +51,6 @@ OscType::OscDataBuffer* OscDataService::get(const OscHeader &h)
 OscType::OscDataBuffer* OscDataService::get(const DDE_OSC_HEADER& hdr)
 {
     QList<OscDataBuffer*> dev_buffers = m_repository.values(hdr.device_id);
-    if (dev_buffers.count() == 1) {
-        return dev_buffers.first();
-    }
-
     qlonglong time = hdr.settings.trig_time;
     if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
         time = time * 1000; // assume time is in seconds, need to convert to msec

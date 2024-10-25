@@ -552,7 +552,7 @@ long OscDataStorage::decodeData(const QCborValue& sourceDat,  OscType::OscDataBu
     for (int i = 0; i < vars.size(); ++i) {
         data.chArray[i].varId = vars[i].toInteger();
         int valueCount = 0;
-        data.chArray[i].append(values[i].toArray().toVariantList());
+        data.chArray[i].append(values[i].toArray().toJsonArray());
         valueCount = data.chArray[i].count();
 /*
         if (data.chArray[i].type == OSC_VAR_DISCRETE)
