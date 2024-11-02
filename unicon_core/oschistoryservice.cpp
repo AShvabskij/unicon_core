@@ -33,10 +33,6 @@ long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
 
     res = m_dataSrv->appendBuffer(std::move(*dat));
 
-    if (res == _return_OK) {
-        emit historyReceived(hdr.device_id);
-    }
-
     return res;
 }
 
@@ -73,5 +69,5 @@ long OscHistoryService::getHeader(const DevID& devID, QDate dateDate, int step, 
 
 void OscHistoryService::reset()
 {
-    m_dataSrv->resetAll();
+    m_dataSrv->removeAll();
 }

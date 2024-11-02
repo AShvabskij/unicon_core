@@ -399,8 +399,8 @@ public:
     virtual ~IOscDataService() {}
     virtual OscType::OscDataBuffer* get(const DDE_OSC_HEADER& hdr) = 0;
     virtual void clear(const DDE_OSC_HEADER& hdr) = 0;
-    virtual void reset(const DDE_OSC_HEADER& hdr) = 0;
-    virtual void resetAll() = 0;
+    virtual void remove(const DDE_OSC_HEADER& hdr) = 0;
+    virtual void removeAll() = 0;
     virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
     virtual long appendBuffer(OscType::OscDataBuffer &&buff) = 0;
     virtual QJsonObject serialisedData(OscType::OscHeader& h, QVector<int> vars, int &cnt, bool& isEof) = 0;

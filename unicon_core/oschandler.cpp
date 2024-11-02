@@ -428,10 +428,10 @@ long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDat
     m_capturedVars = oscVars;
     m_streaming = true;
 
-    QObject* src = dynamic_cast<QObject*>(m_historySrv);
+    QObject* src = dynamic_cast<QObject*>(m_historySrv->getDataSrv());
     Q_ASSERT(src);
 
-    auto con = connect(src, SIGNAL(historyReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)), Qt::AutoConnection);
+    auto con = connect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)), Qt::AutoConnection);
 
     res = m_historySrv->requestData(dde_hdr);
 

@@ -78,7 +78,7 @@ void OscDataService::clear(const DDE_OSC_HEADER& hdr)
     m_mutex.unlock();
 }
 
-void OscDataService::reset(const DDE_OSC_HEADER& hdr)
+void OscDataService::remove(const DDE_OSC_HEADER& hdr)
 {
     OscType::OscDataBuffer* buff = get(hdr);
     if (!buff) {
@@ -94,7 +94,7 @@ void OscDataService::reset(const DDE_OSC_HEADER& hdr)
     m_mutex.unlock();
 }
 
-void OscDataService::resetAll()
+void OscDataService::removeAll()
 {
     m_mutex.lock();
 
@@ -262,6 +262,8 @@ long OscDataService::appendBuffer(OscType::OscDataBuffer&& buff)
     m_mutex.lock();
     *dev_buff = std::move(buff);
     m_mutex.unlock();
+
+    emit dataReceived(dev_buff->id);
 
     return _return_OK;
 }
