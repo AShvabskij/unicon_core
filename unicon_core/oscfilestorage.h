@@ -8,7 +8,7 @@ class OscFileStorage: public IOscFileStorageService
 {
 public:
     OscFileStorage() = default;
-    ~OscFileStorage() override {}
+    virtual ~OscFileStorage() {}
 
     static OscFileStorage* instance() {
         static OscFileStorage m_instance;

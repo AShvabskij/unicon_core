@@ -28,7 +28,7 @@ long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
     }
 
     dat->eof = true; // ??
-    dat->resetPos();
+    dat->resetPos(); // ready to get data again
     dat->timestamp = dat->valueCount  * dat->resolution_us;
 
     res = m_dataSrv->appendBuffer(std::move(*dat));
