@@ -9,29 +9,18 @@ OscHistoryService::OscHistoryService(IOscDataService *dataSrv, IOscFileStorageSe
 
 long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
 {
-    long res = _return_OK;
+    long res = m_dataSrv->requestData(hdr);
 
-    OscType::OscDataBuffer* dat = m_dataSrv->get(hdr);
-
-    if (dat == nullptr) {
-        dat = m_dataSrv->createDataBuffer(hdr);
+    if (res != _return_OK || res != _return_Ready) {
+        OscType::OscDataBuffer* dat = m_dataSrv->createDataBuffer(hdr);
         res = m_dataSaver->loadData(hdr, *dat);
         if (res != _return_OK) {
             delete dat;
             return res;
         }
+
+        res = m_dataSrv->appendBuffer(std::move(*dat));
     }
-
-    Q_ASSERT(dat);
-    if (dat == nullptr) {
-        return _return_FAIL;
-    }
-
-    dat->eof = true; // ??
-    dat->resetPos(); // ready to get data again
-    dat->timestamp = dat->valueCount  * dat->resolution_us;
-
-    res = m_dataSrv->appendBuffer(std::move(*dat));
 
     return res;
 }

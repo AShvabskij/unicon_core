@@ -397,18 +397,18 @@ class IOscDataService
 
 public:
     virtual ~IOscDataService() {}
-    virtual OscType::OscDataBuffer* get(const DDE_OSC_HEADER& hdr) = 0;
-    virtual void clear(const DDE_OSC_HEADER& hdr) = 0;
-    virtual void remove(const DDE_OSC_HEADER& hdr) = 0;
+    virtual void clear(DevInd device_id) = 0;
+    virtual void remove(DevInd device_id) = 0;
     virtual void removeAll() = 0;
     virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
     virtual long appendBuffer(OscType::OscDataBuffer &&buff) = 0;
-    virtual QJsonObject serialisedData(OscType::OscHeader& h, QVector<int> vars, int &cnt, bool& isEof) = 0;
+    virtual QJsonObject jsonData(OscType::OscHeader& h, QVector<int> vars, int &cnt, bool& isEof) = 0;
+    virtual long requestData(const DDE_OSC_HEADER& hdr) = 0;
     virtual long save(const DDE_OSC_HEADER& hdr) = 0;
     virtual OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) = 0;
 
 // signals:
-    virtual void dataReceived(quint16 ind) = 0;
+    virtual void dataReceived(quint16 device_id) = 0;
 
 };
 

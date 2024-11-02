@@ -369,7 +369,7 @@ long OscHandler::getAllData(const DevID &devID, QVector<int> oscVars)
 
     int obj_count = -1; // get all the data
     bool isEof = false;
-    QJsonObject response = m_dataSrv->serialisedData(header, oscVars, obj_count, isEof);
+    QJsonObject response = m_dataSrv->jsonData(header, oscVars, obj_count, isEof);
 
     if (isEof || response.isEmpty()) {
         return _return_OK;
@@ -465,7 +465,7 @@ void OscHandler::th_streamData()
     while (true) {
 
         bool isEof = false;
-        QJsonObject response = m_dataSrv->serialisedData(m_capturedOsc, m_capturedVars, obj_count, isEof);
+        QJsonObject response = m_dataSrv->jsonData(m_capturedOsc, m_capturedVars, obj_count, isEof);
 
         if (response.empty()) {
             break;
@@ -507,7 +507,7 @@ void OscHandler::th_streamHistoryData()
 
     while (true) {
         bool isEof = false;
-        QJsonObject response = dataSrv->serialisedData(m_capturedOsc, m_capturedVars, obj_count, isEof);
+        QJsonObject response = dataSrv->jsonData(m_capturedOsc, m_capturedVars, obj_count, isEof);
         if (response.empty()) {
             break;
         }

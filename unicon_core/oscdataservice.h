@@ -22,24 +22,24 @@ public:
 
     ~OscDataService() override {}
 
-    OscType::OscDataBuffer* get(const DDE_OSC_HEADER& hdr) override;
-
-    void clear(const DDE_OSC_HEADER &hdr) override;
-    void remove(const DDE_OSC_HEADER &hdr) override;
+    void clear(DevInd device_id) override;
+    void remove(DevInd device_id) override;
     void removeAll() override;
 
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
     long appendBuffer(OscType::OscDataBuffer &&buff) override;
 
-    QJsonObject serialisedData(OscType::OscHeader& h, QVector<int> vars, int &cnt, bool &isEof) override;
+    QJsonObject jsonData(OscType::OscHeader& h, QVector<int> vars, int &cnt, bool &isEof) override;
+    long requestData(const DDE_OSC_HEADER& hdr) override;
+
     long save(const DDE_OSC_HEADER &hdr) override;
     OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) override;
 
 signals:
-    void dataReceived(quint16 ind) override;
+    void dataReceived(quint16 device_id) override;
 
 private:
-    OscType::OscDataBuffer* get(const OscType::OscHeader& h);
+    OscType::OscDataBuffer* get(DevInd device_id, qlonglong time = 0);
 
     void  clearDataBuffer(OscType::OscDataBuffer* buff);
     long saveData(const DDE_OSC_HEADER& header, const OscType::OscDataBuffer& data);

@@ -33,33 +33,19 @@
 
 using namespace OscType;
 
-OscType::OscDataBuffer* OscDataService::get(const OscHeader &h)
+OscType::OscDataBuffer* OscDataService::get(DevInd device_id, qlonglong time)
 {
-    QList<OscDataBuffer*> dev_buffers = m_repository.values(h.deviceID.id);
-    qlonglong trig_time = h.settings.trigDTime.toMSecsSinceEpoch();
-    int reason = h.settings.reason;
-
-    for (OscDataBuffer* b: dev_buffers) {
-        if (b->trig_time == trig_time && b->reason == reason) {
-            return b;
-        }
+    QList<OscDataBuffer*> dev_buffers = m_repository.values(device_id);
+    if (time == 0) {
+        return dev_buffers.count() > 0 ? dev_buffers.first() : nullptr;
     }
 
-    return nullptr;
-}
-
-OscType::OscDataBuffer* OscDataService::get(const DDE_OSC_HEADER& hdr)
-{
-    QList<OscDataBuffer*> dev_buffers = m_repository.values(hdr.device_id);
-    qlonglong time = hdr.settings.trig_time;
     if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
         time = time * 1000; // assume time is in seconds, need to convert to msec
     }
 
-    int reason = static_cast<int>(hdr.settings.reason);
-
     for (OscDataBuffer* b: dev_buffers) {
-        if (b->trig_time == time && b->reason == reason) {
+        if (b->trig_time == time) {
             return b;
         }
     }
@@ -67,9 +53,24 @@ OscType::OscDataBuffer* OscDataService::get(const DDE_OSC_HEADER& hdr)
     return nullptr;
 }
 
-void OscDataService::clear(const DDE_OSC_HEADER& hdr)
+long OscDataService::requestData(const DDE_OSC_HEADER &hdr)
 {
-    OscType::OscDataBuffer* buff = get(hdr);
+    OscType::OscDataBuffer* buff = get(hdr.device_id, hdr.settings.trig_time);
+    if (!buff)
+        return _return_FAIL;
+
+    m_mutex.lock();
+        buff->eof = true; // ??
+        buff->resetPos(); // ready to get data again
+        buff->timestamp = buff->valueCount  * buff->resolution_us;
+    m_mutex.unlock();
+
+    return _return_Ready;
+}
+
+void OscDataService::clear(DevInd device_id)
+{
+    OscType::OscDataBuffer* buff = get(device_id);
     if (!buff)
         return;
 
@@ -78,9 +79,9 @@ void OscDataService::clear(const DDE_OSC_HEADER& hdr)
     m_mutex.unlock();
 }
 
-void OscDataService::remove(const DDE_OSC_HEADER& hdr)
+void OscDataService::remove(DevInd device_id)
 {
-    OscType::OscDataBuffer* buff = get(hdr);
+    OscType::OscDataBuffer* buff = get(device_id);
     if (!buff) {
         return;
     }
@@ -89,7 +90,7 @@ void OscDataService::remove(const DDE_OSC_HEADER& hdr)
     m_mutex.lock();
     //  clearDataBuffer(buff);
 
-    m_repository.remove(hdr.device_id, buff);
+    m_repository.remove(device_id, buff);
     delete buff;
     m_mutex.unlock();
 }
@@ -164,7 +165,7 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
         return _return_FAIL;
     }
 
-    OscType::OscDataBuffer* buff = get(hdr);
+    OscType::OscDataBuffer* buff = get(hdr.device_id, hdr.settings.trig_time);
     if (!buff) {
         buff = createDataBuffer(hdr);
         m_repository.insert(hdr.device_id, buff);
@@ -290,13 +291,17 @@ qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastB
     return static_cast<qint8>(res);
 }
 
-QJsonObject OscDataService::serialisedData(OscHeader &h, QVector<int> vars, int &cnt, bool& isEof)
+QJsonObject OscDataService::jsonData(OscHeader &header, QVector<int> vars, int &cnt, bool& isEof)
 {
     QElapsedTimer timer;
     timer.start();
 
-    OscType::OscDataBuffer* buff = get(h);
-    if (!buff) return QJsonObject();
+    qlonglong trig_time = header.settings.trigDTime.toMSecsSinceEpoch();
+    OscType::OscDataBuffer* buff = get(header.deviceID.id, trig_time);
+
+    if (!buff) {
+        return QJsonObject();
+    }
 
     m_mutex.lock();
 
@@ -384,7 +389,7 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
 
 long OscDataService::save(const DDE_OSC_HEADER& hdr)
 {
-    OscType::OscDataBuffer* datBuff = get(hdr);
+    OscType::OscDataBuffer* datBuff = get(hdr.device_id, hdr.settings.trig_time);
     Q_ASSERT(datBuff);
     m_mutex.lock();
     long res = m_dataSaver->save(hdr, *datBuff);
