@@ -15,7 +15,7 @@ class OscDataService: public QObject,
 {
      Q_OBJECT
 public:
-    OscDataService(IOscDataStorageService* s) {
+    OscDataService(IOscFileStorageService* s) {
         Q_ASSERT(s);
         m_dataSaver = s;
     };
@@ -49,7 +49,7 @@ private:
 
     QMultiMap<DevInd, OscType::OscDataBuffer*> m_repository;
     QMutex m_mutex;
-    IOscDataStorageService* m_dataSaver = nullptr;
+    IOscFileStorageService* m_dataSaver = nullptr;
 };
 
 #endif // OSCDATASERVICE_H

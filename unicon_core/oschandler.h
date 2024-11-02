@@ -42,7 +42,7 @@ private:
     OscType::OscChannelDescr createChannelDescr(const OSC_CHANNEL &channel);
     qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
 
-    long startStreamData(const DevID& devID, QVector<int> oscVars, const int &oscId);
+    long startStreamData(const DevID& devID, QVector<int> oscVars);
     long getAllData(const DevID &devID, QVector<int> oscVars);
     long startHistoryData(const DevID &devID, QVector<int> oscVars, QDate historyDate, int step);
 

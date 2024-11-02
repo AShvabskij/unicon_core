@@ -14,7 +14,7 @@ class OscHistoryService: public QObject
 {
      Q_OBJECT
 public:
-    OscHistoryService(IOscDataService* dataSrv, IOscDataStorageService* dataSaver);
+    OscHistoryService(IOscDataService* dataSrv, IOscFileStorageService* dataSaver);
 
     long requestData(const DDE_OSC_HEADER &hdr);
     long getHeader(const DevID &devID, QDate dateDate, int step, DDE_OSC_HEADER& header);
@@ -27,7 +27,7 @@ public:
 private:
     IDDE* m_dde;
     IOscDataService* m_dataSrv;
-    IOscDataStorageService* m_dataSaver = nullptr;
+    IOscFileStorageService* m_dataSaver = nullptr;
 
     DDE_OSC_HEADER m_header;
 

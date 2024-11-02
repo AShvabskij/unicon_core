@@ -169,7 +169,6 @@ int OscHandler::handleGetHeader(const QJsonObject &request)
     }
 
     int deviceId = cmdBody.value("device_id").toInt();
-    int oscId = cmdBody.value("osc_id").toInt();
     Q_ASSERT(deviceId >= 0);
 
     bool historyNeed = cmdBody.contains("step");
@@ -227,7 +226,6 @@ int OscHandler::handleSetHeader(const QJsonObject &request)
     }
 
     int deviceId = cmdBody.value("device_id").toInt();
-    int oscId = cmdBody.value("osc_id").toInt();
     DevID devID = {sysType, static_cast<uint16_t>(deviceId)};
 
     Q_ASSERT(deviceId >= 0);
@@ -276,7 +274,6 @@ int OscHandler::handleGetChannel(const QJsonObject &request)
     }
 
     int deviceId = cmdBody.value("device_id").toInt();
-    int oscId = cmdBody.value("osc_id").toInt();
     int chNum = cmdBody.value("channel_num").toInt();
     Q_ASSERT(deviceId >= 0);
 
@@ -302,7 +299,6 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
     }
 
     int deviceId = cmdBody.value("device_id").toInt();
-    int oscId = cmdBody.value("osc_id").toInt();
     bool historyNeed = cmdBody.contains("step");
     int step = historyNeed ? cmdBody.value("step").toInt() : 0;
     QDate historyDate =  QDateTime::currentDateTime().date(); //m_capturedOsc.deviceID.isValid() ? m_capturedOsc.settings.trigDTime.date() : QDate();
@@ -326,7 +322,7 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
     } else if (getDataNeed) {
         ret = getAllData(devID, capturedVars);
     } else {
-        ret = startStreamData(devID, capturedVars, oscId);
+        ret = startStreamData(devID, capturedVars);
     }
 
     int res = static_cast<int>(ret != 0 ? ret : -1);
@@ -390,7 +386,7 @@ long OscHandler::getAllData(const DevID &devID, QVector<int> oscVars)
     return _return_OK;
 }
 
-long OscHandler::startStreamData(const DevID &devID, QVector<int> oscVars, const int& oscId)
+long OscHandler::startStreamData(const DevID &devID, QVector<int> oscVars)
 {
     OscHeader header;
     long res = getHeader(devID, &header);
@@ -590,7 +586,6 @@ long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *out)
     }
 
     settings.trigDTime = QDateTime::fromMSecsSinceEpoch(time, Qt::LocalTime);
-    qlonglong testTime = settings.trigDTime.toMSecsSinceEpoch();
     if (!settings.trigDTime.isValid()) {
         settings.trigDTime = QDateTime();
     }

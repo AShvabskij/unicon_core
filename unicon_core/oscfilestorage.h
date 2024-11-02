@@ -4,14 +4,14 @@
 #include <QJsonObject>
 #include "osc_types.h"
 
-class OscDataStorage: public IOscDataStorageService
+class OscFileStorage: public IOscFileStorageService
 {
 public:
-    OscDataStorage() = default;
-    ~OscDataStorage() override {}
+    OscFileStorage() = default;
+    ~OscFileStorage() override {}
 
-    static OscDataStorage* instance() {
-        static OscDataStorage m_instance;
+    static OscFileStorage* instance() {
+        static OscFileStorage m_instance;
 
         return &m_instance;
     }

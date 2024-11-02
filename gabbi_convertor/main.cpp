@@ -14,8 +14,8 @@
 #include <iostream>
 #include <memory>
 
-#include <oscdatastorage.h>
-#include <oscdatastorage_v1_2.h>
+#include <oscfilestorage.h>
+#include <oscfilestorage_v1_2.h>
 
 #include "DDE_TYPES.h"
 
@@ -192,13 +192,13 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
 
 long doConvert(QString fileFrom, QString fileTo)
 {
-    QList<IOscDataStorageService*> datServiceCollection;
-    datServiceCollection.append(new OscDataStorage());
-    datServiceCollection.append(new OscDataStorage_v1_2());
+    QList<IOscFileStorageService*> datServiceCollection;
+    datServiceCollection.append(new OscFileStorage());
+    datServiceCollection.append(new OscFileStorage_v1_2());
 
     long res = _return_OK;
     bool isHandled = false;
-    for (IOscDataStorageService* datService : datServiceCollection) {
+    for (IOscFileStorageService* datService : datServiceCollection) {
 
         res = datService->checkVersion(fileFrom);
         if (res <= 0)
