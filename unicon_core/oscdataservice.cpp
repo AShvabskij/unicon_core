@@ -66,6 +66,7 @@ long OscDataService::load(const DDE_OSC_HEADER &hdr)
         m_mutex.unlock();
 
         res = _return_OK;
+
     } else {
         buff = createDataBuffer(hdr);
         res = m_dataSaver->loadData(hdr, *buff);
@@ -77,6 +78,8 @@ long OscDataService::load(const DDE_OSC_HEADER &hdr)
         res = appendBuffer(std::move(*buff));
     }
 
+
+    emit dataReceived(hdr.device_id);
     return res;
 }
 
@@ -275,8 +278,6 @@ long OscDataService::appendBuffer(OscType::OscDataBuffer&& buff)
     m_mutex.lock();
     *dev_buff = std::move(buff);
     m_mutex.unlock();
-
-    emit dataReceived(dev_buff->id);
 
     return _return_OK;
 }

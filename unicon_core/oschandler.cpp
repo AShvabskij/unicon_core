@@ -128,7 +128,6 @@ void OscHandler::handleClose()
 void OscHandler::onReceivedData(quint16 ind)
 {
     if (m_capturedOsc.id != ind) {
-        qWarning() << "\nOsc error on receive data, not valid osc id = " << ind;
         return;
     }
 
