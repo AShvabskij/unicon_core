@@ -8,6 +8,10 @@
 #include <QJsonArray>
 #include <QVector>
 
+#include <QCborValue>
+#include <QCborMap>
+#include <QCborArray>
+
 namespace OscType {
 
     const int MAX_DATA_COUNT = 1000000;
@@ -53,17 +57,18 @@ namespace OscType {
 
         OSC_VAR_TYPE type = OSC_VAR_FLOAT;
 
-        QList<Number32> numValues;
-        QList<qint8> discrValues;
+        QVector<float> fltValues;
+        QVector<int> intValues;
+        QVector<qint8> discrValues;
 
         int lastDataPos = 0;
 
         QVariant value(int pos) const {
             switch (type) {
             case OSC_VAR_INT:
-                return QVariant::fromValue(numValues.value(pos).i);
+                return QVariant::fromValue(intValues.value(pos));
             case OSC_VAR_FLOAT: {
-                return QVariant::fromValue(numValues.value(pos).f);
+                return QVariant::fromValue(fltValues.value(pos));
             } break;
             case OSC_VAR_DISCRETE: {
                 return QVariant::fromValue(discrValues.value(pos));
@@ -74,29 +79,68 @@ namespace OscType {
 
         QVariantList values(int startPos, int cnt = -1) const {
             QVariantList res;
+
             cnt = cnt >= 0 ? cnt : -1;
+
+            auto vList = [](const auto& vector) {
+                QVariantList list;
+                list.reserve(vector.size());
+                std::for_each(vector.begin(), vector.end(), [&list](auto value) {
+                    list.append(QVariant(value));
+                });
+                return list;
+            };
+
             switch (type) {
             case OSC_VAR_INT: {
-                auto values = numValues.mid(startPos,  cnt);
-                res.reserve(values.count());
-                for (const Number32 &num: values) {
-                    res << num.i;
-                }
+                auto values = intValues.mid(startPos,  cnt);
+                res = vList(values);
 
             } break;
             case OSC_VAR_FLOAT: {
-                auto values = numValues.mid(startPos,  cnt);
-                res.reserve(values.count());
-                for (const Number32 &num: values) {
-                    res << num.f;
-                }
+                auto values = fltValues.mid(startPos,  cnt);
+                res = vList(values);
 
             } break;
             case OSC_VAR_DISCRETE: {
                 auto values = discrValues.mid(startPos,  cnt);
-                for (const auto &num: values) {
-                    res << num;
-                }
+                res = vList(values);
+
+            } break;
+            case UNDEFINED: {}
+            }
+
+            return res;
+        }
+
+        QJsonArray jsnValues(int startPos, int cnt = -1) const {
+
+            cnt = cnt >= 0 ? cnt : -1;
+
+            auto jsonList = [](const auto& vector, float scale, float offset) {
+                QJsonArray list;
+                std::for_each(vector.begin(), vector.end(), [&list, scale, offset](auto value) {
+                    QJsonValue lVal = (scale != 0.0 && scale != 1.0) ? value * scale + offset : value;
+                    list.append(lVal);
+                });
+                return list;
+            };
+
+            QJsonArray res;
+            switch (type) {
+            case OSC_VAR_INT: {
+                auto values = intValues.mid(startPos,  cnt);
+                res = jsonList(values, scale, offset);
+
+            } break;
+            case OSC_VAR_FLOAT: {
+                auto values = fltValues.mid(startPos,  cnt);
+                res = jsonList(values, scale, offset);
+
+            } break;
+            case OSC_VAR_DISCRETE: {
+                auto values = discrValues.mid(startPos,  cnt);
+                res = jsonList(values, scale, offset);
             } break;
             case UNDEFINED: {}
             }
@@ -107,14 +151,10 @@ namespace OscType {
         template<typename T> void append(const T& value) {
              switch (type) {
              case OSC_VAR_INT: {
-                 Number32 num;
-                 num.i = value;
-                 numValues.append(num);
+                 intValues.append(value);
              } break;
              case OSC_VAR_FLOAT: {
-                 Number32 num;
-                 num.f = value;
-                 numValues.append(num);
+                 fltValues.append(value);
              } break;
              case OSC_VAR_DISCRETE: {
                  discrValues.append(value);
@@ -126,14 +166,10 @@ namespace OscType {
         void append(QVariant value) {
             switch (type) {
             case OSC_VAR_INT: {
-                Number32 num;
-                num.i = value.toInt();
-                numValues.append(num);
+                intValues.append(value.toInt());
             } break;
             case OSC_VAR_FLOAT: {
-                Number32 num;
-                num.f = value.toFloat();
-                numValues.append(num);
+                fltValues.append(value.toFloat());
             } break;
             case OSC_VAR_DISCRETE: {
                 discrValues.append(value.toInt());
@@ -142,40 +178,128 @@ namespace OscType {
             }
         }
 
-        void append(QVariantList values) {
+        void append(const QVariantList& values) {
             switch (type) {
             case OSC_VAR_INT: {
-                numValues.reserve(values.count());
-                for (const auto& val: values) {
-                    Number32 num;
-                    num.i = val.toInt();
-                    numValues.append(num);
-                }
+                intValues.reserve(values.count() + 1);
+                auto& list = intValues;
+                std::for_each(values.begin(), values.end(), [&list](QVariant val) {
+                    list.append(val.toInt());
+                });
             } break;
             case OSC_VAR_FLOAT: {
-                numValues.reserve(values.count());
-                for (const auto& val: values) {
-                    Number32 num;
-                    num.f = val.toFloat();
-                    numValues.append(num);
-                }
+                fltValues.reserve(values.count() + 1);
+                auto& list = fltValues;
+                std::for_each(values.begin(), values.end(), [&list](QVariant val) {
+                    list.append(val.toFloat());
+                });
             } break;
             case OSC_VAR_DISCRETE: {
-                discrValues.reserve(values.count());
-                for (const auto& val: values) {
-                    discrValues.append(val.toInt());
-                }
+                discrValues.reserve(values.count() + 1);
+                auto& list = discrValues;
+                std::for_each(values.begin(), values.end(), [&list](QVariant val) {
+                    list.append(val.toInt());
+                });
             } break;
             case UNDEFINED: {}
             }
         }
 
+        void append(const QJsonArray& values) {
+            switch (type) {
+            case OSC_VAR_INT: {
+                intValues.reserve(values.count() + 1);
+                auto& list = intValues;
+                std::for_each(values.begin(), values.end(), [&list](QJsonValue val) {
+                    list.append(val.toInt());
+                });
+            } break;
+            case OSC_VAR_FLOAT: {
+                fltValues.reserve(values.count() + 1);
+                auto& list = fltValues;
+                std::for_each(values.begin(), values.end(), [&list](QJsonValue val) {
+                    list.append(val.toDouble());
+                });
+
+            } break;
+            case OSC_VAR_DISCRETE: {
+                discrValues.reserve(values.count() + 1);
+                auto& list = discrValues;
+                std::for_each(values.begin(), values.end(), [&list](QJsonValue val) {
+                    list.append(val.toInt());
+                });
+            } break;
+            case UNDEFINED: {}
+            }
+        }
+
+        void append(const QCborArray& values) {
+            switch (type) {
+            case OSC_VAR_INT: {
+                intValues.reserve(values.size() + 1);
+                auto& list = intValues;
+                std::for_each(values.begin(), values.end(), [&list](QCborValue val) {
+                    list.append(val.toInteger());
+                });
+            } break;
+            case OSC_VAR_FLOAT: {
+                fltValues.reserve(values.size() + 1);
+                auto& list = fltValues;
+                std::for_each(values.begin(), values.end(), [&list](QCborValue val) {
+                    list.append(val.toDouble());
+                });
+
+            } break;
+            case OSC_VAR_DISCRETE: {
+                discrValues.reserve(values.size() + 1);
+                auto& list = discrValues;
+                std::for_each(values.begin(), values.end(), [&list](QCborValue val) {
+                    list.append(val.toInteger());
+                });
+            } break;
+            case UNDEFINED: {}
+            }
+        }
+
+        void append(const int* arr, size_t size) {
+            intValues.reserve(size);
+            std::copy(arr, arr + size, std::back_inserter(intValues));
+       }
+
+        void append(const float* arr, size_t size) {
+            fltValues.reserve(size);
+            std::copy(arr, arr + size, std::back_inserter(fltValues));
+        }
+
+        void append(const qint8* arr, size_t size) {
+            discrValues.reserve(size);
+            std::copy(arr, arr + size, std::back_inserter(discrValues));
+        }
+
         int count() const {
-            return std::max(numValues.count(), discrValues.count());
+            return std::max(std::max(intValues.count(), fltValues.count()), discrValues.count());
+        }
+
+        void reserve(int count) {
+            switch (type) {
+            case OSC_VAR_TYPE::OSC_VAR_INT: {
+                intValues.reserve(count);
+            } break;
+            case OSC_VAR_TYPE::OSC_VAR_FLOAT: {
+                fltValues.reserve(count);
+            } break;
+            case OSC_VAR_TYPE::OSC_VAR_DISCRETE: {
+                discrValues.reserve(count);
+            } break;
+            case UNDEFINED: {
+                qWarning() << "Undefined var type" << ", id = " << varId << ", ch num = " << channelNum;
+            }
+            }
         }
 
         void clear() {
-            numValues.clear();
+            intValues.clear();
+            fltValues.clear();
             discrValues.clear();
             lastDataPos = 0;
         }
@@ -273,28 +397,23 @@ class IOscDataService
 
 public:
     virtual ~IOscDataService() {}
-    virtual OscType::OscDataBuffer* get (DevInd ind) = 0;
-    virtual void clear(DevInd ind) = 0;
-    virtual void reset(DevInd ind) = 0;
     virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
-    virtual QJsonObject serialisedData(DevInd ind, QVector<int> vars, int &cnt) = 0;
+    virtual QJsonObject jsonData(OscType::OscHeader& h, QVector<int> vars, int &cnt, bool& isEof) = 0;
+    virtual long load(const DDE_OSC_HEADER& hdr) = 0;
+    virtual void clear(DevInd device_id) = 0;
+    virtual void remove(DevInd device_id) = 0;
+    virtual void removeAll() = 0;
     virtual long save(const DDE_OSC_HEADER& hdr) = 0;
-    virtual OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) = 0;
-
-    virtual long appendToHistoryData(const DDE_OSC_HEADER& hdr, OscType::OscDataBuffer&& dat) = 0;
-    virtual QJsonObject serialisedHistoryData(DevInd ind, QVector<int> vars, int &cnt) = 0;
-    virtual OscType::OscDataBuffer* getHistoryData(const DDE_OSC_HEADER& hdr) = 0;
-
 
 // signals:
-    virtual void dataReceived(quint16 ind) = 0;
+    virtual void dataReceived(quint16 device_id) = 0;
 
 };
 
-class IOscDataStorageService
+class IOscFileStorageService
 {
 public:
-    virtual ~IOscDataStorageService() {}
+    virtual ~IOscFileStorageService() {}
     virtual long save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data) = 0;
     virtual long checkVersion(QString fileFrom) = 0;
     virtual QList<DDE_OSC_HEADER> headerList(QDate date)  = 0;

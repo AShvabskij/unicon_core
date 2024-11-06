@@ -13,7 +13,7 @@
 #include "oschandler.h"
 
 #include "oscdataservice.h"
-#include "oscdatastorage.h"
+#include "oscfilestorage.h"
 #include "oschistoryservice.h"
 
 #include <QObject>
@@ -48,14 +48,16 @@ void Core::start()
     m_ddeDisp->setDefaultDDE(dde);
     m_ddeDisp->registerDDE(m_sysType, dde);
 
-    OscDataService* oscService = new OscDataService(OscDataStorage::instance());
-    m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), oscService);
-    OscHistoryService* oscHistoryService = new OscHistoryService(oscService, OscDataStorage::instance());
+    OscDataService* runOscService = new OscDataService(OscFileStorage::instance());
+    m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), runOscService);
+
+    OscDataService* hstDataService = new OscDataService(OscFileStorage::instance());
+    OscHistoryService* oscHistoryService = new OscHistoryService(hstDataService, OscFileStorage::instance());
 
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp, m_sysType);
     DeviceHandler* device = new DeviceHandler(m_ddeDisp, m_sysType);
-    OscHandler* osc = new OscHandler(m_ddeDisp, m_sysType, oscService);
+    OscHandler* osc = new OscHandler(m_ddeDisp, m_sysType, runOscService);
     osc->setService(oscHistoryService);
 
     RequestManager::instance()->registerHandler(device);

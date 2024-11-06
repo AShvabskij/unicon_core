@@ -11,7 +11,7 @@
 
 using namespace std;
 
-const int DATA_YELD_INTERVAL_MSC = 7000;
+const int DATA_YELD_INTERVAL_MSC = 4000;
 
 DDE_OSC_FILE::DDE_OSC_FILE()
 {

@@ -29,7 +29,6 @@ OscFileService::~OscFileService()
 _dde_func_return_t OscFileService::open(uint16_t device_id, const char* fileName)
 {
     if (m_header && m_header->device_id == device_id && m_fileName == fileName) {
-        m_header->settings.trig_time = std::time(0) * 1000;
         return _return_OK; // already opened
     }
 
@@ -196,6 +195,8 @@ _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeld
         if (iCounter % 10 == 0) {
             loadData();
             iCounter = 1;
+        } else {
+            return _return_Busy;
         }
     }
 

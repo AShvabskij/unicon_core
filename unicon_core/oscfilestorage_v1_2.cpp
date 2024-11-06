@@ -15,7 +15,7 @@
 #include <QDataStream>
 #include <QDir>
 
-#include "oscdatastorage_v1_2.h"
+#include "oscfilestorage_v1_2.h"
 #include "DDE_TYPES.h"
 
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
@@ -27,7 +27,7 @@
 const int DATA_VERSION = 1;
 const int DATA_SUBVERSION = 2; // temp version for Israel 2024
 
-long OscDataStorage_v1_2::checkVersion(int ver, int subVer)
+long OscFileStorage_v1_2::checkVersion(int ver, int subVer)
 {
     if (ver != DATA_VERSION) {
         return -1;
@@ -40,7 +40,7 @@ long OscDataStorage_v1_2::checkVersion(int ver, int subVer)
     return _return_OK;
 }
 
-long OscDataStorage_v1_2::decodeData(const QCborValue &sourceDat, OscType::OscDataBuffer &data)
+long OscFileStorage_v1_2::decodeData(const QCborValue &sourceDat, OscType::OscDataBuffer &data)
 {
     QCborMap obj = sourceDat.toMap();
     uint8_t ver = obj.value("version").toVariant().toUInt();
@@ -67,8 +67,6 @@ long OscDataStorage_v1_2::decodeData(const QCborValue &sourceDat, OscType::OscDa
 
         data.chArray[i].varId = vars[i].toInteger();
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
-
-        qDebug() << "id = " << data.chArray[i].varId << " first = " << data.chArray[i].numValues.first().f << " last = " << data.chArray[i].numValues.last().f << "\n";
     };
 
     data.valueCount = maxValueCount;

@@ -5,7 +5,7 @@
 #include <QDebug>
 
 #include <QTimer>
-#include <QMap>
+#include <QMultiMap>
 #include <QMutex>
 
 #include "osc_types.h"
@@ -15,41 +15,39 @@ class OscDataService: public QObject,
 {
      Q_OBJECT
 public:
-    OscDataService(IOscDataStorageService* s) {
+    OscDataService(IOscFileStorageService* s) {
         Q_ASSERT(s);
         m_dataSaver = s;
     };
 
     ~OscDataService() override {}
 
-    OscType::OscDataBuffer* get(DevInd ind) override;
-    void clear(DevInd id) override;
-    void reset(DevInd ind) override;
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
-    QJsonObject serialisedData(DevInd ind, QVector<int> vars, int &cnt) override;
+    QJsonObject jsonData(OscType::OscHeader& h, QVector<int> vars, int &cnt, bool &isEof) override;
+    void clear(DevInd device_id) override;
+    void remove(DevInd device_id) override;
+    void removeAll() override;
     long save(const DDE_OSC_HEADER &hdr) override;
-    OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr) override;
-
-    // methods to move to another service
-    long appendToHistoryData(const DDE_OSC_HEADER& hdr, OscType::OscDataBuffer &&dat) override;
-    QJsonObject serialisedHistoryData(DevInd ind, QVector<int> vars, int &cnt) override;
-    virtual OscType::OscDataBuffer* getHistoryData(const DDE_OSC_HEADER& hdr) override;
+    long load(const DDE_OSC_HEADER& hdr) override;
 
 signals:
-    void dataReceived(quint16 ind) override;
+    void dataReceived(quint16 device_id) override;
 
 private:
+    OscType::OscDataBuffer* get(DevInd device_id, qlonglong time = 0);
+
+    long appendBuffer(OscType::OscDataBuffer &&buff);
+    OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr);
     void  clearDataBuffer(OscType::OscDataBuffer* buff);
     long saveData(const DDE_OSC_HEADER& header, const OscType::OscDataBuffer& data);
-    qint8 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
-    QJsonObject dataToJson(OscType::OscDataBuffer &data, QVector<int> vars, int cnt) const;
+    inline qint8 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
+    QJsonObject dataToJson(OscType::OscDataBuffer &data, QVector<int> vars, int &cnt, bool &isEof) const;
     QJsonObject headerToJson(const DDE_OSC_HEADER &h);
 
-    QMap<DevInd, OscType::OscDataBuffer*> m_repository;
+
+    QMultiMap<DevInd, OscType::OscDataBuffer*> m_repository;
     QMutex m_mutex;
-    QMutex m_historyMutex;
-    IOscDataStorageService* m_dataSaver = nullptr;
-    OscType::OscDataBuffer m_historyBuff;
+    IOscFileStorageService* m_dataSaver = nullptr;
 };
 
 #endif // OSCDATASERVICE_H

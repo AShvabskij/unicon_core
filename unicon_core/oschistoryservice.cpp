@@ -1,7 +1,7 @@
 #include "oschistoryservice.h"
 
 const int MAX_DAYS_COUNT = 365;
-OscHistoryService::OscHistoryService(IOscDataService *dataSrv, IOscDataStorageService *dataSaver)
+OscHistoryService::OscHistoryService(IOscDataService *dataSrv, IOscFileStorageService *dataSaver)
 {
     m_dataSrv = dataSrv;
     m_dataSaver = dataSaver;
@@ -9,35 +9,11 @@ OscHistoryService::OscHistoryService(IOscDataService *dataSrv, IOscDataStorageSe
 
 long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
 {
-    long res = _return_OK;
-    OscType::OscDataBuffer* dat = m_dataSrv->getHistoryData(hdr);
-
-    if (dat == nullptr) {
-        dat = m_dataSrv->createDataBuffer(hdr);
-        res = m_dataSaver->loadData(hdr, *dat);
-        if (res != _return_OK) {
-            delete dat;
-            return res;
-        }
-    }
-
-    Q_ASSERT(dat);
-    if (dat == nullptr) {
-        return _return_FAIL;
-    }
-
-    dat->eof = true; // ??
-    dat->resetPos();
-    res = m_dataSrv->appendToHistoryData(hdr, std::move(*dat));
-
-    if (res == _return_OK) {
-        emit historyReceived(hdr.device_id);
-    }
-
+    long res = m_dataSrv->load(hdr);
     return res;
 }
 
-long OscHistoryService::getHeader(const DevID& devID, QDate dateDate, int step, DDE_OSC_HEADER& header)
+long OscHistoryService::requestHeader(const DevID& devID, QDate dateDate, int step, DDE_OSC_HEADER& header)
 {
     int s = 0;
     QDate startDate = dateDate.isValid() ? dateDate : QDateTime::currentDateTime().date();
@@ -68,3 +44,7 @@ long OscHistoryService::getHeader(const DevID& devID, QDate dateDate, int step, 
     return res;
 }
 
+void OscHistoryService::reset()
+{
+    m_dataSrv->removeAll();
+}

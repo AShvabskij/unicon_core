@@ -51,6 +51,13 @@ void OscStateMachine::update(DevInd devId)
 {
     switch (m_state) {
     case Normal: {
+        if (m_header.settings.trig_time > 0) {
+            m_dataSrv->remove(m_header.device_id); // remove old data
+            m_errCounter = 0;
+            m_sof = false;
+            m_eof = false;
+        }
+
         m_header = getHeader(devId);
         if (m_header.device_id != devId) {
             m_state = Error;
@@ -58,11 +65,7 @@ void OscStateMachine::update(DevInd devId)
         }
 
         if (m_header.settings.trig_time > 0) {
-            m_dataSrv->reset(m_header.device_id);
-            m_errCounter = 0;
             m_state = Getting;
-            m_sof = false;
-            m_eof = false;
         } else {
             m_idleCounter = 0;
             m_state = Idle;
