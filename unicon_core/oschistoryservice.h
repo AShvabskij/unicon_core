@@ -17,7 +17,7 @@ public:
     OscHistoryService(IOscDataService* dataSrv, IOscFileStorageService* dataSaver);
 
     long requestData(const DDE_OSC_HEADER &hdr);
-    long getHeader(const DevID &devID, QDate dateDate, int step, DDE_OSC_HEADER& header);
+    long requestHeader(const DevID &devID, QDate dateDate, int step, DDE_OSC_HEADER& header);
     void reset();
 
     IOscDataService* getDataSrv() {

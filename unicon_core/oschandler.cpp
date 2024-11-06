@@ -183,7 +183,7 @@ int OscHandler::handleGetHeader(const QJsonObject &request)
 
         if (historyNeed) {
             DDE_OSC_HEADER dde_hdr;
-            ret = m_historySrv->getHeader(devID, historyDate, historyStep, dde_hdr);
+            ret = m_historySrv->requestHeader(devID, historyDate, historyStep, dde_hdr);
             if (ret == _return_OK) {
                 ret = convertHeader(dde_hdr, &header);
             }
@@ -413,7 +413,7 @@ long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDat
     qDebug() << "Start history data, dev id = " << m_capturedOsc.deviceID.id << "step = " << step;
 
     DDE_OSC_HEADER dde_hdr;
-    long res = m_historySrv->getHeader(devID, historyDate, step, dde_hdr);
+    long res = m_historySrv->requestHeader(devID, historyDate, step, dde_hdr);
     if (res != _return_OK) {
         return res;
     }

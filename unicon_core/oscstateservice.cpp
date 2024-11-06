@@ -49,8 +49,6 @@ OscStateMachine::OscStateMachine(IDDE* dde, IOscDataService *dataSrv)
 
 void OscStateMachine::update(DevInd devId)
 {
-    if (devId > 1) return;
-
     switch (m_state) {
     case Normal: {
         if (m_header.settings.trig_time > 0) {

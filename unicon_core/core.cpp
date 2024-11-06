@@ -48,8 +48,8 @@ void Core::start()
     m_ddeDisp->setDefaultDDE(dde);
     m_ddeDisp->registerDDE(m_sysType, dde);
 
-    OscDataService* oscService = new OscDataService(OscFileStorage::instance());
-    m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), oscService);
+    OscDataService* runOscService = new OscDataService(OscFileStorage::instance());
+    m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), runOscService);
 
     OscDataService* hstDataService = new OscDataService(OscFileStorage::instance());
     OscHistoryService* oscHistoryService = new OscHistoryService(hstDataService, OscFileStorage::instance());
@@ -57,7 +57,7 @@ void Core::start()
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp, m_sysType);
     DeviceHandler* device = new DeviceHandler(m_ddeDisp, m_sysType);
-    OscHandler* osc = new OscHandler(m_ddeDisp, m_sysType, oscService);
+    OscHandler* osc = new OscHandler(m_ddeDisp, m_sysType, runOscService);
     osc->setService(oscHistoryService);
 
     RequestManager::instance()->registerHandler(device);

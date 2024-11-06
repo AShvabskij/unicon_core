@@ -53,19 +53,31 @@ OscType::OscDataBuffer* OscDataService::get(DevInd device_id, qlonglong time)
     return nullptr;
 }
 
-long OscDataService::requestData(const DDE_OSC_HEADER &hdr)
+long OscDataService::load(const DDE_OSC_HEADER &hdr)
 {
     OscType::OscDataBuffer* buff = get(hdr.device_id, hdr.settings.trig_time);
-    if (!buff)
-        return _return_FAIL;
+    long res = _return_OK;
+    if (buff) {
 
-    m_mutex.lock();
-        buff->eof = true; // ??
-        buff->resetPos(); // ready to get data again
-        buff->timestamp = buff->valueCount  * buff->resolution_us;
-    m_mutex.unlock();
+        m_mutex.lock();
+            buff->eof = true; // ??
+            buff->resetPos(); // prepare to get data again
+            buff->timestamp = buff->valueCount  * buff->resolution_us;
+        m_mutex.unlock();
 
-    return _return_Ready;
+        res = _return_OK;
+    } else {
+        buff = createDataBuffer(hdr);
+        res = m_dataSaver->loadData(hdr, *buff);
+        if (res != _return_OK) {
+            delete buff;
+            return res;
+        }
+
+        res = appendBuffer(std::move(*buff));
+    }
+
+    return res;
 }
 
 void OscDataService::clear(DevInd device_id)
@@ -308,9 +320,7 @@ QJsonObject OscDataService::jsonData(OscHeader &header, QVector<int> vars, int &
 
     QJsonObject res = dataToJson(*buff, vars, cnt, isEof);
 
-    if (!res.isEmpty()) {
-        cnt = res["values"].toArray().takeAt(0).toArray().count();
-    } else {
+    if (res.isEmpty()) {
         cnt = 0;
     }
 
@@ -327,7 +337,7 @@ QJsonObject OscDataService::jsonData(OscHeader &header, QVector<int> vars, int &
 //     return res;
 // }
 
-QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int> vars, int cnt, bool &isEof) const
+QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int> vars, int& cnt, bool &isEof) const
 {
     QJsonArray valuesArr;
     QJsonArray varIdListObj;
@@ -359,8 +369,10 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
             continue;
         }
 
-        chVal.lastDataPos = startPos + values.count();
-        isEof = chVal.lastDataPos >= ch_val_count;
+        cnt = values.count();
+
+        chVal.lastDataPos = startPos + cnt;
+        isEof = (chVal.lastDataPos >= ch_val_count);
         timestamp = chVal.lastDataPos * data.resolution_us;
 
         varIdListObj << chVal.varId;

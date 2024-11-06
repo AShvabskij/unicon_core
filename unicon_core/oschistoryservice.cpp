@@ -9,23 +9,11 @@ OscHistoryService::OscHistoryService(IOscDataService *dataSrv, IOscFileStorageSe
 
 long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
 {
-    long res = m_dataSrv->requestData(hdr);
-
-    if (res != _return_OK || res != _return_Ready) {
-        OscType::OscDataBuffer* dat = m_dataSrv->createDataBuffer(hdr);
-        res = m_dataSaver->loadData(hdr, *dat);
-        if (res != _return_OK) {
-            delete dat;
-            return res;
-        }
-
-        res = m_dataSrv->appendBuffer(std::move(*dat));
-    }
-
+    long res = m_dataSrv->load(hdr);
     return res;
 }
 
-long OscHistoryService::getHeader(const DevID& devID, QDate dateDate, int step, DDE_OSC_HEADER& header)
+long OscHistoryService::requestHeader(const DevID& devID, QDate dateDate, int step, DDE_OSC_HEADER& header)
 {
     int s = 0;
     QDate startDate = dateDate.isValid() ? dateDate : QDateTime::currentDateTime().date();
