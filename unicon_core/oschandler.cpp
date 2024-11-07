@@ -370,7 +370,7 @@ long OscHandler::getAllData(const DevID &devID, QVector<int> oscVars)
     bool isEof = false;
     QJsonObject response = m_dataSrv->jsonData(header, oscVars, obj_count, isEof);
 
-    if (isEof || response.isEmpty()) {
+    if (response.isEmpty()) {
         return _return_OK;
     }
 
