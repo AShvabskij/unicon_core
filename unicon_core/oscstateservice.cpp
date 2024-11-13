@@ -29,6 +29,13 @@ void OscStateService::init(QList<DevInd> devList)
     }
 }
 
+void OscStateService::clear()
+{
+    for (DevInd devId: m_devIdList) {
+        delete m_oscState[devId];
+    }
+}
+
 void OscStateService::update()
 {
     for (DevInd id: m_devIdList) {

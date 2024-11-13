@@ -61,3 +61,12 @@ int ResponseManager::registerHandler(IReqHandler *handler)
     return 0;
 }
 
+void ResponseManager::clear()
+{
+    for (QWebSocket *client : m_clients) {
+        client->abort();
+    }
+
+    m_clients.clear();
+}
+

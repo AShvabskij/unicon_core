@@ -17,7 +17,7 @@ public:
     OscStateService(IDDE* dde, IOscDataService* dataSrv);
     void init(QList<DevInd> devList);
     void update();
-
+    void clear();
 private:
     IDDE* m_dde;
     QMap<quint16, OscStateMachine*> m_oscState;

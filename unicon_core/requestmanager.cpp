@@ -28,6 +28,18 @@ int RequestManager::processClose()
     return 0;
 }
 
+int RequestManager::clear()
+{
+    for (IReqHandler* handler : m_handlerList) {
+        handler->handleClose();
+        delete handler;
+    }
+
+    m_handlerList.clear();
+
+    return 0;
+}
+
 int RequestManager::registerHandler(IReqHandler *handler)
 {
     Q_ASSERT(handler);

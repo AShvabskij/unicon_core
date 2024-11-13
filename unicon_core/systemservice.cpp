@@ -28,6 +28,11 @@ void SystemService::start()
     m_timer->start(5000);
 }
 
+void SystemService::stop()
+{
+    m_timer->stop();
+}
+
 long SystemService::requestDeviceLinks(DeviceIndList& links)
 {
     DDE_GET_PARAMS_DATA dat;

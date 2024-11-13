@@ -162,6 +162,10 @@ void SocketServer::processMessage(const QString &message)
             QJsonObject obj;
             obj["ip"] = m_ip;
             m_response->send(obj);
+        } else if(jsObject.value("cmd") == "INIT_DEMO") {
+            m_request->processRequest(jsObject);
+            QJsonObject obj;
+            m_response->send(obj);
         }
 
         return;

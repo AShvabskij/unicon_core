@@ -11,6 +11,8 @@ class BaseReqHandler : public IReqHandler
     Q_OBJECT
 public:
     BaseReqHandler(IDDE_Dispatcher* ddeDispatcher, SysType sysType);
+    BaseReqHandler() {};
+
     ~BaseReqHandler() {};
 
     virtual int handle(const QJsonObject& request);

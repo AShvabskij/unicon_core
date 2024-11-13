@@ -12,6 +12,7 @@ public:
     SystemService(SysType sysType, IDDE *dde);
     DeviceIndList linkedDevices(SysType sysType);
     void start();
+    void stop();
 
 
     Q_SIGNAL void deviceLinkChanged(SysType sysType);

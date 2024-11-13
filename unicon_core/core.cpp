@@ -21,7 +21,9 @@
 #include <QtCore>
 #include <QtConcurrent/QtConcurrent>
 
-Core::Core()
+const QString CMD_INIT_DEMO = "INIT_DEMO";
+
+Core::Core(): BaseReqHandler()
 {
 }
 
@@ -30,30 +32,87 @@ Core::~Core()
     delete m_cmdServer;
 }
 
-void Core::start()
+int Core::handle(const QJsonObject &request)
+{
+    QString cmd = request.value("cmd").toString();
+
+    if (cmd == CMD_INIT_DEMO) {
+        start(SysType::FILE_IO);
+    } else {
+        return BaseReqHandler::handle(request);
+    }
+
+    return 1;
+}
+
+void Core::init()
 {
     m_ddeDisp = new DDE_Dispatcher();
 
 #ifdef __WIN32__
     IDDE* dde = new DDE_EMUL();
-    m_sysType = SysType::FILE_IO;
     dde->init("FILE_IO");
+    m_ddeDisp->registerDDE(SysType::FILE_IO, dde);
+    m_ddeDisp->setDefaultDDE(dde);
+
 #else
     IDDE* dde = new DDE_TOP();
-    m_sysType = SysType::UAVCAN;
-
     dde->init("UAVCAN"); // TODO: replace arg to const char*
-#endif
+    m_ddeDisp->registerDDE(SysType::UAVCAN, dde);
+
+    IDDE* dde_emul = new DDE_EMUL();
+    dde_emul->init("FILE_IO");
+    m_ddeDisp->registerDDE(SysType::FILE_IO, dde_emul);
 
     m_ddeDisp->setDefaultDDE(dde);
-    m_ddeDisp->registerDDE(m_sysType, dde);
+
+#endif
+
+    RequestManager::instance()->registerHandler(this);
+
+    m_cmdServer = new SocketServer(1235);
+    m_cmdServer->setRequestManager(RequestManager::instance());
+    m_cmdServer->setResponseManager(ResponseManager::instance());
+    m_cmdServer->start();
+
+    m_streamServer = new SocketServer(1237);
+    m_streamServer->setRequestManager(RequestManager::instance());
+    m_streamServer->setResponseManager(StreamManager::instance());
+    m_streamServer->start();
+}
+
+void Core::start(SysType sysType)
+{
+    bool firstStart = true;
+    if (m_sysType == sysType) {
+        return;
+    }
+
+    if (m_sysType != SysType::Undefined) {
+        m_oscStateService->clear();
+        delete m_oscStateService;
+        m_oscStateService = nullptr;
+
+        m_sysService->stop();
+        delete m_sysService;
+        m_sysService = nullptr;
+
+        RequestManager::instance()->clear();
+        ResponseManager::instance()->clear();
+        StreamManager::instance()->clear();
+
+        firstStart = false;
+    }
+
+    m_sysType = sysType;
+    IDDE* dde = m_ddeDisp->dde(m_sysType);
+    m_ddeDisp->setDefaultDDE(dde);
 
     OscDataService* runOscService = new OscDataService(OscFileStorage::instance());
     m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), runOscService);
 
     OscDataService* hstDataService = new OscDataService(OscFileStorage::instance());
     OscHistoryService* oscHistoryService = new OscHistoryService(hstDataService, OscFileStorage::instance());
-
 
     ParamsHandler* params = new ParamsHandler(m_ddeDisp, m_sysType);
     DeviceHandler* device = new DeviceHandler(m_ddeDisp, m_sysType);
@@ -69,18 +128,6 @@ void Core::start()
     StreamManager::instance()->registerHandler(params);
     StreamManager::instance()->registerHandler(osc);
 
-    m_cmdServer = new SocketServer(1235);
-    m_cmdServer->setRequestManager(RequestManager::instance());
-    m_cmdServer->setResponseManager(ResponseManager::instance());
-    m_cmdServer->start();
-
-    m_streamServer = new SocketServer(1237);
-    m_streamServer->setRequestManager(RequestManager::instance());
-    m_streamServer->setResponseManager(StreamManager::instance());
-    m_streamServer->start();
-
-//    IDDE* dde = m_ddeDisp->dde(SysType::DEFAULT);
-
     m_sysService = new SystemService(m_sysType, m_ddeDisp->dde(m_sysType));
     connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
 
@@ -90,9 +137,13 @@ void Core::start()
     m_sysService->start();
 
 #ifdef __linux__
-    QtConcurrent::run(this, &Core::thread_proc, m_sysType);
+    if (firstStart) {
+        QtConcurrent::run(this, &Core::thread_proc, m_sysType);
+    }
 #else
-    auto future = QtConcurrent::run(&Core::thread_proc, this, m_sysType);
+    if (firstStart) {
+        auto future = QtConcurrent::run(&Core::thread_proc, this, m_sysType);
+    }
 #endif
 }
 
@@ -104,7 +155,9 @@ void Core::thread_proc(SysType sysType)
 
     while (1)
     {
-        m_oscStateService->update();
+        if (m_oscStateService) {
+            m_oscStateService->update();
+        }
 
         QThread::msleep(100);
     }

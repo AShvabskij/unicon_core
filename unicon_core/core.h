@@ -3,22 +3,27 @@
 
 #include "socketserver.h"
 
-#include "DDE_PARAMS_TYPE.h"
 #include "dde_dispatcher.h"
 #include "oscstateservice.h"
 #include "systemservice.h"
 
+#include "basereqhandler.h"
+
 class IDDE;
 class IDDE_Dispatcher;
 
-class Core: public QObject
+class Core: public BaseReqHandler
 {
     Q_OBJECT
 public:
     Core();
     ~Core();
 
-    void start();
+    virtual int handle(const QJsonObject &request);
+
+    void init();
+    void start(SysType sysInterface);
+
     [[ noreturn ]] void thread_proc(SysType sysType);
 
 public slots:
@@ -34,7 +39,7 @@ private:
     OscStateService* m_oscStateService;
     SystemService* m_sysService;
 
-    SysType m_sysType;
+    SysType m_sysType = SysType::Undefined;
 
 };
 
