@@ -34,6 +34,8 @@ void OscStateService::clear()
     for (DevInd devId: m_devIdList) {
         delete m_oscState[devId];
     }
+
+    m_oscState.clear();
 }
 
 void OscStateService::update()

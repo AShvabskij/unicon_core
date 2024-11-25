@@ -11,6 +11,7 @@
 
 class IDDE;
 class IDDE_Dispatcher;
+class OscDataService;
 
 class Core: public BaseReqHandler
 {
@@ -32,15 +33,21 @@ public slots:
 private:
 
 
-    SocketServer* m_cmdServer;
-    SocketServer* m_streamServer;
+    SocketServer* m_cmdServer = nullptr;
+    SocketServer* m_streamServer = nullptr;
 
-    IDDE_Dispatcher* m_ddeDisp;
-    OscStateService* m_oscStateService;
-    SystemService* m_sysService;
-
+    IDDE_Dispatcher* m_ddeDisp = nullptr;
     SysType m_sysType = SysType::Undefined;
 
+    IReqHandler* m_paramsHandler = nullptr;
+    IReqHandler* m_deviceHandler = nullptr;
+    IReqHandler* m_oscHandler = nullptr;
+
+    QMap<SysType, OscStateService*> m_oscStates;
+    SystemService* m_sysService = nullptr;
+    OscDataService* m_oscDataService = nullptr;
+
+    QFuture<void> m_threadFuture;
 };
 
 #endif // APPLICATION_H

@@ -1,10 +1,7 @@
 #include "core.h"
 
-#ifdef __WIN32__
 #include "DDE_EMUL.h"
-#else
 #include "DDE_TOP.h"
-#endif
 
 #include "requestmanager.h"
 #include "responsemanager.h"
@@ -21,8 +18,6 @@
 #include <QtCore>
 #include <QtConcurrent/QtConcurrent>
 
-const QString CMD_INIT_DEMO = "INIT_DEMO";
-
 Core::Core(): BaseReqHandler()
 {
 }
@@ -34,15 +29,13 @@ Core::~Core()
 
 int Core::handle(const QJsonObject &request)
 {
-    QString cmd = request.value("cmd").toString();
+    SysType sysType = sysTypeId(request);
 
-    if (cmd == CMD_INIT_DEMO) {
-        start(SysType::FILE_IO);
-    } else {
-        return BaseReqHandler::handle(request);
+    if (sysType != SysType::Undefined && m_sysType != sysType) {
+        start(sysType);
     }
 
-    return 1;
+    return BaseReqHandler::handle(request);
 }
 
 void Core::init()
@@ -64,7 +57,7 @@ void Core::init()
     dde_emul->init("FILE_IO");
     m_ddeDisp->registerDDE(SysType::FILE_IO, dde_emul);
 
-    m_ddeDisp->setDefaultDDE(dde);
+//  m_ddeDisp->setDefaultDDE(dde);
 
 #endif
 
@@ -83,50 +76,76 @@ void Core::init()
 
 void Core::start(SysType sysType)
 {
-    bool firstStart = true;
     if (m_sysType == sysType) {
         return;
     }
 
-    if (m_sysType != SysType::Undefined) {
-        m_oscStateService->clear();
-        delete m_oscStateService;
+    if (m_oscStateService) {
+        m_threadFuture.pause();
+        OscStateService* stateService = m_oscStateService;
         m_oscStateService = nullptr;
 
+//      stateService->clear();
+//      m_oscDataService->removeAll();
+        m_oscDataService = nullptr;
+
+//      delete stateService;
+
+//        delete m_oscDataService;
+//        m_oscDataService = nullptr;
+
+        m_threadFuture.resume();
+    }
+
+    if (m_sysService) {
         m_sysService->stop();
         delete m_sysService;
         m_sysService = nullptr;
+    }
 
-        RequestManager::instance()->clear();
-        ResponseManager::instance()->clear();
-        StreamManager::instance()->clear();
+    if (m_paramsHandler && m_deviceHandler && m_oscHandler) {
+        RequestManager::instance()->remove(m_paramsHandler);
+        RequestManager::instance()->remove(m_deviceHandler);
+        RequestManager::instance()->remove(m_oscHandler);
 
-        firstStart = false;
+        delete m_paramsHandler;
+        delete m_deviceHandler;
+        delete m_oscHandler;
+
+        m_paramsHandler = nullptr;
+        m_deviceHandler = nullptr;
+        m_oscHandler = nullptr;
     }
 
     m_sysType = sysType;
     IDDE* dde = m_ddeDisp->dde(m_sysType);
     m_ddeDisp->setDefaultDDE(dde);
 
-    OscDataService* runOscService = new OscDataService(OscFileStorage::instance());
-    m_oscStateService = new OscStateService(m_ddeDisp->dde(m_sysType), runOscService);
+    if (!m_oscDataService) {
+        m_oscDataService = new OscDataService(OscFileStorage::instance());
+    }
+
+    if (!m_oscStates.contains(sysType)) {
+        OscStateService* stateService = new OscStateService(m_ddeDisp->dde(m_sysType), m_oscDataService);
+        m_oscStates.insert(sysType, stateService);
+    }
 
     OscDataService* hstDataService = new OscDataService(OscFileStorage::instance());
     OscHistoryService* oscHistoryService = new OscHistoryService(hstDataService, OscFileStorage::instance());
 
-    ParamsHandler* params = new ParamsHandler(m_ddeDisp, m_sysType);
-    DeviceHandler* device = new DeviceHandler(m_ddeDisp, m_sysType);
-    OscHandler* osc = new OscHandler(m_ddeDisp, m_sysType, runOscService);
-    osc->setService(oscHistoryService);
+    m_paramsHandler = new ParamsHandler(m_ddeDisp, m_sysType);
+    m_deviceHandler = new DeviceHandler(m_ddeDisp, m_sysType);
+    m_oscHandler = new OscHandler(m_ddeDisp, m_sysType, m_oscDataService);
+    dynamic_cast<OscHandler*> (m_oscHandler)->setService(oscHistoryService);
 
-    RequestManager::instance()->registerHandler(device);
-    RequestManager::instance()->registerHandler(params);
-    RequestManager::instance()->registerHandler(osc);
-    ResponseManager::instance()->registerHandler(device);
-    ResponseManager::instance()->registerHandler(params);
-    ResponseManager::instance()->registerHandler(osc);
-    StreamManager::instance()->registerHandler(params);
-    StreamManager::instance()->registerHandler(osc);
+    RequestManager::instance()->registerHandler(m_deviceHandler);
+    RequestManager::instance()->registerHandler(m_paramsHandler);
+    RequestManager::instance()->registerHandler(m_oscHandler);
+    ResponseManager::instance()->registerHandler(m_deviceHandler);
+    ResponseManager::instance()->registerHandler(m_paramsHandler);
+    ResponseManager::instance()->registerHandler(m_oscHandler);
+    StreamManager::instance()->registerHandler(m_paramsHandler);
+    StreamManager::instance()->registerHandler(m_oscHandler);
 
     m_sysService = new SystemService(m_sysType, m_ddeDisp->dde(m_sysType));
     connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
@@ -137,12 +156,12 @@ void Core::start(SysType sysType)
     m_sysService->start();
 
 #ifdef __linux__
-    if (firstStart) {
-        QtConcurrent::run(this, &Core::thread_proc, m_sysType);
+    if (!m_threadFuture.isRunning()) {
+        m_threadFuture = QtConcurrent::run(this, &Core::thread_proc, m_sysType);
     }
 #else
-    if (firstStart) {
-        auto future = QtConcurrent::run(&Core::thread_proc, this, m_sysType);
+    if (!m_threadFuture.isStarted()) {
+        m_threadFuture  = QtConcurrent::run(&Core::thread_proc, this, m_sysType);
     }
 #endif
 }
@@ -155,8 +174,8 @@ void Core::thread_proc(SysType sysType)
 
     while (1)
     {
-        if (m_oscStateService) {
-            m_oscStateService->update();
+        if (m_oscStates.contains(sysType)) {
+            m_oscStates[sysType]->update();
         }
 
         QThread::msleep(100);

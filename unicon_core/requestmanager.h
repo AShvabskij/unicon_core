@@ -22,7 +22,7 @@ public:
     int registerHandler(IReqHandler* handler);
     void start();
     void stop();
-    int clear();
+    int remove(IReqHandler* handler);
 
 private slots:
     void doProcessRequest(const QJsonObject &request);
