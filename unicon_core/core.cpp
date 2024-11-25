@@ -80,21 +80,25 @@ void Core::start(SysType sysType)
         return;
     }
 
-    if (m_oscStateService) {
-        m_threadFuture.pause();
-        OscStateService* stateService = m_oscStateService;
-        m_oscStateService = nullptr;
+    IDDE* dde = m_ddeDisp->dde(sysType);
+    if (!dde) {
+        qWarning() << "The system type is not supported, sysType =  " << sysType;
+        return;
+    }
 
-//      stateService->clear();
-//      m_oscDataService->removeAll();
-        m_oscDataService = nullptr;
+    m_sysType = sysType;
+    m_ddeDisp->setDefaultDDE(dde);
 
-//      delete stateService;
-
-//        delete m_oscDataService;
-//        m_oscDataService = nullptr;
-
-        m_threadFuture.resume();
+    if (sysType != SysType::FILE_IO) {
+        if (m_threads.contains(SysType::FILE_IO)) {
+            QFuture<void> f = m_threads.value(sysType);
+            f.suspend();
+        }
+    } else {
+        if (m_threads.contains(SysType::FILE_IO)) {
+            QFuture<void> f = m_threads.value(sysType);
+            f.resume();
+        }
     }
 
     if (m_sysService) {
@@ -117,16 +121,11 @@ void Core::start(SysType sysType)
         m_oscHandler = nullptr;
     }
 
-    m_sysType = sysType;
-    IDDE* dde = m_ddeDisp->dde(m_sysType);
-    m_ddeDisp->setDefaultDDE(dde);
 
-    if (!m_oscDataService) {
-        m_oscDataService = new OscDataService(OscFileStorage::instance());
-    }
-
-    if (!m_oscStates.contains(sysType)) {
-        OscStateService* stateService = new OscStateService(m_ddeDisp->dde(m_sysType), m_oscDataService);
+    if (!m_oscDatas.contains(sysType) && !m_oscStates.contains(sysType)) {
+        IOscDataService* oscData = new OscDataService(OscFileStorage::instance());
+        m_oscDatas.insert(sysType, oscData);
+        OscStateService* stateService = new OscStateService(m_ddeDisp->dde(m_sysType), oscData);
         m_oscStates.insert(sysType, stateService);
     }
 
@@ -135,7 +134,7 @@ void Core::start(SysType sysType)
 
     m_paramsHandler = new ParamsHandler(m_ddeDisp, m_sysType);
     m_deviceHandler = new DeviceHandler(m_ddeDisp, m_sysType);
-    m_oscHandler = new OscHandler(m_ddeDisp, m_sysType, m_oscDataService);
+    m_oscHandler = new OscHandler(m_ddeDisp, m_sysType, m_oscDatas[m_sysType]);
     dynamic_cast<OscHandler*> (m_oscHandler)->setService(oscHistoryService);
 
     RequestManager::instance()->registerHandler(m_deviceHandler);
@@ -151,7 +150,7 @@ void Core::start(SysType sysType)
     connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
 
     QList<DevInd> links = m_sysService->linkedDevices(m_sysType);
-    m_oscStateService->init(links);
+    m_oscStates[m_sysType]->init(links);
 
     m_sysService->start();
 
@@ -160,9 +159,10 @@ void Core::start(SysType sysType)
         m_threadFuture = QtConcurrent::run(this, &Core::thread_proc, m_sysType);
     }
 #else
-    if (!m_threadFuture.isStarted()) {
-        m_threadFuture  = QtConcurrent::run(&Core::thread_proc, this, m_sysType);
+    if (m_threads.contains(m_sysType)) {
+        m_threads.insert(m_sysType, QtConcurrent::run(&Core::thread_proc, this, m_sysType));
     }
+
 #endif
 }
 
@@ -185,7 +185,7 @@ void Core::thread_proc(SysType sysType)
 void Core::onDeviceChanged(SysType sysType)
 {
     DeviceIndList links = m_sysService->linkedDevices(sysType);
-    m_oscStateService->init(links);
+    m_oscStates[sysType]->init(links);
 
     QJsonObject res;
     res["type"] = "sys";

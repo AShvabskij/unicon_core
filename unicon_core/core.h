@@ -45,9 +45,10 @@ private:
 
     QMap<SysType, OscStateService*> m_oscStates;
     SystemService* m_sysService = nullptr;
-    OscDataService* m_oscDataService = nullptr;
+//  OscDataService* m_oscDataService = nullptr;
+    QMap<SysType, IOscDataService*> m_oscDatas;
 
-    QFuture<void> m_threadFuture;
+    QMap<SysType, QFuture<void>> m_threads;
 };
 
 #endif // APPLICATION_H
