@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QJsonObject>
 #include <QMap>
+#include <QMutex>
 
 class OscStateMachine;
 class OscStateService
@@ -23,6 +24,7 @@ private:
     QMap<quint16, OscStateMachine*> m_oscState;
     IOscDataService* m_dataSrv;
     QList<DevInd> m_devIdList;
+    QMutex m_mutex;
 };
 
 class OscStateMachine
@@ -43,6 +45,7 @@ public:
     OscStateMachine(IDDE *dde, IOscDataService *dataSrv);
     void update(DevInd devId);
     void init(DevInd devId);
+    void finish();
 
 private:
 

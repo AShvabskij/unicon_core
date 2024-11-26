@@ -18,6 +18,8 @@
 #include <QtCore>
 #include <QtConcurrent/QtConcurrent>
 
+// #define NO_DEMO
+
 Core::Core(): BaseReqHandler()
 {
 }
@@ -53,11 +55,11 @@ void Core::init()
     dde->init("UAVCAN"); // TODO: replace arg to const char*
     m_ddeDisp->registerDDE(SysType::UAVCAN, dde);
 
-    IDDE* dde_emul = new DDE_EMUL();
-    dde_emul->init("FILE_IO");
-    m_ddeDisp->registerDDE(SysType::FILE_IO, dde_emul);
-
-//  m_ddeDisp->setDefaultDDE(dde);
+    #ifndef NO_DEMO
+        IDDE* dde_emul = new DDE_EMUL();
+        dde_emul->init("FILE_IO");
+        m_ddeDisp->registerDDE(SysType::FILE_IO, dde_emul);
+    #endif
 
 #endif
 
@@ -82,7 +84,12 @@ void Core::start(SysType sysType)
 
     IDDE* dde = m_ddeDisp->dde(sysType);
     if (!dde) {
-        qWarning() << "The system type is not supported, sysType =  " << sysType;
+        if (sysType == SysType::FILE_IO) {
+            qWarning() << "The DEMO mode is not supported" << sysType;
+
+        } else {
+            qWarning() << "The system type is not supported, sysType =  " << sysTypeToString(sysType);
+        }
         return;
     }
 
@@ -92,7 +99,7 @@ void Core::start(SysType sysType)
     if (sysType != SysType::FILE_IO) {
         if (m_threads.contains(SysType::FILE_IO)) {
             QFuture<void> f = m_threads.value(sysType);
-            f.suspend();
+            f.pause();
         }
     } else {
         if (m_threads.contains(SysType::FILE_IO)) {
@@ -121,7 +128,6 @@ void Core::start(SysType sysType)
         m_oscHandler = nullptr;
     }
 
-
     if (!m_oscDatas.contains(sysType) && !m_oscStates.contains(sysType)) {
         IOscDataService* oscData = new OscDataService(OscFileStorage::instance());
         m_oscDatas.insert(sysType, oscData);
@@ -149,34 +155,44 @@ void Core::start(SysType sysType)
     m_sysService = new SystemService(m_sysType, m_ddeDisp->dde(m_sysType));
     connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
 
+    for (OscStateService* st: m_oscStates.values()) {
+        st->clear();
+    }
+
     QList<DevInd> links = m_sysService->linkedDevices(m_sysType);
     m_oscStates[m_sysType]->init(links);
 
     m_sysService->start();
 
 #ifdef __linux__
-    if (!m_threadFuture.isRunning()) {
-        m_threadFuture = QtConcurrent::run(this, &Core::thread_proc, m_sysType);
+    if (!m_threads.contains(m_sysType) || !m_threads[m_sysType].isRunning()) {
+        m_threads.insert(m_sysType, QtConcurrent::run(this, &Core::thread_proc, m_sysType));
     }
 #else
-    if (m_threads.contains(m_sysType)) {
+    if (!m_threads.contains(m_sysType) || !m_threads[m_sysType].isRunning()) {
         m_threads.insert(m_sysType, QtConcurrent::run(&Core::thread_proc, this, m_sysType));
     }
-
 #endif
 }
 
 void Core::thread_proc(SysType sysType)
 {
-    Q_UNUSED(sysType);
+    if (m_sysType != sysType) {
+        return;
+    }
 
     QThread::msleep(1000);
 
     while (1)
     {
+        if (m_sysType != sysType) {
+            break;
+        }
+
         if (m_oscStates.contains(sysType)) {
             m_oscStates[sysType]->update();
         }
+
 
         QThread::msleep(100);
     }

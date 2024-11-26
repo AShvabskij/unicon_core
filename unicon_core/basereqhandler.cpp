@@ -42,7 +42,7 @@ void BaseReqHandler::setResponseManager(ResponseManager* response)
 
 SysType BaseReqHandler::sysTypeId(const QJsonObject& request)
 {
-    const int TIME_STAMP_MAX = 1000*60*60*24; // Milisec per round the clock
+//  const int TIME_STAMP_MAX = 1000*60*60*24; // Milisec per round the clock
     int requestId = request.value("request_id").toInt();
 
     int res;
