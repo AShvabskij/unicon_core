@@ -19,11 +19,13 @@ public:
     void init(QList<DevInd> devList);
     void update();
     void clear();
+
 private:
     IDDE* m_dde;
     QMap<quint16, OscStateMachine*> m_oscState;
     IOscDataService* m_dataSrv;
     QList<DevInd> m_devIdList;
+
     QMutex m_mutex;
 };
 

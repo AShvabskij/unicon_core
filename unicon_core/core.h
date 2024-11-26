@@ -12,6 +12,7 @@
 class IDDE;
 class IDDE_Dispatcher;
 class OscDataService;
+class OscHistoryService;
 
 class Core: public BaseReqHandler
 {
@@ -25,7 +26,7 @@ public:
     void init();
     void start(SysType sysInterface);
 
-    [[ noreturn ]] void thread_proc(SysType sysType);
+    [[ noreturn ]] void thread_proc();
 
 public slots:
     void onDeviceChanged(SysType sysType);
@@ -43,12 +44,15 @@ private:
     IReqHandler* m_deviceHandler = nullptr;
     IReqHandler* m_oscHandler = nullptr;
 
-    QMap<SysType, OscStateService*> m_oscStates;
+    OscDataService* m_hstDataService = nullptr;
+    OscHistoryService* m_oscHistoryService = nullptr;
     SystemService* m_sysService = nullptr;
-//  OscDataService* m_oscDataService = nullptr;
+
+    QMap<SysType, OscStateService*> m_oscStates;
     QMap<SysType, IOscDataService*> m_oscDatas;
 
-    QMap<SysType, QFuture<void>> m_threads;
+    QFuture<void> m_threadFuture;
+    QMutex m_mutex;
 };
 
 #endif // APPLICATION_H

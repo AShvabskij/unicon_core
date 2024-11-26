@@ -74,6 +74,7 @@ void Core::init()
     m_streamServer->setRequestManager(RequestManager::instance());
     m_streamServer->setResponseManager(StreamManager::instance());
     m_streamServer->start();
+
 }
 
 void Core::start(SysType sysType)
@@ -96,15 +97,14 @@ void Core::start(SysType sysType)
     m_sysType = sysType;
     m_ddeDisp->setDefaultDDE(dde);
 
+    m_mutex.lock();
+
     if (sysType != SysType::FILE_IO) {
-        if (m_threads.contains(SysType::FILE_IO)) {
-            QFuture<void> f = m_threads.value(sysType);
-            f.pause();
-        }
-    } else {
-        if (m_threads.contains(SysType::FILE_IO)) {
-            QFuture<void> f = m_threads.value(sysType);
-            f.resume();
+        OscStateService* demoSrv = m_oscStates.value(FILE_IO, nullptr);
+        if (demoSrv) {
+            demoSrv->clear();
+            m_oscStates.remove(FILE_IO);
+            delete demoSrv;
         }
     }
 
@@ -128,20 +128,27 @@ void Core::start(SysType sysType)
         m_oscHandler = nullptr;
     }
 
-    if (!m_oscDatas.contains(sysType) && !m_oscStates.contains(sysType)) {
-        IOscDataService* oscData = new OscDataService(OscFileStorage::instance());
+    IOscDataService* oscData = m_oscDatas.value(sysType, nullptr);
+    if (!oscData) {
+        oscData = new OscDataService(OscFileStorage::instance());
         m_oscDatas.insert(sysType, oscData);
-        OscStateService* stateService = new OscStateService(m_ddeDisp->dde(m_sysType), oscData);
+    }
+
+    OscStateService* stateService = m_oscStates.value(sysType, nullptr);
+    if (!stateService) {
+        stateService = new OscStateService(m_ddeDisp->dde(m_sysType), oscData);
         m_oscStates.insert(sysType, stateService);
     }
 
-    OscDataService* hstDataService = new OscDataService(OscFileStorage::instance());
-    OscHistoryService* oscHistoryService = new OscHistoryService(hstDataService, OscFileStorage::instance());
+    if (!m_hstDataService && !m_oscHistoryService) {
+        m_hstDataService = new OscDataService(OscFileStorage::instance());
+        m_oscHistoryService = new OscHistoryService(m_hstDataService, OscFileStorage::instance());
+    }
 
     m_paramsHandler = new ParamsHandler(m_ddeDisp, m_sysType);
     m_deviceHandler = new DeviceHandler(m_ddeDisp, m_sysType);
-    m_oscHandler = new OscHandler(m_ddeDisp, m_sysType, m_oscDatas[m_sysType]);
-    dynamic_cast<OscHandler*> (m_oscHandler)->setService(oscHistoryService);
+    m_oscHandler = new OscHandler(m_ddeDisp, m_sysType, oscData);
+    dynamic_cast<OscHandler*> (m_oscHandler)->setService(m_oscHistoryService);
 
     RequestManager::instance()->registerHandler(m_deviceHandler);
     RequestManager::instance()->registerHandler(m_paramsHandler);
@@ -152,47 +159,45 @@ void Core::start(SysType sysType)
     StreamManager::instance()->registerHandler(m_paramsHandler);
     StreamManager::instance()->registerHandler(m_oscHandler);
 
-    m_sysService = new SystemService(m_sysType, m_ddeDisp->dde(m_sysType));
-    connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
-
-    for (OscStateService* st: m_oscStates.values()) {
-        st->clear();
+    if (!m_sysService) {
+        m_sysService = new SystemService(m_sysType, m_ddeDisp->dde(m_sysType));
+        connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
+        m_sysService->start();
     }
 
     QList<DevInd> links = m_sysService->linkedDevices(m_sysType);
     m_oscStates[m_sysType]->init(links);
 
-    m_sysService->start();
-
 #ifdef __linux__
-    if (!m_threads.contains(m_sysType) || !m_threads[m_sysType].isRunning()) {
-        m_threads.insert(m_sysType, QtConcurrent::run(this, &Core::thread_proc, m_sysType));
+    if (!m_threadFuture.isRunning()) {
+        m_threadFuture = QtConcurrent::run(this, &Core::thread_proc);
     }
 #else
-    if (!m_threads.contains(m_sysType) || !m_threads[m_sysType].isRunning()) {
-        m_threads.insert(m_sysType, QtConcurrent::run(&Core::thread_proc, this, m_sysType));
+    if (!m_threadFuture.isRunning()) {
+        m_threadFuture = QtConcurrent::run(&Core::thread_proc, this);
     }
 #endif
+
+    m_mutex.unlock();
 }
 
-void Core::thread_proc(SysType sysType)
+void Core::thread_proc()
 {
-    if (m_sysType != sysType) {
-        return;
-    }
-
     QThread::msleep(1000);
 
     while (1)
     {
-        if (m_sysType != sysType) {
-            break;
-        }
+        m_mutex.lock();
 
-        if (m_oscStates.contains(sysType)) {
+        for (const SysType sysType: m_oscStates.keys()) {
+            if (sysType == FILE_IO && sysType != m_sysType) { // no update demo if demo mode is OFF
+                continue;
+            }
+
             m_oscStates[sysType]->update();
         }
 
+        m_mutex.unlock();
 
         QThread::msleep(100);
     }
