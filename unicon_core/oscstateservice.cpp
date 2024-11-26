@@ -31,7 +31,7 @@ void OscStateService::init(QList<DevInd> devList)
         }
     }
 
-    m_mutex.lock();
+    m_mutex.unlock();
 }
 
 void OscStateService::clear()
