@@ -36,6 +36,12 @@ int RequestManager::remove(IReqHandler* handler)
     handler->handleClose();
     m_handlerList.removeAll(handler);
 
+    for (IReqHandler* it : m_handlerList) {
+        if (it->next() == handler) {
+            it->setNext(nullptr);
+        }
+    }
+
     return 0;
 }
 
