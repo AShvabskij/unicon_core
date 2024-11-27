@@ -35,6 +35,8 @@ _dde_func_return_t OscFileService::open(uint16_t device_id, const char* fileName
     _dde_func_return_t res = loadHeader(device_id, fileName);
     if (!res) return res;
 
+    res = loadData();
+
     return res;
 }
 
@@ -158,7 +160,7 @@ int OscFileService::loadData()
 
     m_loadThread = new std::thread(&OscFileService::th_loadData, this);
 
-    waitForLoad();
+//  waitForLoad();
     return _return_OK;
 }
 
@@ -189,21 +191,21 @@ _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeld
 {
     assert(m_header != nullptr);
 
-    static int iCounter = 0;
-    if (!m_oscFileStream) {
-        iCounter++;
-        if (iCounter % 10 == 0) {
-            loadData();
-            iCounter = 1;
-        } else {
-            return _return_Busy;
-        }
-    }
+    // static int iCounter = 0;
+    // if (!m_oscFileStream) {
+    //     iCounter++;
+    //     if (iCounter % 10 == 0) {
+    //         loadData();
+    //         iCounter = 1;
+    //     } else {
+    //         return _return_Busy;
+    //     }
+    // }
 
-      //   waitForLoad();
+    waitForLoad();
 
     if (!m_oscFileStream) {
-        return _return_FAIL;
+        return _return_Busy;
     }
 
     int resolution_us = m_header->settings.time_resolution_us;
