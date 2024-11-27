@@ -20,6 +20,10 @@ DeviceHandler::DeviceHandler(IDDE_Dispatcher* dde, SysType sysType): BaseReqHand
 
 int DeviceHandler::handle(const QJsonObject& request)
 {
+    if (!canHandle(request)) {
+        return BaseReqHandler::handle(request);
+    }
+
     QJsonObject cmdObj = request.value("cmd").toObject();
     QString cmdName = cmdObj.value("name").toString();
     QString cmdType = cmdObj.value("type").toString();
