@@ -35,6 +35,11 @@ void BaseReqHandler::setNext(IReqHandler *next)
     m_next = next;
 }
 
+IReqHandler *BaseReqHandler::next()
+{
+    return m_next;
+}
+
 void BaseReqHandler::setResponseManager(ResponseManager* response)
 {
     m_response = response;
