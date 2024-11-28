@@ -118,6 +118,11 @@ void Core::start(SysType sysType)
         RequestManager::instance()->remove(m_paramsHandler);
         RequestManager::instance()->remove(m_deviceHandler);
         RequestManager::instance()->remove(m_oscHandler);
+        ResponseManager::instance()->unregisterHandler(m_deviceHandler);
+        ResponseManager::instance()->unregisterHandler(m_paramsHandler);
+        ResponseManager::instance()->unregisterHandler(m_oscHandler);
+        StreamManager::instance()->unregisterHandler(m_paramsHandler);
+        StreamManager::instance()->unregisterHandler(m_oscHandler);
 
         delete m_paramsHandler;
         delete m_deviceHandler;
