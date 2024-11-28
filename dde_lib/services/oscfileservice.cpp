@@ -51,7 +51,7 @@ _dde_func_return_t OscFileService::close()
     m_loadThread = nullptr;
     delete m_oscFileStream;
     m_oscFileStream = nullptr;
-    m_oscFileBuff = "";
+//  m_oscFileBuff = ""; // It is not necessary to reload the file buffer
 
     return _return_OK;
 }
@@ -191,16 +191,15 @@ _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeld
 {
     assert(m_header != nullptr);
 
-    // static int iCounter = 0;
-    // if (!m_oscFileStream) {
-    //     iCounter++;
-    //     if (iCounter % 10 == 0) {
-    //         loadData();
-    //         iCounter = 1;
-    //     } else {
-    //         return _return_Busy;
-    //     }
-    // }
+    static int iCounter = 0;
+    if (!m_oscFileStream) {
+        // lets reload data after pause
+        iCounter++;
+        if (iCounter % 30 == 0) {
+            loadData();
+            iCounter = 1;
+        }
+    }
 
     waitForLoad();
 

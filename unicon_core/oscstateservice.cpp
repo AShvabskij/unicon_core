@@ -29,6 +29,8 @@ void OscStateService::init(QList<DevInd> devList)
             m_oscState.insert(devId, s);
             m_devIdList.append(devId);
         }
+
+        // break; for tests only
     }
 
     m_mutex.unlock();
