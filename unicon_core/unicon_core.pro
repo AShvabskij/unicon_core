@@ -17,6 +17,7 @@ SOURCES += \
         dde_dispatcher.cpp \
         main.cpp \
         core.cpp \
+        datausbcopier.cpp \
         basereqhandler.cpp \
         devicehandler.cpp \
         oscdataservice.cpp \
@@ -32,9 +33,9 @@ SOURCES += \
         streammanager.cpp \
         systemservice.cpp
 
-
 HEADERS += \
     core.h \
+    datausbcopier.h \
     basereqhandler.h \
     dde_dispatcher.h \
     device_types.h \
