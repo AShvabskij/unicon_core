@@ -17,20 +17,44 @@ OscStateService::OscStateService(IDDE *dde, IOscDataService *dataSrv)
 
 void OscStateService::init(QList<DevInd> devList)
 {
+    m_mutex.lock();
+
     for (DevInd devId: devList) {
         if (devId == DDE_DEV0_MASTER_IND)
             continue;
 
         if (!m_devIdList.contains(devId)) {
-            m_oscState[devId] = new OscStateMachine(m_dde, m_dataSrv);
-            m_oscState[devId]->init(devId);
+            auto s = new OscStateMachine(m_dde, m_dataSrv);
+            s->init(devId);
+            m_oscState.insert(devId, s);
             m_devIdList.append(devId);
         }
+
+        // break; for tests only
     }
+
+    m_mutex.unlock();
+}
+
+void OscStateService::clear()
+{
+    m_mutex.lock();
+    m_devIdList.clear();
+
+    for (DevInd devId: m_oscState.keys()) {
+//      m_oscState[devId]->finish();
+        delete m_oscState[devId];
+        m_oscState.remove(devId);
+    }
+
+    m_dataSrv->removeAll();
+
+    m_mutex.unlock();
 }
 
 void OscStateService::update()
 {
+    m_mutex.lock();
     for (DevInd id: m_devIdList) {
         Q_ASSERT(m_oscState.keys().contains(id));
         if (!m_oscState.keys().contains(id))
@@ -38,6 +62,8 @@ void OscStateService::update()
 
         m_oscState[id]->update(id);
     }
+
+    m_mutex.unlock();
 }
 
 OscStateMachine::OscStateMachine(IDDE* dde, IOscDataService *dataSrv)
@@ -45,6 +71,9 @@ OscStateMachine::OscStateMachine(IDDE* dde, IOscDataService *dataSrv)
     m_dde = dde;
     m_state = STATE::Normal;
     m_dataSrv = dataSrv;
+
+    memset(&m_ddeData, 0, sizeof(DDE_GET_OSC_DATA));
+    memset(&m_header, 0, sizeof(DDE_OSC_HEADER));
 }
 
 void OscStateMachine::update(DevInd devId)
@@ -61,7 +90,7 @@ void OscStateMachine::update(DevInd devId)
         m_header = getHeader(devId);
         if (m_header.device_id != devId) {
             m_state = Error;
-            return;
+            break;
         }
 
         if (m_header.settings.trig_time > 0) {
@@ -95,13 +124,13 @@ void OscStateMachine::update(DevInd devId)
 
                 if (res == _return_Busy) {
                     m_state = Busy;
-                    return;
+                    break;
                 }
 
                 if (res != _return_OK) {
                     qWarning() << "Error getting data from the osc, id = " << m_header.device_id;
                     m_state = Error;
-                    return;
+                    break;
                 }
 
                 if (m_eof) {
@@ -113,7 +142,7 @@ void OscStateMachine::update(DevInd devId)
 
                 if (m_ddeData.header_updated) {
                     m_state = Updated;
-                    return;
+                    break;
                 }
             }
 
@@ -122,7 +151,7 @@ void OscStateMachine::update(DevInd devId)
             if (res != _return_OK) {
                 qWarning() << "Error getting buffer for the osc, id = " << m_header.device_id;
                 m_state = Error;
-                return;
+                break;
             }
 
             m_ddeData.data_length = 0; // Empty m_ddeData to get the next block of data
@@ -135,7 +164,7 @@ void OscStateMachine::update(DevInd devId)
                 m_eof = true;
                 if (m_sof) {
                     m_state = Saving;
-                    return;
+                    break;
                 }
             }
 
@@ -190,6 +219,11 @@ void OscStateMachine::init(DevInd devId)
         qWarning() << "Error getting header from osc, id = " << m_header.device_id;
         return;
     }
+}
+
+void OscStateMachine::finish()
+{
+    m_state = STATE::Finished;
 }
 
 long OscStateMachine::getData(const DDE_OSC_HEADER &hdr, DDE_GET_OSC_DATA& getDat)

@@ -15,7 +15,7 @@ typedef QList<quint16> DeviceIndList;
 enum SysType
 {
     Undefined = 0,
-    DEFAULT = 0,
+    Default = 0,
     FILE_IO = 1,
     UAVCAN = 2,
     CANOPEN = 3,
@@ -23,6 +23,18 @@ enum SysType
     CONNEX_MVCP = 5,
     Unknown
 };
+
+constexpr const char* sysTypeToString(SysType type) {
+    switch (type) {
+    case FILE_IO: return "Demo";
+    case UAVCAN: return "UAVCAN";
+    case CANOPEN: return "CANOPEN";
+    case MODBUS: return "MODBUS";
+    case CONNEX_MVCP: return "CONNEX_MVCP";
+    case Unknown: return "Unknown";
+    default: return "";
+    }
+}
 
 struct DevID
 {

@@ -20,6 +20,8 @@ public:
     virtual void unregisterClient(QWebSocket* client);
 
     virtual int registerHandler(IReqHandler* handler);
+    virtual int unregisterHandler(IReqHandler *handler);
+    virtual void clear();
 
 public slots:
     int send(QJsonObject response);

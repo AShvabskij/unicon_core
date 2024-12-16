@@ -3,23 +3,30 @@
 
 #include "socketserver.h"
 
-#include "DDE_PARAMS_TYPE.h"
 #include "dde_dispatcher.h"
 #include "oscstateservice.h"
 #include "systemservice.h"
 
+#include "basereqhandler.h"
+
 class IDDE;
 class IDDE_Dispatcher;
+class OscDataService;
+class OscHistoryService;
 
-class Core: public QObject
+class Core: public BaseReqHandler
 {
     Q_OBJECT
 public:
     Core();
     ~Core();
 
-    void start();
-    [[ noreturn ]] void thread_proc(SysType sysType);
+    virtual int handle(const QJsonObject &request);
+
+    void init();
+    void start(SysType sysInterface);
+
+    [[ noreturn ]] void thread_proc();
 
 public slots:
     void onDeviceChanged(SysType sysType);
@@ -27,15 +34,25 @@ public slots:
 private:
 
 
-    SocketServer* m_cmdServer;
-    SocketServer* m_streamServer;
+    SocketServer* m_cmdServer = nullptr;
+    SocketServer* m_streamServer = nullptr;
 
-    IDDE_Dispatcher* m_ddeDisp;
-    OscStateService* m_oscStateService;
-    SystemService* m_sysService;
+    IDDE_Dispatcher* m_ddeDisp = nullptr;
+    SysType m_sysType = SysType::Undefined;
 
-    SysType m_sysType;
+    IReqHandler* m_paramsHandler = nullptr;
+    IReqHandler* m_deviceHandler = nullptr;
+    IReqHandler* m_oscHandler = nullptr;
 
+    OscDataService* m_hstDataService = nullptr;
+    OscHistoryService* m_oscHistoryService = nullptr;
+    SystemService* m_sysService = nullptr;
+
+    QMap<SysType, OscStateService*> m_oscStates;
+    QMap<SysType, IOscDataService*> m_oscDatas;
+
+    QFuture<void> m_threadFuture;
+    QMutex m_mutex;
 };
 
 #endif // APPLICATION_H

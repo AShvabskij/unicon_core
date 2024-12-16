@@ -35,6 +35,8 @@ _dde_func_return_t OscFileService::open(uint16_t device_id, const char* fileName
     _dde_func_return_t res = loadHeader(device_id, fileName);
     if (!res) return res;
 
+    res = loadData();
+
     return res;
 }
 
@@ -49,7 +51,7 @@ _dde_func_return_t OscFileService::close()
     m_loadThread = nullptr;
     delete m_oscFileStream;
     m_oscFileStream = nullptr;
-    m_oscFileBuff = "";
+//  m_oscFileBuff = ""; // It is not necessary to reload the file buffer
 
     return _return_OK;
 }
@@ -158,7 +160,7 @@ int OscFileService::loadData()
 
     m_loadThread = new std::thread(&OscFileService::th_loadData, this);
 
-    waitForLoad();
+//  waitForLoad();
     return _return_OK;
 }
 
@@ -191,19 +193,18 @@ _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeld
 
     static int iCounter = 0;
     if (!m_oscFileStream) {
+        // lets reload data after pause
         iCounter++;
-        if (iCounter % 10 == 0) {
+        if (iCounter % 30 == 0) {
             loadData();
             iCounter = 1;
-        } else {
-            return _return_Busy;
         }
     }
 
-      //   waitForLoad();
+    waitForLoad();
 
     if (!m_oscFileStream) {
-        return _return_FAIL;
+        return _return_Busy;
     }
 
     int resolution_us = m_header->settings.time_resolution_us;

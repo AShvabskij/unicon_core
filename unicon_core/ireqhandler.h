@@ -12,6 +12,8 @@ public:
     virtual int handle(const QJsonObject& request) = 0;
     virtual bool canHandle(const QJsonObject &request) = 0;
     virtual void setNext(IReqHandler* next) = 0;
+    virtual IReqHandler* next() = 0;
+
     virtual void handleClose() = 0;
 
     Q_SIGNAL void send(const QJsonObject& response);

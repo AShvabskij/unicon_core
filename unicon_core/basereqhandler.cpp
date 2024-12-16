@@ -35,6 +35,11 @@ void BaseReqHandler::setNext(IReqHandler *next)
     m_next = next;
 }
 
+IReqHandler *BaseReqHandler::next()
+{
+    return m_next;
+}
+
 void BaseReqHandler::setResponseManager(ResponseManager* response)
 {
     m_response = response;
@@ -42,14 +47,15 @@ void BaseReqHandler::setResponseManager(ResponseManager* response)
 
 SysType BaseReqHandler::sysTypeId(const QJsonObject& request)
 {
-    const int TIME_STAMP_MAX = 1000*60*60*24; // Milisec per round the clock
+//  const int TIME_STAMP_MAX = 1000*60*60*24; // Milisec per round the clock
     int requestId = request.value("request_id").toInt();
 
     int res;
     if (request.contains("sys_type_id")) {
         res = request.value("sys_type_id").toInt();
     } else {
-        res = requestId / TIME_STAMP_MAX;
+        return SysType::Undefined;
+//        res = requestId / TIME_STAMP_MAX;
     }
 
     SysType sysType = (SysType)res;

@@ -20,6 +20,10 @@ DeviceHandler::DeviceHandler(IDDE_Dispatcher* dde, SysType sysType): BaseReqHand
 
 int DeviceHandler::handle(const QJsonObject& request)
 {
+    if (!canHandle(request)) {
+        return BaseReqHandler::handle(request);
+    }
+
     QJsonObject cmdObj = request.value("cmd").toObject();
     QString cmdName = cmdObj.value("name").toString();
     QString cmdType = cmdObj.value("type").toString();
@@ -160,21 +164,26 @@ void DeviceHandler::handleReqDevices(SysType sysType, int requestId)
 {
     QMap<SysType, QList<DevInd>> allLinks;
 
-    if (sysType != SysType::Undefined) {
-        QList<DevInd> links;
-        requestDeviceLinks(sysType, links);
-        allLinks.insert(sysType, links);
-    } else {
-        for (int ival = SysType::Undefined; ival != SysType::Unknown; ival++ )
-        {
-            SysType sysType = (SysType)ival;
-            if (m_dde->dde(sysType) == nullptr) continue;
-
-            QList<DevInd> links;
-            requestDeviceLinks(sysType, links);
-            allLinks.insert(sysType, links);
-        }
+    if (sysType == SysType::Undefined) {
+        sysType = m_dde->getDefaultType();
     }
+
+    QList<DevInd> links;
+    requestDeviceLinks(sysType, links);
+    allLinks.insert(sysType, links);
+
+//        for (int ival = SysType::Undefined; ival != SysType::Unknown; ival++ )
+//        {
+//            SysType sysType = (SysType)ival;
+//            if (sysType == SysType::FILE_IO) continue;
+
+//            if (m_dde->dde(sysType) == nullptr) continue;
+
+//            QList<DevInd> links;
+//            requestDeviceLinks(sysType, links);
+//            allLinks.insert(sysType, links);
+//        }
+
 
     DeviceList devices;
     for (SysType type: allLinks.keys()) {

@@ -28,6 +28,23 @@ int RequestManager::processClose()
     return 0;
 }
 
+int RequestManager::remove(IReqHandler* handler)
+{
+    Q_ASSERT(handler);
+    if (!handler) return -1;
+
+    handler->handleClose();
+    m_handlerList.removeAll(handler);
+
+    for (IReqHandler* it : m_handlerList) {
+        if (it->next() == handler) {
+            it->setNext(nullptr);
+        }
+    }
+
+    return 0;
+}
+
 int RequestManager::registerHandler(IReqHandler *handler)
 {
     Q_ASSERT(handler);

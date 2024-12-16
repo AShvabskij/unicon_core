@@ -1,14 +1,48 @@
-Group;Element;Description;GLIO Adres;Value type (1-BIT,2-INT,3-FLOAT);R/W;min;max;Value unity;iq coef (by default 1.0.15) ;Value
-;;;;;;;;;;
-MOTOR DATA_D12;I(A);The current of the motor in each of the three phases;65;3;R;;;A;1;2,2
-MOTOR DATA_D12;I(%);Operating current in each of the three phases as a percentage of motor FLA;66;2;R;;;%;;70
-MOTOR DATA_D12;VOLT;The voltage in each of the three phases;67;2;R;;;V;;1500
-MOTOR DATA_D12;FREQ;The line frequency;68;2;R;;;Hz;;50
-MOTOR DATA_D12;COSP;The motor power factor;69;3;R;;;;;1
-MAIN&PROTECT_D12;RATED LINE VOLTAGE;HRVS-DN-PowerStart's rate voltage;129;2;W;2300;15000;V;;3300
-MAIN&PROTECT_D12;STARTER FLC;HRVS-DN-PowerStart's FLC (Full Load Current);130;2;W;20;1800;A;;150
-MAIN&PROTECT_D12;MOTOR FLA;Sets motor's FLA(Full load Ampere);131;2;W;0;1800;A;;150
+Group;Element;Description;GLIO Adres;"Value type (1-BIT,2-INT,3-FLOAT)";R/W;min;max;Value unity;iq coef (by default 1.0.15) ;Value;ValueList
+Module0;;Test;0;0;;;;;;;
+MOTOR DATA;I(A);The current of the motor in each of the three phases;65;3;R;;;A;1;"2,2";
+MOTOR DATA;I(%);Operating current in each of the three phases as a percentage of motor FLA;66;2;W;;;%;;70;
+MOTOR DATA;VOLT;The voltage in each of the three phases;67;3;R;;;V;;1500;
+MOTOR DATA;FREQ;The line frequency;68;2;R;;;Hz;;50;
+MOTOR DATA;COSP;The motor power factor;69;3;R;;;;;1;
+MOTOR DATA;Deg;Displays the angle (in degrees) between the voltage and the current;70;2;R;;;deg.;;0;
+MOTOR DATA;PW;Displays motor power;71;3;W;;;KW;;0;
+MOTOR DATA;Q;Displays motor reactive power;72;3;W;;;KVAR;;0;
+MAIN&PROTECT;RATED LINE VOLTAGE;HRVS-DN-PowerStart's rate voltage;129;2;W;2300;15000;V;;3300;
+MAIN&PROTECT;STARTER FLC;HRVS-DN-PowerStart's FLC (Full Load Current);130;1;W;20;1800;A;;150;
+MAIN&PROTECT;MOTOR FLA;Sets motor's FLA(Full load Ampere);131;4;W;0;1800;A;;139;
+MAIN&PROTECT;RATED MOTOR POWER;Sets motor rated power as indicated on its name plate ;132;2;W;50;40000;KW;;1000;
+MAIN&PROTECT;SERVICE FACTOR ;Sets motor rated service factor;133;2;W;100;130;%;;100;
+MAIN&PROTECT;UNDERCURRENT TRIP ;Sets UNDER CURRENT TRIP protection. ;134;2;W;20;90;%;;0;
+MAIN&PROTECT;UNDERCURRENT DELAY ;Sets the time delay for UNDER CURRENT TRIP protection. ;135;3;W;"0,2";40;sec.;;1;
+MAIN&PROTECT;O/C SHEAR PIN ;Sets OVER CURRENT SHEAR PIN protection;136;3;W;0;5;sec.;;"0,1";
+MAIN&PROTECT;O/C DELAY;Sets O/C SHEAR PIN DELAY time.;137;3;W;0;5;sec.;;"0,1";
+MAIN&PROTECT;OVERLOAD CLASS;Sets OVERLOAD CLASS characteristics;138;5;W;;;;;2;"IEC CLASS 5,IEC CLASS 10,IEC CLASS 15,IEC CLASS 20,IEC CLASS 25,IEC CLASS 30,NEMA CLASS 5,NEMA CLASS 10,NEMA CLASS 15,NEMA CLASS 20,NEMA CLASS 25,NEMA CLASS 30"
+MAIN&PROTECT;OVERLOAD PROTECT;The overload protection can be set to protect the motor as set in the OVERLOAD PROTECT parameter ;139;5;W;;;;;"2,2";"DISABLE, ENABLE WHILE RUN, ENABLE "
+MAIN&PROTECT;UNBALANCE TRIP;Sets UNBALANCE TRIP level ;140;2;W;10;100;%;;20;
+MAIN&PROTECT;UNBALANCE DELAY ;Sets UNBALANCE TRIP DELAY ;141;2;W;200;60000;msec.;;1000;
+MAIN&PROTECT;GND FAULT TRIP;Sets GND FAULT TRIP level. ;142;2;W;10;100;%;;20;
+MAIN&PROTECT;GND FAULT DELAY ;Sets GND FAULT TRIP DELAY;143;2;W;200;60000;msec.;;5000;
+MAIN&PROTECT;UNDERVOLTAGE TRIP;Sets UNDER VOLTAGE TRIP level;144;2;W;50;90;%;;70;
+MAIN&PROTECT;UNDERVOLTAGE DELAY ;Sets UNDERVOLT TRIP DELAY. ;145;3;W;"0,2";10;sec.;;5;
+MAIN&PROTECT;FREQUENCY TRIP;Sets the FREQUENCY TRIP. ;146;5;W;;;;;2;"DISABLE,ENABLE"
+MAIN&PROTECT;S.SCR OR WR.CON ;Sets the S.SCR OR WR.CON trip. ;147;5;W;;;;;2;"DISABLE,ENABLE"
+MAIN&PROTECT;PHASE LOSS TRIP;Sets the PHASE LOSS TRIP;148;5;W;;;;;1;"DISABLE,ENABLE"
+MAIN&PROTECT;VOLTAGE PLL TRIP;Sets the VOLTAGE PLL TRIP ;149;5;W;;;;;1;"DISABLE,ENABLE"
+START PARAMETERS;SOFT START CURVE ;Sets HRVS-DN-PowerStart SOFT START CURVE ;195;5;W;0;5;;;1;"0 (BASIC), 1 (STANDARD ), 2 !!, 3 !!, 4 !!, 5 (TORQUE) "
+START PARAMETERS;PULSE LEVEL;"Sets PULSE LEVEL, % OF FLA ";196;2;W;70;700;%;;70;
+START PARAMETERS;PULSE TIME;Sets PULSE START TIME. ;197;3;W;0;"0,64";sec.;;"0,1";
+START PARAMETERS;INITIAL VOLTAGE ;Sets motors INITIAL STARTING VOLTAGE. ;198;2;W;10;50;%;;10;
+STOP PARAMETERS ;SOFT STOP CURVE ;Sets SOFT STOP CURVE. ;260;5;W;0;4;;;1;" (BASIC), 1 (STANDARD ), 2 !!, 3 !!, 4 !!, 5 (TOR"
+STOP PARAMETERS ;DECELERATION TIME;Sets DECELERATION TIME of the motor ;261;3;W;0;90;sec.;;"0,1";
+STOP PARAMETERS ;FINAL TORQUE ;Sets FINAL TORQUE during soft stop. ;262;2;W;0;10;min.;;"0,1";
+STOP PARAMETERS ;COAST DOWN DELAY ;Sets an Off delay timer that prevents the HRVS-DN-PowerStart to start before the COAST DOWN DELAY time has elapsed. ;263;2;W;10;3600;sec.;;0;
+FAULT PARAMETERS ;UV & PL AUTO RESET ;Sets UNDERVOLTAGE and PHASE LOSS AUTO RESET. ;325;5;W;;;;;1;"NO,YES "
+FAULT PARAMETERS ;BYPASS OPEN TRIP ;Sets BYPASS OPEN TRIP protection ;326;5;W;;;;;2;"DISABLE,ENABLE"
+FAULT PARAMETERS ;TRIP AFTER BYPASS;Sets TRIP AFTER BYPASS trip. ;327;5;W;;;;;2;"DISABLE,ENABLE"
+FAULT PARAMETERS ;BYPASS AUTO RESET ;Sets BYPASS AUTO RESET ;328;5;W;;;;;2;"NO,YES "
 OSC PARAMETERS;Reason;Trigger reason;385;2;W;;;;;0;
 OSC PARAMETERS;Time;Trigger time;386;2;R;;;ms;;0;
 OSC PARAMETERS;Resolution;;387;2;W;;;us;;0;
 OSC PARAMETERS;Buffer length;;388;2;W;;;us;;0;
+OSC PARAMETERS;Start;;389;2;W;;;;;0;

@@ -13,6 +13,9 @@ public:
 
     virtual void setDefaultDDE(IDDE* dde) = 0;
     virtual IDDE* dde(SysType sysInterface) = 0;
+    virtual SysType getType(IDDE* dde) = 0;
+    virtual SysType getDefaultType() = 0;
+
     virtual IDDE* operator() (SysType sysInterface = SysType::Undefined) = 0;
 };
 
@@ -23,6 +26,9 @@ public:
     virtual ~DDE_Dispatcher();
     virtual void registerDDE(SysType sysInterface, IDDE* dde);
     virtual IDDE* dde(SysType sysInterface);
+    virtual SysType getType(IDDE* dde);
+    virtual SysType getDefaultType();
+
     virtual void setDefaultDDE(IDDE* dde) {
         Q_ASSERT(dde);
         m_defDDE = dde;

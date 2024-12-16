@@ -66,7 +66,21 @@ long DDE_EMUL::set_osc_header(DDE_OSC_HEADER &p)
 
 _dde_func_return_t DDE_EMUL::get_osc_data(DDE_GET_OSC_DATA& p)
 {
-    return m_osc->get(p);
+    // let's control the value of the parameter "Start" of "OSC PARAMETERS"
+    DDE_GET_PARAMS_DATA params;
+    params.device_id = p.device_id;
+    params.module_id = 6;
+    params.param_id = 5;
+
+    m_params->get(params);
+
+    auto el = params.el[0];
+
+    if (el.ivalue >= 1) {
+        return m_osc->get(p); // return data only if the parameter "Start" == 1
+    }
+
+    return _return_Busy; // waiting data
 }
 
 _dde_func_return_t DDE_EMUL::set_osc_data(DDE_SET_OSC_DATA&)
