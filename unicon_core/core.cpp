@@ -3,6 +3,7 @@
 #include "DDE_EMUL.h"
 #include "DDE_TOP.h"
 
+#include "datausbcopier.h"
 #include "requestmanager.h"
 #include "responsemanager.h"
 #include "paramshandler.h"

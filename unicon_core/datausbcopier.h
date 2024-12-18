@@ -21,6 +21,7 @@ signals:
 private slots:
     void onMediaChanged(const QString&);
     void onUsbConnected(const QString& usbRootPath);
+    void onDataSaved();
 
 private:
     void copyFilesToUsb(const QString &sourceDirPath, const QString& destinationPath);

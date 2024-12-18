@@ -422,6 +422,7 @@ public:
     virtual long loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data) = 0;
     virtual QString getFolderPath(const QDateTime dateTime) = 0;
 
+
 };
 
 #endif // OSCTYPES_H

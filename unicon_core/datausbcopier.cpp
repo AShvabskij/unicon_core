@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QDebug>
 #include <QProcess>
+#include <QTimer>
 
 DataUsbCopier::DataUsbCopier(IOscFileStorageService *storage, QObject *parent) : QObject(parent), m_storage(storage)
 {
@@ -86,6 +87,11 @@ void DataUsbCopier::onUsbConnected(const QString& usbRootPath)
     }
 }
 
+void DataUsbCopier::onDataSaved()
+{
+    qDebug() << "On data saved";
+}
+
 QString DataUsbCopier::usbDevicePath()
 {
     foreach (const QStorageInfo &storage, QStorageInfo::mountedVolumes()) {
@@ -114,17 +120,17 @@ bool DataUsbCopier::isUsbDrive(const QStorageInfo &storage)
 
 //  qDebug() << "storage name = " << storage.name() << "path = " << storage.rootPath() << "fsType = " << storage.fileSystemType() << "device = " << storage.device();
 
+    QString rootPath = storage.rootPath();
+    QString device = storage.device();
+
 #ifdef __WIN32__
     // On Windows, check the device path for removable drives (e.g., E:, F:, etc.)
     if (storage.device().startsWith("\\\\.\\") || rootPath.startsWith("E:\\") || rootPath.startsWith("F:\\")) {
         return true; // Possible USB device on Windows
-    } else {
-        return false;
     }
+    return false;
 #else
     // Check the root path for hints (Linux-specific)
-    QString rootPath = storage.rootPath();
-    QString device = storage.device();
 
     if (!device.startsWith("/dev/sdb") && !device.startsWith("/dev/sda")) {
         return false;
