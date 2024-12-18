@@ -7,7 +7,6 @@
 #include "oscdataservice.h"
 
 #include "oschistoryservice.h"
-#include <QTimer>
 
 class OscHandler : public BaseReqHandler
 {

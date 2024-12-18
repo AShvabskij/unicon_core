@@ -420,6 +420,8 @@ public:
     virtual long loadHeader(QString fileFrom, DDE_OSC_HEADER &header) = 0;
     virtual long loadData(QString fileFrom, OscType::OscDataBuffer& data) = 0;
     virtual long loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data) = 0;
+    virtual QString getFolderPath(const QDateTime dateTime) = 0;
+
 };
 
 #endif // OSCTYPES_H

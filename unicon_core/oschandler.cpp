@@ -1,5 +1,4 @@
 #include "oschandler.h"
-#include <QTimer>
 #include <QtConcurrent/QtConcurrent>
 
 const QString CMD_OSC_HEADER = "osc_header";

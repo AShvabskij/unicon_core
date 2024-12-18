@@ -75,6 +75,7 @@ void Core::init()
     m_streamServer->setResponseManager(StreamManager::instance());
     m_streamServer->start();
 
+    m_copier = new DataUsbCopier(OscFileStorage::instance());
 }
 
 void Core::start(SysType sysType)
