@@ -29,7 +29,7 @@ private slots:
 
 private:
     void copyFilesToUsb(const QDate startDate, const QString &usbRootPath);
-    void copyFiles(const QString &sourceDirPath, const QString& destinationPath);
+    void copyFilesWithStructure(const QString &sourceDirPath, const QString& destRootPath);
     bool copyFileWithErrorCheck(const QString &sourcePath, const QString &destinationPath);
     void recursiveCopy(const QString& srcPath, const QString& dstPath);
     bool isUsbDrive(const QStorageInfo& storage);

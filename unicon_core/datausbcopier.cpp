@@ -85,12 +85,10 @@ void DataUsbCopier::copyFilesToUsb(const QDate startDate, const QString& usbRoot
 {
     qDebug() << "Copy data logger files from date:" << startDate.toString();
 
-    QString destPath = usbRootPath + "/DataLogger";
     QDate date = startDate;
-
     while (date != QDateTime::currentDateTime().date().addDays(1)) {
         QString sourceDirPath = m_storage->getFolderPath(date.startOfDay());
-        copyFiles(sourceDirPath, destPath);
+        copyFilesWithStructure(sourceDirPath, usbRootPath);
         date = date.addDays(1);
     }
 }
@@ -103,10 +101,12 @@ void DataUsbCopier::onDataSaved(quint16 device_id)
 
     QTimer::singleShot(5000, [this, date]() {
         if (m_usbMountPath == "") {
-            return;
+            m_usbMountPath = usbDevicePath();
         }
 
-        copyFilesToUsb(date, m_usbMountPath);
+        if (m_usbMountPath != "") {
+            copyFilesToUsb(date, m_usbMountPath);
+        }
     });
 
     QString dataPath = m_storage->getDataLoggerRootPath();
@@ -176,7 +176,7 @@ bool DataUsbCopier::isUsbDrive(const QStorageInfo &storage)
 #endif
 }
 
-void DataUsbCopier::copyFiles(const QString &sourceDirPath, const QString &destinationPath)
+void DataUsbCopier::copyFilesWithStructure(const QString &sourceDirPath, const QString &destRootPath)
 {
     QDir sourceDir(sourceDirPath);
     if (!sourceDir.exists()) {
@@ -184,18 +184,31 @@ void DataUsbCopier::copyFiles(const QString &sourceDirPath, const QString &desti
         return;
     }
 
-    QDir destDir(destinationPath);
-    if (!destDir.exists()) {
-        if (!destDir.mkpath(destinationPath)) {
-            qDebug() << "Failed to create destination directory:" << destinationPath;
+    QDir destRootDir(destRootPath);
+    if (!destRootDir.exists()) {
+        if (!destRootDir.mkpath(destRootPath)) {
+            qDebug() << "Failed to create destination directory:" << destRootPath;
             return;
         }
     }
 
     QStringList files = sourceDir.entryList(QDir::Files);
     for (const QString& fileName : files) {
+
+        QString relativePath = destRootDir.relativeFilePath(sourceDirPath);
+        QString destFileDir = destRootPath + "/" + relativePath;
+
+        // Recreate the target dir structure based on the source dir structure
+        QDir destSubDir(destFileDir);
+        if (!destSubDir.exists()) {
+            if (!destSubDir.mkpath(destFileDir)) {
+                qWarning() << "Failed to create directory:" << destFileDir;
+            }
+        }
+
         QString srcFile = sourceDir.absoluteFilePath(fileName);
-        QString destFile = destDir.absoluteFilePath(fileName);
+        QString destFile = destSubDir.absoluteFilePath(fileName);
+
         if (QFile::exists(destFile)) {
             continue;
         }
@@ -272,13 +285,14 @@ bool DataUsbCopier::checkDiskSpace(const QString rootfolder)
         qint64 totalBytes = storageInfo.bytesTotal();     // Total space on the storage device
         qint64 usedBytes = totalBytes - freeBytes;        // Used space
 
-        qDebug() << "Path:" << rootfolder;
-        qDebug() << "Total Space:" << totalBytes / (1024 * 1024) << "MB";
-        qDebug() << "Used Space:" << usedBytes / (1024 * 1024) << "MB";
-        qDebug() << "Free Space:" << freeBytes / (1024 * 1024) << "MB";
-        const float freeSpaceProc = usedBytes/totalBytes;
+        const double freeSpaceProc = (double)usedBytes/(double)totalBytes;
         if (freeSpaceProc < 0.2) {
-            qInfo() << "The disk free space is not enough, try to clean oldest log data";
+            qInfo() << "The disk free space is not enough, try to clean the oldest folder with log data";
+
+            qDebug() << "Path:" << rootfolder;
+            qDebug() << "Total Space:" << totalBytes / (1024 * 1024) << "MB";
+            qDebug() << "Used Space:" << usedBytes / (1024 * 1024) << "MB";
+            qDebug() << "Free Space:" << freeBytes / (1024 * 1024) << "MB";
 
             emit errorDiskFull(rootfolder);
             return false; // need to clear data logs

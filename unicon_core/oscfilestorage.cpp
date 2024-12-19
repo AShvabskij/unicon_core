@@ -180,6 +180,11 @@ void OscFileStorage::cleanOldestData(const QString rootPath)
         }
     }
 
+    // Удаляем саму папку
+    if (!dayDir.rmdir(dayDir.path())) {
+        qWarning() << "Failed to remove folder:" << dayDir.path();
+    }
+
     qInfo() << "Cleaned oldest folder:" << dayDir.path();
 }
 
