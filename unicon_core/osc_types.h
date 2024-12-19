@@ -407,6 +407,7 @@ public:
 
 // signals:
     virtual void dataReceived(quint16 device_id) = 0;
+    virtual void dataSaved(quint16 device_id) = 0;
 
 };
 
@@ -421,6 +422,8 @@ public:
     virtual long loadData(QString fileFrom, OscType::OscDataBuffer& data) = 0;
     virtual long loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data) = 0;
     virtual QString getFolderPath(const QDateTime dateTime) = 0;
+    virtual QString getDataLoggerRootPath() = 0;
+    virtual void cleanOldestData(const QString rootPath) = 0;
 
 
 };

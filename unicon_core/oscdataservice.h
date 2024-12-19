@@ -32,6 +32,7 @@ public:
 
 signals:
     void dataReceived(quint16 device_id) override;
+    void dataSaved(quint16 device_id) override;
 
 private:
     OscType::OscDataBuffer* get(DevInd device_id, qlonglong time = 0);

@@ -118,10 +118,69 @@ QString OscFileStorage::getFolderPath(const QDateTime dateTime)
     QString abbreviatedMonth = dateTime.toString("MMM");
     QString dayOfMonth = abbreviatedMonth + "_" + QString::number(dateTime.date().day());
 
-    QString dataLoggerPath =  QString("./DataLogger/"); // qApp->applicationDirPath()
+    QString dataLoggerPath = getDataLoggerRootPath();
     QString path = dataLoggerPath + year + "/" + abbreviatedMonth + "/" + dayOfMonth;
 
     return path;
+}
+
+QString OscFileStorage::getDataLoggerRootPath()
+{
+    QString dataLoggerPath =  QString("./DataLogger/"); // qApp->applicationDirPath()
+    return dataLoggerPath;
+}
+
+void OscFileStorage::cleanOldestData(const QString rootPath)
+{
+    QDir rootDir(rootPath);
+
+    if (!rootDir.exists()) {
+        qWarning() << "Root path does not exist:" << rootPath;
+        return;
+    }
+
+    // Получаем список папок годов
+    QStringList yearFolders = rootDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    if (yearFolders.isEmpty()) {
+        qWarning() << "No year folders found in root path:" << rootPath;
+        return;
+    }
+
+    // Находим самую старую папку года
+    QString oldestYearFolder = yearFolders.first();
+    QDir yearDir(rootDir.filePath(oldestYearFolder));
+
+    // Получаем список папок месяцев
+    QStringList monthFolders = yearDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    if (monthFolders.isEmpty()) {
+//      qWarning() << "No month folders found in year folder:" << yearDir.path();
+        return;
+    }
+
+    // Находим самый старый месяц
+    QString oldestMonthFolder = monthFolders.first();
+    QDir monthDir(yearDir.filePath(oldestMonthFolder));
+
+    // Получаем список папок дней
+    QStringList dayFolders = monthDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    if (dayFolders.isEmpty()) {
+//      qWarning() << "No day folders found in month folder:" << monthDir.path();
+        return;
+    }
+
+    // Находим самый старый день
+    QString oldestDayFolder = dayFolders.first();
+    QDir dayDir(monthDir.filePath(oldestDayFolder));
+
+    // Удаляем все файлы в самой старой папке
+    QFileInfoList files = dayDir.entryInfoList(QDir::Files);
+    for (const QFileInfo &file : files) {
+        if (!QFile::remove(file.filePath())) {
+            qWarning() << "Failed to remove file:" << file.filePath();
+        }
+    }
+
+    qInfo() << "Cleaned oldest folder:" << dayDir.path();
 }
 
 long OscFileStorage::saveObj(const QString fileName, const QJsonObject &obj, bool useBinaryFormat)

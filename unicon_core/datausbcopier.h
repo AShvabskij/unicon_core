@@ -17,18 +17,25 @@ public:
 
 signals:
     void usbConnected(const QString& usbPath);
+    void errorDiskFull(const QString& path);
+
+public slots:
+    void onDataSaved(quint16 device_id);
 
 private slots:
     void onMediaChanged(const QString&);
     void onUsbConnected(const QString& usbRootPath);
-    void onDataSaved();
+    void onDiskFullError(const QString& dataPath);
 
 private:
-    void copyFilesToUsb(const QString &sourceDirPath, const QString& destinationPath);
+    void copyFilesToUsb(const QDate startDate, const QString &usbRootPath);
+    void copyFiles(const QString &sourceDirPath, const QString& destinationPath);
+    bool copyFileWithErrorCheck(const QString &sourcePath, const QString &destinationPath);
     void recursiveCopy(const QString& srcPath, const QString& dstPath);
     bool isUsbDrive(const QStorageInfo& storage);
-    QString getUsername();
+    bool checkDiskSpace(const QString rootfolder);
 
+    QString getUsername();
     QString usbDevicePath();
 
     QString m_sourceDirPath = "";

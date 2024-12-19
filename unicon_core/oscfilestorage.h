@@ -23,7 +23,9 @@ public:
     long loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data) override;
     QList<DDE_OSC_HEADER> headerList(QDate date) override;
     QString getFolderPath(const QDateTime dateTime) override;
+    QString getDataLoggerRootPath() override;
 
+    void cleanOldestData(const QString rootPath) override;
 
 protected:
     virtual long checkVersion(int ver, int subVer);

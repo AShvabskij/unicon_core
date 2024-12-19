@@ -29,6 +29,7 @@ DataUsbCopier::DataUsbCopier(IOscFileStorageService *storage, QObject *parent) :
 //    });
 
     connect(this, SIGNAL(usbConnected(const QString&)), this, SLOT(onUsbConnected(const QString&)), Qt::QueuedConnection);
+    connect(this, SIGNAL(errorDiskFull(const QString&)), this, SLOT(onDiskFullError(const QString&)), Qt::QueuedConnection);
 }
 
 QString DataUsbCopier::getUsername()
@@ -75,21 +76,44 @@ void DataUsbCopier::onUsbConnected(const QString& usbRootPath)
         return;
     }
 
-    QString destPath = usbRootPath + "/DataLogger";
     QDate date = QDateTime::currentDateTime().date().addDays(-90);
 
-    qDebug() << "Copy data logger files from date:" << date.toString();
+    copyFilesToUsb(date, usbRootPath);
+}
 
-    while (date != QDateTime::currentDateTime().date()) {
+void DataUsbCopier::copyFilesToUsb(const QDate startDate, const QString& usbRootPath)
+{
+    qDebug() << "Copy data logger files from date:" << startDate.toString();
+
+    QString destPath = usbRootPath + "/DataLogger";
+    QDate date = startDate;
+
+    while (date != QDateTime::currentDateTime().date().addDays(1)) {
         QString sourceDirPath = m_storage->getFolderPath(date.startOfDay());
-        copyFilesToUsb(sourceDirPath, destPath);
+        copyFiles(sourceDirPath, destPath);
         date = date.addDays(1);
     }
 }
 
-void DataUsbCopier::onDataSaved()
+void DataUsbCopier::onDataSaved(quint16 device_id)
 {
-    qDebug() << "On data saved";
+    qDebug() << "On data saved, dev id =" << device_id;
+
+    QDate date = QDateTime::currentDateTime().date();
+
+    QTimer::singleShot(5000, [this, date]() {
+        if (m_usbMountPath == "") {
+            return;
+        }
+
+        copyFilesToUsb(date, m_usbMountPath);
+    });
+
+    QString dataPath = m_storage->getDataLoggerRootPath();
+
+    checkDiskSpace(dataPath);
+
+    return;
 }
 
 QString DataUsbCopier::usbDevicePath()
@@ -152,7 +176,7 @@ bool DataUsbCopier::isUsbDrive(const QStorageInfo &storage)
 #endif
 }
 
-void DataUsbCopier::copyFilesToUsb(const QString &sourceDirPath, const QString &destinationPath)
+void DataUsbCopier::copyFiles(const QString &sourceDirPath, const QString &destinationPath)
 {
     QDir sourceDir(sourceDirPath);
     if (!sourceDir.exists()) {
@@ -179,9 +203,48 @@ void DataUsbCopier::copyFilesToUsb(const QString &sourceDirPath, const QString &
         if (QFile::copy(srcFile, destFile)) {
             qDebug() << "Copied:" << srcFile << "to" << destFile;
         } else {
-            qDebug() << "Failed to copy:" << srcFile;
+//          qDebug() << "Failed to copy:" << srcFile;
+            copyFileWithErrorCheck(srcFile, destFile);
         }
     }
+}
+
+bool DataUsbCopier::copyFileWithErrorCheck(const QString &sourcePath, const QString &destinationPath)
+{
+    QFile sourceFile(sourcePath);
+    if (!sourceFile.open(QIODevice::ReadOnly)) {
+        qWarning() << "Failed to open source file:" << sourceFile.errorString();
+        return false;
+    }
+
+    QFile destinationFile(destinationPath);
+    if (!destinationFile.open(QIODevice::WriteOnly)) {
+        qWarning() << "Failed to open destination file:" << destinationFile.errorString();
+        return false;
+    }
+
+    const qint64 bufferSize = 4096; // Buffer size for copying
+    char buffer[bufferSize];
+    qint64 bytesRead;
+
+    while ((bytesRead = sourceFile.read(buffer, bufferSize)) > 0) {
+        if (destinationFile.write(buffer, bytesRead) == -1) {
+            qWarning() << "Write error:" << destinationFile.errorString();
+            if (destinationFile.error() == QFileDevice::ResourceError) {
+                qWarning() << "Disk full error detected!";
+                QString dataPath = m_usbMountPath + "/DataLogger";
+                emit errorDiskFull(dataPath);
+            }
+            return false;
+        }
+    }
+
+    if (bytesRead == -1) {
+        qWarning() << "Read error:" << sourceFile.errorString();
+        return false;
+    }
+
+    return true;
 }
 
 void DataUsbCopier::recursiveCopy(const QString& srcPath, const QString& dstPath)
@@ -199,3 +262,37 @@ void DataUsbCopier::recursiveCopy(const QString& srcPath, const QString& dstPath
         break; // temporarly
     }
 }
+
+bool DataUsbCopier::checkDiskSpace(const QString rootfolder)
+{
+    QStorageInfo storageInfo(rootfolder);
+
+    if (storageInfo.isValid() && storageInfo.isReady()) {
+        qint64 freeBytes = storageInfo.bytesAvailable();  // Free space available for the current user
+        qint64 totalBytes = storageInfo.bytesTotal();     // Total space on the storage device
+        qint64 usedBytes = totalBytes - freeBytes;        // Used space
+
+        qDebug() << "Path:" << rootfolder;
+        qDebug() << "Total Space:" << totalBytes / (1024 * 1024) << "MB";
+        qDebug() << "Used Space:" << usedBytes / (1024 * 1024) << "MB";
+        qDebug() << "Free Space:" << freeBytes / (1024 * 1024) << "MB";
+        const float freeSpaceProc = usedBytes/totalBytes;
+        if (freeSpaceProc < 0.2) {
+            qInfo() << "The disk free space is not enough, try to clean oldest log data";
+
+            emit errorDiskFull(rootfolder);
+            return false; // need to clear data logs
+        }
+    } else {
+        qDebug() << "Storage information is not valid or not ready for path:" << rootfolder;
+        return false; // do nothing
+    }
+
+    return true;
+}
+
+void DataUsbCopier::onDiskFullError(const QString& dataPath)
+{
+    m_storage->cleanOldestData(dataPath);
+}
+

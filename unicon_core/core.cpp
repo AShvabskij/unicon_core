@@ -139,6 +139,7 @@ void Core::start(SysType sysType)
     if (!oscData) {
         oscData = new OscDataService(OscFileStorage::instance());
         m_oscDatas.insert(sysType, oscData);
+        connect((OscDataService*)oscData, &OscDataService::dataSaved, m_copier, &DataUsbCopier::onDataSaved, Qt::AutoConnection);
     }
 
     OscStateService* stateService = m_oscStates.value(sysType, nullptr);
