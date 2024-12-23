@@ -13,7 +13,7 @@ class DataUsbCopier: public QObject
 
 public:
     DataUsbCopier(IOscFileStorageService *storage, QObject* parent = nullptr);
-    void monitorUSBDevices();
+    void startWatching();
 
 signals:
     void usbConnected(const QString& usbPath);
@@ -21,6 +21,7 @@ signals:
 
 public slots:
     void onDataSaved(quint16 device_id);
+    void monitorUSBDevices();
 
 private slots:
     void onMediaChanged(const QString&);

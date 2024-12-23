@@ -76,7 +76,15 @@ void Core::init()
     m_streamServer->setResponseManager(StreamManager::instance());
     m_streamServer->start();
 
+    m_usbThread = new QThread();
+    m_usbThread->setPriority(QThread::LowPriority);
+
     m_copier = new DataUsbCopier(OscFileStorage::instance());
+    m_copier->moveToThread(m_usbThread);
+    m_copier->startWatching();
+
+    connect(m_usbThread, SIGNAL(started()), m_copier, SLOT(monitorUSBDevices()));
+    m_usbThread->start();
 }
 
 void Core::start(SysType sysType)

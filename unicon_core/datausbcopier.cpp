@@ -7,20 +7,26 @@
 #include <QDebug>
 #include <QProcess>
 #include <QTimer>
+#include <QElapsedTimer>
+#include <QThread>
 
 DataUsbCopier::DataUsbCopier(IOscFileStorageService *storage, QObject *parent) : QObject(parent), m_storage(storage)
+{
+}
+
+void DataUsbCopier::startWatching()
 {
     // Watch for usb folder in Debian /media/username/USB_NAME
 
     QString userName =  getUsername();
     QString watchedPath = "/media/"+ userName;
 
-    qDebug() << "watched path:" << watchedPath;
+    qDebug() << "watching usb card path:" << watchedPath;
 
     m_watcher.addPath(watchedPath);
 //  m_watcher.addPath("/run/media");
 
-    connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, &DataUsbCopier::onMediaChanged);
+    connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, &DataUsbCopier::onMediaChanged, Qt::QueuedConnection);
 
 //    m_timer = new QTimer(this);
 //    QObject::connect(m_timer, &QTimer::timeout, this, [this]() {
@@ -30,6 +36,8 @@ DataUsbCopier::DataUsbCopier(IOscFileStorageService *storage, QObject *parent) :
 
     connect(this, SIGNAL(usbConnected(const QString&)), this, SLOT(onUsbConnected(const QString&)), Qt::QueuedConnection);
     connect(this, SIGNAL(errorDiskFull(const QString&)), this, SLOT(onDiskFullError(const QString&)), Qt::QueuedConnection);
+
+    return;
 }
 
 QString DataUsbCopier::getUsername()
@@ -54,8 +62,10 @@ void DataUsbCopier::monitorUSBDevices()
 
         emit usbConnected(usbPath);
     } else {
-        m_usbMountPath = "";
-        qDebug() << "usb is removed";
+        if (m_usbMountPath != "") {
+            m_usbMountPath = "";
+            qDebug() << "usb is removed";
+        }
     }
 }
 
@@ -72,6 +82,8 @@ void DataUsbCopier::onUsbConnected(const QString& usbRootPath)
 {
     //  QString usbPath = usbDevicePath();
 
+//  qDebug() << "Usb thread id" << QThread::currentThreadId();
+
     if (usbRootPath == "") {
         return;
     }
@@ -83,7 +95,7 @@ void DataUsbCopier::onUsbConnected(const QString& usbRootPath)
 
 void DataUsbCopier::copyFilesToUsb(const QDate startDate, const QString& usbRootPath)
 {
-    qDebug() << "Copy data logger files from date:" << startDate.toString();
+    qInfo() << "Backup to usb card data files from date:" << startDate.toString();
 
     QDate date = startDate;
     while (date != QDateTime::currentDateTime().date().addDays(1)) {
@@ -97,20 +109,23 @@ void DataUsbCopier::onDataSaved(quint16 device_id)
 {
     qDebug() << "On data saved, dev id =" << device_id;
 
-    QDate date = QDateTime::currentDateTime().date();
-
-    QTimer::singleShot(5000, [this, date]() {
+    QTimer::singleShot(5000, [this]() {
         if (m_usbMountPath == "") {
             m_usbMountPath = usbDevicePath();
         }
 
         if (m_usbMountPath != "") {
+            QElapsedTimer timer;
+            timer.start();
+            // copy current date log files
+            QDate date = QDateTime::currentDateTime().date();
             copyFilesToUsb(date, m_usbMountPath);
+
+            qDebug() << "copy current date log files, took " << timer.elapsed() << "ms";
         }
     });
 
     QString dataPath = m_storage->getDataLoggerRootPath();
-
     checkDiskSpace(dataPath);
 
     return;
@@ -181,6 +196,10 @@ void DataUsbCopier::copyFilesWithStructure(const QString &sourceDirPath, const Q
     QDir sourceDir(sourceDirPath);
     if (!sourceDir.exists()) {
 //      qDebug() << "Source directory does not exist:" << sourceDirPath;
+        return;
+    }
+
+    if (sourceDir.isEmpty(QDir::Files)) {
         return;
     }
 
@@ -278,6 +297,9 @@ void DataUsbCopier::recursiveCopy(const QString& srcPath, const QString& dstPath
 
 bool DataUsbCopier::checkDiskSpace(const QString rootfolder)
 {
+    QElapsedTimer timer;
+    timer.start();
+
     QStorageInfo storageInfo(rootfolder);
 
     if (storageInfo.isValid() && storageInfo.isReady()) {
@@ -301,6 +323,8 @@ bool DataUsbCopier::checkDiskSpace(const QString rootfolder)
         qDebug() << "Storage information is not valid or not ready for path:" << rootfolder;
         return false; // do nothing
     }
+
+    qDebug() << "Check disk space took:" << timer.elapsed() << "ms";
 
     return true;
 }

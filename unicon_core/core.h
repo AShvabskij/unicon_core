@@ -55,7 +55,7 @@ private:
 
     QFuture<void> m_threadFuture;
     QMutex m_mutex;
-
+    QThread* m_usbThread;
 };
 
 #endif // APPLICATION_H
