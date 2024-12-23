@@ -1,17 +1,17 @@
-#ifndef OSCDATASAVER_H
-#define OSCDATASAVER_H
+#ifndef OSCDATALOGGER_H
+#define OSCDATALOGGER_H
 
 #include <QJsonObject>
 #include "osc_types.h"
 
-class OscFileStorage: public IOscFileStorageService
+class OscDataLogger: public IOscDataLogger
 {
 public:
-    OscFileStorage() = default;
-    virtual ~OscFileStorage() {}
+    OscDataLogger() = default;
+    virtual ~OscDataLogger() {}
 
-    static OscFileStorage* instance() {
-        static OscFileStorage m_instance;
+    static OscDataLogger* instance() {
+        static OscDataLogger m_instance;
 
         return &m_instance;
     }
@@ -41,4 +41,4 @@ private:
     QStringList getSortedFilesByCreationDate(const QString &dirPath, QString mask);
 };
 
-#endif // OSCDATASAVER_H
+#endif // OSCDATALOGGER_H

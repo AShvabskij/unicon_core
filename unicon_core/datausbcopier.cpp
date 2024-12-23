@@ -10,7 +10,7 @@
 #include <QElapsedTimer>
 #include <QThread>
 
-DataUsbCopier::DataUsbCopier(IOscFileStorageService *storage, QObject *parent) : QObject(parent), m_storage(storage)
+DataUsbCopier::DataUsbCopier(IOscDataLogger *storage, QObject *parent) : QObject(parent), m_storage(storage)
 {
 }
 

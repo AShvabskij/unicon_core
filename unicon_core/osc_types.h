@@ -411,10 +411,10 @@ public:
 
 };
 
-class IOscFileStorageService
+class IOscDataLogger
 {
 public:
-    virtual ~IOscFileStorageService() {}
+    virtual ~IOscDataLogger() {}
     virtual long save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data) = 0;
     virtual long checkVersion(QString fileFrom) = 0;
     virtual QList<DDE_OSC_HEADER> headerList(QDate date)  = 0;

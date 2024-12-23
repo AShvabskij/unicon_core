@@ -15,7 +15,7 @@
 #include <QDataStream>
 #include <QDir>
 
-#include "oscfilestorage_v1_2.h"
+#include "oscdatalogger_v1_2.h"
 #include "DDE_TYPES.h"
 
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
@@ -27,7 +27,7 @@
 const int DATA_VERSION = 1;
 const int DATA_SUBVERSION = 2; // temp version for Israel 2024
 
-long OscFileStorage_v1_2::checkVersion(int ver, int subVer)
+long OscDataLogger_v1_2::checkVersion(int ver, int subVer)
 {
     if (ver != DATA_VERSION) {
         return -1;
@@ -40,7 +40,7 @@ long OscFileStorage_v1_2::checkVersion(int ver, int subVer)
     return _return_OK;
 }
 
-long OscFileStorage_v1_2::decodeData(const QCborValue &sourceDat, OscType::OscDataBuffer &data)
+long OscDataLogger_v1_2::decodeData(const QCborValue &sourceDat, OscType::OscDataBuffer &data)
 {
     QCborMap obj = sourceDat.toMap();
     uint8_t ver = obj.value("version").toVariant().toUInt();

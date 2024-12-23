@@ -5,14 +5,14 @@
 #include <QStorageInfo>
 #include <QFileSystemWatcher>
 
-class IOscFileStorageService;
+class IOscDataLogger;
 
 class DataUsbCopier: public QObject
 {
     Q_OBJECT
 
 public:
-    DataUsbCopier(IOscFileStorageService *storage, QObject* parent = nullptr);
+    DataUsbCopier(IOscDataLogger *storage, QObject* parent = nullptr);
     void startWatching();
 
 signals:
@@ -43,7 +43,7 @@ private:
     QString m_usbMountPath = "";
     QFileSystemWatcher m_watcher;
 
-    IOscFileStorageService* m_storage;
+    IOscDataLogger* m_storage;
 };
 
 // For a more robust solution, consider integrating libudev to directly interact with the Linux device subsystem

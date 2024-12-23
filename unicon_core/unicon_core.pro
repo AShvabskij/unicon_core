@@ -20,9 +20,9 @@ SOURCES += \
         datausbcopier.cpp \
         basereqhandler.cpp \
         devicehandler.cpp \
+        oscdatalogger.cpp \
+        oscdatalogger_v1_2.cpp \
         oscdataservice.cpp \
-        oscfilestorage.cpp \
-        oscfilestorage_v1_2.cpp \
         oschandler.cpp \
         oschistoryservice.cpp \
         oscstateservice.cpp \
@@ -42,9 +42,9 @@ HEADERS += \
     devicehandler.h \
     ireqhandler.h \
     osc_types.h \
+    oscdatalogger.h \
+    oscdatalogger_v1_2.h \
     oscdataservice.h \
-    oscfilestorage.h \
-    oscfilestorage_v1_2.h \
     oschandler.h \
     oschistoryservice.h \
     oscstateservice.h \

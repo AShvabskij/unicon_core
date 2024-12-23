@@ -1,7 +1,7 @@
 #include "oschistoryservice.h"
 
 const int MAX_DAYS_COUNT = 365;
-OscHistoryService::OscHistoryService(IOscDataService *dataSrv, IOscFileStorageService *dataSaver)
+OscHistoryService::OscHistoryService(IOscDataService *dataSrv, IOscDataLogger *dataSaver)
 {
     m_dataSrv = dataSrv;
     m_dataSaver = dataSaver;
