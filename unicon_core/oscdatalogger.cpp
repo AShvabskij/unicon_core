@@ -1,4 +1,4 @@
-#include "oscfilestorage.h"
+#include "oscdatalogger.h"
 #include "DDE_TYPES.h"
 
 #include <QDateTime>
@@ -67,7 +67,7 @@ namespace {
 
 using namespace OscType;
 
-long OscFileStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data)
+long OscDataLogger::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data)
 {
     //  const char* home = getenv("HOME");
         QDateTime now = QDateTime::currentDateTime();
@@ -98,7 +98,7 @@ long OscFileStorage::save(const DDE_OSC_HEADER &header, const OscType::OscDataBu
         return res;
 }
 
-QString OscFileStorage::createFolder(const QDateTime dateTime)
+QString OscDataLogger::createFolder(const QDateTime dateTime)
 {
     QString path = getFolderPath(dateTime);
 
@@ -112,19 +112,83 @@ QString OscFileStorage::createFolder(const QDateTime dateTime)
     return path;
 }
 
-QString OscFileStorage::getFolderPath(const QDateTime dateTime)
+QString OscDataLogger::getFolderPath(const QDateTime dateTime)
 {
     QString year = "Y" + QString::number(dateTime.date().year());
     QString abbreviatedMonth = dateTime.toString("MMM");
     QString dayOfMonth = abbreviatedMonth + "_" + QString::number(dateTime.date().day());
 
-    QString dataLoggerPath =  QString("./DataLogger/"); // qApp->applicationDirPath()
+    QString dataLoggerPath = getDataLoggerRootPath();
     QString path = dataLoggerPath + year + "/" + abbreviatedMonth + "/" + dayOfMonth;
 
     return path;
 }
 
-long OscFileStorage::saveObj(const QString fileName, const QJsonObject &obj, bool useBinaryFormat)
+QString OscDataLogger::getDataLoggerRootPath()
+{
+    QString dataLoggerPath =  QString("./DataLogger/"); // qApp->applicationDirPath()
+    return dataLoggerPath;
+}
+
+void OscDataLogger::cleanOldestData(const QString rootPath)
+{
+    QDir rootDir(rootPath);
+
+    if (!rootDir.exists()) {
+        qWarning() << "Root path does not exist:" << rootPath;
+        return;
+    }
+
+    // Получаем список папок годов
+    QStringList yearFolders = rootDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    if (yearFolders.isEmpty()) {
+        qWarning() << "No year folders found in root path:" << rootPath;
+        return;
+    }
+
+    // Находим самую старую папку года
+    QString oldestYearFolder = yearFolders.first();
+    QDir yearDir(rootDir.filePath(oldestYearFolder));
+
+    // Получаем список папок месяцев
+    QStringList monthFolders = yearDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    if (monthFolders.isEmpty()) {
+//      qWarning() << "No month folders found in year folder:" << yearDir.path();
+        return;
+    }
+
+    // Находим самый старый месяц
+    QString oldestMonthFolder = monthFolders.first();
+    QDir monthDir(yearDir.filePath(oldestMonthFolder));
+
+    // Получаем список папок дней
+    QStringList dayFolders = monthDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    if (dayFolders.isEmpty()) {
+//      qWarning() << "No day folders found in month folder:" << monthDir.path();
+        return;
+    }
+
+    // Находим самый старый день
+    QString oldestDayFolder = dayFolders.first();
+    QDir dayDir(monthDir.filePath(oldestDayFolder));
+
+    // Удаляем все файлы в самой старой папке
+    QFileInfoList files = dayDir.entryInfoList(QDir::Files);
+    for (const QFileInfo &file : files) {
+        if (!QFile::remove(file.filePath())) {
+            qWarning() << "Failed to remove file:" << file.filePath();
+        }
+    }
+
+    // Удаляем саму папку
+    if (!dayDir.rmdir(dayDir.path())) {
+        qWarning() << "Failed to remove folder:" << dayDir.path();
+    }
+
+    qInfo() << "Cleaned oldest folder:" << dayDir.path();
+}
+
+long OscDataLogger::saveObj(const QString fileName, const QJsonObject &obj, bool useBinaryFormat)
 {
     _dde_func_return_t res = _return_OK;
 
@@ -166,7 +230,7 @@ long OscFileStorage::saveObj(const QString fileName, const QJsonObject &obj, boo
     return res;
 }
 
-QJsonObject OscFileStorage::headerToJson(const DDE_OSC_HEADER &h)
+QJsonObject OscDataLogger::headerToJson(const DDE_OSC_HEADER &h)
 {
     QJsonObject res;
 
@@ -207,7 +271,7 @@ QJsonObject OscFileStorage::headerToJson(const DDE_OSC_HEADER &h)
     return res;
 }
 
-long OscFileStorage::checkVersion(QString fileFrom)
+long OscDataLogger::checkVersion(QString fileFrom)
 {
     QString path = QFileInfo(fileFrom).absolutePath();
     QString name = QFileInfo(fileFrom).baseName();
@@ -236,7 +300,7 @@ long OscFileStorage::checkVersion(QString fileFrom)
     return res;
 }
 
-long OscFileStorage::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
+long OscDataLogger::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
 {
     QString path = QFileInfo(fileFrom).absolutePath();
     QString name = QFileInfo(fileFrom).baseName();
@@ -278,7 +342,7 @@ QByteArray decodeByteArray(QCborStreamReader &reader)
     return result;
 }
 
-long OscFileStorage::loadData(QString fileFrom, OscType::OscDataBuffer& data)
+long OscDataLogger::loadData(QString fileFrom, OscType::OscDataBuffer& data)
 {
     QString path = QFileInfo(fileFrom).absolutePath();
     QString name = QFileInfo(fileFrom).baseName();
@@ -307,7 +371,7 @@ long OscFileStorage::loadData(QString fileFrom, OscType::OscDataBuffer& data)
     return ret;
 }
 
-long OscFileStorage::loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data)
+long OscDataLogger::loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data)
 {
     QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, Qt::LocalTime);
     QString path =  getFolderPath(trigTime);
@@ -340,7 +404,7 @@ long OscFileStorage::loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuff
     return ret;
 }
 
-QList<DDE_OSC_HEADER> OscFileStorage::headerList(QDate date)
+QList<DDE_OSC_HEADER> OscDataLogger::headerList(QDate date)
 {
     QList<DDE_OSC_HEADER> headers;
     QString path =  getFolderPath(QDateTime(date, QTime()));
@@ -361,7 +425,7 @@ QList<DDE_OSC_HEADER> OscFileStorage::headerList(QDate date)
     return headers;
 }
 
-QStringList OscFileStorage::getSortedFilesByCreationDate(const QString &dirPath, QString mask)
+QStringList OscDataLogger::getSortedFilesByCreationDate(const QString &dirPath, QString mask)
 {
     QDir dir(dirPath);
 
@@ -394,7 +458,7 @@ QStringList OscFileStorage::getSortedFilesByCreationDate(const QString &dirPath,
     return sortedFileList;
 }
 
-QJsonObject OscFileStorage::serializeToJSon(const OscDataBuffer& dat) const
+QJsonObject OscDataLogger::serializeToJSon(const OscDataBuffer& dat) const
 {
     QJsonObject res;
     QJsonArray allValues;
@@ -446,7 +510,7 @@ QJsonObject OscFileStorage::serializeToJSon(const OscDataBuffer& dat) const
     return res;
 }
 
-long OscFileStorage::checkVersion(int ver, int subVer)
+long OscDataLogger::checkVersion(int ver, int subVer)
 {
     if (ver != DATA_VERSION) {
         return -1;
@@ -459,7 +523,7 @@ long OscFileStorage::checkVersion(int ver, int subVer)
     return _return_OK;
 }
 
-long OscFileStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
+long OscDataLogger::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
 {
     h.device_id = obj["device_id"].toVariant().toInt();
     h.settings.reason = obj["reason"].toVariant().toInt();
@@ -492,7 +556,7 @@ long OscFileStorage::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
     return _return_OK;
 }
 
-long OscFileStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuffer &data)
+long OscDataLogger::jsonToData(const QJsonObject& obj,  OscType::OscDataBuffer &data)
 {
     uint8_t ver = obj["version"].toVariant().toUInt();
     uint8_t sub_ver = obj["sub_version"].toVariant().toUInt();
@@ -528,7 +592,7 @@ long OscFileStorage::jsonToData(const QJsonObject& obj,  OscType::OscDataBuffer 
     return _return_OK;
 }
 
-long OscFileStorage::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuffer &data)
+long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuffer &data)
 {
     QCborMap obj = sourceDat.toMap();
     uint8_t ver = obj.value("version").toVariant().toUInt();

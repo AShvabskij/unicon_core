@@ -3,6 +3,7 @@
 #include "DDE_EMUL.h"
 #include "DDE_TOP.h"
 
+#include "datausbcopier.h"
 #include "requestmanager.h"
 #include "responsemanager.h"
 #include "paramshandler.h"
@@ -10,7 +11,7 @@
 #include "oschandler.h"
 
 #include "oscdataservice.h"
-#include "oscfilestorage.h"
+#include "oscdatalogger.h"
 #include "oschistoryservice.h"
 
 #include <QObject>
@@ -75,6 +76,15 @@ void Core::init()
     m_streamServer->setResponseManager(StreamManager::instance());
     m_streamServer->start();
 
+    m_usbThread = new QThread();
+
+    m_copier = new DataUsbCopier(OscDataLogger::instance());
+    m_copier->moveToThread(m_usbThread);
+    m_copier->startWatching();
+
+    connect(m_usbThread, SIGNAL(started()), m_copier, SLOT(monitorUSBDevices()));
+    m_usbThread->start();
+    m_usbThread->setPriority(QThread::LowPriority);
 }
 
 void Core::start(SysType sysType)
@@ -135,8 +145,9 @@ void Core::start(SysType sysType)
 
     IOscDataService* oscData = m_oscDatas.value(sysType, nullptr);
     if (!oscData) {
-        oscData = new OscDataService(OscFileStorage::instance());
+        oscData = new OscDataService(OscDataLogger::instance());
         m_oscDatas.insert(sysType, oscData);
+        connect((OscDataService*)oscData, &OscDataService::dataSaved, m_copier, &DataUsbCopier::onDataSaved, Qt::AutoConnection);
     }
 
     OscStateService* stateService = m_oscStates.value(sysType, nullptr);
@@ -146,8 +157,8 @@ void Core::start(SysType sysType)
     }
 
     if (!m_hstDataService && !m_oscHistoryService) {
-        m_hstDataService = new OscDataService(OscFileStorage::instance());
-        m_oscHistoryService = new OscHistoryService(m_hstDataService, OscFileStorage::instance());
+        m_hstDataService = new OscDataService(OscDataLogger::instance());
+        m_oscHistoryService = new OscHistoryService(m_hstDataService, OscDataLogger::instance());
     }
 
     m_paramsHandler = new ParamsHandler(m_ddeDisp, m_sysType);

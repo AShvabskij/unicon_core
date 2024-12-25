@@ -1,17 +1,17 @@
-#ifndef OSCDATASAVER_H
-#define OSCDATASAVER_H
+#ifndef OSCDATALOGGER_H
+#define OSCDATALOGGER_H
 
 #include <QJsonObject>
 #include "osc_types.h"
 
-class OscFileStorage: public IOscFileStorageService
+class OscDataLogger: public IOscDataLogger
 {
 public:
-    OscFileStorage() = default;
-    virtual ~OscFileStorage() {}
+    OscDataLogger() = default;
+    virtual ~OscDataLogger() {}
 
-    static OscFileStorage* instance() {
-        static OscFileStorage m_instance;
+    static OscDataLogger* instance() {
+        static OscDataLogger m_instance;
 
         return &m_instance;
     }
@@ -22,12 +22,15 @@ public:
     long loadData(QString fileFrom, OscType::OscDataBuffer &data) override;
     long loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data) override;
     QList<DDE_OSC_HEADER> headerList(QDate date) override;
+    QString getFolderPath(const QDateTime dateTime) override;
+    QString getDataLoggerRootPath() override;
+
+    void cleanOldestData(const QString rootPath) override;
 
 protected:
     virtual long checkVersion(int ver, int subVer);
     QJsonObject serializeToJSon(const OscType::OscDataBuffer &dat) const;
     QString createFolder(const QDateTime dateTime);
-    QString getFolderPath(const QDateTime dateTime);
     long saveObj(const QString fileName, const QJsonObject &obj, bool useBinaryFormat = false);
     QJsonObject headerToJson(const DDE_OSC_HEADER &h);
     virtual long jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h);
@@ -38,4 +41,4 @@ private:
     QStringList getSortedFilesByCreationDate(const QString &dirPath, QString mask);
 };
 
-#endif // OSCDATASAVER_H
+#endif // OSCDATALOGGER_H

@@ -13,6 +13,7 @@ class IDDE;
 class IDDE_Dispatcher;
 class OscDataService;
 class OscHistoryService;
+class DataUsbCopier;
 
 class Core: public BaseReqHandler
 {
@@ -48,11 +49,13 @@ private:
     OscHistoryService* m_oscHistoryService = nullptr;
     SystemService* m_sysService = nullptr;
 
+    DataUsbCopier* m_copier = nullptr;
     QMap<SysType, OscStateService*> m_oscStates;
     QMap<SysType, IOscDataService*> m_oscDatas;
 
     QFuture<void> m_threadFuture;
     QMutex m_mutex;
+    QThread* m_usbThread;
 };
 
 #endif // APPLICATION_H

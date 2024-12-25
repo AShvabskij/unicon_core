@@ -408,5 +408,7 @@ long OscDataService::save(const DDE_OSC_HEADER& hdr)
     long res = m_dataSaver->save(hdr, *datBuff);
     m_mutex.unlock();
 
+    emit dataSaved(hdr.device_id);
+
     return res;
 }

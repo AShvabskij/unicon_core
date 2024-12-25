@@ -1,6 +1,7 @@
 #include <QCoreApplication>
 #include "core.h"
 
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
@@ -12,6 +13,7 @@ int main(int argc, char *argv[])
     core.start(SysType::FILE_IO);
 #else
     core.start(SysType::UAVCAN);
+
 #endif
 
     return a.exec();
