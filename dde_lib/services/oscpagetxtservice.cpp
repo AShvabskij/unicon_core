@@ -144,8 +144,8 @@ _dde_func_return_t OscPageTxtService::readNextData(DDE_GET_OSC_DATA& getDat, int
         return _return_FAIL;
     }
 
-    int buff_length = OSC_DATA_BUFFER_MAX;
-//  assert(buff_length > 0 && buff_length <= OSC_DATA_BUFFER_MAX);
+    int buff_length = OSC_DATA_BUFFER_SIZE;
+//  assert(buff_length > 0 && buff_length <= OSC_DATA_BUFFER_SIZE);
 
     getDat.overflow = 0;
     getDat.header_updated = 0;

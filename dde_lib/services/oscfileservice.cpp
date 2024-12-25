@@ -210,7 +210,7 @@ _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeld
     int resolution_us = m_header->settings.time_resolution_us;
     if (resolution_us != 0) {
         int data_length = (datYeldIntervalMsc * 1000) / resolution_us;
-        p.data_length = data_length > (OSC_DATA_BUFFER_MAX - 1) ? static_cast<uint16_t>(OSC_DATA_BUFFER_MAX - 1) : static_cast<uint16_t>(data_length);
+        p.data_length = data_length > (OSC_DATA_BUFFER_SIZE - 1) ? static_cast<uint16_t>(OSC_DATA_BUFFER_SIZE - 1) : static_cast<uint16_t>(data_length);
 
         std::cout << "Osc data length to load = " << p.data_length << "\n";
 

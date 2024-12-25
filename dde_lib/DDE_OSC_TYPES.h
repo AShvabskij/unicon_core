@@ -14,7 +14,9 @@
 #define OSC_MAX_DISCRETE_VARS 128
 #define OSC_MAX_VARS 128
 #define OSC_PAGE_MAX 4
-#define OSC_DATA_BUFFER_MAX 0x10000
+#define OSC_DATA_BUFFER_SIZE 0x10000
+//#define OSC_DATA_BUFFER_MAX 0x10000 A&D this was incorrecly named as max - OSC_DATA_BUFFER_MAX (max index in array) = OSC_DATA_BUFFER_SIZE-1
+
 
 #define OSC_MODE_BUFFERING
 #define SOC_MODE_SINGLE
@@ -62,9 +64,9 @@ struct OSC_CHANNEL
 
 union OSC_DATA
 {
-    float f_buff[OSC_DATA_BUFFER_MAX];
-    int32_t i_buff[OSC_DATA_BUFFER_MAX];
-    uint32_t u_buff[OSC_DATA_BUFFER_MAX];
+    float f_buff[OSC_DATA_BUFFER_SIZE];
+    int32_t i_buff[OSC_DATA_BUFFER_SIZE];
+    uint32_t u_buff[OSC_DATA_BUFFER_SIZE];
 };
 
 struct OSC_SETTING

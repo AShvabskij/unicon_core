@@ -118,13 +118,13 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint16_t id, const DDE_OSC_HE
     }
 
     int count = 0;
-    for (int i = 0; i <= OSC_MAX_VARS; i++) {
-        const OSC_CHANNEL& channel = hdr.channels[i];
+    for (int ii = 0; ii <= OSC_MAX_VARS; ii++) {
+        const OSC_CHANNEL& channel = hdr.channels[ii];
 
         if (!isValidOscChannel(channel))
             break;
 
-        GLIO_OSC_CHANNEL& glio_ch = rec.channel[i];
+        GLIO_OSC_CHANNEL& glio_ch = rec.channel[ii];
 
         glio_ch.chNum = channel.chNum;
         glio_ch.gain = channel.gain;
@@ -258,8 +258,8 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint16_t id, uint
     // pthread_mutex_lock(&dat->shm_mutex);
 
     dat->state.pageMask[pageNum] = 1;
-    std::string msg = "Written page = " + std::to_string(pageNum);
-    std::cout << msg.c_str() << std::endl;
+    //std::string msg = "Written page = " + std::to_string(pageNum);
+    //std::cout << msg.c_str() << std::endl;
 
     // move_next_page_write()
     uint8_t nextPage = (pageNum < OSC_PAGE_MAX) ? pageNum + 1 : 0;
