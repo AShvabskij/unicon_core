@@ -331,11 +331,12 @@ long ParamsHandler::captureParam(const Param& p)
 
             switch (p.ID.devId.type) {
             case SysType::UAVCAN:
+            case SysType::DLOG_CPLOT:
+            case SysType::DLOG_ISTART:
                 if (count >= (module.el_count - 1)) { // только если запрашивается целиком группа
                     captureModule = true;
                 } break;
             case SysType::MODBUS:
-            case SysType::CONNEX_MVCP:
                 if (count >= (module.el_count/2)) {  // if more than a half of the group is requestied
                     captureModule = true;
                 } break;
