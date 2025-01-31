@@ -47,20 +47,29 @@ void Core::init()
 
 #ifdef __WIN32__
     IDDE* dde = new DDE_EMUL();
-    dde->init("FILE_IO");
+    dde->init(sysTypeToString(SysType::FILE_IO));
     m_ddeDisp->registerDDE(SysType::FILE_IO, dde);
     m_ddeDisp->setDefaultDDE(dde);
 
 #else
     IDDE* dde = new DDE_TOP();
-    dde->init("UAVCAN"); // TODO: replace arg to const char*
+    dde->init(sysTypeToString(SysType::UAVCAN)); // TODO: replace arg to const char*
     m_ddeDisp->registerDDE(SysType::UAVCAN, dde);
+
+    IDDE* dde = new DDE_TOP();
+    dde->init(sysTypeToString(SysType::DLOG_CPLOT));
+    m_ddeDisp->registerDDE(SysType::DLOG_CPLOT, dde);
+
+    IDDE* dde = new DDE_TOP();
+    dde->init(sysTypeToString(SysType::DLOG_ISTART));
+    m_ddeDisp->registerDDE(SysType::DLOG_ISTART, dde);
 
     #ifndef NO_DEMO
         IDDE* dde_emul = new DDE_EMUL();
         dde_emul->init("FILE_IO");
         m_ddeDisp->registerDDE(SysType::FILE_IO, dde_emul);
     #endif
+
 
 #endif
 
