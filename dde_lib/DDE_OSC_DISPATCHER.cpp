@@ -17,11 +17,11 @@ _dde_func_return_t DDE_OSC_DISPATCHER::init(const char* sys_type )
 {
     if (strcmp(sys_type, "FILE_IO") == 0) {
         m_osc = new DDE_OSC_FILE();
-    } else if (strcmp(sys_type, "UAVCAN") == 0) {
-        m_osc = new DDE_OSC();
-    } else {
+    } else if (strcmp(sys_type, "") == 0) {
         std::cout << "Osc error! This system type is not recognised , sys_type = " << sys_type << "\n";
         m_osc = new DDE_OSC_STUB();
+    } else {
+        m_osc = new DDE_OSC();
     }
 
     return m_osc->init(sys_type);
