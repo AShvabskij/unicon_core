@@ -51,8 +51,8 @@ extern DEVICE_ELEMENTS *pDev[MAX_DEV_SUPPORT];
 extern uint8_t get_devID(uint8_t ind);
 
 
-int IPCMEM_init(char* dev_name);
-uint16_t IPCMEM_Deinit(unsigned char dev_name);
+int IPCMEM_init(const char *dev_name);
+uint16_t IPCMEM_Deinit(const char *sys_name);
 
 #ifdef SET_DEBUG
 #define BUF_TMP 1024

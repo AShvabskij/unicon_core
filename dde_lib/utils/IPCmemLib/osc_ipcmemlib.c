@@ -44,7 +44,7 @@ int mem_initBlk(int ind, size_t blkSize, const char* blkName)
 //
 int mem_mkKeyFiles(const char* path)
 {
-    int schet = 0, ret = -1;
+    int ret = 0;
     char namef[MAX_FNAME_LEN + 32] = { 0 };
     char named[MAX_FNAME_LEN] = { 0 };
 
@@ -55,10 +55,7 @@ int mem_mkKeyFiles(const char* path)
         if (dl > MAX_FNAME_LEN) dl = MAX_FNAME_LEN;
         memset(pathKey_[i], 0, MAX_FNAME_LEN);
         memcpy(pathKey_[i], namef, dl);
-        schet++;
     }
-
-    if (schet == MAX_DEV_SUPPORT) ret = 0;
 
     return ret;
 }
@@ -68,12 +65,8 @@ int mem_mkKeyFiles(const char* path)
 //
 int osc_mem_init(const char* sys_name, int blkSize)
 {
-    if (mem_mkKeyFiles(sys_name)) {
-#ifdef SET_DEBUG_IPC
-        Report(1, "Error: Can't create key files for support #%d device.\n", MAX_DEV_SUPPORT);
-#endif
-        return -1;
-    }
+    int res = mem_mkKeyFiles(sys_name);
+    if (res < 0) return res;
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
         shmBlk[i] = mem_initBlk(i, blkSize, sys_name);

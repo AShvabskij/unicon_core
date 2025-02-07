@@ -6,18 +6,9 @@
 const uint32_t mem_owner_flag = 0664;
 const uint32_t dir_owner_flag = 0777;
 
-const char* dirPath = "/tmp/files";
-//#ifdef SET_NEW_IPC
-const char* nfPath = "/blk";
-//#else
-//    const char *nfPath = "/tmp/files/blk";
-//#endif
-
 char pathKey[MAX_DEV_SUPPORT][MAX_FNAME_LEN];
 const char* pathCmdKey = "DEVICE_COMMANDS";
 
-int shmDev[MAX_DEV_SUPPORT] = { -1 };
-unsigned char* blkPtr[MAX_DEV_SUPPORT] = { NULL };
 DEVICE_ELEMENTS* pDev[MAX_DEV_SUPPORT] = { NULL };
 DEVICE_COMMANDS* _devCmdPtr = { NULL };
 
@@ -35,45 +26,23 @@ extern void Report(uint8_t addTime, const char* fmt, ...);
 //-----------------------------------------------------------------------
 //              Init shared memory block
 //
-int initBlk(int did, size_t sz, unsigned char with)
+int initBlk(const char* blkName,  size_t blkSize, unsigned char* retAdr)
 {
     int ret = -1;
-    unsigned char* adr = MAP_FAILED;
-    int flg = O_RDWR;
+    retAdr = MAP_FAILED;
+    int flg = O_RDWR | O_CREAT;
 
-    if (with) flg |= O_CREAT;
-
-    int key = shm_open(pathKey[did], flg, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);// | S_IROTH | S_IWOTH);
+    int key = shm_open(blkName, flg, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);// | S_IROTH | S_IWOTH);
     if (key != -1) {
-        if (with) ftruncate(key, sizeof(DEVICE_ELEMENTS));
-        adr = (unsigned char*)mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
-        if (adr != MAP_FAILED) {
-            blkPtr[did] = adr;
+        ftruncate(key, blkSize);
+        retAdr = (unsigned char*)mmap(NULL, blkSize, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
+        if (retAdr != MAP_FAILED) {
             ret = key;
-        }
-    }
+        } else {
 #ifdef SET_DEBUG_IPC
-    Report(1, "[%s] shm_open()=%d mmap()=%p\n", __func__, key, adr);
+            Report(1, "[%s] Can't get shm_blk by '%s' for 'pDev[%d]'.\n", __func__, pathKey[i], i);
 #endif
-
-    return ret;
-}
-
-int initCmdBlk(const char* keyName, size_t sz, unsigned char with)
-{
-    int ret = -1;
-    unsigned char* adr = MAP_FAILED;
-    int flg = O_RDWR;
-
-    if (with) flg |= O_CREAT;
-
-    int key = shm_open(keyName, flg, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);// | S_IROTH | S_IWOTH);
-    if (key != -1) {
-        if (with) ftruncate(key, sz);
-        adr = (unsigned char*)mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
-        if (adr != MAP_FAILED) {
-            _devCmdPtr = adr;
-            ret = key;
+            return -1;
         }
     }
 #ifdef SET_DEBUG_IPC
@@ -113,28 +82,40 @@ err:
 
 }
 
+int initCmdBlk()
+{
+    _devCmdPtr = NULL;
+    unsigned char* retAdr = NULL;
+
+    int res = initBlk(pathCmdKey, sizeof(DEVICE_COMMANDS), retAdr);
+    if (res < 0) return res;
+
+    _devCmdPtr = (DEVICE_COMMANDS*)retAdr;
+
+    res = initCmdMutex();
+
+    return res;
+}
+
 //----------------------------------------------------------------------
 //        Create in folder 'files' file's for get key to
 //                make shared memory blocks
 //
-int mkKeyFiles(unsigned char with)
+int mkKeyFiles(const char* path)
 {
-    int schet = 0, ret = -1;
+    int ret = 0;
     char namef[MAX_FNAME_LEN + 32] = { 0 };
     char named[MAX_FNAME_LEN] = { 0 };
 
 
-    strcat(named, nfPath);
+    strcat(named, path);
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
         int dl = sprintf(namef, "%s%02d", named, i);
         if (dl > MAX_FNAME_LEN) dl = MAX_FNAME_LEN;
         memset(pathKey[i], 0, MAX_FNAME_LEN);
         memcpy(pathKey[i], namef, dl);
-        schet++;
     }
-
-    if (schet == MAX_DEV_SUPPORT) ret = 0;
 
     return ret;
 }
@@ -142,64 +123,36 @@ int mkKeyFiles(unsigned char with)
 //         Make shared memory blocks
 //         return : MAX_DEV_SUPPORT pointers in array pDev[]
 //
-int IPCMEM_init(char* dev_name)
+int IPCMEM_init(const char* sys_name)
 {
-    if (mkKeyFiles(dev_name)) {
-#ifdef SET_DEBUG_IPC
-        Report(1, "Error: Can't create key files for support #%d device.\n", MAX_DEV_SUPPORT);
-#endif
-        return -1;
-    }
-
-    for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        shmDev[i] = initBlk(i, sizeof(DEVICE_ELEMENTS), dev_name);
-        if (shmDev[i] == -1) {
-#ifdef SET_DEBUG_IPC
-            Report(1, "[%s] Can't get shm_blk by '%s' for 'pDev[%d]'.\n", __func__, pathKey[i], i);
-#endif
-            return -1;
-        }
-        else {
-            pDev[i] = (DEVICE_ELEMENTS*)blkPtr[i];
-#ifdef SET_DEBUG_IPC
-            strcpy(stmp, pathKey[i]);
-            if (with)
-                Report(1, "[%s] Create shared memory block #%d (size:%lu addr:%p file:%s)\n",
-                    __func__,
-                    shmDev[i],
-                    sizeof(DEVICE_PARAMS),
-                    pDev[i],
-                    basename(stmp));
-            else
-                Report(1, "[%s] Attach shared memory block #%d (size:%lu addr:%p file:%s)\n",
-                    __func__,
-                    shmDev[i],
-                    sizeof(DEVICE_PARAMS),
-                    pDev[i],
-                    basename(stmp));
-#endif
-        }
-    }
-
-    int res = initCmdBlk(pathCmdKey, sizeof(DEVICE_COMMANDS), dev_name);
+    int res = mkKeyFiles(sys_name);
     if (res < 0) return res;
 
-    res = initCmdMutex();
+    for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
+        pDev[i] = NULL;
+        unsigned char* retAdr = NULL;
+        int res = initBlk(pathKey[i], sizeof(DEVICE_ELEMENTS), retAdr);
+        if (res < 0) return res;
+
+        pDev[i] = (DEVICE_ELEMENTS*)retAdr;
+    }
+
+    res = initCmdBlk();
 
     return res;
 }
+
 //-----------------  Release All shared memory blocks  -----------------------
-uint16_t IPCMEM_Deinit(unsigned char dev_name)
+uint16_t IPCMEM_Deinit(const char* sys_name)
 {
     uint16_t err = 0;
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
         if (pDev[i] != NULL) {
-            if (!munmap(blkPtr[i], sizeof(DEVICE_ELEMENTS))) {
-                shmDev[i] = -1;
+            if (!munmap(pDev[i], sizeof(DEVICE_ELEMENTS))) {
                 pDev[i] = NULL;
-                blkPtr[i] = NULL;
-                if (dev_name) {
+
+                if (sys_name) {
                     if (shm_unlink(pathKey[i]) != 0) {//error
                         err |= 2;
                     }
