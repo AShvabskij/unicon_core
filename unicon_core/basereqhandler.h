@@ -24,6 +24,7 @@ public:
 
 protected:
     SysType sysTypeId(const QJsonObject& request);
+    QJsonObject createEmptyResponse(int requestId);
 
     IReqHandler* m_next = nullptr;
     ResponseManager* m_response = nullptr;

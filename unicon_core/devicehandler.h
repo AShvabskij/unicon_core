@@ -20,7 +20,6 @@ private:
     void handleDeviceHeader(const QJsonObject &request);
     void handleModuleHeader(const QJsonObject& request);
     void handleSystemStatus(const QJsonObject& request);
-    void handleSystemInit(const QJsonObject& request);
     void handleDeviceLinks(const QJsonObject &request);
     void handleReqDevices(SysType sysType, int requestId);
     void handleReqDeviceHeader(SysType sysType, int deviceId, int requestId);
@@ -37,7 +36,6 @@ private:
     QJsonObject createResponse(int requestId, const Module& module);
     QJsonObject createResponse(int requestId, const SystemStatus& status);
     QJsonObject createResponse(int requestId, const QList<quint16>& links);
-    QJsonObject createEmptyResponse(int requestId);
 };
 
 #endif // DEVICE_HANDLER_H

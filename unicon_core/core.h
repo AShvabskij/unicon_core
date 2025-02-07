@@ -34,6 +34,7 @@ public slots:
 
 private:
 
+    void handleSystemInit(const QJsonObject& request);
 
     SocketServer* m_cmdServer = nullptr;
     SocketServer* m_streamServer = nullptr;

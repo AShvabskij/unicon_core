@@ -68,3 +68,12 @@ SysType BaseReqHandler::sysTypeId(const QJsonObject& request)
 
     return sysType;
 }
+
+QJsonObject BaseReqHandler::createEmptyResponse(int requestId)
+{
+    QJsonObject res;
+    res["request_id"] = requestId;
+    res["body"] = QJsonArray();
+
+    return res;
+}

@@ -21,6 +21,8 @@
 
 // #define NO_DEMO
 
+const QString CMD_SYSTEM_INIT = "system_init";
+
 Core::Core(): BaseReqHandler()
 {
 }
@@ -34,11 +36,34 @@ int Core::handle(const QJsonObject &request)
 {
     SysType sysType = sysTypeId(request);
 
+    QJsonObject cmdObj = request.value("cmd").toObject();
+    QString cmdName = cmdObj.value("name").toString();
+
     if (sysType != SysType::Undefined && m_sysType != sysType) {
         start(sysType);
     }
 
+    if (cmdName == CMD_SYSTEM_INIT) {
+        // if (sysType != SysType::Undefined && m_sysType != sysType) {
+        //     start(sysType);
+        // }
+
+        handleSystemInit(request);
+        return 1;
+    }
+
     return BaseReqHandler::handle(request);
+}
+
+void Core::handleSystemInit(const QJsonObject& request)
+{
+    int requestId = request.value("request_id").toInt();
+    if (requestId <= 0) return;
+
+    QJsonObject response = createEmptyResponse(requestId);
+    send(response);
+
+    return;
 }
 
 void Core::init()
@@ -142,6 +167,10 @@ void Core::start(SysType sysType)
         ResponseManager::instance()->unregisterHandler(m_oscHandler);
         StreamManager::instance()->unregisterHandler(m_paramsHandler);
         StreamManager::instance()->unregisterHandler(m_oscHandler);
+
+        m_paramsHandler->handleClose();
+        m_deviceHandler->handleClose();
+        m_oscHandler->handleClose();
 
         delete m_paramsHandler;
         delete m_deviceHandler;

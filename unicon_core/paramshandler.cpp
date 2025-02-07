@@ -8,7 +8,6 @@
 const QString CMD_PARAMS_HEADER = "param_header";
 const QString CMD_TYPE_GET = "get";
 const QString CMD_PARAMS_DATA = "param_data";
-const QString CMD_SYSTEM_INIT = "system_init";
 
 const int DATA_YELD_INTERVAL_MSC = 100;
 const int STREAM_OBJECT_LIMIT = 60000;//*100;
@@ -66,8 +65,6 @@ int ParamsHandler::handle(const QJsonObject &request)
         } else if (cmdType == "close_stream") {
             handleCloseStream(request);
         }
-    } else if (cmdName == CMD_SYSTEM_INIT) {
-        handleCloseAllStreams(request);
     } else {
         return BaseReqHandler::handle(request);
     }
@@ -77,7 +74,7 @@ int ParamsHandler::handle(const QJsonObject &request)
 
 void ParamsHandler::handleClose()
 {
-    stopPooling();
+    handleCloseAllStreams();
 }
 
 void ParamsHandler::handleGetHeader(const QJsonObject &request)
@@ -384,7 +381,7 @@ void ParamsHandler::handleCloseStream(const QJsonObject &request)
     int paramId  = cmdBody.value("param_id").toInt();
 
     if (moduleId == 0 && paramId == 0) {
-        handleCloseAllStreams(request);
+        handleCloseAllStreams();
     }
 
     ParamID pID = {{m_sysType, static_cast<quint16>(deviceId)}, moduleId, paramId};
@@ -409,7 +406,7 @@ void ParamsHandler::handleCloseStream(const QJsonObject &request)
     return;
 }
 
-void ParamsHandler::handleCloseAllStreams(const QJsonObject&/*request*/)
+void ParamsHandler::handleCloseAllStreams()
 {
     stopPooling();
 
