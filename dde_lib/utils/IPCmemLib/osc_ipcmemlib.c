@@ -51,7 +51,7 @@ int mem_mkKeyFiles(const char* path)
     strcat(named, path);
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        int dl = sprintf(namef, "%s%02d", named, i);
+        int dl = sprintf(namef, "%s_OSC_%02d", named, i);
         if (dl > MAX_FNAME_LEN) dl = MAX_FNAME_LEN;
         memset(pathKey_[i], 0, MAX_FNAME_LEN);
         memcpy(pathKey_[i], namef, dl);

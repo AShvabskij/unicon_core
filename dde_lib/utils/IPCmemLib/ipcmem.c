@@ -26,18 +26,19 @@ extern void Report(uint8_t addTime, const char* fmt, ...);
 //-----------------------------------------------------------------------
 //              Init shared memory block
 //
-int initBlk(const char* blkName,  size_t blkSize, unsigned char* retAdr)
+int initBlk(const char* blkName,  size_t blkSize, uintptr_t* retAdr)
 {
+    void* blkShm = NULL;
     int ret = -1;
-    retAdr = MAP_FAILED;
     int flg = O_RDWR | O_CREAT;
 
     int key = shm_open(blkName, flg, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);// | S_IROTH | S_IWOTH);
     if (key != -1) {
         ftruncate(key, blkSize);
-        retAdr = (unsigned char*)mmap(NULL, blkSize, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
-        if (retAdr != MAP_FAILED) {
+        blkShm = mmap(NULL, blkSize, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
+        if (blkShm != MAP_FAILED) {
             ret = key;
+            *retAdr = blkShm;
         } else {
 #ifdef SET_DEBUG_IPC
             Report(1, "[%s] Can't get shm_blk by '%s' for 'pDev[%d]'.\n", __func__, pathKey[i], i);
@@ -85,9 +86,9 @@ err:
 int initCmdBlk()
 {
     _devCmdPtr = NULL;
-    unsigned char* retAdr = NULL;
+    uintptr_t retAdr = NULL;
 
-    int res = initBlk(pathCmdKey, sizeof(DEVICE_COMMANDS), retAdr);
+    int res = initBlk(pathCmdKey, sizeof(DEVICE_COMMANDS), &retAdr);
     if (res < 0) return res;
 
     _devCmdPtr = (DEVICE_COMMANDS*)retAdr;
@@ -130,8 +131,9 @@ int IPCMEM_init(const char* sys_name)
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
         pDev[i] = NULL;
-        unsigned char* retAdr = NULL;
-        int res = initBlk(pathKey[i], sizeof(DEVICE_ELEMENTS), retAdr);
+        uintptr_t* retAdr = NULL;
+
+        int res = initBlk(pathKey[i], sizeof(DEVICE_ELEMENTS), &retAdr);
         if (res < 0) return res;
 
         pDev[i] = (DEVICE_ELEMENTS*)retAdr;
