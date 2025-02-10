@@ -201,6 +201,7 @@ upShmBlk(int did)
     }
 }
 #endif
+/*
 //----------------------------------------------------------------------
 //   Function put struct's value to shared memory block by device_id
 //          On success, return zero. On error, return -1
@@ -226,7 +227,7 @@ int getDataIPC(uint8_t id, DEVICE_ELEMENTS* rec)
     return 0;
 }
 //----------------------------------------------------------------------
-
+*/
 
 
 //----------------------------------------------------------------------

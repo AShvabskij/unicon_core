@@ -78,15 +78,15 @@ void Core::init()
 
 #else
     IDDE* dde_uavcan = new DDE_TOP();
-    dde_uavcan->init(sysTypeToString(SysType::UAVCAN)); // TODO: replace arg to const char*
+//    dde_uavcan->init(sysTypeToString(SysType::UAVCAN)); // TODO: replace arg to const char*
     m_ddeDisp->registerDDE(SysType::UAVCAN, dde_uavcan);
 
     IDDE* dde_cplot = new DDE_TOP();
-    dde_cplot->init(sysTypeToString(SysType::DLOG_CPLOT));
+//    dde_cplot->init(sysTypeToString(SysType::DLOG_CPLOT));
     m_ddeDisp->registerDDE(SysType::DLOG_CPLOT, dde_cplot);
 
     IDDE* dde_istart = new DDE_TOP();
-    dde_istart->init(sysTypeToString(SysType::DLOG_ISTART));
+//    dde_istart->init(sysTypeToString(SysType::DLOG_ISTART));
     m_ddeDisp->registerDDE(SysType::DLOG_ISTART, dde_istart);
 
     #ifndef NO_DEMO
@@ -138,6 +138,8 @@ void Core::start(SysType sysType)
         }
         return;
     }
+
+    dde->init(sysTypeToString(sysType));
 
     m_sysType = sysType;
     m_ddeDisp->setDefaultDDE(dde);
