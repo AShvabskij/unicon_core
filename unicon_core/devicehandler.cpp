@@ -143,6 +143,10 @@ long DeviceHandler::requestDeviceLinks(SysType sysType, QList<DevInd>& links)
         }
     }
 
+    if (links.length() == 0) {
+        qInfo() << "No devices are linked to systype =" << sysTypeToString(sysType);
+    }
+
     return _return_OK;
 }
 

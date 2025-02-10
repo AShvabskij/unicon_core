@@ -99,6 +99,7 @@ void Core::init()
 #endif
 
     RequestManager::instance()->registerHandler(this);
+    ResponseManager::instance()->registerHandler(this);
 
     m_cmdServer = new SocketServer(1235);
     m_cmdServer->setRequestManager(RequestManager::instance());
