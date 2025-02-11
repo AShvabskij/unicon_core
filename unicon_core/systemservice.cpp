@@ -8,9 +8,14 @@ SystemService::SystemService(SysType sysType, IDDE* dde)
 {
     m_sysType = sysType;
     m_dde = dde;
-    m_timer = new QTimer(this);
-//  m_timer->setTimerType(Qt::PreciseTimer);
-    connect(m_timer, &QTimer::timeout, this, &SystemService::onTimerAlarm);
+
+    // TODO remove this code after refactoring IPC_MEM for multiple systems
+    requestDeviceLinks(m_deviceList);
+    if (m_deviceList.length() > 1) {
+        m_timer = new QTimer(this);
+    //  m_timer->setTimerType(Qt::PreciseTimer);
+        connect(m_timer, &QTimer::timeout, this, &SystemService::onTimerAlarm); // monitor the device ststus
+    }
 }
 
 DeviceIndList SystemService::linkedDevices(SysType sysType)
