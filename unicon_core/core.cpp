@@ -265,8 +265,15 @@ void Core::onDeviceChanged(SysType sysType)
     DeviceIndList links = m_sysService->linkedDevices(sysType);
     m_oscStates[sysType]->init(links);
 
+    QJsonArray jsLinks;
+    for(auto dev_ind: links) {
+        jsLinks.append(dev_ind);
+    }
+
     QJsonObject res;
     res["type"] = "sys";
+    res["sys_type_id"] = sysType;
+    res["links"] = jsLinks;
     res["status"] = "1"; // 1 - links changed
 
     StreamManager::instance()->stream({res});
