@@ -244,7 +244,7 @@ int IPCMEM_get_params(DDE_GET_PARAMS_DATA* get_params)
     //uint8_t par_ID = get_params->param_id;
     uint16_t addr = mod_ID * PARAMS_COUNT_MAX;// +par_ID; //for now 1 el
     //copy 64 el TODO may be optimized by real number of elements in module. module[x].el[0].ivalue contains numer of elements in module[x]
-    memcpy((uint8_t*)&get_params->el[0], (uint8_t*)&pDev[dev_ID]->el[addr], PARAMS_COUNT_MAX * sizeof(GLIO_ELEMENT_VALUE));
+    memcpy((uintptr_t*)&get_params->el[0], (uintptr_t*)&pDev[dev_ID]->el[addr], PARAMS_COUNT_MAX * sizeof(GLIO_ELEMENT_VALUE));
 
     return 0;
 }
@@ -258,7 +258,7 @@ int IPCMEM_get_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, G
     if (device_id >= MAX_DEV_SUPPORT) return -4;
     uint16_t addr = module_id * (PARAMS_COUNT_MAX)+param_id;
 
-    memcpy((uint8_t*)el, (uint8_t*)&pDev[device_id]->el[addr], sizeof(GLIO_ELEMENT_VALUE));
+    memcpy((uintptr_t*)el, (uintptr_t*)&pDev[device_id]->el[addr], sizeof(GLIO_ELEMENT_VALUE));
 
     return 0;
 }
