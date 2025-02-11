@@ -100,6 +100,7 @@ void Core::init()
 
     RequestManager::instance()->registerHandler(this);
     ResponseManager::instance()->registerHandler(this);
+    StreamManager::instance()->registerHandler(this);
 
     m_cmdServer = new SocketServer(1235);
     m_cmdServer->setRequestManager(RequestManager::instance());
@@ -276,5 +277,5 @@ void Core::onDeviceChanged(SysType sysType)
     res["links"] = jsLinks;
     res["status"] = "1"; // 1 - links changed
 
-    StreamManager::instance()->stream({res});
+    this->stream({res});
 }
