@@ -39,12 +39,12 @@ int Core::handle(const QJsonObject &request)
     QJsonObject cmdObj = request.value("cmd").toObject();
     QString cmdName = cmdObj.value("name").toString();
 
-    if (sysType != SysType::Undefined && m_sysType != sysType) {
+    if (sysType != SysType::Undefined) {
         start(sysType);
     }
 
     if (cmdName == CMD_SYSTEM_INIT) {
-        // if (sysType != SysType::Undefined && m_sysType != sysType) {
+        // if (sysType != SysType::Undefined) {
         //     start(sysType);
         // }
 
@@ -194,7 +194,7 @@ void Core::start(SysType sysType)
 
     OscStateService* stateService = m_oscStates.value(sysType, nullptr);
     if (!stateService) {
-        stateService = new OscStateService(m_ddeDisp->dde(m_sysType), oscData);
+        stateService = new OscStateService(m_ddeDisp->dde(sysType), oscData);
         m_oscStates.insert(sysType, stateService);
     }
 
@@ -203,9 +203,9 @@ void Core::start(SysType sysType)
         m_oscHistoryService = new OscHistoryService(m_hstDataService, OscDataLogger::instance());
     }
 
-    m_paramsHandler = new ParamsHandler(m_ddeDisp, m_sysType);
-    m_deviceHandler = new DeviceHandler(m_ddeDisp, m_sysType);
-    m_oscHandler = new OscHandler(m_ddeDisp, m_sysType, oscData);
+    m_paramsHandler = new ParamsHandler(m_ddeDisp, sysType);
+    m_deviceHandler = new DeviceHandler(m_ddeDisp, sysType);
+    m_oscHandler = new OscHandler(m_ddeDisp, sysType, oscData);
     dynamic_cast<OscHandler*> (m_oscHandler)->setService(m_oscHistoryService);
 
     RequestManager::instance()->registerHandler(m_deviceHandler);
@@ -218,13 +218,18 @@ void Core::start(SysType sysType)
     StreamManager::instance()->registerHandler(m_oscHandler);
 
     if (!m_sysService) {
-        m_sysService = new SystemService(m_sysType, m_ddeDisp->dde(m_sysType));
+        m_sysService = new SystemService(sysType, m_ddeDisp->dde(sysType));
         connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
+    }
+
+    QList<DevInd> links = m_sysService->linkedDevices(sysType);
+
+    // TODO remove this condition after refactoring IPC_MEM for multiple systems
+    if (links.length() > 1) {
         m_sysService->start();
     }
 
-    QList<DevInd> links = m_sysService->linkedDevices(m_sysType);
-    m_oscStates[m_sysType]->init(links);
+    m_oscStates[sysType]->init(links);
 
 #ifdef __linux__
     if (!m_threadFuture.isRunning()) {

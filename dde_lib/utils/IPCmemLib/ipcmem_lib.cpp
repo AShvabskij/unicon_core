@@ -11,16 +11,13 @@ std::string _system_name = "";
 int PARAMS_DATA_init(char* system_name)
 {
 
-    if (_system_name != "") {
-        printf("DeInit ipcmem for %s \n", _system_name.c_str());
-        IPCMEM_Deinit(_system_name.c_str());
-    }
-
-    printf("Init ipcmem for %s \n", system_name);
+    printf("IPC mem init for %s \n", system_name);
 
     int res =  IPCMEM_init(system_name);
-    if (res != 0) exit(-1);
-
+    if (res != 0) {
+        printf("IPC mem init failed \n");
+        exit(-1);
+    }
 
     _system_name = system_name;
     return 0;
