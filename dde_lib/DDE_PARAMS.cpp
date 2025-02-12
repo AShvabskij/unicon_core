@@ -278,7 +278,7 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
 
 //
 //------------------------------------------------------------------------------
-_dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
+bool DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
 {
     _dde_func_return_t res = _return_OK;
     if (p.el_count > PARAMS_COUNT_MAX) res = _return_FAIL;
@@ -289,12 +289,12 @@ _dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
     if (p.header_reset != 0 && p.header_reset != 1) res = _return_FAIL;
 
     if (res == _return_FAIL) {
-        string err = "The data is not valid: id = " + std::to_string(p.module_id) + "."
+        string err = "The param data is not valid: id = " + std::to_string(p.device_id) + "." + std::to_string(p.module_id) + "."
                 + std::to_string(p.param_id) + ", el count = " + std::to_string(p.el_count);
         std::cout << err.c_str();
     }
 
-    return res;
+    return res == _return_OK ? true : false;
 }
 
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
@@ -361,7 +361,7 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
 {
     //DDE_GET_PARAMS_DATA p_data;
 
-    if (list_read.empty()) return _return_FAIL;
+    if (list_read.empty()) return _return_FAIL; // todo: may be lock before ???
 
     std::lock_guard<std::mutex> lock{ m_guardMutex };
     p = std::move(list_read.front());
@@ -474,6 +474,10 @@ void DDE_PARAMS::update()
 
         uint16_t device_id = get_params.device_id;
         int cmd_ind = cmd_ind_arr[device_id]++;
+        if (!isValidData(get_params)) {
+            break;
+        }
+
         assert(cmd_ind < MAX_DEV_CMD_CNT);
         assert(device_id < MAX_DEV_SUPPORT);
 

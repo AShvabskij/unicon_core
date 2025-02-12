@@ -243,6 +243,8 @@ long DeviceHandler::requestModule(SysType sysType, DevInd deviceId, int moduleId
     DevID devID = {sysType, static_cast<DevInd>(deviceId)};
 
     DDE_GET_PARAMS_HEADER header;
+    memset(&header, 0, sizeof(DDE_GET_PARAMS_HEADER));
+
     header.device_id = static_cast<uint16_t>(deviceId);
     header.module_id = static_cast<uint16_t>(moduleId);
     header.param_id = 0;
