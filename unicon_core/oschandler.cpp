@@ -571,7 +571,13 @@ long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *out)
 
         if (channel.var.type == OSC_VAR_TYPE::OSC_VAR_FLOAT || channel.var.type == OSC_VAR_TYPE::OSC_VAR_INT) {
             out->analogChannels[chInd] = createChannelDescr(channel);
+            qDebug() << DDE_LOG_PREFIX
+                     << "Analog var" << out->analogChannels[chInd].varName;
+
         } else if (channel.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
+            qDebug() << DDE_LOG_PREFIX
+                     << "Discrete var" << out->discreteChannels[chInd].varName;
+
             out->discreteChannels[chInd] = createChannelDescr(channel);
         }
     }
