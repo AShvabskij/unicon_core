@@ -70,7 +70,7 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
     if (!rec) return _return_FAIL;
 
     std::cout << DDE_LOG_PREFIX
-              << "Get osc header from IPC" << ", channel count = " << rec->settings.channels_count
+              << "Get osc header from IPC" << ", channel count = " << (int)rec->settings.channels_count
               << std::endl;
 
     for (int i = 0; i < rec->settings.channels_count; i++) {

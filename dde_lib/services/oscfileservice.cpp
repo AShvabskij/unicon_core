@@ -232,7 +232,7 @@ _dde_func_return_t OscFileService::readNextData(DDE_GET_OSC_DATA& p, int datYeld
 
         const auto& values = parseValues(line);
 
-        for (int chInd = 1; chInd <= OSC_MAX_CHANNELS; chInd++) {
+        for (int chInd = 1; chInd <= OSC_MAX_VARS; chInd++) {
             auto& var = m_header->vars[chInd];
             uint16_t elemInd = var.colIndex;
             uint8_t chNum = var.chNum;
