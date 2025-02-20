@@ -103,9 +103,9 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
         channel.var.color = glio_ch.color;
         channel.var.scale = glio_ch.gain;
 
-//        std::cout << DDE_LOG_PREFIX
-//                  << "Get var = " << channel.var.name
-//                  << std::endl;
+        std::cout << DDE_LOG_PREFIX
+                  << "Header var = " << channel.var.name
+                  << std::endl;
 
     }
 
