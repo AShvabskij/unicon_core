@@ -162,14 +162,14 @@ _dde_func_return_t OscPageTxtService::readNextData(DDE_GET_OSC_DATA& getDat, int
 
         const auto& values = parseValues(line);
         int column_count = values.size();
-        if (ch_count >= OSC_MAX_CHANNELS || ch_count > column_count) {
+        if (ch_count >= OSC_MAX_VARS || ch_count > column_count) {
             cout << osc_data::OSC_FILE_PARSE_ERROR;
             continue;
         }
 
         for (int chInd = 0; chInd < ch_count; chInd++) {
 
-            assert(chInd <= OSC_MAX_CHANNELS);
+            assert(chInd <= OSC_MAX_VARS);
 
             int32_t rawValue = values[chInd];
             getDat.data[chInd].i_buff[buffInd] = rawValue;

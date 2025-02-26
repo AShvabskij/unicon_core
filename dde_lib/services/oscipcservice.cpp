@@ -69,6 +69,10 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
 
     if (!rec) return _return_FAIL;
 
+    std::cout << DDE_LOG_PREFIX
+              << "Get osc header from IPC" << ", channel count = " << (int)rec->settings.channels_count
+              << std::endl;
+
     for (int i = 0; i < rec->settings.channels_count; i++) {
 
         OSC_CHANNEL& channel = hdr.channels[i];
@@ -98,6 +102,11 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
         channel.var.type = glio_ch.type;
         channel.var.color = glio_ch.color;
         channel.var.scale = glio_ch.gain;
+
+        std::cout << DDE_LOG_PREFIX
+                  << "Header var = " << channel.var.name
+                  << std::endl;
+
     }
 
     hdr.settings = rec->settings;

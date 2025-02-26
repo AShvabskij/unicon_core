@@ -110,7 +110,7 @@ struct DDE_GET_OSC_DATA
     bool eof = false;    // flag if it is the last frame
     bool sof = false;    // save-of-file - flag if it is the first frame
 
-    OSC_DATA data[OSC_MAX_CHANNELS + 1];
+    OSC_DATA data[OSC_MAX_VARS + 1];
 };
 
 struct DDE_SET_OSC_DATA
@@ -121,7 +121,7 @@ struct DDE_SET_OSC_DATA
     bool eof = false;
     bool sof = false; // mark start block to start saving
 
-    OSC_DATA data[OSC_MAX_CHANNELS + 1];
+    OSC_DATA data[OSC_MAX_VARS + 1];
 };
 
 struct DDE_OSC_DATA_HEADER
@@ -159,7 +159,7 @@ typedef struct
     uint16_t id;
     OSC_STATE state;
     OSC_SETTING settings;
-    GLIO_OSC_CHANNEL channel[OSC_MAX_CHANNELS + 1];
+    GLIO_OSC_CHANNEL channel[OSC_MAX_VARS + 1];
 
 } GLIO_OSC_HEADER;
 #endif
