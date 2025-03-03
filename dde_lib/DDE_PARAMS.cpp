@@ -1,7 +1,7 @@
 
 #include "DDE_PARAMS.h"
+#include "paramipcservice.h"
 
-#include "ipcmem_lib.h"
 #include "db_sqlib.h"
 
 #include <string>
@@ -16,6 +16,7 @@ using namespace std;
 DDE_PARAMS::DDE_PARAMS()
 {
     _paramDescr = new ParamDescr();
+    _paramiPC = new ParamIPCService();
 }
 
 //------------------------------------------------------------------------------
@@ -24,6 +25,7 @@ DDE_PARAMS::DDE_PARAMS()
 DDE_PARAMS::~DDE_PARAMS()
 {
     delete _paramDescr;
+    delete _paramiPC;
 }
 
 _dde_func_return_t DDE_PARAMS::init(const char* sys_type)
@@ -31,7 +33,7 @@ _dde_func_return_t DDE_PARAMS::init(const char* sys_type)
     //	std::thread*thr_params = new std::thread(&DDE_PARAMS::thread_proc, this);
     int res = _return_OK;
     if (string(sys_type) != "") {
-        res = PARAMS_DATA_init(const_cast<char*>(sys_type));
+        res = _paramiPC->init(sys_type);
     }
 
     /*
@@ -67,7 +69,7 @@ void DDE_PARAMS::addTestDevice()
             break;
         }
 
-        PARAMS_DATA_direct_write(setDat);
+        _paramiPC->write_data(setDat);
     }
 }
 
@@ -95,7 +97,7 @@ void DDE_PARAMS::addTestLinks()
         default: setDat.ivalue = 0;
         }
 
-        PARAMS_DATA_direct_write(setDat);
+        _paramiPC->write_data(setDat);
     }
 }
 
@@ -123,7 +125,7 @@ void DDE_PARAMS::addTestData()
         default: setDat.ivalue = ii;
         }
 
-        PARAMS_DATA_direct_write(setDat);
+        _paramiPC->write_data(setDat);
     }
 }
 
@@ -134,7 +136,7 @@ void DDE_PARAMS::checkTestData()
     for (int ii = 0; ii < 64; ii++) {
         get.module_id = ii;
         get.param_id = 0;
-        PARAMS_DATA_direct_read(get);
+        _paramiPC->read_data(get);
         printf("module=%d ", ii);
         for (int yy = 0; yy < 64; yy++)
             printf("%d ", get.el[yy].ivalue);
@@ -158,7 +160,7 @@ std::string DDE_PARAMS::create_device_name(const uint8_t device_id)//0x6D766370
     for (int i = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME; i <= DDE_DEV0_MODULE0_PARAM3_SW_REV; i++)
     {
         dat.param_id = i;
-        PARAMS_DATA_direct_read(dat); // read one of name part for the given device from ipc
+        _paramiPC->read_data(dat); // read one of name part for the given device from ipc
 
         sub_name = "";
         if (dat.el->ivalue != 0) {
@@ -171,7 +173,7 @@ std::string DDE_PARAMS::create_device_name(const uint8_t device_id)//0x6D766370
     }
 
     dat.param_id = DDE_DEV0_MODULE0_PARAM4_HASH;
-    PARAMS_DATA_direct_read(dat); // read one of name part for the given device from ipc
+    _paramiPC->read_data(dat); // read one of name part for the given device from ipc
 
     char hexCode[9] = "";
     uint32_t hashValue = dat.el->ivalue;
@@ -390,7 +392,7 @@ _dde_func_return_t DDE_PARAMS::direct_write(DDE_SET_PARAMS_DATA& set)
         set.timestamp = time;
     }
 
-    PARAMS_DATA_direct_write(set);
+    _paramiPC->write_data(set);
 
     return _return_OK;
 }
@@ -400,7 +402,7 @@ _dde_func_return_t DDE_PARAMS::direct_write(DDE_SET_PARAMS_DATA& set)
 //wrapper for IPCMEM
 _dde_func_return_t DDE_PARAMS::direct_read(DDE_GET_PARAMS_DATA& get_params)
 {
-    int res = PARAMS_DATA_direct_read(get_params);
+    int res = _paramiPC->read_data(get_params);
     if (res < 0) return _return_FAIL;
 
     return _return_OK;
@@ -408,7 +410,7 @@ _dde_func_return_t DDE_PARAMS::direct_read(DDE_GET_PARAMS_DATA& get_params)
 
 _dde_func_return_t DDE_PARAMS::update_data_descr(uint16_t device_id, GLIO_ELEMENT_DESCR& el)
 {
-    int res = PARAMS_DATA_update_descr(device_id, el);
+    int res = _paramiPC->update_elem_descr(device_id, el);
     if (res < 0) return _return_FAIL;
 
     return _return_OK;
@@ -528,7 +530,7 @@ _dde_func_return_t DDE_PARAMS::write_cmd_array(uint8_t device_id, DDE_PARAMS_CMD
     const int WAIT_TIMEOUT_MSC = 100;
 
     while ((res != _return_OK) && (!timeout)) {
-        res = PARAMS_DATA_write_cmd(device_id, cmdArray, cmd_cnt);
+        res = _paramiPC->write_cmd(device_id, cmdArray, cmd_cnt);
 
         if (res != _return_OK) {
             attempts++;

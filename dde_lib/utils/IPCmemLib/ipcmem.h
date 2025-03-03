@@ -41,33 +41,18 @@ extern "C" {
 
 #define MAX_FNAME_LEN 128
 
-//-----------------------------------------------------------------------
+int IPCMEM_init(const char *sys_name, int blkSize);
+int IPCMEM_Deinit(const char *sys_name, uintptr_t *_blkPtr, int blkSize);
+uintptr_t getDataIPC(uint16_t id);
+int putDataIPC(uint8_t id, DEVICE_ELEMENTS* rec);
 
-extern DEVICE_ELEMENTS *pDev[MAX_DEV_SUPPORT];
-
-//-------------------------------------------------------------------------
-
-
-extern uint8_t get_devID(uint8_t ind);
-
-
-int IPCMEM_init(const char *dev_name);
-uint16_t IPCMEM_Deinit(const char *sys_name);
+uintptr_t getCmdIPC();
+int initCmdBlk(const char *sys_name);
 
 #ifdef SET_DEBUG
 #define BUF_TMP 1024
 void upShmBlk(int did);
 #endif
-
-int putDataIPC(uint8_t id, DEVICE_ELEMENTS* rec);
-int getDataIPC(uint8_t id, DEVICE_ELEMENTS* rec);
-
-int IPCMEM_get_params(DDE_GET_PARAMS_DATA* get_params);
-int IPCMEM_get_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, GLIO_ELEMENT_VALUE* el);
-int IPCMEM_set_element(uint8_t device_id, uint8_t module_id, uint8_t param_id, uint32_t ivalue, time_t time);
-int IPCMEM_set_element_descr(uint8_t device_id, GLIO_ELEMENT_DESCR* el);
-int IPCMEM_read_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd);
-int IPCMEM_write_cmd(uint8_t device_id, DDE_PARAMS_CMD* cmd, int cmd_cnt);
 
 
 //-------------------------------------------------------------------------

@@ -8,9 +8,6 @@
 #include "cstdint"
 #include "stdlib.h"
 
-//#include "ipcmem_lib.h"
-//#include "db_sqlib.h"
-
 DDE_TOP::DDE_TOP()
 {
 

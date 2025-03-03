@@ -18,6 +18,8 @@
 #define DDE_PARAMS_NAME_LENGTH      64
 
 class ParamDescr;
+class ParamIPCService;
+
 class DDE_PARAMS : public IDDE_PARAMS
 {
 public:
@@ -64,6 +66,7 @@ private:
 
     std::thread *thr_params;
     ParamDescr* _paramDescr;
+    ParamIPCService* _paramiPC;
 
     std::deque <DDE_GET_PARAMS_DATA> list_read;
     std::deque <DDE_SET_PARAMS_DATA> list_write;

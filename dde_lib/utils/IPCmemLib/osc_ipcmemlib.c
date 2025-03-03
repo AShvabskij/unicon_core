@@ -4,7 +4,7 @@
 
 char pathKey_[MAX_DEV_SUPPORT][MAX_FNAME_LEN];
 int shmBlk[MAX_DEV_SUPPORT] = { -1 };
-unsigned char* _blkPtr[MAX_DEV_SUPPORT] = { NULL };
+unsigned char* _blkPtr_t[MAX_DEV_SUPPORT] = { NULL };
 int _blkSize = 0;
 
 #ifdef SET_DEBUG_IPC
@@ -28,7 +28,7 @@ int mem_initBlk(int ind, size_t blkSize, const char* blkName)
         ftruncate(key, blkSize);
         adr = (unsigned char*)mmap(NULL, blkSize, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
         if (adr != MAP_FAILED) {
-            _blkPtr[ind] = adr;
+            _blkPtr_t[ind] = adr;
             ret = key;
         }
     }
@@ -86,10 +86,10 @@ int osc_mem_deinit(const char* sys_name, int blkSize)
     int err = 0;
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        if (_blkPtr[i] != NULL) {
-            if (!munmap(_blkPtr[i], blkSize)) {
+        if (_blkPtr_t[i] != NULL) {
+            if (!munmap(_blkPtr_t[i], blkSize)) {
                 shmBlk[i] = -1;
-                _blkPtr[i] = NULL;
+                _blkPtr_t[i] = NULL;
                 if (sys_name) {
                     if (shm_unlink(pathKey_[i]) != 0) {//error
                         err |= 2;
@@ -111,7 +111,7 @@ unsigned char* osc_mem_getData(uint16_t ind)
         return NULL;
     }
 
-    return _blkPtr[ind];
+    return _blkPtr_t[ind];
 }
 
 int osc_mem_setData(uint16_t ind, unsigned char* data, size_t sz)
@@ -120,7 +120,7 @@ int osc_mem_setData(uint16_t ind, unsigned char* data, size_t sz)
         return -1;
     }
 
-    memcpy(_blkPtr[ind], data, sz);
+    memcpy(_blkPtr_t[ind], data, sz);
 
     return _return_OK;
 }

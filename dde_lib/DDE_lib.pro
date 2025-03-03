@@ -20,7 +20,8 @@ SOURCES += \
     csvfile.cpp \
     services/oscfileservice.cpp \
     services/oscpagebinservice.cpp \
-    services/oscpagetxtservice.cpp
+    services/oscpagetxtservice.cpp \
+    services/paramipcservice.cpp
 
 unix: SOURCES += \
     DDE_PARAMS.cpp \
@@ -49,7 +50,8 @@ HEADERS += \
     services/oscfileservice.h \
     services/oscipcservice.h \
     services/oscpagebinservice.h \
-    services/oscpagetxtservice.h
+    services/oscpagetxtservice.h \
+    services/paramipcservice.h
 
 INCLUDEPATH += $$PWD/utils/csvfile
 INCLUDEPATH += $$PWD/utils/IPCmemLib
