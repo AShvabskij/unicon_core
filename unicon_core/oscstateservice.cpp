@@ -243,7 +243,7 @@ DDE_OSC_HEADER OscStateMachine::getHeader(DevInd devId)
     hdr.device_id = devId;
     auto res = m_dde->get_osc_header(hdr);
     if (res == _return_FAIL) {
-        qWarning() << "Error getting header from osc, id = " << m_header.device_id;
+        qWarning() << "Error getting header from osc, id = " << devId;
         m_state = Error;
         return DDE_OSC_HEADER();
     }
