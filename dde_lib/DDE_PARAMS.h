@@ -33,6 +33,7 @@ public:
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p);
 
+    virtual _dde_func_return_t get_cmd(uint8_t device_id, DDE_PARAMS_CMD& cmd);
 
     //virtual int set(DDE_SET_PARAMS p, void* callback_func);
     virtual _dde_func_return_t direct_write(DDE_SET_PARAMS_DATA& p);

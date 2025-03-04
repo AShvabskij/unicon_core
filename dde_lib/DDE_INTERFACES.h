@@ -41,7 +41,7 @@ public:
     virtual _dde_func_return_t set(DDE_SET_PARAMS_HEADER& p) = 0;
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p) = 0;
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p) = 0;
-
+    virtual _dde_func_return_t get_cmd(uint8_t device_id, DDE_PARAMS_CMD& cmd) = 0;
 
     virtual void update() = 0;
 };

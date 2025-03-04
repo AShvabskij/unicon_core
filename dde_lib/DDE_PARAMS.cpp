@@ -338,9 +338,6 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
     return _return_OK;
 }
 
-//------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------
 _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
 {
     //1) Add request to queue
@@ -358,6 +355,18 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
 
     return _return_OK;
 }
+
+_dde_func_return_t DDE_PARAMS::get_cmd(uint8_t device_id, DDE_PARAMS_CMD& cmd)
+{
+    int res = _paramiPC->read_cmd(device_id, &cmd);
+    if (res < 0) return _return_FAIL;
+
+    return _return_OK;
+}
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
 
 _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
 {
@@ -415,7 +424,6 @@ _dde_func_return_t DDE_PARAMS::update_data_descr(uint16_t device_id, GLIO_ELEMEN
 
     return _return_OK;
 }
-
 
 //------------------------------------------------------------------------------
 //
