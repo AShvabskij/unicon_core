@@ -7,7 +7,6 @@
 #define MAX_DEV_SUPPORT  (32+1)
 #define MAX_DEV_CMD_CNT  5 // Maximum device command buffer size per iteration
 #define ELEMENTS_ID_MAX		0xFFF
-#define MAX_SYSNAME_LEN 128
 
 // 32 device on CAN bus + 1 connex master with ID=0
 

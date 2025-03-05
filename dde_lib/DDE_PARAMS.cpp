@@ -369,9 +369,10 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
 {
     //DDE_GET_PARAMS_DATA p_data;
 
+    std::lock_guard<std::mutex> lock{ m_guardMutex };
+
     if (list_read.empty()) return _return_FAIL; // todo: may be lock before ???
 
-    std::lock_guard<std::mutex> lock{ m_guardMutex };
     p = std::move(list_read.front());
     list_read.pop_front();
 
@@ -380,9 +381,10 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
 
 _dde_func_return_t DDE_PARAMS::pop_write_request(DDE_SET_PARAMS_DATA& p)
 {
+    std::lock_guard<std::mutex> lock{ m_guardMutex };
+
     if (list_write.empty()) return _return_FAIL;
 
-    std::lock_guard<std::mutex> lock{ m_guardMutex };
     p = std::move(list_write.front());
     list_write.pop_front();
 
