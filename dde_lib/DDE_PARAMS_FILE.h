@@ -35,7 +35,8 @@ public:
 
     virtual _dde_func_return_t init(const char* sys_type);
 
-    virtual void update() {};
+    virtual _dde_func_return_t update_device_params(uint16_t device_id){};
+    virtual void update(){};
 
 private:
     inline time_t systemTime();

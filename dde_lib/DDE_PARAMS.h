@@ -42,6 +42,7 @@ public:
     virtual _dde_func_return_t pop_read_request(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t pop_write_request(DDE_SET_PARAMS_DATA& p);
 
+    virtual _dde_func_return_t update_device_params(uint16_t device_id);
     void update();
 
 
@@ -54,7 +55,7 @@ protected:
     //void proceed_response_queue();
     uint32_t overflow = 0;
 
-    _dde_func_return_t update_param_header(uint16_t device_id, GLIO_ELEMENT_DESCR& el);
+    _dde_func_return_t update_param_header(uint16_t device_id, const GLIO_ELEMENT_DESCR &el);
     bool isValidData(const DDE_GET_PARAMS_DATA& p);
 
 private:

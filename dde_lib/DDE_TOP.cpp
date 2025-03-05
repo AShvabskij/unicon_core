@@ -95,17 +95,15 @@ _dde_func_return_t DDE_TOP::set_evlog_data(DDE_SET_EVLOG_DATA& )
 
 _dde_func_return_t DDE_TOP::init(const char* system_type)
 {
-    if (m_sysType == system_type) {
-        return _return_OK;
-    }
-
     m_sysType = system_type;
 
     m_params->init(system_type);
 
     m_osc->init(system_type);
 
-    m_updThread = new std::thread(&DDE_TOP::thread_proc, this);
+    if (m_updThread == nullptr) {
+        m_updThread = new std::thread(&DDE_TOP::thread_proc, this);
+    }
 
     return 0;
 }

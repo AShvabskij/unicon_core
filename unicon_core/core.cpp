@@ -48,10 +48,6 @@ int Core::handle(const QJsonObject &request)
         return 1;
     }
 
-    if (sysType != SysType::Undefined) {
-        start(sysType);
-    }
-
     return BaseReqHandler::handle(request);
 }
 

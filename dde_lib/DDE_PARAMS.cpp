@@ -36,12 +36,17 @@ _dde_func_return_t DDE_PARAMS::init(const char* sys_type)
         res = _paramiPC->init(sys_type);
     }
 
+
     /*
         addTestDevice();
         addTestLinks();
         addTestData();
         checkTestData();
     */
+
+    for (int ii = 0; ii < DEVICE_ID_MAX; ii++) {
+        update_device_params(ii);
+    }
 
     return res;
 }
@@ -171,6 +176,8 @@ std::string DDE_PARAMS::create_device_name(const uint8_t device_id)//0x6D766370
 
         res += sub_name; // forming full device name as combination of all parts
     }
+
+    if (res == "") return res;
 
     dat.param_id = DDE_DEV0_MODULE0_PARAM4_HASH;
     _paramiPC->read_data(dat); // read one of name part for the given device from ipc
@@ -361,6 +368,38 @@ _dde_func_return_t DDE_PARAMS::get_cmd(uint8_t device_id, DDE_PARAMS_CMD& cmd)
     return res;
 }
 
+_dde_func_return_t DDE_PARAMS::update_device_params(uint16_t device_id)
+{
+    _dde_func_return_t res = _return_OK;
+
+    string dev_name = create_device_name(device_id);
+    if (dev_name == "") return _return_FAIL;
+
+    res = _paramDescr->init(dev_name.c_str(), "");
+    if (res != _return_OK) return res;
+
+    for (int ii = 0; ii <= MODULES_ID_MAX; ii++) {
+        DDE_GET_PARAMS_HEADER headers;
+        headers.device_id = device_id;
+        headers.module_id = ii;
+        headers.param_id = 0;
+        headers.el_count = 0;
+
+        res = _paramDescr->get(&headers, db_type::usual);
+        if (res != _return_OK) break;
+
+        if (headers.el_count == 0) continue;
+
+        for (int ind = 0; ind < headers.el_count; ind++) {
+            const GLIO_ELEMENT_DESCR& el = headers.el_descr[ind];
+            res = update_param_header(device_id, el);
+            if (res != _return_OK) break;
+        }
+    }
+
+    return res;
+}
+
 //------------------------------------------------------------------------------
 //
 //------------------------------------------------------------------------------
@@ -414,7 +453,7 @@ _dde_func_return_t DDE_PARAMS::direct_read(DDE_GET_PARAMS_DATA& get_params)
     return res;
 }
 
-_dde_func_return_t DDE_PARAMS::update_param_header(uint16_t device_id, GLIO_ELEMENT_DESCR& el)
+_dde_func_return_t DDE_PARAMS::update_param_header(uint16_t device_id, const GLIO_ELEMENT_DESCR& el)
 {
     auto res = _paramiPC->update_elem_descr(device_id, el);
     return res;

@@ -9,7 +9,7 @@
 class DDE_OSC : public IDDE_OSC
 {
 public:
-    DDE_OSC() = default;
+    DDE_OSC();
     ~DDE_OSC();
 
     virtual _dde_func_return_t init(const char* /*system_type*/);

@@ -11,6 +11,12 @@
 #include "oscipcservice.h"
 
 using namespace std;
+DDE_OSC::DDE_OSC()
+{
+    m_dataSrv = new OscPageBinService();
+    m_headerSrv = new OscIPCHeaderService();
+}
+
 DDE_OSC::~DDE_OSC()
 {
     if (m_sysName != "") {
@@ -23,8 +29,8 @@ DDE_OSC::~DDE_OSC()
 
 _dde_func_return_t DDE_OSC::init(const char * sysName)
 {
-    m_dataSrv = new OscPageBinService();
-    m_headerSrv = new OscIPCHeaderService();
+    if (m_sysName == sysName) return _return_OK; // already inited
+
     m_sysName = sysName;
 
     _dde_func_return_t res = m_headerSrv->init(sysName);

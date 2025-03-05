@@ -69,8 +69,14 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
 
     if (!rec) return _return_FAIL;
 
+    hdr.settings = rec->settings;
+    int ch_count = rec->settings.channels_count;
+    if (ch_count == 0) {
+        return _return_OK;
+    }
+
     std::cout << DDE_LOG_PREFIX
-              << "Get osc header from IPC" << ", channel count = " << (int)rec->settings.channels_count
+              << "Get osc header from IPC" << ", channel count = " << ch_count
               << std::endl;
 
     for (int i = 0; i < rec->settings.channels_count; i++) {
@@ -108,8 +114,6 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
                   << std::endl;
 
     }
-
-    hdr.settings = rec->settings;
 
     return _return_OK;
 }
