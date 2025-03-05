@@ -39,17 +39,17 @@ int Core::handle(const QJsonObject &request)
     QJsonObject cmdObj = request.value("cmd").toObject();
     QString cmdName = cmdObj.value("name").toString();
 
-    if (sysType != SysType::Undefined) {
-        start(sysType);
-    }
-
     if (cmdName == CMD_SYSTEM_INIT) {
-        // if (sysType != SysType::Undefined) {
-        //     start(sysType);
-        // }
+         if (sysType != SysType::Undefined) {
+             start(sysType);
+         }
 
         handleSystemInit(request);
         return 1;
+    }
+
+    if (sysType != SysType::Undefined) {
+        start(sysType);
     }
 
     return BaseReqHandler::handle(request);
