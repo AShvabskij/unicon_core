@@ -10,8 +10,8 @@
 
 DDE_TOP::DDE_TOP()
 {
-
-
+    m_params = new DDE_PARAMS();
+    m_osc = new DDE_OSC_DISPATCHER();
 }
 
 DDE_TOP::~DDE_TOP()
@@ -95,12 +95,14 @@ _dde_func_return_t DDE_TOP::set_evlog_data(DDE_SET_EVLOG_DATA& )
 
 _dde_func_return_t DDE_TOP::init(const char* system_type)
 {
+    if (m_sysType == system_type) {
+        return _return_OK;
+    }
+
     m_sysType = system_type;
 
-    m_params = new DDE_PARAMS();
     m_params->init(system_type);
 
-    m_osc = new DDE_OSC_DISPATCHER();
     m_osc->init(system_type);
 
     m_updThread = new std::thread(&DDE_TOP::thread_proc, this);

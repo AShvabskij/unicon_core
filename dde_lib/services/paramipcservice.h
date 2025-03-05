@@ -1,6 +1,8 @@
 #ifndef PARAMIPCSERVICE_H
 #define PARAMIPCSERVICE_H
 
+#include <string>
+
 #pragma once
 #include "DDE_TYPES.h"
 #include "DDE_OSC_TYPES.h"
@@ -26,7 +28,7 @@ private:
 
     DEVICE_ELEMENTS* _pDev[MAX_DEV_SUPPORT] = { NULL };
     DEVICE_COMMANDS* _devCmdPtr = { NULL };
-    char _sysName[MAX_SYSNAME_LEN];
+    std::string _sysName;
 };
 
 #endif // PARAMIPCSERVICE_H

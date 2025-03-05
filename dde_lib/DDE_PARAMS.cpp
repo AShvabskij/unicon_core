@@ -193,7 +193,6 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
 
     int res = _paramDescr->init(dev_name.c_str(), ""); // we need to look in db for correct table according device_name and device_revision
     if (res == _return_OK) {
-
         p.timeout = 0;
         p.timeout_flg = 0;
         p.el_count = 0;
@@ -237,7 +236,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
 
 _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
 {
-    //assert(p.el.device_id < DEVICE_ID_MAX);
+    assert(p.device_id <= DEVICE_ID_MAX);
     assert(p.module_id <= MODULES_ID_MAX);
     assert(p.param_id <= PARAMS_ID_MAX);
 
@@ -273,7 +272,7 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
     el.writable = p.writable;
     strncpy(el.dim, p.dim, DIM_SIZE);
 
-    update_data_descr(p.device_id, el);
+    update_param_header(p.device_id, el);
 
     return _return_OK;
 }
@@ -358,10 +357,8 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
 
 _dde_func_return_t DDE_PARAMS::get_cmd(uint8_t device_id, DDE_PARAMS_CMD& cmd)
 {
-    int res = _paramiPC->read_cmd(device_id, &cmd);
-    if (res < 0) return _return_FAIL;
-
-    return _return_OK;
+    auto res = _paramiPC->read_cmd(device_id, &cmd);
+    return res;
 }
 
 //------------------------------------------------------------------------------
@@ -372,9 +369,10 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
 {
     //DDE_GET_PARAMS_DATA p_data;
 
+    std::lock_guard<std::mutex> lock{ m_guardMutex };
+
     if (list_read.empty()) return _return_FAIL; // todo: may be lock before ???
 
-    std::lock_guard<std::mutex> lock{ m_guardMutex };
     p = std::move(list_read.front());
     list_read.pop_front();
 
@@ -383,9 +381,10 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
 
 _dde_func_return_t DDE_PARAMS::pop_write_request(DDE_SET_PARAMS_DATA& p)
 {
+    std::lock_guard<std::mutex> lock{ m_guardMutex };
+
     if (list_write.empty()) return _return_FAIL;
 
-    std::lock_guard<std::mutex> lock{ m_guardMutex };
     p = std::move(list_write.front());
     list_write.pop_front();
 
@@ -401,9 +400,9 @@ _dde_func_return_t DDE_PARAMS::direct_write(DDE_SET_PARAMS_DATA& set)
         set.timestamp = time;
     }
 
-    _paramiPC->write_data(set);
+    auto res = _paramiPC->write_data(set);
 
-    return _return_OK;
+    return res;
 }
 //------------------------------------------------------------------------------
 //
@@ -411,18 +410,14 @@ _dde_func_return_t DDE_PARAMS::direct_write(DDE_SET_PARAMS_DATA& set)
 //wrapper for IPCMEM
 _dde_func_return_t DDE_PARAMS::direct_read(DDE_GET_PARAMS_DATA& get_params)
 {
-    int res = _paramiPC->read_data(get_params);
-    if (res < 0) return _return_FAIL;
-
-    return _return_OK;
+    auto res = _paramiPC->read_data(get_params);
+    return res;
 }
 
-_dde_func_return_t DDE_PARAMS::update_data_descr(uint16_t device_id, GLIO_ELEMENT_DESCR& el)
+_dde_func_return_t DDE_PARAMS::update_param_header(uint16_t device_id, GLIO_ELEMENT_DESCR& el)
 {
-    int res = _paramiPC->update_elem_descr(device_id, el);
-    if (res < 0) return _return_FAIL;
-
-    return _return_OK;
+    auto res = _paramiPC->update_elem_descr(device_id, el);
+    return res;
 }
 
 //------------------------------------------------------------------------------

@@ -8,11 +8,15 @@ ParamIPCService::ParamIPCService()
 
 _dde_func_return_t ParamIPCService::init(const char *sysName)
 {
+    if (_sysName == sysName) {
+        return _return_OK;
+    }
+
     int res = IPCMEM_init(sysName, sizeof(DEVICE_ELEMENTS));
     if (res < 0)
         return _return_FAIL;
 
-    strncpy(_sysName, sysName, MAX_SYSNAME_LEN);
+    _sysName = sysName;
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
         uintptr_t retPtr = 0;
         retPtr = getDataIPC(i);
