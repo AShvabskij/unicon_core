@@ -41,6 +41,7 @@ private:
 
     IDDE_Dispatcher* m_ddeDisp = nullptr;
     SysType m_sysType = SysType::Undefined;
+    QList<SysType> m_supportedSysTypes;
 
     IReqHandler* m_paramsHandler = nullptr;
     IReqHandler* m_deviceHandler = nullptr;
@@ -48,7 +49,7 @@ private:
 
     OscDataService* m_hstDataService = nullptr;
     OscHistoryService* m_oscHistoryService = nullptr;
-    SystemService* m_sysService = nullptr;
+    QMap<SysType, SystemService*> m_sysServices;
 
     DataUsbCopier* m_copier = nullptr;
     QMap<SysType, OscStateService*> m_oscStates;

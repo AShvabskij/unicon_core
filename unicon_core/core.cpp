@@ -25,6 +25,7 @@ const QString CMD_SYSTEM_INIT = "system_init";
 
 Core::Core(): BaseReqHandler()
 {
+    m_ddeDisp = new DDE_Dispatcher();
 }
 
 Core::~Core()
@@ -34,16 +35,10 @@ Core::~Core()
 
 int Core::handle(const QJsonObject &request)
 {
-    SysType sysType = sysTypeId(request);
-
     QJsonObject cmdObj = request.value("cmd").toObject();
     QString cmdName = cmdObj.value("name").toString();
 
     if (cmdName == CMD_SYSTEM_INIT) {
-         if (sysType != SysType::Undefined) {
-             start(sysType);
-         }
-
         handleSystemInit(request);
         return 1;
     }
@@ -56,6 +51,23 @@ void Core::handleSystemInit(const QJsonObject& request)
     int requestId = request.value("request_id").toInt();
     if (requestId <= 0) return;
 
+    SysType sysType = sysTypeId(request);
+    if (sysType == SysType::Undefined || sysType == SysType::Unknown) {
+        QJsonArray jsSysArr;
+        for(SysType sysType: m_supportedSysTypes) {
+            jsSysArr.append(sysType);
+        }
+
+        QJsonObject response;
+        response["request_id"] = requestId;
+        response["body"] = jsSysArr;
+        send(response);
+    }
+
+    if (sysType != SysType::Undefined) {
+        start(sysType);
+    }
+
     QJsonObject response = createEmptyResponse(requestId);
     send(response);
 
@@ -64,7 +76,10 @@ void Core::handleSystemInit(const QJsonObject& request)
 
 void Core::init()
 {
-    m_ddeDisp = new DDE_Dispatcher();
+    m_supportedSysTypes.append(SysType::UAVCAN);
+    m_supportedSysTypes.append(SysType::DLOG_CPLOT);
+    m_supportedSysTypes.append(SysType::DLOG_ISTART);
+
 
 #ifdef __WIN32__
     IDDE* dde = new DDE_EMUL();
@@ -73,17 +88,11 @@ void Core::init()
     m_ddeDisp->setDefaultDDE(dde);
 
 #else
-    IDDE* dde_uavcan = new DDE_TOP();
-//    dde_uavcan->init(sysTypeToString(SysType::UAVCAN)); // TODO: replace arg to const char*
-    m_ddeDisp->registerDDE(SysType::UAVCAN, dde_uavcan);
-
-    IDDE* dde_cplot = new DDE_TOP();
-//    dde_cplot->init(sysTypeToString(SysType::DLOG_CPLOT));
-    m_ddeDisp->registerDDE(SysType::DLOG_CPLOT, dde_cplot);
-
-    IDDE* dde_istart = new DDE_TOP();
-//    dde_istart->init(sysTypeToString(SysType::DLOG_ISTART));
-    m_ddeDisp->registerDDE(SysType::DLOG_ISTART, dde_istart);
+    for(SysType sysType: m_supportedSysTypes) {
+        IDDE* dde = new DDE_TOP();
+    //    dde_uavcan->init(sysTypeToString(SysType::UAVCAN)); // TODO: replace arg to const char*
+        m_ddeDisp->registerDDE(sysType, dde);
+    }
 
     #ifndef NO_DEMO
         IDDE* dde_emul = new DDE_EMUL();
@@ -152,12 +161,6 @@ void Core::start(SysType sysType)
         }
     }
 
-    if (m_sysService) {
-        m_sysService->stop();
-        delete m_sysService;
-        m_sysService = nullptr;
-    }
-
     if (m_paramsHandler && m_deviceHandler && m_oscHandler) {
         RequestManager::instance()->remove(m_paramsHandler);
         RequestManager::instance()->remove(m_deviceHandler);
@@ -190,7 +193,7 @@ void Core::start(SysType sysType)
 
     OscStateService* stateService = m_oscStates.value(sysType, nullptr);
     if (!stateService) {
-        stateService = new OscStateService(m_ddeDisp->dde(sysType), oscData);
+        stateService = new OscStateService(dde, oscData);
         m_oscStates.insert(sysType, stateService);
     }
 
@@ -213,18 +216,15 @@ void Core::start(SysType sysType)
     StreamManager::instance()->registerHandler(m_paramsHandler);
     StreamManager::instance()->registerHandler(m_oscHandler);
 
-    if (!m_sysService) {
-        m_sysService = new SystemService(sysType, m_ddeDisp->dde(sysType));
-        connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
+    SystemService* sysService = m_sysServices[sysType];
+    if (!sysService) {
+        sysService = new SystemService(sysType, dde);
+        connect(sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
+        m_sysServices.insert(sysType, sysService);
+        sysService->start();
     }
 
-    QList<DevInd> links = m_sysService->linkedDevices(sysType);
-
-    // TODO remove this condition after refactoring IPC_MEM for multiple systems
-    if (links.length() > 1) {
-        m_sysService->start();
-    }
-
+    QList<DevInd> links = sysService->linkedDevices(sysType);
     m_oscStates[sysType]->init(links);
 
 #ifdef __linux__
@@ -264,7 +264,7 @@ void Core::thread_proc()
 
 void Core::onDeviceChanged(SysType sysType)
 {
-    DeviceIndList links = m_sysService->linkedDevices(sysType);
+    DeviceIndList links = m_sysServices[sysType]->linkedDevices(sysType);
     m_oscStates[sysType]->init(links);
 
     QJsonArray jsLinks;
