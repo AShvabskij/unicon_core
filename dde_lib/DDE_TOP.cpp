@@ -48,6 +48,7 @@ _dde_func_return_t DDE_TOP::get_params_header(DDE_GET_PARAMS_HEADER& p)
 _dde_func_return_t DDE_TOP::get_params_data(DDE_GET_PARAMS_DATA& p)
 {
     _dde_func_return_t res = m_params->get(p);
+
     return res;
 
 }
