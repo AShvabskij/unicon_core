@@ -162,7 +162,9 @@ void Core::start(SysType sysType)
     if (sysType == SysType::FILE_IO) {
         m_sysServices[FILE_IO]->start(FILE_IO);
     } else {
-        m_sysServices[FILE_IO]->stop();
+        if (m_sysServices.contains(FILE_IO)) {
+            m_sysServices[FILE_IO]->stop();
+        }
     }
 
 #ifdef __linux__
