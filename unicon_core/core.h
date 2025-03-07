@@ -4,15 +4,12 @@
 #include "socketserver.h"
 
 #include "dde_dispatcher.h"
-#include "oscstateservice.h"
 #include "systemservice.h"
 
 #include "basereqhandler.h"
 
 class IDDE;
 class IDDE_Dispatcher;
-class OscDataService;
-class OscHistoryService;
 class DataUsbCopier;
 
 class Core: public BaseReqHandler
@@ -43,17 +40,8 @@ private:
     SysType m_sysType = SysType::Undefined;
     QList<SysType> m_supportedSysTypes;
 
-    IReqHandler* m_paramsHandler = nullptr;
-    IReqHandler* m_deviceHandler = nullptr;
-    IReqHandler* m_oscHandler = nullptr;
-
-    OscDataService* m_hstDataService = nullptr;
-    OscHistoryService* m_oscHistoryService = nullptr;
     QMap<SysType, SystemService*> m_sysServices;
-
     DataUsbCopier* m_copier = nullptr;
-    QMap<SysType, OscStateService*> m_oscStates;
-    QMap<SysType, IOscDataService*> m_oscDatas;
 
     QFuture<void> m_threadFuture;
     QMutex m_mutex;

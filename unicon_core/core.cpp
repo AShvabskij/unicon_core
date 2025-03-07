@@ -1,18 +1,13 @@
 #include "core.h"
 
 #include "DDE_EMUL.h"
-#include "DDE_TOP.h"
 
 #include "datausbcopier.h"
 #include "requestmanager.h"
 #include "responsemanager.h"
-#include "paramshandler.h"
-#include "devicehandler.h"
-#include "oschandler.h"
 
 #include "oscdataservice.h"
 #include "oscdatalogger.h"
-#include "oschistoryservice.h"
 
 #include <QObject>
 #include <QtWebSockets>
@@ -152,80 +147,23 @@ void Core::start(SysType sysType)
 
     m_mutex.lock();
 
-    if (sysType != SysType::FILE_IO) {
-        OscStateService* demoSrv = m_oscStates.value(FILE_IO, nullptr);
-        if (demoSrv) {
-            demoSrv->clear();
-            m_oscStates.remove(FILE_IO);
-            delete demoSrv;
-        }
-    }
-
-    if (m_paramsHandler && m_deviceHandler && m_oscHandler) {
-        RequestManager::instance()->remove(m_paramsHandler);
-        RequestManager::instance()->remove(m_deviceHandler);
-        RequestManager::instance()->remove(m_oscHandler);
-        ResponseManager::instance()->unregisterHandler(m_deviceHandler);
-        ResponseManager::instance()->unregisterHandler(m_paramsHandler);
-        ResponseManager::instance()->unregisterHandler(m_oscHandler);
-        StreamManager::instance()->unregisterHandler(m_paramsHandler);
-        StreamManager::instance()->unregisterHandler(m_oscHandler);
-
-        m_paramsHandler->handleClose();
-        m_deviceHandler->handleClose();
-        m_oscHandler->handleClose();
-
-        delete m_paramsHandler;
-        delete m_deviceHandler;
-        delete m_oscHandler;
-
-        m_paramsHandler = nullptr;
-        m_deviceHandler = nullptr;
-        m_oscHandler = nullptr;
-    }
-
-    IOscDataService* oscData = m_oscDatas.value(sysType, nullptr);
-    if (!oscData) {
-        oscData = new OscDataService(OscDataLogger::instance());
-        m_oscDatas.insert(sysType, oscData);
-        connect((OscDataService*)oscData, &OscDataService::dataSaved, m_copier, &DataUsbCopier::onDataSaved, Qt::AutoConnection);
-    }
-
-    OscStateService* stateService = m_oscStates.value(sysType, nullptr);
-    if (!stateService) {
-        stateService = new OscStateService(dde, oscData);
-        m_oscStates.insert(sysType, stateService);
-    }
-
-    if (!m_hstDataService && !m_oscHistoryService) {
-        m_hstDataService = new OscDataService(OscDataLogger::instance());
-        m_oscHistoryService = new OscHistoryService(m_hstDataService, OscDataLogger::instance());
-    }
-
-    m_paramsHandler = new ParamsHandler(m_ddeDisp, sysType);
-    m_deviceHandler = new DeviceHandler(m_ddeDisp, sysType);
-    m_oscHandler = new OscHandler(m_ddeDisp, sysType, oscData);
-    dynamic_cast<OscHandler*> (m_oscHandler)->setService(m_oscHistoryService);
-
-    RequestManager::instance()->registerHandler(m_deviceHandler);
-    RequestManager::instance()->registerHandler(m_paramsHandler);
-    RequestManager::instance()->registerHandler(m_oscHandler);
-    ResponseManager::instance()->registerHandler(m_deviceHandler);
-    ResponseManager::instance()->registerHandler(m_paramsHandler);
-    ResponseManager::instance()->registerHandler(m_oscHandler);
-    StreamManager::instance()->registerHandler(m_paramsHandler);
-    StreamManager::instance()->registerHandler(m_oscHandler);
-
     SystemService* sysService = m_sysServices[sysType];
     if (!sysService) {
-        sysService = new SystemService(sysType, dde);
+        sysService = new SystemService(sysType, m_ddeDisp);
         connect(sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
+
+        IOscDataService* oscData = sysService->getOscDataService();
+        connect((OscDataService*)oscData, &OscDataService::dataSaved, m_copier, &DataUsbCopier::onDataSaved, Qt::AutoConnection);
+        sysService->start(sysType);
+
         m_sysServices.insert(sysType, sysService);
-        sysService->start();
     }
 
-    QList<DevInd> links = sysService->linkedDevices(sysType);
-    m_oscStates[sysType]->init(links);
+    if (sysType == SysType::FILE_IO) {
+        m_sysServices[FILE_IO]->start(FILE_IO);
+    } else {
+        m_sysServices[FILE_IO]->stop();
+    }
 
 #ifdef __linux__
     if (!m_threadFuture.isRunning()) {
@@ -248,12 +186,12 @@ void Core::thread_proc()
     {
         m_mutex.lock();
 
-        for (const SysType sysType: m_oscStates.keys()) {
+        for (const SysType sysType: m_sysServices.keys()) {
             if (sysType == FILE_IO && sysType != m_sysType) { // no update demo if demo mode is OFF
                 continue;
             }
 
-            m_oscStates[sysType]->update();
+            m_sysServices[sysType]->update();
         }
 
         m_mutex.unlock();
@@ -265,7 +203,6 @@ void Core::thread_proc()
 void Core::onDeviceChanged(SysType sysType)
 {
     DeviceIndList links = m_sysServices[sysType]->linkedDevices(sysType);
-    m_oscStates[sysType]->init(links);
 
     QJsonArray jsLinks;
     for(auto dev_ind: links) {
