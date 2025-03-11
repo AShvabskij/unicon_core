@@ -89,8 +89,14 @@ long OscDataLogger::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuf
         QJsonObject datjsonObj = serializeToJSon(data);
 
         QString datFile = path + "/" + baseFileName + ".dat";
+        QString lastDatFile = path + "/" + "last_data" + ".json";
 
         res = saveObj(datFile, datjsonObj, true);
+        if (res == _return_OK) {
+            // save data to json format for debugging purpose only
+            res = saveObj(lastDatFile, datjsonObj, false);
+        }
+
         if (res == _return_OK) {
             qInfo() << "Saved osc data, device id = " << header.device_id << " to file: " << headerFile << ENDL;
         }
