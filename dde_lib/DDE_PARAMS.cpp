@@ -388,8 +388,8 @@ _dde_func_return_t DDE_PARAMS::update_device_params(uint16_t device_id)
         headers.el_count = 0;
 
         res = _paramDescr->get(&headers, db_type::usual);
-        if (res != _return_OK) break;
 
+        if (res != _return_OK) continue;
         if (headers.el_count == 0) continue;
 
         for (int ind = 0; ind < headers.el_count; ind++) {
