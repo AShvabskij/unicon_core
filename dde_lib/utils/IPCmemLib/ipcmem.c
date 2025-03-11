@@ -7,9 +7,7 @@ const uint32_t mem_owner_flag = 0664;
 const uint32_t dir_owner_flag = 0777;
 
 char pathKey[MAX_DEV_SUPPORT][MAX_FNAME_LEN];
-const char* pathCmdKey = "DEVICE_COMMANDS";
 
-DEVICE_ELEMENTS* pDev[MAX_DEV_SUPPORT] = { NULL };
 DEVICE_COMMANDS* _devCmdPtr = { NULL };
 uintptr_t _blkPtr[MAX_DEV_SUPPORT] = { NULL };
 
@@ -32,25 +30,23 @@ int initBlk(const char* blkName,  size_t blkSize, uintptr_t* ret_ptr)
 {
     void* blkShm = NULL;
     int ret = -1;
-    int flg = O_RDWR | O_CREAT;
+    int flg = O_CREAT | O_RDWR;
 
-    int key = shm_open(blkName, flg, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);// | S_IROTH | S_IWOTH);
-    if (key != -1) {
-        ftruncate(key, blkSize);
-        blkShm = mmap(NULL, blkSize, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
-        if (blkShm != MAP_FAILED) {
-            ret = key;
-            *ret_ptr = blkShm;
-        } else {
-#ifdef SET_DEBUG_IPC
-            Report(1, "[%s] Can't get shm_blk by '%s' for 'pDev[%d]'.\n", __func__, pathKey[i], i);
-#endif
-            return -1;
-        }
+    int key = shm_open(blkName, flg,  S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);// | S_IROTH | S_IWOTH);
+    if (key == -1) {
+        fprintf(stderr, "Can't init shm_blk by '%s'\n", blkName);
+        return -1;
     }
-#ifdef SET_DEBUG_IPC
-    Report(1, "[%s] shm_open()=%d mmap()=%p\n", __func__, key, adr);
-#endif
+
+    ftruncate(key, blkSize);
+    blkShm = mmap(NULL, blkSize, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
+    if (blkShm != MAP_FAILED) {
+        ret = key;
+        *ret_ptr = blkShm;
+    } else {
+        fprintf(stderr, "Can't init shm_blk by '%s'\n", blkName);
+        return -1;
+    }
 
     return ret;
 }
@@ -96,7 +92,7 @@ int initCmdBlk(const char *sys_name)
 
     strcat(named, sys_name);
 
-    int dl = sprintf(namef, "%s_cmd", named);
+    int dl = sprintf(namef, "%s_CMD", named);
     if (dl > MAX_FNAME_LEN) dl = MAX_FNAME_LEN;
     memset(cmdKey, 0, MAX_FNAME_LEN);
     memcpy(cmdKey, namef, dl);
@@ -119,11 +115,10 @@ int mkKeyFiles(const char* path)
     char namef[MAX_FNAME_LEN + 32] = { 0 };
     char named[MAX_FNAME_LEN] = { 0 };
 
-
     strcat(named, path);
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        int dl = sprintf(namef, "%s%02d", named, i);
+        int dl = sprintf(namef, "%s_%02d", named, i);
         if (dl > MAX_FNAME_LEN) dl = MAX_FNAME_LEN;
         memset(pathKey[i], 0, MAX_FNAME_LEN);
         memcpy(pathKey[i], namef, dl);
@@ -133,7 +128,7 @@ int mkKeyFiles(const char* path)
 }
 //-----------------------------------------------------------------------
 //         Make shared memory blocks
-//         return : MAX_DEV_SUPPORT pointers in array pDev[]
+//         return : MAX_DEV_SUPPORT pointers in array _blkPtr[]
 //
 int IPCMEM_init(const char* sys_name, int blkSize)
 {

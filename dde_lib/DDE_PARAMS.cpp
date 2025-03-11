@@ -591,12 +591,15 @@ _dde_func_return_t DDE_PARAMS::write_cmd_array(uint8_t device_id, DDE_PARAMS_CMD
                 direct_write(set_err);
 
                 DDE_PARAMS_CMD& cmd = cmdArray[0];
-                std::cout << "Error remote reading cmd! dev_id=" + std::to_string(device_id)
-                          << " mod_id=" + std::to_string(cmd.module_id)
-                          << " par_id=" + std::to_string(cmd.param_id)
-                          << " nRW=" + std::to_string(cmd.nRW)
-                          << ". Check if a remote device proccess is working!"
-                          << std::endl;
+                bool isLinkedCmd = (device_id == 0 && cmd.module_id == DDE_DEV0_MODULE1_DEVS_LINK);
+                if (!isLinkedCmd) {
+                    std::cout << "Error remote reading cmd! dev_id=" + std::to_string(device_id)
+                              << " mod_id=" + std::to_string(cmd.module_id)
+                              << " par_id=" + std::to_string(cmd.param_id)
+                              << " nRW=" + std::to_string(cmd.nRW)
+                              << ". Check if a remote device proccess is working!"
+                              << std::endl;
+                }
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIMEOUT_MSC));
