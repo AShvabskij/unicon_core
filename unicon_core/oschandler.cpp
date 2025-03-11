@@ -565,7 +565,7 @@ long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *out)
     for (int chInd = 0; chInd < header.settings.channels_count; chInd++) {
         const OSC_CHANNEL& channel = header.channels[chInd];
         if (channel.var.id <= 0) {
-            qInfo() << DDE_LOG_PREFIX << "Skipped channel var, name = " << channel.var.name;
+            qInfo() << DDE_LOG_PREFIX << "Skipped osc var, id = " << channel.var.id << "name = " << channel.var.name;
             continue;
         }
 
