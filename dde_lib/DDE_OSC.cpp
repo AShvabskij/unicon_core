@@ -122,14 +122,14 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
     colors[3] = 0x01ffff;
 
     for (int i = 0; i < OSC_MAX_VARS; i++) {
-        if (header.channels[i].var.color != 0) {
+        if (header.vars[i].var.color != 0) {
             continue;
         }
 
-        if (header.channels[i].var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
-            header.channels[i].var.color = colors[0];
+        if (header.vars[i].var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
+            header.vars[i].var.color = colors[0];
         } else {
-            header.channels[i].var.color = colors[i % 4];
+            header.vars[i].var.color = colors[i % 4];
         }
     }
 

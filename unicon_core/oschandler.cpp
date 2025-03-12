@@ -562,17 +562,16 @@ long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *out)
     qDebug() << DDE_LOG_PREFIX
              << "Get osc header" << ", channel count = " << header.settings.channels_count;
 
-    for (int chInd = 0; chInd < header.settings.channels_count; chInd++) {
-        const OSC_CHANNEL& channel = header.channels[chInd];
-        if (channel.var.id <= 0) {
-            qInfo() << DDE_LOG_PREFIX << "Skipped osc var, id = " << channel.var.id << "name = " << channel.var.name;
+    for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
+        const OSC_VAR& var = header.vars[ind];
+        if (!var.isValid()) {
             continue;
         }
 
-        if (channel.var.type == OSC_VAR_TYPE::OSC_VAR_FLOAT || channel.var.type == OSC_VAR_TYPE::OSC_VAR_INT) {
-            out->analogChannels[chInd] = createChannelDescr(channel);
-        } else if (channel.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
-            out->discreteChannels[chInd] = createChannelDescr(channel);
+        if (var.var.type == OSC_VAR_TYPE::OSC_VAR_FLOAT || var.var.type == OSC_VAR_TYPE::OSC_VAR_INT) {
+            out->analogChannels[ind] = createChannelDescr(var);
+        } else if (var.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
+            out->discreteChannels[ind] = createChannelDescr(var);
         }
     }
 
@@ -613,22 +612,22 @@ long OscHandler::setHeader(const DevID& deviceID, const OscSettings& settings)
     return _return_OK;
 }
 
-OscChannelDescr OscHandler::createChannelDescr(const OSC_CHANNEL& channel)
+OscChannelDescr OscHandler::createChannelDescr(const OSC_VAR& var)
 {
     OscChannelDescr ret;
-    ret.channelNum = channel.chNum;
-    ret.varId = channel.var.id;
-    ret.varName = channel.var.name;
-    ret.scale = channel.var.scale;
-    ret.min = channel.var.min;
-    ret.max = channel.var.max;
-    ret.color = channel.var.color;
+    ret.channelNum = var.chNum;
+    ret.varId = var.var.id;
+    ret.varName = var.var.name;
+    ret.scale = var.var.scale;
+    ret.min = var.var.min;
+    ret.max = var.var.max;
+    ret.color = var.var.color;
 
-    ret.firstBit = channel.firstBit;
-    ret.lastBit = channel.lastBit;
+    ret.firstBit = var.firstBit;
+    ret.lastBit = var.lastBit;
 
-    ret.isDiscrete = (channel.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE);
-    ret.isDigital = (channel.var.type == OSC_VAR_TYPE::OSC_VAR_INT);
+    ret.isDiscrete = (var.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE);
+    ret.isDigital = (var.var.type == OSC_VAR_TYPE::OSC_VAR_INT);
 
     return ret;
 }

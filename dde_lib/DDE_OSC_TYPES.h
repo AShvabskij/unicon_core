@@ -35,7 +35,7 @@ enum OSC_VAR_TYPE
      OSC_VAR_DISCRETE = 3
 };
 
-struct OSC_VAR
+struct OSC_VAR_DESCR
 {
     uint16_t id = 0;
 
@@ -49,10 +49,10 @@ struct OSC_VAR
     int color = 0;
 };
 
-struct OSC_CHANNEL
+struct OSC_VAR
 {
     uint16_t chNum = 0;
-    OSC_VAR var;
+    OSC_VAR_DESCR var;
 
     float gain = 0.0;
     float offset = 0.0;
@@ -60,6 +60,10 @@ struct OSC_CHANNEL
     // for discrete values only
     uint8_t firstBit = 0;
     uint8_t lastBit = 0;
+
+    bool isValid() const {
+        return var.type != OSC_VAR_TYPE::UNDEFINED && var.id > 0;
+    }
 };
 
 union OSC_DATA
@@ -94,8 +98,8 @@ struct DDE_OSC_HEADER
 {
     uint16_t device_id = 0; // todo rename to osc_id
 
-    OSC_CHANNEL channels[OSC_MAX_VARS + 1];
-
+    OSC_VAR vars[OSC_MAX_VARS + 1];
+    
     OSC_SETTING settings;
 };
 
@@ -110,7 +114,7 @@ struct DDE_GET_OSC_DATA
     bool eof = false;    // flag if it is the last frame
     bool sof = false;    // save-of-file - flag if it is the first frame
 
-    OSC_DATA data[OSC_MAX_VARS + 1];
+    OSC_DATA data[OSC_MAX_CHANNELS + 1];
 };
 
 struct DDE_SET_OSC_DATA
@@ -121,7 +125,7 @@ struct DDE_SET_OSC_DATA
     bool eof = false;
     bool sof = false; // mark start block to start saving
 
-    OSC_DATA data[OSC_MAX_VARS + 1];
+    OSC_DATA data[OSC_MAX_CHANNELS + 1];
 };
 
 struct DDE_OSC_DATA_HEADER

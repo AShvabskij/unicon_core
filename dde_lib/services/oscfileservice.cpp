@@ -277,16 +277,16 @@ _dde_func_return_t OscFileService::getHeader(DDE_OSC_HEADER &p)
 
     p.settings = m_header->settings;
 
-    for (int chInd = 1; chInd <= OSC_MAX_VARS; chInd++) {
-        OSC_CHANNEL& channel = p.channels[chInd];
-        const OSC_FILE::VAR_DESCR& var = m_header->vars[chInd];
+    for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
+        OSC_VAR& var = p.vars[ind];
+        const OSC_FILE::VAR_DESCR& var_src = m_header->vars[ind];
 
-        channel.chNum = var.chNum;
-        channel.var = createOscVar(var);
-        channel.gain = var.gain;
-        channel.offset = var.offset;
-        channel.firstBit = var.firstBit;
-        channel.lastBit = var.lastBit;
+        var.chNum = var_src.chNum;
+        var.var = createOscVar(var_src);
+        var.gain = var_src.gain;
+        var.offset = var_src.offset;
+        var.firstBit = var_src.firstBit;
+        var.lastBit = var_src.lastBit;
     }
 
     return _return_OK;
@@ -298,9 +298,9 @@ _dde_func_return_t OscFileService::setHeader(const DDE_OSC_HEADER& h)
     return _return_OK;
 }
 
-OSC_VAR OscFileService::createOscVar(const OSC_FILE::VAR_DESCR& descr)
+OSC_VAR_DESCR OscFileService::createOscVar(const OSC_FILE::VAR_DESCR& descr)
 {
-    OSC_VAR ret;
+    OSC_VAR_DESCR ret;
     ret.id = descr.var_id;
     strcpy(ret.name, descr.name);
     strcpy(ret.user_name, descr.name);

@@ -152,17 +152,17 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
     }
     buff->trig_time = time;
 
-    for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
-        const OSC_CHANNEL& channel = hdr.channels[chInd];
+    for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
+        const OSC_VAR& var = hdr.vars[ind];
 
-        if (channel.var.id == 0) continue;
+        if (!var.isValid()) continue; // TODO: may be break here
 
-        OscChannelValues& chValues = buff->chArray[chInd];
-        chValues.channelNum = channel.chNum;
-        chValues.varId = channel.var.id;
-        chValues.scale = channel.gain;
-        chValues.offset = channel.offset;
-        chValues.type = channel.var.type;
+        OscChannelValues& chValues = buff->chArray[ind]; // TODO: replace to buff->chArray[var.chNum]
+        chValues.channelNum = var.chNum;
+        chValues.varId = var.var.id;
+        chValues.scale = var.gain;
+        chValues.offset = var.offset;
+        chValues.type = var.var.type;
 
         chValues.reserve(MAX_DATA_COUNT);
     }
@@ -213,15 +213,16 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     buff->valueCount += dat.data_length;
     qint8 ival_arr[dat.data_length + 1];
 
-    for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
-        const OSC_CHANNEL& channel = hdr.channels[chInd];
+    int var_count = 0;
+    for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
+        const OSC_VAR& var = hdr.vars[ind];
 
-        if (channel.var.id == 0) continue;
+        if (!var.isValid()) continue;
 
-        const OSC_DATA& chData = dat.data[channel.chNum];
-        OscChannelValues& chValues = buff->chArray[chInd];
+        const OSC_DATA& chData = dat.data[var.chNum];
+        OscChannelValues& chValues = buff->chArray[ind];
 
-        switch (channel.var.type) {
+        switch (var.var.type) {
         case OSC_VAR_TYPE::OSC_VAR_INT: {
             chValues.append(chData.i_buff, dat.data_length);
         } break;
@@ -232,15 +233,16 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
         case OSC_VAR_TYPE::OSC_VAR_DISCRETE: {
             for (int i = 0; i < dat.data_length; i++) {
                 int32_t rawValue = chData.i_buff[i];
-                ival_arr[i] = discreteValue(rawValue, channel.firstBit, channel.lastBit);
+                ival_arr[i] = discreteValue(rawValue, var.firstBit, var.lastBit);
             }
             chValues.append(ival_arr, dat.data_length);
         } break;
         case UNDEFINED: {
-            qWarning() << "Undefined var type" << ", id = " << channel.var.id << ", name = " << channel.var.name;
+            qWarning() << "Undefined var type" << ", id = " << var.var.id << ", name = " << var.var.name;
         }
         }
 
+        var_count++;
     }
 
     int resolution = static_cast<int>(hdr.settings.time_resolution_us);
@@ -249,7 +251,7 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     m_mutex.unlock();
 
     qDebug() << "AppendData:"
-             << "channels =" << hdr.settings.channels_count
+             << "vars =" << var_count
              << "length =" << dat.data_length
              << "took" << timer.elapsed() << "ms";
 

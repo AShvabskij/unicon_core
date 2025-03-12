@@ -70,7 +70,7 @@ private:
     float normalizeValue(uint16_t rawValue);
     std::vector<std::string> split(std::string inputStr, char delim);
     OSC_FILE::VAR_DESCR createVarDescr(std::vector<std::string> &elems, uint16_t varId, bool isDigital);
-    OSC_VAR createOscVar(const OSC_FILE::VAR_DESCR& descr);
+    OSC_VAR_DESCR createOscVar(const OSC_FILE::VAR_DESCR& descr);
     int th_loadData();
 
     OSC_FILE::FILE_HEADER* m_header = nullptr;

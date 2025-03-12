@@ -318,7 +318,7 @@ namespace OscType {
         bool eof = false;
         bool sof = false;
 
-        OscChannelValues chArray[OSC_MAX_VARS + 1];
+        OscChannelValues chArray[OSC_MAX_VARS + 1]; // TODO: replace to chArray[OSC_MAX_CHANNELS + 1]
 
         bool isOversized() {
             if (valueCount > MAX_DATA_COUNT)

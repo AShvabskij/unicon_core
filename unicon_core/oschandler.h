@@ -38,7 +38,7 @@ private:
     QJsonObject createHeaderObj(int requestId, const OscType::OscHeader& header);
     QJsonObject createChannelObj(int requestId, const OscType::OscChannelDescr& ch);
     QJsonObject createAnswerObj(int requestId, DevID deviceID, const QJsonObject &body = QJsonObject(), int error = 0);
-    OscType::OscChannelDescr createChannelDescr(const OSC_CHANNEL &channel);
+    OscType::OscChannelDescr createChannelDescr(const OSC_VAR &var);
     qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
 
     long startStreamData(const DevID& devID, QVector<int> oscVars);

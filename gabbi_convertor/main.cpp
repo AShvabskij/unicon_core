@@ -40,18 +40,18 @@ OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
     buff->timestamp = hdr.settings.trig_time;
     buff->trig_time = hdr.settings.trig_time;
 
-    for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
-        const OSC_CHANNEL& channel = hdr.channels[chInd];
-        if (channel.var.id <= 0) {
+    for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
+        const OSC_VAR& var = hdr.vars[ind];
+        if (!var.isValid()) {
             continue;
         }
 
-        OscType::OscChannelValues& chValues = buff->chArray[chInd];
-        chValues.channelNum = channel.chNum;
-        chValues.varId = channel.var.id;
-        chValues.type = channel.var.type;
-        chValues.scale = channel.gain;
-        chValues.offset = channel.offset;
+        OscType::OscChannelValues& chValues = buff->chArray[ind];
+        chValues.channelNum = var.chNum;
+        chValues.varId = var.var.id;
+        chValues.type = var.var.type;
+        chValues.scale = var.gain;
+        chValues.offset = var.offset;
     }
 
     return buff;
@@ -90,37 +90,37 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
     QStringList varNumOfSets;
     QMap<int/*var_id*/, int/*bitNum*/> discrVarsBits;
 
-    for (int i= 0; i < hdr.settings.channels_count; ++i) {
-        auto& ch = hdr.channels[i];
+    for (int i= 0; i < OSC_MAX_VARS; ++i) {
+        auto& var = hdr.vars[i];
 
-        if (ch.var.id <= 0)
+        if (!var.isValid())
             continue;
 
-        int chNumOfSet = (ch.chNum + 1) - (numOfSet - 1) * SET_SIZE;
+        int chNumOfSet = (var.chNum + 1) - (numOfSet - 1) * SET_SIZE;
 
         QStringList line;
 
-        QRgb rgb = ch.var.color;
+        QRgb rgb = var.var.color;
 
-        if (ch.var.type == OSC_VAR_FLOAT || ch.var.type == OSC_VAR_INT) {
-            int lastBit = (ch.lastBit > 0 && ch.lastBit < MAX_BIT_NUM) ? ch.lastBit : MAX_BIT_NUM;
-            float gain = (ch.gain != 0.0 && ch.gain != 1.0) ? ch.gain : ch.var.scale;
+        if (var.var.type == OSC_VAR_FLOAT || var.var.type == OSC_VAR_INT) {
+            int lastBit = (var.lastBit > 0 && var.lastBit < MAX_BIT_NUM) ? var.lastBit : MAX_BIT_NUM;
+            float gain = (var.gain != 0.0 && var.gain != 1.0) ? var.gain : var.var.scale;
 
-            line << QString("@") + QString(ch.var.name)
+            line << QString("@") + QString(var.var.name)
                  << QString("L") + QString::number(numOfSet)
                  << QString::number(chNumOfSet).rightJustified(2, '0')
-                 << QString("D") + QString::number(ch.firstBit).rightJustified(2, '0')
+                 << QString("D") + QString::number(var.firstBit).rightJustified(2, '0')
                  << QString("D") + QString::number(lastBit).rightJustified(2, '0')
-                 << QString::number(gain) << QString::number(ch.offset)
+                 << QString::number(gain) << QString::number(var.offset)
                  << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
                  << "TRUE";
-        } else if (ch.var.type == OSC_VAR_DISCRETE) {
-            discrVarsBits[ch.var.id] = ch.firstBit;
+        } else if (var.var.type == OSC_VAR_DISCRETE) {
+            discrVarsBits[var.var.id] = var.firstBit;
 
-            line << QString("&") + QString(ch.var.name)
+            line << QString("&") + QString(var.var.name)
                  << QString("L") + QString::number(numOfSet)
                  << QString::number(chNumOfSet).rightJustified(2, '0')
-                 << QString("D") + QString::number(ch.firstBit).rightJustified(2, '0')
+                 << QString("D") + QString::number(var.firstBit).rightJustified(2, '0')
                  << QString("BIT")
                  << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
                  << "TRUE";
@@ -129,7 +129,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
         res << line.join(SEP) << ENDL;
 
         varIndexes << QString::number(i);
-        varNames << ch.var.name;
+        varNames << var.var.name;
         varNumOfSets <<  QString("L") + QString::number(numOfSet) + "_" + QString::number(chNumOfSet).rightJustified(2, '0');
     }
 

@@ -243,25 +243,28 @@ QJsonObject OscDataLogger::headerToJson(const DDE_OSC_HEADER &h)
     res["resolution_us"] = QString::number(h.settings.time_resolution_us);
 
     QJsonArray channelsObj;
-    for (int chInd = 0; chInd < h.settings.channels_count; chInd++) {
-        const OSC_CHANNEL& ch = h.channels[chInd];
+    for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
+        const OSC_VAR& var = h.vars[ind];
+
+        if (!var.isValid()) continue;
+
         QJsonObject obj;
-        obj["ch_num"] = ch.chNum;
-        obj["first_bit"] = ch.firstBit;
-        obj["last_bit"] = ch.lastBit;
-        obj["gain"] = ch.gain;
-        obj["offset"] = ch.offset;
+        obj["ch_num"] = var.chNum;
+        obj["first_bit"] = var.firstBit;
+        obj["last_bit"] = var.lastBit;
+        obj["gain"] = var.gain;
+        obj["offset"] = var.offset;
 
 
-        obj["var_id"] = ch.var.id;
-        obj["name"] = ch.var.name;
-        obj["dim"] = ch.var.dim;
-        obj["scale"] = ch.var.scale;
-        obj["min"] = ch.var.min;
-        obj["max"] = ch.var.max;
-        obj["color"] = colorToString(ch.var.color);
+        obj["var_id"] = var.var.id;
+        obj["name"] = var.var.name;
+        obj["dim"] = var.var.dim;
+        obj["scale"] = var.var.scale;
+        obj["min"] = var.var.min;
+        obj["max"] = var.var.max;
+        obj["color"] = colorToString(var.var.color);
 
-        obj["type"] = OSC_VAR_TYPE_TO_STRING(ch.var.type);
+        obj["type"] = OSC_VAR_TYPE_TO_STRING(var.var.type);
 
         channelsObj << obj;
     }
@@ -532,25 +535,25 @@ long OscDataLogger::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
     h.settings.time_resolution_us = obj["resolution_us"].toVariant().toInt();
 
     QJsonArray arr = obj["channels"].toArray();
-    h.settings.channels_count = arr.count();
-    for (int ind = 0; ind < h.settings.channels_count; ind++) {
+    int var_count = arr.count();
+    for (int ind = 0; ind < var_count; ind++) {
         QJsonObject elem = arr[ind].toObject();
-        auto& ch = h.channels[ind];
+        auto& var = h.vars[ind];
 
-        ch.chNum = elem["ch_num"].toInt();
-        ch.firstBit = elem["first_bit"].toInt();
-        ch.lastBit = elem["last_bit"].toInt();
-        ch.gain = elem["gain"].toInt();
-        ch.offset = elem["offset"].toInt();
+        var.chNum = elem["ch_num"].toInt();
+        var.firstBit = elem["first_bit"].toInt();
+        var.lastBit = elem["last_bit"].toInt();
+        var.gain = elem["gain"].toInt();
+        var.offset = elem["offset"].toInt();
 
-        ch.var.id = elem["var_id"].toInt();
-        strcpy(ch.var.name, elem["name"].toString().toStdString().c_str());
-        strcpy(ch.var.dim, elem["dim"].toString().toStdString().c_str());
-        ch.var.scale = elem["scale"].toDouble(0);
-        ch.var.min = elem["min"].toDouble(0);
-        ch.var.max = elem["max"].toDouble(0);
-        ch.var.color = stringToColor(elem["color"].toString());
-        ch.var.type = OSC_VAR_TYPE_FROM_STRING(elem["type"].toString());
+        var.var.id = elem["var_id"].toInt();
+        strcpy(var.var.name, elem["name"].toString().toStdString().c_str());
+        strcpy(var.var.dim, elem["dim"].toString().toStdString().c_str());
+        var.var.scale = elem["scale"].toDouble(0);
+        var.var.min = elem["min"].toDouble(0);
+        var.var.max = elem["max"].toDouble(0);
+        var.var.color = stringToColor(elem["color"].toString());
+        var.var.type = OSC_VAR_TYPE_FROM_STRING(elem["type"].toString());
     }
 
     return _return_OK;

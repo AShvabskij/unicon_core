@@ -52,12 +52,12 @@ _dde_func_return_t OscIPCHeaderService::deInit(const char* sysName)
     return _dde_func_return_t();
 }
 
-bool OscIPCHeaderService::isValidOscChannel(const OSC_CHANNEL& ch)
+bool OscIPCHeaderService::isValidOscVar(const OSC_VAR& var)
 {
-   if (ch.var.type == OSC_VAR_TYPE::UNDEFINED)
+   if (!var.isValid())
        return false;
 
-   if (strlen(ch.var.name) == 0)
+   if (strlen(var.var.name) == 0)
        return false;
 
    return true;
@@ -79,38 +79,34 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
               << "Get osc header from IPC" << ", channel count = " << ch_count
               << std::endl;
 
-    for (int i = 0; i < rec->settings.channels_count; i++) {
+    for (int i = 0; i < OSC_MAX_VARS; i++) {
 
-        OSC_CHANNEL& channel = hdr.channels[i];
+        OSC_VAR& var = hdr.vars[i];
 
         const GLIO_OSC_CHANNEL& glio_ch = rec->channel[i];
-        if (strlen(glio_ch.name) == 0 || glio_ch.type == OSC_VAR_TYPE::UNDEFINED) {
-            std::cout << DDE_LOG_PREFIX
-                      << "Error getting osc channel header from IPC" << ", channel index = " << i
-                      << std::endl;
-
+        if (glio_ch.type == OSC_VAR_TYPE::UNDEFINED || strlen(glio_ch.name) == 0) {
             continue;
         }
 
-        channel.chNum = glio_ch.chNum;
-        channel.gain = glio_ch.gain;
-        channel.offset = glio_ch.offset;
-        channel.firstBit = glio_ch.firstBit;
-        channel.lastBit = glio_ch.lastBit;
+        var.chNum = glio_ch.chNum;
+        var.gain = glio_ch.gain;
+        var.offset = glio_ch.offset;
+        var.firstBit = glio_ch.firstBit;
+        var.lastBit = glio_ch.lastBit;
 
-        channel.var.id = i + 1;
+        var.var.id = i + 1;
 
-        strcpy(channel.var.name, glio_ch.name);
-        strcpy(channel.var.user_name, glio_ch.userName);
-        strcpy(channel.var.dim, glio_ch.dim);
-        channel.var.min = glio_ch.min;
-        channel.var.max = glio_ch.max;
-        channel.var.type = glio_ch.type;
-        channel.var.color = glio_ch.color;
-        channel.var.scale = glio_ch.gain;
+        strcpy(var.var.name, glio_ch.name);
+        strcpy(var.var.user_name, glio_ch.userName);
+        strcpy(var.var.dim, glio_ch.dim);
+        var.var.min = glio_ch.min;
+        var.var.max = glio_ch.max;
+        var.var.type = glio_ch.type;
+        var.var.color = glio_ch.color;
+        var.var.scale = glio_ch.gain;
 
         std::cout << DDE_LOG_PREFIX
-                  << "Header var = " << channel.var.name
+                  << "Header var = " << var.var.name
                   << std::endl;
 
     }
@@ -130,33 +126,29 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint16_t id, const DDE_OSC_HE
         rec.state = dat->state;
     }
 
-    int count = 0;
-    for (int ii = 0; ii <= OSC_MAX_VARS; ii++) {
-        const OSC_CHANNEL& channel = hdr.channels[ii];
+    for (int ii = 0; ii < OSC_MAX_VARS; ii++) {
+        const OSC_VAR& var = hdr.vars[ii];
 
-        if (!isValidOscChannel(channel))
-            break;
+        if (!isValidOscVar(var)) continue;
 
         GLIO_OSC_CHANNEL& glio_ch = rec.channel[ii];
 
-        glio_ch.chNum = channel.chNum;
-        glio_ch.gain = channel.gain;
-        glio_ch.offset = channel.offset;
-        glio_ch.firstBit = channel.firstBit;
-        glio_ch.lastBit = channel.lastBit;
+        glio_ch.chNum = var.chNum;
+        glio_ch.gain = var.gain;
+        glio_ch.offset = var.offset;
+        glio_ch.firstBit = var.firstBit;
+        glio_ch.lastBit = var.lastBit;
 
-        strcpy(glio_ch.name, channel.var.name);
-        strcpy(glio_ch.userName, channel.var.user_name);
-        strcpy(glio_ch.dim, channel.var.dim);
-        glio_ch.min = channel.var.min;
-        glio_ch.max = channel.var.max;
-        glio_ch.type = channel.var.type;
-        glio_ch.color = channel.var.color;
-        count++;
+        strcpy(glio_ch.name, var.var.name);
+        strcpy(glio_ch.userName, var.var.user_name);
+        strcpy(glio_ch.dim, var.var.dim);
+        glio_ch.min = var.var.min;
+        glio_ch.max = var.var.max;
+        glio_ch.type = var.var.type;
+        glio_ch.color = var.var.color;
     }
 
     rec.settings = hdr.settings;
-    rec.settings.channels_count = count;
 
     int res = osc_mem_setData(id, reinterpret_cast<unsigned char*>(&rec), sizeof(GLIO_OSC_HEADER));
 //  // pthread_mutex_unlock(&dat->shm_mutex);
