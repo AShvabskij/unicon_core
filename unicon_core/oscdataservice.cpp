@@ -286,24 +286,33 @@ long OscDataService::appendBuffer(OscType::OscDataBuffer&& buff)
 
 qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit)
 {
-    uint32_t mask = 0x0001;
-    qint32 res = rawValue >> firstBit;
+    qint8 res = 0;
+    if (firstBit == lastBit)
+    {
+        // Extract a single bit at the position specified by firstBit
+//        res = (rawValue >> (firstBit) & 0x01;
+         res = (rawValue >> (31 - firstBit)) & 1;
+    }
+    else if (lastBit > firstBit)
+    {
+        // Bit range extraction
+        // Calculate the number of bits to extract
+        qint8 bitLength = lastBit - firstBit + 1;
 
-    bool isBit = (firstBit == lastBit);
-    if (isBit) {
-        res &= mask;
-        return res;
+        // Create a mask with 'bitLength' number of 1s
+        qint32 mask = (1 << bitLength) - 1;
+
+        // Shift the rawValue to the right so that the desired range is aligned to the least significant bits
+        // Then apply the mask to extract the value
+        return (rawValue >> (31 - lastBit)) & mask;
+    }
+    else
+    {
+        // Handle invalid case where lastBit < firstBit (optional)
+        res = 0; // or throw an exception, depending on your requirements
     }
 
-    uint16_t tmpVal = 0x000;
-    for (int i = 0; i <= lastBit - firstBit; i++) {
-        tmpVal |= mask;
-        mask = mask << 1;
-    }
-
-    res &= tmpVal;
-
-    return static_cast<qint8>(res);
+    return res;
 }
 
 QJsonObject OscDataService::jsonData(OscHeader &header, QVector<int> vars, int &cnt, bool& isEof)
