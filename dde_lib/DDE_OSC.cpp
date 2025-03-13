@@ -19,7 +19,9 @@ DDE_OSC::DDE_OSC()
 
 DDE_OSC::~DDE_OSC()
 {
-    m_headerSrv->deInit();
+    if (m_sysName != "") {
+        m_headerSrv->deInit();
+    }
 
     delete m_dataSrv;
     delete m_headerSrv;
