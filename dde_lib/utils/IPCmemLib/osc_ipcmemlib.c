@@ -4,8 +4,7 @@
 
 char pathKey_[MAX_DEV_SUPPORT][MAX_FNAME_LEN];
 int shmBlk[MAX_DEV_SUPPORT] = { -1 };
-unsigned char* _blkPtr_t[MAX_DEV_SUPPORT] = { NULL };
-int _blkSize = 0;
+uintptr_t _blkPtr_t[MAX_DEV_SUPPORT] = { NULL };
 
 #ifdef SET_DEBUG_IPC
 char chap[BUF_TMP] = { 0 };
@@ -105,7 +104,7 @@ int osc_mem_deinit(const char* sys_name, int blkSize)
     return err;
 }
 
-unsigned char* osc_mem_getData(uint16_t ind)
+uintptr_t osc_mem_getData(uint16_t ind)
 {
     if (ind >= MAX_DEV_SUPPORT) {
         return NULL;

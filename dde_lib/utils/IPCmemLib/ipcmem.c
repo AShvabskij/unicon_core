@@ -118,7 +118,7 @@ int mkKeyFiles(const char* path)
     strcat(named, path);
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        int dl = sprintf(namef, "%s_%02d", named, i);
+        int dl = sprintf(namef, "%s_DEV_%02d", named, i);
         if (dl > MAX_FNAME_LEN) dl = MAX_FNAME_LEN;
         memset(pathKey[i], 0, MAX_FNAME_LEN);
         memcpy(pathKey[i], namef, dl);

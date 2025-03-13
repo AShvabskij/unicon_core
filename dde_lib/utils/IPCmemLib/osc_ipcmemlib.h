@@ -42,7 +42,7 @@ extern "C" {
 
 	int osc_mem_init(const char* sys_name, int blkSize);
 	int osc_mem_deinit(const char* sys_name, int blkSize);
-    unsigned char* osc_mem_getData(uint16_t id);
+    uintptr_t osc_mem_getData(uint16_t id);
     int osc_mem_setData(uint16_t ind, unsigned char* data, size_t sz);
 
 #ifdef SET_DEBUG
