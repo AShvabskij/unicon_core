@@ -292,21 +292,18 @@ qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastB
     if (firstBit == lastBit)
     {
         // Extract a single bit at the position specified by firstBit
-//        res = (rawValue >> (firstBit) & 0x01;
-         res = (rawValue >> (31 - firstBit)) & 0x01;
+         res = (rawValue >> firstBit) & 0x01;
     }
     else if (lastBit > firstBit)
     {
-        // Bit range extraction
         // Calculate the number of bits to extract
-        qint8 bitLength = lastBit - firstBit + 1;
+        qint8 numBits = lastBit - firstBit + 1;
 
-        // Create a mask with 'bitLength' number of 1s
-        qint32 mask = (1 << bitLength) - 1;
+        // Create a mask with the required number of bits set to 1
+        qint32 mask = (1 << numBits) - 1;
 
-        // Shift the rawValue to the right so that the desired range is aligned to the least significant bits
-        // Then apply the mask to extract the value
-        return (rawValue >> (31 - lastBit)) & mask;
+        // Shift the rawValue to the right by firstBit and apply the mask
+        res = (rawValue >> firstBit) & mask;
     }
     else
     {
