@@ -3,7 +3,7 @@
 #include "osc_ipcmemlib.h"
 
 #include <pthread.h>
-#include <cassert>
+#include <cpp_inc.h>
 
 _dde_func_return_t OscIPCHeaderService::init(const char* sysName)
 {
@@ -32,8 +32,10 @@ _dde_func_return_t OscIPCHeaderService::mutex_init()
 {
     int err = 0;
     pthread_mutexattr_t attr;
-    err = pthread_mutexattr_init(&attr); if (err) goto err;
-    err = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED); if (err) goto err;
+    err = pthread_mutexattr_init(&attr);
+    if (err) goto errLbl;
+    err = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+    if (err) goto errLbl;
 
     for (uint16_t i = 0; i < MAX_DEV_SUPPORT; i++) {
         GLIO_OSC_HEADER* rec = _pOsc[i];
@@ -62,12 +64,13 @@ errLbl:
 
 _dde_func_return_t OscIPCHeaderService::deInit()
 {
-    for (int devInd = 0; devInd < MAX_DEV_SUPPORT; i++) {
-        uintptr_t retPtr = 0;
-        osc_mem_setData(devInd, _pOsc[devInd], sizeof(GLIO_OSC_HEADER));
+    if (_sysName == "") return _return_OK;
+
+    for (int devInd = 0; devInd < MAX_DEV_SUPPORT; devInd++) {
+        osc_mem_setData(devInd, (uintptr_t)_pOsc[devInd], sizeof(GLIO_OSC_HEADER));
     }
 
-    osc_mem_deinit(_sysName.c_str(), sizeof(GLIO_OSC_HEADER));
+    osc_mem_deinit(_sysName.c_str(), (uintptr_t*)_pOsc, sizeof(GLIO_OSC_HEADER));
 
     return _return_OK;
 }
@@ -83,7 +86,7 @@ bool OscIPCHeaderService::isValidOscVar(const OSC_VAR& var)
    return true;
 }
 
-DDE_OSC_HEADER* OscIPCHeaderService::get_ipc_data(uint16_t id)
+GLIO_OSC_HEADER* OscIPCHeaderService::get_ipc_data(uint16_t id)
 {
     assert(id < MAX_DEV_SUPPORT);
 
@@ -147,13 +150,6 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint16_t id, const DDE_OSC_HE
     GLIO_OSC_HEADER rec;
     rec.id = hdr.device_id;
 
-    auto dat = get_ipc_data(id);
-//  // pthread_mutex_lock(&dat->shm_mutex);
-
-    if (dat) {
-        rec.state = dat->state;
-    }
-
     for (int ii = 0; ii < OSC_MAX_VARS; ii++) {
         const OSC_VAR& var = hdr.vars[ii];
 
@@ -178,16 +174,21 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint16_t id, const DDE_OSC_HE
 
     rec.settings = hdr.settings;
 
-    int res = osc_mem_setData(id, reinterpret_cast<unsigned char*>(&rec), sizeof(GLIO_OSC_HEADER));
-//  // pthread_mutex_unlock(&dat->shm_mutex);
+    GLIO_OSC_HEADER* dat = get_ipc_data(id);
+    if (!dat) return _return_FAIL;
+        // pthread_mutex_lock(&dat->shm_mutex);
+        rec.state = dat->state;
+        memcpy(dat, &rec, sizeof(GLIO_OSC_HEADER));
 
-    return (res > 0) ? _return_OK : _return_FAIL;
+        // pthread_mutex_unlock(&dat->shm_mutex);
+
+    return _return_OK;
 }
 
 const OSC_STATE OscIPCHeaderService::get_state(uint16_t id)
 {
     OSC_STATE state;
-    DDE_OSC_HEADER* dat = get_ipc_data(id);
+    GLIO_OSC_HEADER* dat = get_ipc_data(id);
     if (!dat) return state;
 
     memcpy(&state, &dat->state, sizeof(OSC_STATE));
@@ -197,7 +198,7 @@ const OSC_STATE OscIPCHeaderService::get_state(uint16_t id)
 
 _dde_func_return_t OscIPCHeaderService::set_state(uint16_t id, const OSC_STATE& setDat)
 {
-    DDE_OSC_HEADER* dat = get_ipc_data(id);
+    GLIO_OSC_HEADER* dat = get_ipc_data(id);
     if (!dat) return _return_FAIL;
 
 //  // pthread_mutex_lock(&dat->shm_mutex);
@@ -209,7 +210,7 @@ _dde_func_return_t OscIPCHeaderService::set_state(uint16_t id, const OSC_STATE& 
 
 _dde_func_return_t OscIPCHeaderService::get_settings(uint16_t id, OSC_SETTING& getDat)
 {
-    DDE_OSC_HEADER* dat = get_ipc_data(id);
+    GLIO_OSC_HEADER* dat = get_ipc_data(id);
     if (!dat) return _return_FAIL;
 
     memcpy(&getDat, &dat->settings, sizeof(OSC_SETTING));
@@ -219,7 +220,7 @@ _dde_func_return_t OscIPCHeaderService::get_settings(uint16_t id, OSC_SETTING& g
 
 int OscIPCHeaderService::get_ch_count(uint16_t id)
 {
-    DDE_OSC_HEADER* dat = get_ipc_data(id);
+    GLIO_OSC_HEADER* dat = get_ipc_data(id);
     if (!dat) return _return_FAIL;
 
     return dat->settings.channels_count;
@@ -227,7 +228,7 @@ int OscIPCHeaderService::get_ch_count(uint16_t id)
 
 _dde_func_return_t OscIPCHeaderService::set_settings(uint16_t id, const OSC_SETTING& setDat)
 {
-    DDE_OSC_HEADER* dat = get_ipc_data(id);
+    GLIO_OSC_HEADER* dat = get_ipc_data(id);
     if (!dat) return _return_FAIL;
 
 //  // pthread_mutex_lock(&dat->shm_mutex);
@@ -241,7 +242,7 @@ int OscIPCHeaderService::get_page_state(uint16_t id, uint8_t pageNum)
 {
     assert(pageNum <= OSC_PAGE_MAX);
 
-    DDE_OSC_HEADER* dat = get_ipc_data(id);
+    GLIO_OSC_HEADER* dat = get_ipc_data(id);
     if (!dat) return -1;
 
     return dat->state.pageMask[pageNum];
@@ -251,7 +252,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_state(uint16_t id, uint8_t page
 {
     assert(pageNum <= OSC_PAGE_MAX);
 
-    DDE_OSC_HEADER* dat = get_ipc_data(id);
+    GLIO_OSC_HEADER* dat = get_ipc_data(id);
     if (!dat) return _return_FAIL;
 
 //  // pthread_mutex_lock(&dat->shm_mutex);
@@ -267,7 +268,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_write(uint16_t id, uin
 {
     assert(pageNum <= OSC_PAGE_MAX);
 
-    DDE_OSC_HEADER* dat = get_ipc_data(id);
+    GLIO_OSC_HEADER* dat = get_ipc_data(id);
     if (!dat) return _return_FAIL;
 
     // pthread_mutex_lock(&dat->shm_mutex);
@@ -285,7 +286,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint16_t id, uint
 {
     assert(pageNum <= OSC_PAGE_MAX);
 
-    DDE_OSC_HEADER* dat = get_ipc_data(id);
+    GLIO_OSC_HEADER* dat = get_ipc_data(id);
     if (!dat) return _return_FAIL;
 
     // pthread_mutex_lock(&dat->shm_mutex);
@@ -305,7 +306,7 @@ _dde_func_return_t OscIPCHeaderService::set_page_ready_to_read(uint16_t id, uint
 
 int OscIPCHeaderService::get_page_ready_to_read(uint16_t id)
 {
-    DDE_OSC_HEADER* dat = get_ipc_data(id);
+    GLIO_OSC_HEADER* dat = get_ipc_data(id);
     if (!dat) return -1;
 
     if (dat->state.enabled == false) {
@@ -345,7 +346,7 @@ int OscIPCHeaderService::get_page_ready_to_read(uint16_t id)
 
 int OscIPCHeaderService::get_page_ready_to_write(uint16_t id)
 {
-    DDE_OSC_HEADER* dat = get_ipc_data(id);
+    GLIO_OSC_HEADER* dat = get_ipc_data(id);
     if (!dat) return -1;
 
     if (dat->state.enabled == false) {

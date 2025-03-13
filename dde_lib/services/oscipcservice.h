@@ -27,7 +27,7 @@ public:
     _dde_func_return_t set_page_ready_to_read(uint16_t id, uint8_t pageNum);
 
 private:
-    DDE_OSC_HEADER* get_ipc_data(uint16_t id);
+    GLIO_OSC_HEADER *get_ipc_data(uint16_t id);
 
     GLIO_OSC_HEADER* _pOsc[MAX_DEV_SUPPORT] = { NULL };
 

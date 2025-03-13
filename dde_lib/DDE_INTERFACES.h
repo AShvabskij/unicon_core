@@ -127,7 +127,7 @@ public:
     virtual ~IOscHeaderService() {}
 
     virtual _dde_func_return_t init(const char* sysName) = 0;
-    virtual _dde_func_return_t deInit(const char* sysName) = 0;
+    virtual _dde_func_return_t deInit() = 0;
 
     virtual _dde_func_return_t get_header(uint16_t id, DDE_OSC_HEADER&) = 0;
     virtual _dde_func_return_t set_header(uint16_t id, const DDE_OSC_HEADER&) = 0;

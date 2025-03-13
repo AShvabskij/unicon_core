@@ -80,15 +80,15 @@ int osc_mem_init(const char* sys_name, int blkSize)
     return 0;
 }
 //-----------------  Release All shared memory blocks  -----------------------
-int osc_mem_deinit(const char* sys_name, int blkSize)
+int osc_mem_deinit(const char* sys_name, uintptr_t* blkPtr, int blkSize)
 {
     int err = 0;
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        if (_blkPtr_t[i] != NULL) {
-            if (!munmap(_blkPtr_t[i], blkSize)) {
+        if (blkPtr[i] != NULL) {
+            if (!munmap(blkPtr[i], blkSize)) {
                 shmBlk[i] = -1;
-                _blkPtr_t[i] = NULL;
+                blkPtr[i] = NULL;
                 if (sys_name) {
                     if (shm_unlink(pathKey_[i]) != 0) {//error
                         err |= 2;
@@ -113,13 +113,13 @@ uintptr_t osc_mem_getData(uint16_t ind)
     return _blkPtr_t[ind];
 }
 
-int osc_mem_setData(uint16_t ind, unsigned char* data, size_t sz)
+int osc_mem_setData(uint16_t ind, uintptr_t data, size_t sz)
 {
     if (ind >= MAX_DEV_SUPPORT) {
         return -1;
     }
 
-    memcpy(_blkPtr_t[ind], data, sz);
+    _blkPtr_t[ind] = data;
 
     return _return_OK;
 }
