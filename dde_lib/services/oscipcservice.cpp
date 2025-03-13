@@ -114,7 +114,7 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
 
         OSC_VAR& var = hdr.vars[i];
 
-        const GLIO_OSC_CHANNEL& glio_ch = rec->channel[i];
+        const GLIO_OSC_VAR& glio_ch = rec->vars[i];
         if (glio_ch.type == OSC_VAR_TYPE::UNDEFINED || strlen(glio_ch.name) == 0) {
             continue;
         }
@@ -155,7 +155,7 @@ _dde_func_return_t OscIPCHeaderService::set_header(uint16_t id, const DDE_OSC_HE
 
         if (!isValidOscVar(var)) continue;
 
-        GLIO_OSC_CHANNEL& glio_ch = rec.channel[ii];
+        GLIO_OSC_VAR& glio_ch = rec.vars[ii];
 
         glio_ch.chNum = var.chNum;
         glio_ch.gain = var.gain;

@@ -137,7 +137,7 @@ struct DDE_OSC_DATA_HEADER
     bool sof = false;
 };
 
-struct GLIO_OSC_CHANNEL
+struct GLIO_OSC_VAR
 {
     uint16_t chNum = 0;
 
@@ -163,7 +163,7 @@ typedef struct
     uint16_t id;
     OSC_STATE state;
     OSC_SETTING settings;
-    GLIO_OSC_CHANNEL channel[OSC_MAX_VARS + 1];
+    GLIO_OSC_VAR vars[OSC_MAX_VARS + 1];
 
 } GLIO_OSC_HEADER;
 #endif
