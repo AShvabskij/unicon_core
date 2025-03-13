@@ -286,12 +286,14 @@ long OscDataService::appendBuffer(OscType::OscDataBuffer&& buff)
 
 qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit)
 {
+    Q_ASSERT(lastBit >= firstBit);
+
     qint8 res = 0;
     if (firstBit == lastBit)
     {
         // Extract a single bit at the position specified by firstBit
 //        res = (rawValue >> (firstBit) & 0x01;
-         res = (rawValue >> (31 - firstBit)) & 1;
+         res = (rawValue >> (31 - firstBit)) & 0x01;
     }
     else if (lastBit > firstBit)
     {
@@ -308,8 +310,7 @@ qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastB
     }
     else
     {
-        // Handle invalid case where lastBit < firstBit (optional)
-        res = 0; // or throw an exception, depending on your requirements
+        res = 0;
     }
 
     return res;
