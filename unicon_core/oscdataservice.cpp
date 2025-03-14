@@ -37,7 +37,7 @@ OscType::OscDataBuffer* OscDataService::get(DevInd device_id, qlonglong time)
 {
     QList<OscDataBuffer*> dev_buffers = m_repository.values(device_id);
     if (time == 0) {
-        return dev_buffers.count() > 0 ? dev_buffers.first() : nullptr;
+        return dev_buffers.count() > 0 ? dev_buffers.last() : nullptr;
     }
 
     if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
@@ -313,13 +313,12 @@ qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastB
     return res;
 }
 
-QJsonObject OscDataService::jsonData(OscHeader &header, QVector<int> vars, int &cnt, bool& isEof)
+QJsonObject OscDataService::jsonData(const DevID& deviceID, qlonglong trig_time, QVector<int> vars, int &cnt, bool& isEof)
 {
     QElapsedTimer timer;
     timer.start();
 
-    qlonglong trig_time = header.settings.trigDTime.toMSecsSinceEpoch();
-    OscType::OscDataBuffer* buff = get(header.deviceID.id, trig_time);
+    OscType::OscDataBuffer* buff = get(deviceID.id, trig_time);
 
     if (!buff) {
         return QJsonObject();

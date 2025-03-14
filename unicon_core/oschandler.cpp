@@ -367,7 +367,7 @@ long OscHandler::getAllData(const DevID &devID, QVector<int> oscVars)
 
     int obj_count = -1; // get all the data
     bool isEof = false;
-    QJsonObject response = m_dataSrv->jsonData(header, oscVars, obj_count, isEof);
+    QJsonObject response = m_dataSrv->jsonData(header.deviceID, 0, oscVars, obj_count, isEof);
 
     if (response.isEmpty()) {
         return _return_OK;
@@ -463,7 +463,7 @@ void OscHandler::th_streamData()
     while (true) {
 
         bool isEof = false;
-        QJsonObject response = m_dataSrv->jsonData(m_capturedOsc, m_capturedVars, obj_count, isEof);
+        QJsonObject response = m_dataSrv->jsonData(m_capturedOsc.deviceID, 0, m_capturedVars, obj_count, isEof);
 
         if (response.empty()) {
             break;
@@ -485,7 +485,6 @@ void OscHandler::th_streamData()
     }
 
     qDebug() << "Emit osc data, dev id =" << m_capturedOsc.deviceID.id
-             << "trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
              << "reason =" << m_capturedOsc.settings.reason
              << "channels =" <<  m_capturedVars.count()
              << "count =" << valCount
@@ -505,7 +504,9 @@ void OscHandler::th_streamHistoryData()
 
     while (true) {
         bool isEof = false;
-        QJsonObject response = dataSrv->jsonData(m_capturedOsc, m_capturedVars, obj_count, isEof);
+        qlonglong trig_time = m_capturedOsc.settings.trigDTime.toMSecsSinceEpoch();
+        QJsonObject response = dataSrv->jsonData(m_capturedOsc.deviceID, trig_time, m_capturedVars, obj_count, isEof);
+
         if (response.empty()) {
             break;
         }
