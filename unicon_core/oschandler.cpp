@@ -9,7 +9,7 @@ const QString CMD_TYPE_GET = "get";
 const QString CMD_TYPE_SET = "set";
 const QString CMD_OSC_DATA = "osc_data";
 
-const int SEND_OBJ_COUNT_MAX = 500;
+const int SEND_OBJ_COUNT_MAX = 5000// 65536;
 const int SEND_HISTORY_COUNT_MAX = 5000;
 const int SEND_HISTORY_COUNT_MIN = 1000;
 
@@ -459,7 +459,7 @@ void OscHandler::th_streamData()
     timer.start();
 
     int valCount = 0;
-    int obj_count = SEND_OBJ_COUNT_MAX;
+    int obj_count = SEND_OBJ_COUNT_MAX; // todo: it is better to specify a percentage of the total amount of data
     while (true) {
 
         bool isEof = false;

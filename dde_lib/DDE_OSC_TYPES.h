@@ -62,7 +62,7 @@ struct OSC_VAR
     uint8_t lastBit = 0;
 
     bool isValid() const {
-        return var.type != OSC_VAR_TYPE::UNDEFINED && var.id > 0;
+        return var.type != OSC_VAR_TYPE::UNDEFINED && var.id >= 0;
     }
 };
 
@@ -70,7 +70,7 @@ union OSC_DATA
 {
     float f_buff[OSC_DATA_BUFFER_SIZE];
     int32_t i_buff[OSC_DATA_BUFFER_SIZE];
-    uint32_t u_buff[OSC_DATA_BUFFER_SIZE];
+    //uint32_t u_buff[OSC_DATA_BUFFER_SIZE];
 };
 
 struct OSC_SETTING
