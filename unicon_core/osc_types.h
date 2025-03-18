@@ -120,7 +120,7 @@ namespace OscType {
             auto jsonList = [](const auto& vector, float scale, float offset) {
                 QJsonArray list;
                 std::for_each(vector.begin(), vector.end(), [&list, scale, offset](auto value) {
-                    QJsonValue lVal = (scale != 0.0 && scale != 1.0) ? value * scale + offset : value;
+                    QJsonValue lVal = (scale != 0.0 && scale != 1.0) ? (value + offset) * scale : value;
                     list.append(lVal);
                 });
                 return list;
