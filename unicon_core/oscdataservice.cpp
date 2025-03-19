@@ -231,11 +231,13 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
         } break;
 
         case OSC_VAR_TYPE::OSC_VAR_DISCRETE: {
-            for (int i = 0; i < dat.data_length; i++) {
-                int32_t rawValue = chData.i_buff[i];
-                ival_arr[i] = discreteValue(rawValue, var.firstBit, var.lastBit);
-            }
-            chValues.append(ival_arr, dat.data_length);
+            chValues.append(chData.i_buff, dat.data_length);
+
+            // for (int i = 0; i < dat.data_length; i++) {
+            //     int32_t rawValue = chData.i_buff[i];
+            //     ival_arr[i] = discreteValue(rawValue, var.firstBit, var.lastBit);
+            // }
+            // chValues.append(ival_arr, dat.data_length);
         } break;
         case UNDEFINED: {
             qWarning() << "Undefined var type" << ", id = " << var.var.id << ", name = " << var.var.name;
