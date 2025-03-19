@@ -543,7 +543,7 @@ long OscDataLogger::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
         var.chNum = elem["ch_num"].toInt();
         var.firstBit = elem["first_bit"].toInt();
         var.lastBit = elem["last_bit"].toInt();
-        var.gain = elem["gain"].toInt();
+        var.gain = elem["gain"].toDouble(0);
         var.offset = elem["offset"].toInt();
 
         var.var.id = elem["var_id"].toInt();
