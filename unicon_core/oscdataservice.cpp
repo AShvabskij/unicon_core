@@ -214,13 +214,15 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     qint8 ival_arr[dat.data_length + 1];
 
     int var_count = 0;
+    QList<int> chNums;
     for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
         const OSC_VAR& var = hdr.vars[ind];
 
         if (!var.isValid()) continue;
+        if (chNums.contains(var.chNum)) continue;
 
         const OSC_DATA& chData = dat.data[var.chNum];
-        OscChannelValues& chValues = buff->chArray[ind];
+        OscChannelValues& chValues = buff->chArray[var.chNum];
 
         switch (var.var.type) {
         case OSC_VAR_TYPE::OSC_VAR_INT: {
@@ -245,6 +247,7 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
         }
 
         var_count++;
+        chNums.append(var.chNum);
     }
 
     int resolution = static_cast<int>(hdr.settings.time_resolution_us);
@@ -255,6 +258,7 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     qDebug() << "AppendData:"
              << "vars =" << var_count
              << "length =" << dat.data_length
+             << "channels =" << chNums.size()
              << "took" << timer.elapsed() << "ms";
 
     emit dataReceived(buff->id);
