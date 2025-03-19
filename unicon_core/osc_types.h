@@ -140,7 +140,7 @@ namespace OscType {
             } break;
             case OSC_VAR_DISCRETE: {
                 auto values = discrValues.mid(startPos,  cnt);
-                res = jsonList(values, scale, offset);
+                res = jsonList(values, 0.0, 0);
             } break;
             case UNDEFINED: {}
             }
