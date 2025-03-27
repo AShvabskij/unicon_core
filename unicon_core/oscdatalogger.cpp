@@ -474,7 +474,7 @@ QJsonObject OscDataLogger::serializeToJSon(const OscDataBuffer& dat) const
     res["d_id"] = dat.id;
     res["time"] = dat.timestamp;
 
-    for (const OscChannelValues& chVal : dat.chArray) {
+    for (const OscChannelData& chVal : dat.data) {
         if (chVal.varId == 0) continue;
 
         varIdList << chVal.varId;
@@ -482,7 +482,7 @@ QJsonObject OscDataLogger::serializeToJSon(const OscDataBuffer& dat) const
     }
     res["vars"] = varIdListObj;
 
-    for (const OscChannelValues& chVal : dat.chArray) {
+    for (const OscChannelData& chVal : dat.data) {
         QJsonArray valuesObj;
 
         if (!varIdList.contains(chVal.varId))
@@ -581,10 +581,10 @@ long OscDataLogger::jsonToData(const QJsonObject& obj,  OscType::OscDataBuffer &
     int maxValueCount = 0;
 
     for (int i = 0; i < vars.count(); ++i) {
-        data.chArray[i].varId = vars[i].toInt();
+        data.data[i].varId = vars[i].toInt();
         int valueCount = 0;
-        data.chArray[i].append(values[i].toArray().toVariantList());
-        valueCount = data.chArray[i].count();
+        data.data[i].append(values[i].toArray().toVariantList());
+        valueCount = data.data[i].count();
 
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
@@ -620,10 +620,10 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
 
     int maxValueCount = 0;
     for (int i = 0; i < vars.size(); ++i) {
-        data.chArray[i].varId = vars[i].toInteger();
+        data.data[i].varId = vars[i].toInteger();
         int valueCount = 0;
-        data.chArray[i].append(values[i].toArray());
-        valueCount = data.chArray[i].count();
+        data.data[i].append(values[i].toArray());
+        valueCount = data.data[i].count();
 /*
         if (data.chArray[i].type == OSC_VAR_DISCRETE)
             break;

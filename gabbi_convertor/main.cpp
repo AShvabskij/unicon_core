@@ -46,7 +46,7 @@ OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
             continue;
         }
 
-        OscType::OscChannelValues& chValues = buff->chArray[ind];
+        OscType::OscChannelData& chValues = buff->data[var.chNum];
         chValues.channelNum = var.chNum;
         chValues.varId = var.var.id;
         chValues.type = var.var.type;
@@ -145,8 +145,8 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
         QStringList rec;
         rec << QString::number(i + 1);
 
-        for (int ind = 0; ind <= OSC_MAX_VARS; ind++) {
-            const OscType::OscChannelValues& var = data.chArray[ind];
+        for (int ind = 0; ind < OSC_MAX_CHANNELS; ind++) {
+            const OscType::OscChannelData& var = data.data[ind];
 
             if (var.varId == 0)
                 continue;
