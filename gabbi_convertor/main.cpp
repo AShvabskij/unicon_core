@@ -74,7 +74,7 @@ int denormalizeValue(float value)
     return res;
 }
 
-bool hasOnlyOneBitSet(int n)
+bool hasOnlyOneBit(int n)
 {
     return n != 0 && (n & (n - 1)) == 0;
 }
@@ -99,7 +99,6 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
     QStringList varIndexes;
     QStringList varNames;
     QStringList varNumOfSets;
-    QMap<int/*var_id*/, int/*bitNum*/> discrVarsBits;
 
     for (int i= 0; i < OSC_MAX_VARS; ++i) {
         auto& var = hdr.vars[i];
@@ -126,7 +125,6 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
                  << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
                  << "TRUE";
         } else if (var.var.type == OSC_VAR_DISCRETE) {
-            discrVarsBits[var.var.id] = var.firstBit;
 
             line << QString("&") + QString(var.var.name)
                  << QString("L") + QString::number(numOfSet)
@@ -160,8 +158,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
             const OscType::OscChannelVar& var = datBuff.vars[ind];
             const OscType::OscChannelData& chDat = datBuff.data[var.channelNum];
 
-            if (var.varId == 0)
-                continue;
+            if (!var.isValid()) continue;
 
             switch (var.type) {
             case OSC_VAR_INT:
@@ -173,18 +170,8 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
 
             case OSC_VAR_DISCRETE: {
                 int discrValue = chDat.value(i).toInt();
-                if (!hasOnlyOneBitSet(discrValue)) {
-                    chValues[var.channelNum] = discrValue; // 04.2025 The decision for a newer version of the data buff
-                } else {
-                    // It looks like an old version, when only one bit was set in the value of the number.
-                    int value = chValues[var.channelNum].toInt();
-                    int bitNum = discrVarsBits[var.varId];
-                    int bitMask = 1 << bitNum;
+                chValues[var.channelNum] = discrValue; // 04.2025 The decision for a newer version of the data buff
 
-                    value = (discrValue == 0) ? (value & ~bitMask) : (value | bitMask);
-
-                    chValues[var.channelNum] = value;
-                }
             } break;
             case UNDEFINED: {}
             };

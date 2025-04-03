@@ -25,7 +25,7 @@
 #define ENDL "\n"
 #endif
 
-const int DATA_VERSION = 1;
+const int DATA_VERSION = 2;
 const int DATA_SUBVERSION = 1;
 
 namespace {
@@ -465,7 +465,7 @@ QJsonObject OscDataLogger::serializeToJSon(const OscDataBuffer& dat) const
 {
     QJsonObject res;
     QJsonArray allValues;
-    QJsonArray varIdListObj;
+    QJsonArray chNumList;
 
     res["version"] = DATA_VERSION;
     res["sub_version"] = DATA_SUBVERSION;
@@ -474,9 +474,11 @@ QJsonObject OscDataLogger::serializeToJSon(const OscDataBuffer& dat) const
     res["time"] = dat.timestamp;
 
     for (const OscChannelVar& chVar : dat.vars) {
-        if (chVar.varId == 0) continue;
+        if (!chVar.isValid()) continue;
 
-        varIdListObj << chVar.varId;
+        if (chNumList.contains(chVar.channelNum)) continue;
+
+        chNumList << chVar.channelNum;
 
         QJsonArray valuesObj;
         const OscChannelData& chVal = dat.data[chVar.channelNum];
@@ -493,8 +495,7 @@ QJsonObject OscDataLogger::serializeToJSon(const OscDataBuffer& dat) const
 
             case OSC_VAR_DISCRETE:
                 for (int i = 0; i< chVal.intValues.count(); i++) {
-                    qint32 val = discreteValue(chVal.intValues[i], chVar.firstBit, chVar.lastBit);
-                    valuesObj.append(val);
+                    valuesObj << chVal.intValues[i];
                 } break;
             case UNDEFINED: {}
         };
@@ -502,9 +503,8 @@ QJsonObject OscDataLogger::serializeToJSon(const OscDataBuffer& dat) const
         allValues.append(valuesObj);
     }
 
+    res["channels"] = chNumList;
     res["values"] = allValues;
-    res["vars"] = varIdListObj;
-
     return res;
 }
 
@@ -570,15 +570,14 @@ long OscDataLogger::jsonToData(const QJsonObject& obj,  OscType::OscDataBuffer &
 
     data.id =  obj["d_id"].toInt();
     data.timestamp = obj["time"].toVariant().toLongLong();
-    QJsonArray vars = obj["vars"].toArray();
+    QJsonArray channels = obj["channels"].toArray();
     QJsonArray values = obj["values"].toArray();
 
     int maxValueCount = 0;
 
-    for (int i = 0; i < vars.count(); ++i) {
-        data.vars[i].varId = vars[i].toInt();
+    for (int i = 0; i < channels.count(); ++i) {
         int valueCount = 0;
-        data.data[data.vars[i].channelNum].append(values[i].toArray().toVariantList());
+        data.data[channels[i].toInteger()].append(values[i].toArray().toVariantList());
         valueCount = data.data[i].count();
 
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
@@ -606,24 +605,17 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
 
     data.id =  obj.value("d_id").toInteger();
     data.timestamp = obj.value("time").toVariant().toLongLong();
-    QCborArray vars = obj.value("vars").toArray();
+    QCborArray channels = obj.value("channels").toArray();
     QCborArray values = obj.value("values").toArray();
 
     QElapsedTimer timer;
     timer.start();
 
     int maxValueCount = 0;
-    for (int i = 0; i < vars.size(); ++i) {
-        int varId = vars[i].toInteger();
+    for (int i = 0; i < channels.size(); ++i) {
         int valueCount = 0;
-        auto var = data.vars[varId];
-
-        data.data[var.channelNum].append(values[i].toArray());
+        data.data[channels[i].toInteger()].append(values[i].toArray());
         valueCount = data.data[i].count();
-/*
-        if (data.chArray[i].type == OSC_VAR_DISCRETE)
-            break;
-*/
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
 
@@ -633,7 +625,7 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
              << "device ind =" << data.id
              << "timestamp =" << data.trig_time
              << "reason =" << data.reason
-             << "vars =" << vars.size()
+             << "vars =" << channels.size()
              << "values =" << data.valueCount
              << "took" << timer.elapsed() << "ms";
 

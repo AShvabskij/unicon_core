@@ -61,6 +61,7 @@ namespace OscType {
         int lastDataPos = 0;
 
         OSC_VAR_TYPE type = UNDEFINED;
+        bool isValid() const { return type != UNDEFINED && channelNum >= 0;}
     };
 
     struct OscChannelData
@@ -305,11 +306,6 @@ namespace OscType {
         void append(const float* arr, size_t size) {
             fltValues.reserve(size);
             std::copy(arr, arr + size, std::back_inserter(fltValues));
-        }
-
-        void append(const qint8* arr, size_t size) {
-            intValues.reserve(size);
-            std::copy(arr, arr + size, std::back_inserter(intValues));
         }
 
         int count() const {

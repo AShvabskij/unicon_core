@@ -405,7 +405,6 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
         valuesArr << values;
     }
 
-
     if (varIdListObj.isEmpty()) {
         return QJsonObject();
     }
