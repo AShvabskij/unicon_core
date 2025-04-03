@@ -23,7 +23,7 @@ namespace OscType {
     enum ReasonEnum {
         First, Second
     };
-    struct OscChannelDescr
+    struct OscChannelDescr // todo: rename to OscChannelVar
     {
         int channelNum = 0;
         quint16 varId = 0;
@@ -55,12 +55,17 @@ namespace OscType {
         float scale = 0.0;
         float offset = 0.0;
 
-        OSC_VAR_TYPE type = OSC_VAR_FLOAT;
+        qint8 firstBit = 0;
+        qint8 lastBit = 0;
+
+        int lastDataPos = 0;
+
+        OSC_VAR_TYPE type = UNDEFINED;
     };
 
     struct OscChannelData
     {
-        OSC_VAR_TYPE type = OSC_VAR_FLOAT;
+        OSC_VAR_TYPE type = UNDEFINED;
 
         QVector<float> fltValues;
         QVector<int> intValues;
@@ -117,7 +122,7 @@ namespace OscType {
             return res;
         }
 
-        QJsonArray jsnValues(int startPos, float scale, float offset, int cnt = -1) const {
+        QJsonArray jsnValues(int startPos, const OscChannelVar& var, int cnt = -1) const {
 
             cnt = cnt >= 0 ? cnt : -1;
 
@@ -130,21 +135,48 @@ namespace OscType {
                 return list;
             };
 
+            auto jsonDiscrList = [](const auto& vector, qint8 firstBit, qint8 lastBit) {
+                QJsonArray list;
+                std::for_each(vector.begin(), vector.end(), [&list, firstBit, lastBit](auto rawValue) {
+                    qint8 res = 0;
+                    if (firstBit == lastBit)
+                    {
+                        // Extract a single bit at the position specified by firstBit
+                        res = (rawValue >> firstBit) & 0x01;
+                    }
+                    else if (lastBit > firstBit)
+                    {
+                        // Calculate the number of bits to extract
+                        qint8 numBits = lastBit - firstBit + 1;
+
+                        // Create a mask with the required number of bits set to 1
+                        qint32 mask = (1 << numBits) - 1;
+
+                        // Shift the rawValue to the right by firstBit and apply the mask
+                        res = (rawValue >> firstBit) & mask;
+                    }
+
+                    list.append(res);
+                });
+
+                return list;
+            };
+
             QJsonArray res;
             switch (type) {
             case OSC_VAR_INT: {
                 auto values = intValues.mid(startPos,  cnt);
-                res = jsonList(values, scale, offset);
+                res = jsonList(values, var.scale, var.offset);
 
             } break;
             case OSC_VAR_FLOAT: {
                 auto values = fltValues.mid(startPos,  cnt);
-                res = jsonList(values, scale, offset);
+                res = jsonList(values, var.scale, var.offset);
 
             } break;
             case OSC_VAR_DISCRETE: {
                 auto values = intValues.mid(startPos,  cnt);
-                res = jsonList(values, 0.0, 0);
+                res = jsonDiscrList(values, var.firstBit, var.lastBit);
             } break;
             case UNDEFINED: {}
             }
@@ -296,7 +328,7 @@ namespace OscType {
                 intValues.reserve(count);
             } break;
             case UNDEFINED: {
-                qWarning() << "Undefined var type" << ", id = " << varId << ", ch num = " << channelNum;
+                qWarning() << "Undefined var type";
             }
             }
         }
@@ -304,7 +336,6 @@ namespace OscType {
         void clear() {
             intValues.clear();
             fltValues.clear();
-            lastDataPos = 0;
         }
     };
 
@@ -321,8 +352,8 @@ namespace OscType {
         bool eof = false;
         bool sof = false;
 
-        OscChannelVar vars[OSC_MAX_VARS + 1];
-        OscChannelData data[OSC_MAX_CHANNELS + 1]; // TODO: replace to chArray[OSC_MAX_CHANNELS + 1]
+        OscChannelVar vars[OSC_MAX_VARS + 1]; // todo: replace to OscChannelDescr
+        OscChannelData data[OSC_MAX_CHANNELS + 1];
 
         bool isOversized() {
             if (valueCount > MAX_DATA_COUNT)

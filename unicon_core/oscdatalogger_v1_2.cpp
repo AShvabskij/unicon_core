@@ -65,7 +65,7 @@ long OscDataLogger_v1_2::decodeData(const QCborValue &sourceDat, OscType::OscDat
             data.data[i].append(val);
         }
 
-        data.data[i].varId = vars[i].toInteger();
+        data.vars[i].varId = vars[i].toInteger();
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
 

@@ -465,7 +465,6 @@ QJsonObject OscDataLogger::serializeToJSon(const OscDataBuffer& dat) const
 {
     QJsonObject res;
     QJsonArray allValues;
-    QList<int> varIdList;
     QJsonArray varIdListObj;
 
     res["version"] = DATA_VERSION;
@@ -474,34 +473,29 @@ QJsonObject OscDataLogger::serializeToJSon(const OscDataBuffer& dat) const
     res["d_id"] = dat.id;
     res["time"] = dat.timestamp;
 
-    for (const OscChannelData& chVal : dat.data) {
-        if (chVal.varId == 0) continue;
+    for (const OscChannelVar& chVar : dat.vars) {
+        if (chVar.varId == 0) continue;
 
-        varIdList << chVal.varId;
-        varIdListObj << chVal.varId;
-    }
-    res["vars"] = varIdListObj;
+        varIdListObj << chVar.varId;
 
-    for (const OscChannelData& chVal : dat.data) {
         QJsonArray valuesObj;
-
-        if (!varIdList.contains(chVal.varId))
-                continue;
+        const OscChannelData& chVal = dat.data[chVar.channelNum];
 
         switch (chVal.type) {
             case OSC_VAR_INT:
-                for (int i=0; i< chVal.intValues.count(); i++) {
+                for (int i = 0; i< chVal.intValues.count(); i++) {
                     valuesObj << chVal.intValues[i];
                 } break;
             case OSC_VAR_FLOAT:
-                for (int i=0; i< chVal.fltValues.count(); i++) {
+                for (int i = 0; i< chVal.fltValues.count(); i++) {
                     valuesObj << chVal.fltValues[i];
                 } break;
 
             case OSC_VAR_DISCRETE:
-                for (int i=0; i< chVal.discrValues.count(); i++) {
-                    valuesObj << chVal.discrValues[i];
-                }
+                for (int i = 0; i< chVal.intValues.count(); i++) {
+                    qint32 val = discreteValue(chVal.intValues[i], chVar.firstBit, chVar.lastBit);
+                    valuesObj.append(val);
+                } break;
             case UNDEFINED: {}
         };
 
@@ -509,6 +503,7 @@ QJsonObject OscDataLogger::serializeToJSon(const OscDataBuffer& dat) const
     }
 
     res["values"] = allValues;
+    res["vars"] = varIdListObj;
 
     return res;
 }
@@ -581,14 +576,13 @@ long OscDataLogger::jsonToData(const QJsonObject& obj,  OscType::OscDataBuffer &
     int maxValueCount = 0;
 
     for (int i = 0; i < vars.count(); ++i) {
-        data.data[i].varId = vars[i].toInt();
+        data.vars[i].varId = vars[i].toInt();
         int valueCount = 0;
-        data.data[i].append(values[i].toArray().toVariantList());
+        data.data[data.vars[i].channelNum].append(values[i].toArray().toVariantList());
         valueCount = data.data[i].count();
 
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
-
 
     data.valueCount = maxValueCount;
 
@@ -620,9 +614,11 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
 
     int maxValueCount = 0;
     for (int i = 0; i < vars.size(); ++i) {
-        data.data[i].varId = vars[i].toInteger();
+        int varId = vars[i].toInteger();
         int valueCount = 0;
-        data.data[i].append(values[i].toArray());
+        auto var = data.vars[varId];
+
+        data.data[var.channelNum].append(values[i].toArray());
         valueCount = data.data[i].count();
 /*
         if (data.chArray[i].type == OSC_VAR_DISCRETE)
@@ -645,3 +641,31 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
     return _return_OK;
 }
 
+qint32 OscDataLogger::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit) const
+{
+    Q_ASSERT(lastBit >= firstBit);
+
+    qint32 res = 0;
+    if (firstBit == lastBit)
+    {
+        // Extract a single bit at the position specified by firstBit
+        res = (rawValue >> firstBit) & 0x01;
+    }
+    else if (lastBit > firstBit)
+    {
+        // Calculate the number of bits to extract
+        qint8 numBits = lastBit - firstBit + 1;
+
+        // Create a mask with the required number of bits set to 1
+        qint32 mask = (1 << numBits) - 1;
+
+        // Shift the rawValue to the right by firstBit and apply the mask
+        res = (rawValue >> firstBit) & mask;
+    }
+    else
+    {
+        res = 0;
+    }
+
+    return res;
+}

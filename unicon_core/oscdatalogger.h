@@ -39,6 +39,7 @@ protected:
 
 private:
     QStringList getSortedFilesByCreationDate(const QString &dirPath, QString mask);
+    qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit) const;
 };
 
 #endif // OSCDATALOGGER_H

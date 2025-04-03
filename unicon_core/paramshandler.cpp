@@ -3,7 +3,6 @@
 #include "paramshandler.h"
 #include <QTimer>
 #include <QTextStream>
-#include <iostream>
 
 const QString CMD_PARAMS_HEADER = "param_header";
 const QString CMD_TYPE_GET = "get";
@@ -572,7 +571,7 @@ void ParamsHandler::streamParamsValue()
         qDebug() << "\nStreaming param values" << ", param count =" << streamParamCount;
     }
 
-    int i = 0;
+//  int i = 0;
     for (ParamValue& val : sentValues) {
         if (!val.isActual()) {
             qlonglong currTimeMsec = QDateTime::currentMSecsSinceEpoch();

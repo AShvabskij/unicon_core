@@ -42,16 +42,22 @@ OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
 
     for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
         const OSC_VAR& var = hdr.vars[ind];
-        if (!var.isValid()) {
-            continue;
-        }
 
-        OscType::OscChannelData& chValues = buff->data[var.chNum];
-        chValues.channelNum = var.chNum;
-        chValues.varId = var.var.id;
+        if (!var.isValid()) continue;
+
+        OscType::OscChannelVar& chVar = buff->vars[ind];
+        chVar.channelNum = var.chNum;
+        chVar.varId = var.var.id;
+        chVar.type = var.var.type;
+        chVar.scale = var.gain;
+        chVar.offset = var.offset;
+        chVar.firstBit = var.firstBit;
+        chVar.lastBit = var.lastBit;
+
+        OscChannelData& chValues = buff->data[var.chNum];
         chValues.type = var.var.type;
-        chValues.scale = var.gain;
-        chValues.offset = var.offset;
+
+        chValues.reserve(MAX_DATA_COUNT);
     }
 
     return buff;
@@ -68,7 +74,12 @@ int denormalizeValue(float value)
     return res;
 }
 
-long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& data, QTextStream& stream)
+bool hasOnlyOneBitSet(int n)
+{
+    return n != 0 && (n & (n - 1)) == 0;
+}
+
+long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& datBuff, QTextStream& stream)
 {
     QTextStream& res = stream;
 
@@ -141,39 +152,39 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
 
     QMap<int/*channel*/, QVariant/*value*/> chValues;
 
-    for (int i = 0; i < data.valueCount; i++) {
+    for (int i = 0; i < datBuff.valueCount; i++) {
         QStringList rec;
         rec << QString::number(i + 1);
 
-        for (int ind = 0; ind < OSC_MAX_CHANNELS; ind++) {
-            const OscType::OscChannelData& var = data.data[ind];
+        for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
+            const OscType::OscChannelVar& var = datBuff.vars[ind];
+            const OscType::OscChannelData& chDat = datBuff.data[var.channelNum];
 
             if (var.varId == 0)
                 continue;
 
-            if (i >= var.count()) {
-                break;
-            }
-
             switch (var.type) {
             case OSC_VAR_INT:
             case OSC_VAR_FLOAT: {
-                QVariant val = var.value(i);
+                QVariant val = chDat.value(i);
                 int n = denormalizeValue(val.toFloat());
                 chValues[var.channelNum] = n;
             } break;
 
             case OSC_VAR_DISCRETE: {
+                int discrValue = chDat.value(i).toInt();
+                if (!hasOnlyOneBitSet(discrValue)) {
+                    chValues[var.channelNum] = discrValue; // 04.2025 The decision for a newer version of the data buff
+                } else {
+                    // It looks like an old version, when only one bit was set in the value of the number.
+                    int value = chValues[var.channelNum].toInt();
+                    int bitNum = discrVarsBits[var.varId];
+                    int bitMask = 1 << bitNum;
 
-                int value = chValues[var.channelNum].toInt();
-                int bitNum = discrVarsBits[var.varId];
-                int bitMask = 1 << bitNum;
-                int bitValue = var.value(i).toInt();
+                    value = (discrValue == 0) ? (value & ~bitMask) : (value | bitMask);
 
-                value = (bitValue == 0) ? (value & ~bitMask) : (value | bitMask);
-
-                chValues[var.channelNum] = value;
-
+                    chValues[var.channelNum] = value;
+                }
             } break;
             case UNDEFINED: {}
             };

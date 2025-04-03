@@ -62,7 +62,7 @@ struct OSC_VAR
     uint8_t lastBit = 0;
 
     bool isValid() const {
-        return var.type != OSC_VAR_TYPE::UNDEFINED && var.id >= 0;
+        return var.type != OSC_VAR_TYPE::UNDEFINED;
     }
 };
 

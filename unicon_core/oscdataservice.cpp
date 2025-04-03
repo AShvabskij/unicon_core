@@ -135,6 +135,10 @@ void OscDataService::clearDataBuffer(OscType::OscDataBuffer* buff)
     for (OscChannelData& chValues : buff->data) {
         chValues.clear();
     }
+
+    for (OscChannelVar& chVar : buff->vars) {
+        chVar.lastDataPos = 0;
+    }
 }
 
 OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
@@ -156,12 +160,15 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
         const OSC_VAR& var = hdr.vars[ind];
 
         if (!var.isValid()) continue; // TODO: may be break here
-        OscChannelVar chVar = buff->vars[ind];
+
+        OscChannelVar& chVar = buff->vars[ind];
         chVar.channelNum = var.chNum;
         chVar.varId = var.var.id;
         chVar.scale = var.gain;
         chVar.offset = var.offset;
         chVar.type = var.var.type;
+        chVar.firstBit = var.firstBit;
+        chVar.lastBit = var.lastBit;
 
         OscChannelData& chValues = buff->data[var.chNum];
         chValues.type = var.var.type;
@@ -220,6 +227,8 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
         const OSC_VAR& var = hdr.vars[ind];
 
         if (!var.isValid()) continue;
+        var_count++;
+
         if (chNums.contains(var.chNum)) continue;
 
         const OSC_DATA& chData = dat.data[var.chNum];
@@ -247,7 +256,6 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
         }
         }
 
-        var_count++;
         chNums.append(var.chNum);
     }
 
@@ -290,7 +298,7 @@ long OscDataService::appendBuffer(OscType::OscDataBuffer&& buff)
 
     return _return_OK;
 }
-
+/*
 qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit)
 {
     Q_ASSERT(lastBit >= firstBit);
@@ -319,7 +327,7 @@ qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastB
 
     return res;
 }
-
+*/
 QJsonObject OscDataService::jsonData(const DevID& deviceID, qlonglong trig_time, QVector<int> vars, int &cnt, bool& isEof)
 {
     QElapsedTimer timer;
@@ -359,14 +367,14 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
     QJsonArray varIdListObj;
 
     int timestamp = 0;
-    for (const OscChannelVar& chVar : data.vars) {
-        if (chVar.varId == 0) continue;
+    for (OscChannelVar& chVar : data.vars) {
+        if (chVar.type == UNDEFINED) continue;
         if (!vars.isEmpty() && !vars.contains(chVar.varId)) {
             continue;
         }
 
-        OscChannelData chVal = data.data[chVar.channelNum];
-        int startPos = chVal.lastDataPos;
+        const OscChannelData& chVal = data.data[chVar.channelNum];
+        int startPos = chVar.lastDataPos;
         int ch_val_count = chVal.count();
         if (startPos >= ch_val_count) {
             continue;
@@ -381,16 +389,16 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
         //     values= multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
         // }
 
-        QJsonArray values = chVal.jsnValues(startPos, chVar.scale, chVar.offset, cnt);
+        QJsonArray values = chVal.jsnValues(startPos, chVar, cnt);
         if (values.isEmpty()) {
             continue;
         }
 
         cnt = values.count();
 
-        chVal.lastDataPos = startPos + cnt;
-        isEof = (chVal.lastDataPos >= ch_val_count);
-        timestamp = chVal.lastDataPos * data.resolution_us;
+        chVar.lastDataPos = startPos + cnt;
+        isEof = (chVar.lastDataPos >= ch_val_count);
+        timestamp = chVar.lastDataPos * data.resolution_us;
 
         varIdListObj << chVar.varId;
         // valuesArr << QJsonArray::fromVariantList(values);

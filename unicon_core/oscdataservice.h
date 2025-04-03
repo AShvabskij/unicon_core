@@ -41,7 +41,7 @@ private:
     OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER& hdr);
     void  clearDataBuffer(OscType::OscDataBuffer* buff);
     long saveData(const DDE_OSC_HEADER& header, const OscType::OscDataBuffer& data);
-    inline qint8 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
+//  inline qint8 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
     QJsonObject dataToJson(OscType::OscDataBuffer &data, QVector<int> vars, int &cnt, bool &isEof) const;
     QJsonObject headerToJson(const DDE_OSC_HEADER &h);
 
