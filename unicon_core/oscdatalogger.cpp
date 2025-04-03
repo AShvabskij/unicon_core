@@ -577,7 +577,8 @@ long OscDataLogger::jsonToData(const QJsonObject& obj,  OscType::OscDataBuffer &
 
     for (int i = 0; i < channels.count(); ++i) {
         int valueCount = 0;
-        data.data[channels[i].toInteger()].append(values[i].toArray().toVariantList());
+        int chNum = channels[i].toInt();
+        data.data[chNum].append(values[i].toArray().toVariantList());
         valueCount = data.data[i].count();
 
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
@@ -614,7 +615,8 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
     int maxValueCount = 0;
     for (int i = 0; i < channels.size(); ++i) {
         int valueCount = 0;
-        data.data[channels[i].toInteger()].append(values[i].toArray());
+        int chNum = channels[i].toInteger();
+        data.data[chNum].append(values[i].toArray());
         valueCount = data.data[i].count();
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
