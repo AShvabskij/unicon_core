@@ -71,18 +71,19 @@ void Core::handleSystemInit(const QJsonObject& request)
 
 void Core::init()
 {
-    m_supportedSysTypes.append(SysType::UAVCAN);
-    m_supportedSysTypes.append(SysType::DLOG_CPLOT);
-    m_supportedSysTypes.append(SysType::DLOG_ISTART);
-
-
 #ifdef __WIN32__
+    m_supportedSysTypes.append(SysType::FILE_IO);
+
     IDDE* dde = new DDE_EMUL();
     dde->init(sysTypeToString(SysType::FILE_IO));
     m_ddeDisp->registerDDE(SysType::FILE_IO, dde);
     m_ddeDisp->setDefaultDDE(dde);
 
 #else
+    m_supportedSysTypes.append(SysType::UAVCAN);
+    m_supportedSysTypes.append(SysType::DLOG_CPLOT);
+    m_supportedSysTypes.append(SysType::DLOG_ISTART);
+
     for(SysType sysType: m_supportedSysTypes) {
         IDDE* dde = new DDE_TOP();
     //    dde_uavcan->init(sysTypeToString(SysType::UAVCAN)); // TODO: replace arg to const char*
