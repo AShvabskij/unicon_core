@@ -400,7 +400,7 @@ long OscHandler::startStreamData(const DevID &devID, QVector<int> oscVars)
     QObject* src = dynamic_cast<QObject*>(m_dataSrv);
     Q_ASSERT(src);
 
-    QMetaObject::Connection con = connect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)), Qt::AutoConnection);
+    QMetaObject::Connection con = connect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)), Qt::UniqueConnection);
 
     th_streamData(); // Send all buffered data firstly
 
@@ -425,7 +425,7 @@ long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDat
     QObject* src = dynamic_cast<QObject*>(m_historySrv->getDataSrv());
     Q_ASSERT(src);
 
-    auto con = connect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)), Qt::AutoConnection);
+    auto con = connect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)), Qt::UniqueConnection);
 
     res = m_historySrv->requestData(dde_hdr);
 

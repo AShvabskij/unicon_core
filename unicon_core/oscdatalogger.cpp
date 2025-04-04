@@ -616,8 +616,12 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
     for (int i = 0; i < channels.size(); ++i) {
         int valueCount = 0;
         int chNum = channels[i].toInteger();
-        data.data[chNum].append(values[i].toArray());
-        valueCount = data.data[i].count();
+        const QCborArray& chValues = values[i].toArray();
+        data.data[chNum].append(chValues);
+        valueCount = data.data[chNum].count();
+
+//      qDebug() << "Append values to channel =" << chNum << "size =" << valueCount << "took" << timer.elapsed() << "ms";
+
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
 
@@ -627,7 +631,7 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
              << "device ind =" << data.id
              << "timestamp =" << data.trig_time
              << "reason =" << data.reason
-             << "vars =" << channels.size()
+             << "channels =" << channels.size()
              << "values =" << data.valueCount
              << "took" << timer.elapsed() << "ms";
 

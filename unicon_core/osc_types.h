@@ -273,14 +273,14 @@ namespace OscType {
             case OSC_VAR_INT: {
                 intValues.reserve(values.size() + 1);
                 auto& list = intValues;
-                std::for_each(values.begin(), values.end(), [&list](QCborValue val) {
+                std::for_each(values.begin(), values.end(), [&list](const QCborValue& val) {
                     list.append(val.toInteger());
                 });
             } break;
             case OSC_VAR_FLOAT: {
                 fltValues.reserve(values.size() + 1);
                 auto& list = fltValues;
-                std::for_each(values.begin(), values.end(), [&list](QCborValue val) {
+                std::for_each(values.begin(), values.end(), [&list](const QCborValue& val) {
                     list.append(val.toDouble());
                 });
 
@@ -288,7 +288,7 @@ namespace OscType {
             case OSC_VAR_DISCRETE: {
                 intValues.reserve(values.size() + 1);
                 auto& list = intValues;
-                std::for_each(values.begin(), values.end(), [&list](QCborValue val) {
+                std::for_each(values.begin(), values.end(), [&list](const QCborValue& val) {
                     list.append(val.toInteger());
                 });
             } break;
