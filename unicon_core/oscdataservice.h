@@ -45,7 +45,6 @@ private:
     QJsonObject dataToJson(OscType::OscDataBuffer &data, QVector<int> vars, int &cnt, bool &isEof) const;
     QJsonObject headerToJson(const DDE_OSC_HEADER &h);
 
-
     QMultiMap<DevInd, OscType::OscDataBuffer*> m_repository;
     QMutex m_mutex;
     IOscDataLogger* m_dataSaver = nullptr;

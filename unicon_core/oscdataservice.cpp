@@ -421,7 +421,7 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
 
 long OscDataService::save(const DDE_OSC_HEADER& hdr)
 {
-    OscType::OscDataBuffer* datBuff = get(hdr.device_id, hdr.settings.trig_time);
+    OscType::OscDataBuffer* datBuff = get(hdr.device_id);
     Q_ASSERT(datBuff);
     m_mutex.lock();
     long res = m_dataSaver->save(hdr, *datBuff);
