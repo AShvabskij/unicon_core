@@ -345,8 +345,6 @@ QJsonObject OscDataService::jsonData(const DevID& deviceID, qlonglong trig_time,
         cnt = 0;
     }
 
-    buff->lastDataPos = buff->lastDataPos + cnt;
-
     m_mutex.unlock();
 
 //  qDebug() << "The serialisedData operation took" << timer.elapsed() << "milliseconds";
@@ -371,7 +369,7 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
         }
 
         const OscChannelData& chVal = data.data[chVar.channelNum];
-        int startPos = chVar.lastDataPos;
+        int startPos = data.lastDataPos.value(chVar.varId, 0);
         int ch_val_count = chVal.count();
         if (startPos >= ch_val_count) {
             continue;
@@ -393,9 +391,10 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
 
         cnt = values.count();
 
-        chVar.lastDataPos = startPos + cnt;
-        isEof = (chVar.lastDataPos >= ch_val_count);
-        timestamp = chVar.lastDataPos * data.resolution_us;
+        int lastDataPos = startPos + cnt;
+        data.lastDataPos[chVar.varId] = lastDataPos;
+        isEof = (lastDataPos >= ch_val_count);
+        timestamp = lastDataPos * data.resolution_us;
 
         varIdListObj << chVar.varId;
         // valuesArr << QJsonArray::fromVariantList(values);

@@ -338,7 +338,6 @@ namespace OscType {
         DevInd id;
         int valueCount = 0; // // number of points in values buffer
         int valueDensity = 0; // number of points per millisec
-        int lastDataPos = 0;
         qlonglong timestamp = 0;
         qlonglong trig_time = 0;
         qlonglong resolution_us;
@@ -348,6 +347,7 @@ namespace OscType {
 
         OscChannelVar vars[OSC_MAX_VARS + 1]; // todo: replace to OscChannelDescr
         OscChannelData data[OSC_MAX_CHANNELS + 1];
+        QMap<int/*varId*/, int/*pos*/>lastDataPos;
 
         bool isOversized() {
             if (valueCount > MAX_DATA_COUNT)
@@ -365,7 +365,7 @@ namespace OscType {
         }
 
         void resetPos() {
-            lastDataPos = 0;
+            lastDataPos.clear();
             for (OscChannelVar& chVar : vars) {
                 chVar.lastDataPos = 0;
             }
