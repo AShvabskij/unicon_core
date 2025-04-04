@@ -71,8 +71,6 @@ namespace OscType {
         QVector<float> fltValues;
         QVector<int> intValues;
 
-        int lastDataPos = 0;
-
         QVariant value(int pos) const {
             switch (type) {
             case OSC_VAR_INT:
@@ -368,8 +366,8 @@ namespace OscType {
 
         void resetPos() {
             lastDataPos = 0;
-            for (OscChannelData& chVal : data) {
-                chVal.lastDataPos = 0;
+            for (OscChannelVar& chVar : vars) {
+                chVar.lastDataPos = 0;
             }
         }
     };

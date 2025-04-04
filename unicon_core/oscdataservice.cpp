@@ -130,15 +130,12 @@ void OscDataService::clearDataBuffer(OscType::OscDataBuffer* buff)
     buff->sof = false;
     buff->valueCount= 0;
     buff->timestamp = 0;
-    buff->lastDataPos = 0;
 
     for (OscChannelData& chValues : buff->data) {
         chValues.clear();
     }
 
-    for (OscChannelVar& chVar : buff->vars) {
-        chVar.lastDataPos = 0;
-    }
+    buff->resetPos();
 }
 
 OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
