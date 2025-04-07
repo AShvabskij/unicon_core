@@ -23,23 +23,6 @@ namespace OscType {
     enum ReasonEnum {
         First, Second
     };
-    struct OscChannelDescr // todo: rename to OscChannelVar
-    {
-        int channelNum = 0;
-        quint16 varId = 0;
-        QString varName = "";
-        float scale = 0.0;
-        float min = 0.0;
-        float max = 0.0;
-
-        bool isDigital = false;
-        bool isDiscrete = false;
-
-        qint8 firstBit = 0;
-        qint8 lastBit = 0;
-
-        int color;
-    };
 
     union Number32
     {
@@ -49,8 +32,11 @@ namespace OscType {
 
     struct OscChannelVar
     {
+        OSC_VAR_TYPE type = UNDEFINED;
+
         int channelNum = 0;
         quint16 varId = 0;
+        QString varName = "";
 
         float scale = 0.0;
         float offset = 0.0;
@@ -58,9 +44,8 @@ namespace OscType {
         qint8 firstBit = 0;
         qint8 lastBit = 0;
 
-        int lastDataPos = 0;
+        int color = 0;
 
-        OSC_VAR_TYPE type = UNDEFINED;
         bool isValid() const { return type != UNDEFINED && channelNum >= 0;}
     };
 
@@ -345,7 +330,7 @@ namespace OscType {
         bool eof = false;
         bool sof = false;
 
-        OscChannelVar vars[OSC_MAX_VARS + 1]; // todo: replace to OscChannelDescr
+        OscChannelVar vars[OSC_MAX_VARS + 1];
         OscChannelData data[OSC_MAX_CHANNELS + 1];
         QMap<int/*varId*/, int/*pos*/>lastDataPos;
 
@@ -366,9 +351,6 @@ namespace OscType {
 
         void resetPos() {
             lastDataPos.clear();
-            for (OscChannelVar& chVar : vars) {
-                chVar.lastDataPos = 0;
-            }
         }
     };
 
@@ -390,30 +372,43 @@ namespace OscType {
         QString name = "";
         QString desc = "";
 
-        QMap<quint8/*channel index*/, OscChannelDescr> analogChannels; // todo: replace to QList, get rid of "channel index" key
-        QMap<quint8/*channel index*/, OscChannelDescr> discreteChannels;
+        QList<OscChannelVar> analogChannels;
+        QList<OscChannelVar> discreteChannels;
         OscSettings settings;
 
         bool operator == (const OscHeader& o) const {
             return this->id == o.id && this->deviceID == o.deviceID;
         }
 
-        OscChannelDescr channel(int chNum) const
+        OscChannelVar chVar(int chNum) const
         {
-            for (quint8 chInd : analogChannels.keys()) {
-                const OscChannelDescr& ch = analogChannels.value(chInd);
-                if (ch.channelNum == chNum) {
-                    return ch;
+            for (const OscChannelVar& v : analogChannels) {
+                if (v.channelNum == chNum) {
+                    return v;
                 }
             }
-            for (quint8 chInd : discreteChannels.keys()) {
-                const OscChannelDescr& ch = discreteChannels.value(chInd);
-                if (ch.channelNum == chNum) {
-                    return ch;
+            for (const OscChannelVar& v : discreteChannels) {
+                if (v.channelNum == chNum) {
+                    return v;
                 }
             }
 
-            return OscChannelDescr();
+            return OscChannelVar();
+        }
+
+        void append(const OscChannelVar& var) {
+            switch(var.type) {
+                case OSC_VAR_FLOAT:
+                case OSC_VAR_INT: {
+                    this->analogChannels.append(var);
+                } break;
+                case OSC_VAR_DISCRETE: {
+                    this->discreteChannels.append(var);
+                } break;
+                default: break;
+                }
+
+                return;
         }
     };
 

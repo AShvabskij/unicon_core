@@ -36,39 +36,37 @@ QJsonObject headerToJson(const OscHeader& h) {
     res["resolution_us"] = h.settings.timeResolution_us;
     res["display_resolution_ms"] = h.settings.displayResolution_ms;
 
-    QJsonArray channelsObj;
-    for (quint8 chInd : h.analogChannels.keys()) {
-        const OscChannelDescr& ch = h.analogChannels.value(chInd);
+    QJsonArray analogsObj;
+    for (const OscChannelVar& var : h.analogChannels) {
         QJsonObject obj;
-        obj["ch_num"] = ch.channelNum;
-        obj["var_id"] = ch.varId;
-        obj["name"] = ch.varName;
+        obj["ch_num"] = var.channelNum;
+        obj["var_id"] = var.varId;
+        obj["name"] = var.varName;
 //      obj["user_name"] = ch.userName;
-        obj["scale"] = ch.scale;
-        obj["min"] = ch.min;
-        obj["max"] = ch.max;
-        obj["color"] = colorToString(ch.color);
+        obj["scale"] = var.scale;
+        obj["min"] = 0;
+        obj["max"] = 0;
+        obj["color"] = colorToString(var.color);
         obj["isDiscrete"] = false;
 
-        channelsObj << obj;
+        analogsObj << obj;
     }
 
-    res["analog_channels"] = channelsObj;
+    res["analog_channels"] = analogsObj; // todo: rename analog_channels to analog_vars
 
     QJsonArray discretesObj;
-    for (quint8 chInd : h.discreteChannels.keys()) {
-        const OscChannelDescr& ch = h.discreteChannels.value(chInd);
+    for (const OscChannelVar& var : h.discreteChannels) {
         QJsonObject obj;
-        obj["ch_num"] = ch.channelNum;
-        obj["var_id"] = ch.varId;
-        obj["name"] = ch.varName;
-        obj["color"] = colorToString(ch.color);
+        obj["ch_num"] = var.channelNum;
+        obj["var_id"] = var.varId;
+        obj["name"] = var.varName;
+        obj["color"] = colorToString(var.color);
         obj["isDiscrete"] = true;
 
         discretesObj << obj;
     }
 
-    res["discrete_channels"] = discretesObj;
+    res["discrete_channels"] = discretesObj; // todo: rename discrete_channels to discrete_vars
 
     return res;
 }
@@ -279,8 +277,8 @@ int OscHandler::handleGetChannel(const QJsonObject &request)
     DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
     long ret = getHeader(devId, &header);
 
-    const OscChannelDescr& chDescr = header.channel(chNum);
-    QJsonObject response = createChannelObj(requestId, chDescr);
+    const OscChannelVar& chVar = header.chVar(chNum);
+    QJsonObject response = createChannelDescr(requestId, chVar);
     send(response);
 
     return ret;
@@ -552,13 +550,13 @@ long OscHandler::getHeader(const DevID& deviceID, OscHeader *out)
     return res;
 }
 
-long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *out)
+long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *res)
 {
-    out->id = header.device_id;
-    out->name = "osc";
-    out->desc = "osc desc";
-    out->analogChannels.clear();
-    out->discreteChannels.clear();
+    res->id = header.device_id;
+    res->name = "osc";
+    res->desc = "osc desc";
+    res->analogChannels.clear();
+    res->discreteChannels.clear();
 
     qDebug() << DDE_LOG_PREFIX
              << "Get osc header" << ", channel count = " << header.settings.channels_count;
@@ -569,14 +567,11 @@ long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *out)
             continue;
         }
 
-        if (var.var.type == OSC_VAR_TYPE::OSC_VAR_FLOAT || var.var.type == OSC_VAR_TYPE::OSC_VAR_INT) {
-            out->analogChannels[ind] = createChannelDescr(var);
-        } else if (var.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
-            out->discreteChannels[ind] = createChannelDescr(var);
-        }
+        const auto& chVar = createChannelVar(var);
+        res->append(chVar);
     }
 
-    OscSettings& settings = out->settings;
+    OscSettings& settings = res->settings;
     settings.oscId = header.device_id; // let's assume oscId is equivalent to device_id
     settings.reason = (ReasonEnum)header.settings.reason;
     settings.timeResolution_us = header.settings.time_resolution_us;
@@ -613,22 +608,19 @@ long OscHandler::setHeader(const DevID& deviceID, const OscSettings& settings)
     return _return_OK;
 }
 
-OscChannelDescr OscHandler::createChannelDescr(const OSC_VAR& var)
+OscChannelVar OscHandler::createChannelVar(const OSC_VAR& var)
 {
-    OscChannelDescr ret;
+    OscChannelVar ret;
     ret.channelNum = var.chNum;
     ret.varId = var.var.id;
     ret.varName = var.var.name;
     ret.scale = var.var.scale;
-    ret.min = var.var.min;
-    ret.max = var.var.max;
     ret.color = var.var.color;
 
     ret.firstBit = var.firstBit;
     ret.lastBit = var.lastBit;
 
-    ret.isDiscrete = (var.var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE);
-    ret.isDigital = (var.var.type == OSC_VAR_TYPE::OSC_VAR_INT);
+    ret.type = var.var.type;
 
     return ret;
 }
@@ -642,19 +634,19 @@ QJsonObject OscHandler::createHeaderObj(int requestId, const OscHeader& header)
     return res;
 }
 
-QJsonObject OscHandler::createChannelObj(int requestId, const OscChannelDescr& ch)
+QJsonObject OscHandler::createChannelDescr(int requestId, const OscChannelVar& chVar)
 {
     QJsonObject res;
     res["request_id"] = requestId;
     QJsonObject obj;
-    obj["ch_num"] = ch.channelNum;
-    obj["var_id"] = ch.varId;
-    obj["name"] = ch.varName;
-    obj["scale"] = ch.scale;
-    obj["min"] = ch.min;
-    obj["max"] = ch.max;
-    obj["color"] =  colorToString(ch.color);
-    obj["isDiscrete"] = ch.isDiscrete;
+    obj["ch_num"] = chVar.channelNum;
+    obj["var_id"] = chVar.varId;
+    obj["name"] = chVar.varName;
+    obj["scale"] = chVar.scale;
+    obj["min"] = 0;
+    obj["max"] = 0;
+    obj["color"] =  colorToString(chVar.color);
+    obj["isDiscrete"] = (chVar.type == OSC_VAR_DISCRETE);
 
     res["body"] = obj;
 

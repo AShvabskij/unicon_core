@@ -32,13 +32,13 @@ private:
     int handleCloseStream(const QJsonObject &request);
 
     long getHeader(const DevID& deviceID, OscType::OscHeader *out);
-    long convertHeader(const DDE_OSC_HEADER& header, OscType::OscHeader *out);
+    long convertHeader(const DDE_OSC_HEADER& header, OscType::OscHeader *res);
     long setHeader(const DevID& deviceID, const OscType::OscSettings &settings);
 
     QJsonObject createHeaderObj(int requestId, const OscType::OscHeader& header);
-    QJsonObject createChannelObj(int requestId, const OscType::OscChannelDescr& ch);
+    QJsonObject createChannelDescr(int requestId, const OscType::OscChannelVar &chVar);
     QJsonObject createAnswerObj(int requestId, DevID deviceID, const QJsonObject &body = QJsonObject(), int error = 0);
-    OscType::OscChannelDescr createChannelDescr(const OSC_VAR &var);
+    OscType::OscChannelVar createChannelVar(const OSC_VAR &var);
     qint32 discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit);
 
     long startStreamData(const DevID& devID, QVector<int> oscVars);
