@@ -15,6 +15,7 @@
 #include <memory>
 
 #include <oscdatalogger.h>
+#include <oscdatalogger_v1_1.h>
 #include <oscdatalogger_v1_2.h>
 
 #include "DDE_TYPES.h"
@@ -192,6 +193,7 @@ long doConvert(QString fileFrom, QString fileTo)
 {
     QList<IOscDataLogger*> datServiceCollection;
     datServiceCollection.append(new OscDataLogger());
+    datServiceCollection.append(new OscDataLogger_v1_1());
     datServiceCollection.append(new OscDataLogger_v1_2());
 
     long res = _return_OK;

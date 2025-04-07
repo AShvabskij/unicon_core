@@ -15,6 +15,7 @@ INCLUDEPATH += $$PWD/../dde_lib
 
 SOURCES += \
         ../unicon_core/oscdatalogger.cpp \
+        ../unicon_core/oscdatalogger_v1_1.cpp \
         ../unicon_core/oscdatalogger_v1_2.cpp \
         main.cpp
 
