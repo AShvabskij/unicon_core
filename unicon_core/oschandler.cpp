@@ -9,9 +9,9 @@ const QString CMD_TYPE_GET = "get";
 const QString CMD_TYPE_SET = "set";
 const QString CMD_OSC_DATA = "osc_data";
 
-const int SEND_OBJ_COUNT_MAX = 5000;// 65536;
+const int SEND_OBJ_COUNT_MAX = 1000;// 65536;
 const int SEND_HISTORY_COUNT_MAX = 5000;
-const int SEND_HISTORY_COUNT_MIN = 1000;
+const int SEND_HISTORY_COUNT_MIN = 500;
 
 using namespace OscType;
 
@@ -499,7 +499,6 @@ void OscHandler::th_streamHistoryData()
     int valCount = 0;
     int obj_count = SEND_HISTORY_COUNT_MIN;
     IOscDataService* dataSrv = m_historySrv->getDataSrv();
-
     while (true) {
         bool isEof = false;
         qlonglong trig_time = m_capturedOsc.settings.trigDTime.toMSecsSinceEpoch();
@@ -523,7 +522,8 @@ void OscHandler::th_streamHistoryData()
             break;
         }
 
-        obj_count = std::min(obj_count * 2, SEND_HISTORY_COUNT_MAX);
+
+        obj_count = std::min((int)(obj_count * 1.1), SEND_HISTORY_COUNT_MAX);
     }
 
     qDebug() << "Emit all history data, dev id = " << m_capturedOsc.deviceID.id
