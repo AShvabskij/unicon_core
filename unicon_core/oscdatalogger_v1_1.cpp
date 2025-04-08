@@ -67,14 +67,34 @@ long OscDataLogger_v1_1::decodeData(const QCborValue& sourceDat,  OscType::OscDa
     QElapsedTimer timer;
     timer.start();
 
+    QMap<int/*var_id*/, int/*bitNum*/> discrVarsBits;
+
     int maxValueCount = 0;
     for (int i = 0; i < vars.size(); ++i) {
         int valueCount = 0;
-        const QCborArray& chValues = values[i].toArray();
+        const OscChannelVar& var = data.var(vars[i].toInteger());
+        if (!var.isValid()) continue;
 
-        data.data[i].append(values[i].toArray());
+        const QCborArray& varValues = values[i].toArray();
+
+        if (var.type == OSC_VAR_DISCRETE) {
+            QVariantList values = data.data[var.channelNum].values();
+            for (int ii = 0; ii < values.count(); ii++) {
+                int bitValue = varValues[ii].toInteger();
+                int bitNum = var.firstBit;
+                int bitMask = 1 << bitNum;
+                int value = values.value(ii).toInt();
+
+                values.value(ii) = (bitValue == 0) ? (value & ~bitMask) : (value | bitMask);
+            }
+
+            data.data[var.channelNum].append(values);
+
+        } else {
+            data.data[var.channelNum].append(varValues);
+        }
+
         valueCount = data.data[i].count();
-
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
 

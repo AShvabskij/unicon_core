@@ -70,7 +70,7 @@ namespace OscType {
             }
         };
 
-        QVariantList values(int startPos, int cnt = -1) const {
+        QVariantList values(int startPos = 0, int cnt = -1) const {
             QVariantList res;
 
             cnt = cnt >= 0 ? cnt : -1;
@@ -333,6 +333,15 @@ namespace OscType {
         OscChannelVar vars[OSC_MAX_VARS + 1];
         OscChannelData data[OSC_MAX_CHANNELS + 1];
         QMap<int/*varId*/, int/*pos*/>lastDataPos;
+
+        OscChannelVar var(int varId) {
+            for (const OscChannelVar& var: vars) {
+                if (!var.isValid()) continue;
+                if (var.varId == varId) return var;
+            };
+
+            return OscChannelVar();
+        };
 
         bool isOversized() {
             if (valueCount > MAX_DATA_COUNT)
