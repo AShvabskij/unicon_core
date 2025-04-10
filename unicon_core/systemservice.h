@@ -34,7 +34,7 @@ private slots:
 private:
     long requestDeviceLinks(DeviceIndList& links);
 
-    SysType m_sysType = SysType::Undefined;
+    SysType m_sysType = SysType::SysType_Undefined;
     QList<DevInd> m_deviceList;
     QTimer* m_timer;
     IDDE_Dispatcher* m_ddeDisp = nullptr;

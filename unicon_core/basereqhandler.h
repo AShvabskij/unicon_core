@@ -29,7 +29,7 @@ protected:
     IReqHandler* m_next = nullptr;
     ResponseManager* m_response = nullptr;
     IDDE_Dispatcher* m_dde = nullptr;
-    SysType m_sysType = SysType::Unknown;
+    SysType m_sysType = SysType::SysType_Unknown;
 
 };
 

@@ -47,7 +47,7 @@ void Core::handleSystemInit(const QJsonObject& request)
     if (requestId <= 0) return;
 
     SysType sysType = sysTypeId(request);
-    if (sysType == SysType::Undefined || sysType == SysType::Unknown) {
+    if (sysType == SysType::SysType_Undefined || sysType == SysType::SysType_Unknown) {
         QJsonArray jsSysArr;
         for(SysType sysType: m_supportedSysTypes) {
             jsSysArr.append(sysType);
@@ -59,7 +59,7 @@ void Core::handleSystemInit(const QJsonObject& request)
         send(response);
     }
 
-    if (sysType != SysType::Undefined) {
+    if (sysType != SysType::SysType_Undefined) {
         start(sysType);
     }
 

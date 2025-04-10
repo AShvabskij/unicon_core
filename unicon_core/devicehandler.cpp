@@ -154,7 +154,7 @@ void DeviceHandler::handleReqDevices(SysType sysType, int requestId)
 {
     QMap<SysType, QList<DevInd>> allLinks;
 
-    if (sysType == SysType::Undefined) {
+    if (sysType == SysType::SysType_Undefined) {
         sysType = m_dde->getDefaultType();
     }
 

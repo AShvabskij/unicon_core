@@ -23,7 +23,7 @@ constexpr const char* sysTypeToString(SysType type) {
     case MODBUS: return "MODBUS";
     case DLOG_CPLOT: return "DLOG_CPLOT";
     case DLOG_ISTART: return "DLOG_ISTART";
-    case Unknown: return "Unknown";
+    case SysType_Unknown: return "Unknown";
     default: return "";
     }
 
@@ -36,7 +36,7 @@ struct DevID
     DevInd id; // todo rename to 'ind'
 
     bool isValid() const {
-        return id <= MAX_DEV_SUPPORT && type != SysType::Undefined;
+        return id <= MAX_DEV_SUPPORT && type != SysType::SysType_Undefined;
     }
 };
 
@@ -122,11 +122,11 @@ typedef QVector<Module> ModuleList;
 
 struct Device
 {
-    DevID ID = {SysType::Undefined, 0};
+    DevID ID = {SysType::SysType_Undefined, 0};
     QString name; // name of similar devices : DEVICE_NAME + HW_REV + SW_REV, f.e. "DCDC00010002"
     QString instanceName; // unique device instance name: name + ID
     QString desc;
-    SysType sysType  = Undefined;
+    SysType sysType  = SysType_Undefined;
     ModuleList modules;
 
     Device() = default;

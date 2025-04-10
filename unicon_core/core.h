@@ -37,7 +37,7 @@ private:
     SocketServer* m_streamServer = nullptr;
 
     IDDE_Dispatcher* m_ddeDisp = nullptr;
-    SysType m_sysType = SysType::Undefined;
+    SysType m_sysType = SysType::SysType_Undefined;
     QList<SysType> m_supportedSysTypes;
 
     QMap<SysType, SystemService*> m_sysServices;

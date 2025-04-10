@@ -13,7 +13,7 @@
 
 enum SysType
 {
-    Undefined = 0,
+    SysType_Undefined = 0,
     Default = 0,
     FILE_IO = 1,
     UAVCAN = 2,
@@ -21,5 +21,5 @@ enum SysType
     MODBUS = 4,
     DLOG_CPLOT = 5,
     DLOG_ISTART = 6,
-    Unknown
+    SysType_Unknown
 };
