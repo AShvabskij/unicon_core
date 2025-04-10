@@ -25,6 +25,8 @@
 #define ENDL "\n"
 #endif
 
+#include <QTimeZone>
+
 const int DATA_VERSION = 2;
 const int DATA_SUBVERSION = 1;
 

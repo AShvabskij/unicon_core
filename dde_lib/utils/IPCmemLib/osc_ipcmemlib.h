@@ -37,8 +37,8 @@ extern "C" {
 	//#define SET_NEW_IPC
 
 	#define MAX_FNAME_LEN 128
-
-	//-----------------------------------------------------------------
+    #define MAX_DEV_SUPPORT  (32+1)
+    //-----------------------------------------------------------------
 
 	int osc_mem_init(const char* sys_name, int blkSize);
     int osc_mem_deinit(const char* sys_name, uintptr_t *blkPtr, int blkSize);

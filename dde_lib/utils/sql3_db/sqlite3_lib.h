@@ -10,6 +10,7 @@
 #include <signal.h>
 // #include <ucontext.h>
 #include "DDE_TYPES.h"
+#include "DDE_PARAMS_TYPE.h"
 //
 #ifdef __cplusplus
 extern "C" {

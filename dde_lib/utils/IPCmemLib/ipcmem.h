@@ -25,6 +25,7 @@
 //
 
 #include "DDE_TYPES.h"
+#include "DDE_DEVICES_TYPE.h"
 
 #pragma once
 

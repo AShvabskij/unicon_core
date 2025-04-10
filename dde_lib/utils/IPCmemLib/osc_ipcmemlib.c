@@ -4,7 +4,7 @@
 
 char pathKey_[MAX_DEV_SUPPORT][MAX_FNAME_LEN];
 int shmBlk[MAX_DEV_SUPPORT] = { -1 };
-uintptr_t _blkPtr_t[MAX_DEV_SUPPORT] = { NULL };
+uintptr_t _blkPtr_t[MAX_DEV_SUPPORT] = { 0 };
 
 #ifdef SET_DEBUG_IPC
 char chap[BUF_TMP] = { 0 };
@@ -19,13 +19,13 @@ extern void Report(uint8_t addTime, const char* fmt, ...);
 int mem_initBlk(int ind, size_t blkSize, const char* blkName)
 {
     int ret = -1;
-    unsigned char* adr = MAP_FAILED;
+    void* adr = NULL;
     int flg = O_RDWR | O_CREAT;
 
     int key = shm_open(pathKey_[ind], flg, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);// | S_IROTH | S_IWOTH);
     if (key != -1) {
         ftruncate(key, blkSize);
-        adr = (unsigned char*)mmap(NULL, blkSize, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
+        adr = mmap(NULL, blkSize, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
         if (adr != MAP_FAILED) {
             _blkPtr_t[ind] = adr;
             ret = key;
@@ -85,10 +85,10 @@ int osc_mem_deinit(const char* sys_name, uintptr_t* blkPtr, int blkSize)
     int err = 0;
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        if (blkPtr[i] != NULL) {
-            if (!munmap(blkPtr[i], blkSize)) {
+        if (blkPtr[i] != 0) {
+            if (!munmap((void*)blkPtr[i], blkSize)) {
                 shmBlk[i] = -1;
-                blkPtr[i] = NULL;
+                blkPtr[i] = 0;
                 if (sys_name) {
                     if (shm_unlink(pathKey_[i]) != 0) {//error
                         err |= 2;
@@ -107,7 +107,7 @@ int osc_mem_deinit(const char* sys_name, uintptr_t* blkPtr, int blkSize)
 uintptr_t osc_mem_getData(uint16_t ind)
 {
     if (ind >= MAX_DEV_SUPPORT) {
-        return NULL;
+        return 0;
     }
 
     return _blkPtr_t[ind];

@@ -14,6 +14,22 @@
 typedef quint16 DevInd;
 typedef QList<quint16> DeviceIndList;
 
+
+constexpr const char* sysTypeToString(SysType type) {
+    switch (type) {
+    case FILE_IO: return "FILE_IO"; // only for demo mode
+    case UAVCAN: return "UAVCAN";
+    case CANOPEN: return "CANOPEN";
+    case MODBUS: return "MODBUS";
+    case DLOG_CPLOT: return "DLOG_CPLOT";
+    case DLOG_ISTART: return "DLOG_ISTART";
+    case Unknown: return "Unknown";
+    default: return "";
+    }
+
+    return "";
+}
+
 struct DevID
 {
     SysType type;

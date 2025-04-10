@@ -136,8 +136,8 @@ int IPCMEM_init(const char* sys_name, int blkSize)
     if (res < 0) return res;
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        _blkPtr[i] = NULL;
-        uintptr_t retAdr = NULL;
+        _blkPtr[i] = 0;
+        uintptr_t retAdr = 0;
 
         int res = initBlk(pathKey[i], blkSize, &retAdr);
         if (res < 0) return res;
@@ -159,8 +159,8 @@ int IPCMEM_Deinit(const char* sys_name, uintptr_t* blkPtr, int blkSize)
     if (res < 0) return res;
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        if (blkPtr[i] != NULL) {
-            if (!munmap(blkPtr[i], blkSize)) {
+        if (blkPtr[i] != 0) {
+            if (!munmap((void*)blkPtr[i], blkSize)) {
 
                 if (sys_name) {
                     if (shm_unlink(pathKey[i]) != 0) {//error
@@ -190,7 +190,7 @@ uintptr_t getDataIPC(uint16_t id)
 
 uintptr_t getCmdIPC()
 {
-    return _devCmdPtr;
+    return (uintptr_t)_devCmdPtr;
 }
 
 //----------------------------------------------------------------------------
