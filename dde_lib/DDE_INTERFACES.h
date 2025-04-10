@@ -2,6 +2,8 @@
 #define DDE_INTERFACES_H
 
 #include "DDE_TYPES.h"
+#include "DDE_DEVICES_TYPE.h"
+#include "DDE_PARAMS_TYPE.h"
 #include "DDE_OSC_TYPES.h"
 #include "DDE_EVLOG_TYPES.h"
 

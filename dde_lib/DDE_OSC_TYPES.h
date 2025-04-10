@@ -68,7 +68,7 @@ struct OSC_VAR
 
 union OSC_DATA
 {
-    float f_buff[OSC_DATA_BUFFER_SIZE];
+    float f_buff[OSC_DATA_BUFFER_SIZE] = {0};
     int32_t i_buff[OSC_DATA_BUFFER_SIZE];
     //uint32_t u_buff[OSC_DATA_BUFFER_SIZE];
 };

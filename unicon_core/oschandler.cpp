@@ -582,7 +582,7 @@ long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *res)
         time = time * 1000; // assume time is in seconds, need to convert to msec
     }
 
-    settings.trigDTime = QDateTime::fromMSecsSinceEpoch(time, Qt::LocalTime);
+    settings.trigDTime = QDateTime::fromMSecsSinceEpoch(time, QTimeZone::systemTimeZone());
     if (!settings.trigDTime.isValid()) {
         settings.trigDTime = QDateTime();
     }

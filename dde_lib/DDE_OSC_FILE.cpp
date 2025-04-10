@@ -1,11 +1,5 @@
 #include "DDE_OSC_FILE.h"
 
-#include <cmath>
-#include <chrono>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-
 #include "cpp_inc.h"
 #include "oscfileservice.h"
 
@@ -38,7 +32,7 @@ _dde_func_return_t DDE_OSC_FILE::open(uint16_t oscId)
     return res;
 }
 
-_dde_func_return_t DDE_OSC_FILE::close(uint16_t oscId)
+_dde_func_return_t DDE_OSC_FILE::close(uint16_t )
 {
     for (auto service : m_oscFileSrv) {
         _dde_func_return_t res = service.second->close();

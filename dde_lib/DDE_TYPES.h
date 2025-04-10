@@ -1,11 +1,6 @@
 #pragma once
 
 //---------------------------------------------------------------------------
-#include <stdint.h>
-#include <time.h>
-
-#include "DDE_DEVICES_TYPE.h"
-#include "DDE_PARAMS_TYPE.h"
 
 #define _dde_func_return_t long
 
@@ -15,3 +10,29 @@
 #define _return_Busy	3
 
 #define DDE_LOG_PREFIX "DDE_OSC: "
+
+enum SysType
+{
+    Undefined = 0,
+    Default = 0,
+    FILE_IO = 1,
+    UAVCAN = 2,
+    CANOPEN = 3,
+    MODBUS = 4,
+    DLOG_CPLOT = 5,
+    DLOG_ISTART = 6,
+    Unknown
+};
+
+constexpr const char* sysTypeToString(SysType type) {
+    switch (type) {
+    case FILE_IO: return "FILE_IO"; // only for demo mode
+    case UAVCAN: return "UAVCAN";
+    case CANOPEN: return "CANOPEN";
+    case MODBUS: return "MODBUS";
+    case DLOG_CPLOT: return "DLOG_CPLOT";
+    case DLOG_ISTART: return "DLOG_ISTART";
+    case Unknown: return "Unknown";
+    default: return "";
+    }
+}

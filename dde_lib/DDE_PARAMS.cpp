@@ -30,7 +30,6 @@ DDE_PARAMS::~DDE_PARAMS()
 
 _dde_func_return_t DDE_PARAMS::init(const char* sys_type)
 {
-    //	std::thread*thr_params = new std::thread(&DDE_PARAMS::thread_proc, this);
     int res = _return_OK;
     if (string(sys_type) != "") {
         res = _paramiPC->init(sys_type);

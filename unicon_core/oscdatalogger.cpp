@@ -74,7 +74,7 @@ long OscDataLogger::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuf
         QString path =  createFolder(now);
         QJsonObject jsonObj = headerToJson(header);
 
-        QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, Qt::LocalTime);
+        QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, QTimeZone::systemTimeZone());
         QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
 
         QString headerFile = path + "/" + baseFileName + ".hdr";
@@ -376,7 +376,7 @@ long OscDataLogger::loadData(QString fileFrom, OscType::OscDataBuffer& data)
 
 long OscDataLogger::loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data)
 {
-    QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, Qt::LocalTime);
+    QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, QTimeZone::systemTimeZone());
     QString path =  getFolderPath(trigTime);
     QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
 

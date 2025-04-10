@@ -1,9 +1,6 @@
 #pragma once
 
 #include <string>
-#include <fstream>
-#include <vector>
-#include <thread>
 
 #include "csvfile.h"
 
@@ -35,7 +32,7 @@ public:
 
     virtual _dde_func_return_t init(const char* sys_type);
 
-    virtual _dde_func_return_t update_device_params(uint16_t device_id){return _return_OK;};
+    virtual _dde_func_return_t update_device_params(uint16_t ){return _return_OK;};
     virtual void update(){};
 
 private:

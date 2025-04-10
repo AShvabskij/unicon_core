@@ -3,6 +3,7 @@
 #include "DDE_TYPES.h"
 #include "DDE_PARAMS_TYPE.h"
 #include "DDE_INTERFACES.h"
+
 #include "cpp_inc.h"
 
 #include <mutex>
@@ -66,7 +67,6 @@ private:
 
     _dde_func_return_t write_cmd_array(uint8_t device_id, DDE_PARAMS_CMD* cmdArray, int cmd_cnt);
 
-    std::thread *thr_params;
     ParamDescr* _paramDescr;
     ParamIPCService* _paramiPC;
 

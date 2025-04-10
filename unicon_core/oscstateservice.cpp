@@ -72,8 +72,8 @@ OscStateMachine::OscStateMachine(IDDE* dde, IOscDataService *dataSrv)
     m_state = STATE::Normal;
     m_dataSrv = dataSrv;
 
-    memset(&m_ddeData, 0, sizeof(DDE_GET_OSC_DATA));
-    memset(&m_header, 0, sizeof(DDE_OSC_HEADER));
+    // memset(&m_ddeData, 0, sizeof(DDE_GET_OSC_DATA));
+    // memset(&m_header, 0, sizeof(DDE_OSC_HEADER));
 }
 
 void OscStateMachine::update(DevInd devId)
@@ -228,6 +228,7 @@ void OscStateMachine::finish()
 
 long OscStateMachine::getData(const DDE_OSC_HEADER &hdr, DDE_GET_OSC_DATA& getDat)
 {
+
     memset(&getDat, 0, sizeof(DDE_GET_OSC_DATA)); // this command results to compiler warning
     // getDat = DDE_GET_OSC_DATA(); // you must not do it so, because it results to memory corruption
     getDat.device_id = hdr.device_id;
