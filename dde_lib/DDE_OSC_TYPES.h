@@ -43,15 +43,18 @@ struct OSC_VAR_DESCR
     char name[OSC_VAR_NAME_LENGTH] = "";
     char user_name[OSC_VAR_NAME_LENGTH] = "";
     char dim[6] = "";
-    float min = 0.0;
-    float max = 0.0;
-    float scale = 0.0;
+    float __rm__min = 0.0;
+    float __rm__max = 0.0;
+    float __rm__scale = 0.0;
     int color = 0;
 };
 
 struct OSC_VAR
 {
     uint16_t chNum = 0;
+    uint16_t setLn = 0; // set number: L1, L2, L3 ...
+    uint16_t setCh = 0; // set channel: 0, 1, 2
+
     OSC_VAR_DESCR var;
 
     float gain = 0.0;

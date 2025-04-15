@@ -261,9 +261,9 @@ QJsonObject OscDataLogger::headerToJson(const DDE_OSC_HEADER &h)
         obj["var_id"] = var.var.id;
         obj["name"] = var.var.name;
         obj["dim"] = var.var.dim;
-        obj["scale"] = var.var.scale;
-        obj["min"] = var.var.min;
-        obj["max"] = var.var.max;
+        obj["scale"] = var.var.__rm__scale;
+        obj["min"] = var.var.__rm__min;
+        obj["max"] = var.var.__rm__max;
         obj["color"] = colorToString(var.var.color);
 
         obj["type"] = OSC_VAR_TYPE_TO_STRING(var.var.type);
@@ -546,9 +546,9 @@ long OscDataLogger::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
         var.var.id = elem["var_id"].toInt();
         strcpy(var.var.name, elem["name"].toString().toStdString().c_str());
         strcpy(var.var.dim, elem["dim"].toString().toStdString().c_str());
-        var.var.scale = elem["scale"].toDouble(0);
-        var.var.min = elem["min"].toDouble(0);
-        var.var.max = elem["max"].toDouble(0);
+        var.var.__rm__scale = elem["scale"].toDouble(0);
+        var.var.__rm__min = elem["min"].toDouble(0);
+        var.var.__rm__max = elem["max"].toDouble(0);
         var.var.color = stringToColor(elem["color"].toString());
         var.var.type = OSC_VAR_TYPE_FROM_STRING(elem["type"].toString());
     }
@@ -619,6 +619,7 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
         int valueCount = 0;
         int chNum = channels[i].toInteger();
         const QCborArray& chValues = values[i].toArray();
+        data.data[chNum].clear();
         data.data[chNum].append(chValues);
         valueCount = data.data[chNum].count();
 
