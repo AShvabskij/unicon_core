@@ -24,7 +24,7 @@ _dde_func_return_t DDE_OSC_EMUL::get(DDE_OSC_HEADER& p)
     for (int ii =0; ii < OSC_MAX_ANALOG_VARS; ii++)
     {
         p.vars[ii].var.id = paramId++;
-        p.vars[ii].var.__rm__scale = 0.1;
+        p.vars[ii].gain = 0.1;
     }
 
     return _return_OK;

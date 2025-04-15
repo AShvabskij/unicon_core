@@ -614,7 +614,7 @@ OscChannelVar OscHandler::createChannelVar(const OSC_VAR& var)
     ret.channelNum = var.chNum;
     ret.varId = var.var.id;
     ret.varName = var.var.name;
-    ret.scale = var.var.__rm__scale;
+    ret.scale = var.gain;
     ret.color = var.var.color;
 
     ret.firstBit = var.firstBit;

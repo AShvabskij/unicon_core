@@ -130,11 +130,8 @@ _dde_func_return_t OscIPCHeaderService::get_header(uint16_t id, DDE_OSC_HEADER& 
         strcpy(var.var.name, glio_ch.name);
         strcpy(var.var.user_name, glio_ch.userName);
         strcpy(var.var.dim, glio_ch.dim);
-        var.var.__rm__min = glio_ch.min;
-        var.var.__rm__max = glio_ch.max;
         var.var.type = glio_ch.type;
         var.var.color = glio_ch.color;
-        var.var.__rm__scale = glio_ch.gain;
 
         std::cout << DDE_LOG_PREFIX
                   << "Header var = " << var.var.name

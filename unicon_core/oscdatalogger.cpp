@@ -261,7 +261,6 @@ QJsonObject OscDataLogger::headerToJson(const DDE_OSC_HEADER &h)
         obj["var_id"] = var.var.id;
         obj["name"] = var.var.name;
         obj["dim"] = var.var.dim;
-        obj["scale"] = var.var.__rm__scale;
         obj["min"] = var.var.__rm__min;
         obj["max"] = var.var.__rm__max;
         obj["color"] = colorToString(var.var.color);
@@ -546,9 +545,6 @@ long OscDataLogger::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
         var.var.id = elem["var_id"].toInt();
         strcpy(var.var.name, elem["name"].toString().toStdString().c_str());
         strcpy(var.var.dim, elem["dim"].toString().toStdString().c_str());
-        var.var.__rm__scale = elem["scale"].toDouble(0);
-        var.var.__rm__min = elem["min"].toDouble(0);
-        var.var.__rm__max = elem["max"].toDouble(0);
         var.var.color = stringToColor(elem["color"].toString());
         var.var.type = OSC_VAR_TYPE_FROM_STRING(elem["type"].toString());
     }

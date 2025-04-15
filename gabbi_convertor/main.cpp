@@ -115,7 +115,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
 
         if (var.var.type == OSC_VAR_FLOAT || var.var.type == OSC_VAR_INT) {
             int lastBit = (var.lastBit > 0 && var.lastBit < MAX_BIT_NUM) ? var.lastBit : MAX_BIT_NUM;
-            float gain = (var.gain != 0.0 && var.gain != 1.0) ? var.gain : var.var.__rm__scale;
+            float gain = var.gain;
 
             line << QString("@") + QString(var.var.name)
                  << QString("L") + QString::number(numOfSet)
