@@ -304,9 +304,9 @@ OSC_VAR_DESCR OscFileService::createOscVar(const OSC_FILE::VAR_DESCR& descr)
     ret.id = descr.var_id;
     strcpy(ret.name, descr.name);
     strcpy(ret.user_name, descr.name);
-    ret.min = descr.min;
-    ret.max = descr.max;
-    ret.scale = descr.gain;
+    ret.__rm__min = descr.min;
+    ret.__rm__max = descr.max;
+    ret.__rm__scale = descr.gain;
     ret.type = descr.isDiscrete ? OSC_VAR_TYPE::OSC_VAR_DISCRETE : (descr.isDigital ? OSC_VAR_TYPE::OSC_VAR_INT : OSC_VAR_TYPE::OSC_VAR_FLOAT);
     memset(ret.dim, '\0', sizeof(ret.dim));
 
