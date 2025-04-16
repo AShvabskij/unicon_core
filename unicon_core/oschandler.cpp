@@ -12,6 +12,7 @@ const QString CMD_OSC_DATA = "osc_data";
 const int SEND_OBJ_COUNT_MAX = 1000;// 65536;
 const int SEND_HISTORY_COUNT_MAX = 5000;
 const int SEND_HISTORY_COUNT_MIN = 500;
+const int SET_SIZE = 16;
 
 using namespace OscType;
 
@@ -561,13 +562,21 @@ long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *res)
     qDebug() << DDE_LOG_PREFIX
              << "Get osc header" << ", channel count = " << header.settings.channels_count;
 
+    int numOfSet = 1;
+
     for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
         const OSC_VAR& var = header.vars[ind];
         if (!var.isValid()) {
             continue;
         }
 
-        const auto& chVar = createChannelVar(var);
+        OscChannelVar chVar = createChannelVar(var);
+        if (var.setLn == 0 && var.setCh == 0) {
+            int chNumOfSet = (var.chNum + 1) - (numOfSet - 1) * SET_SIZE;
+            chVar.setLn = numOfSet;
+            chVar.setCh = chNumOfSet;
+        }
+
         res->append(chVar);
     }
 
@@ -617,6 +626,9 @@ OscChannelVar OscHandler::createChannelVar(const OSC_VAR& var)
     ret.scale = var.gain;
     ret.color = var.var.color;
 
+    ret.setLn = var.setLn;
+    ret.setCh = var.setCh;
+
     ret.firstBit = var.firstBit;
     ret.lastBit = var.lastBit;
 
@@ -640,6 +652,8 @@ QJsonObject OscHandler::createChannelDescr(int requestId, const OscChannelVar& c
     res["request_id"] = requestId;
     QJsonObject obj;
     obj["ch_num"] = chVar.channelNum;
+    obj["set_ln"] = chVar.setLn;
+    obj["set_ch"] = chVar.setCh;
     obj["var_id"] = chVar.varId;
     obj["name"] = chVar.varName;
     obj["scale"] = chVar.scale;

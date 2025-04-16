@@ -38,6 +38,9 @@ namespace OscType {
         quint16 varId = 0;
         QString varName = "";
 
+        uint16_t setLn = 0; // set number: L1, L2, L3 ...
+        uint16_t setCh = 0; // set channel: 0, 1, 2
+
         float scale = 0.0;
         float offset = 0.0;
 

@@ -591,7 +591,7 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
 {
     QCborMap obj = sourceDat.toMap();
     uint8_t ver = obj.value("version").toVariant().toUInt();
-    uint8_t sub_ver = obj.value("version").toVariant().toUInt();
+    uint8_t sub_ver = obj.value("sub_version").toVariant().toUInt();
 
     if (ver != DATA_VERSION) {
         QTextStream(stdout) << "The json data version " <<  ver << " is not supported" <<  ", the current supported version is " << DATA_VERSION << ENDL;

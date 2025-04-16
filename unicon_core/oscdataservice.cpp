@@ -31,6 +31,8 @@
 //     float offset;
 // };
 
+const int SET_SIZE = 16;
+
 using namespace OscType;
 
 OscType::OscDataBuffer* OscDataService::get(DevInd device_id, qlonglong time)
@@ -153,6 +155,7 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
     }
     buff->trig_time = time;
 
+    int numOfSet = 1;
     for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
         const OSC_VAR& var = hdr.vars[ind];
 
@@ -166,6 +169,15 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
         chVar.type = var.var.type;
         chVar.firstBit = var.firstBit;
         chVar.lastBit = var.lastBit;
+
+        if (var.setLn == 0 && var.setCh == 0) {
+            int chNumOfSet = (var.chNum + 1) - (numOfSet - 1) * SET_SIZE;
+            chVar.setLn = numOfSet;
+            chVar.setCh = chNumOfSet;
+        } else {
+            chVar.setLn = var.setLn;
+            chVar.setCh = var.setCh;
+        }
 
         OscChannelData& chValues = buff->data[var.chNum];
         chValues.type = var.var.type;
