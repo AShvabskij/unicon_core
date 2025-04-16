@@ -11,9 +11,6 @@
 #include <QCommandLineOption>
 #include <QTextStream>
 
-#include <iostream>
-#include <memory>
-
 #include <oscdatalogger.h>
 #include <oscdatalogger_v1_1.h>
 #include <oscdatalogger_v1_2.h>
@@ -49,6 +46,7 @@ OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
         if (!var.isValid()) continue;
 
         OscType::OscChannelVar& chVar = buff->vars[ind];
+        chVar.varName = var.var.name;
         chVar.channelNum = var.chNum;
         chVar.varId = var.var.id;
         chVar.type = var.var.type;
@@ -103,7 +101,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
     QDateTime date = QDateTime::fromSecsSinceEpoch(hdr.settings.trig_time);
     res << ".Date," << date.date().toString("yyyy-MM-dd") << "," << ENDL;
     res << ".Time," << date.time().toString("hh:mm:ss:zzz") << "," << ENDL;
-    res << ".Ts," << resolution_sec << ","  << ENDL;
+    res << ".Ts," << QString::number(resolution_sec, 'f') << ","  << ENDL;
 
     res << ENDL;
 
@@ -196,19 +194,18 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
         QStringList rec;
         rec << QString::number(i + 1);
 
-        for (int chNum : analogChannels) {
+        for (auto key: varSets.keys()) {
+            int chNum = varSets[key];
             const OscType::OscChannelData& chDat = datBuff.data[chNum];
 
+            if (analogChannels.contains(chNum)) {
                 auto rawVal = chDat.value(i);
                 int val = denormalizeValue(rawVal.toFloat());
                 rec << QString::number(val);
-        }
-
-        for (int chNum : discreteChannels) {
-            const OscType::OscChannelData& chDat = datBuff.data[chNum];
-
-            int discrValue = chDat.value(i).toInt();
-            rec << QString::number(discrValue); // 04.2025 The decision for a newer version of the data buff
+            } else if (discreteChannels.contains(chNum)) {
+                int discrValue = chDat.value(i).toInt();
+                rec << QString::number(discrValue); // 04.2025 The decision for a newer version of the data buff
+            }
         }
 
         res << rec.join(",") << ENDL;
