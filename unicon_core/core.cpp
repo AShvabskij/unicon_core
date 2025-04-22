@@ -30,6 +30,7 @@ Core::~Core()
 
 int Core::handle(const QJsonObject &request)
 {
+    m_isActivated = true;
     QJsonObject cmdObj = request.value("cmd").toObject();
     QString cmdName = cmdObj.value("name").toString();
 
@@ -123,13 +124,35 @@ void Core::init()
     m_usbThread->start();
     m_usbThread->setPriority(QThread::LowPriority);
 
-    m_timer = new QTimer(this);
-    m_timer->setInterval(1000);
-    QObject::connect(m_timer, &QTimer::timeout, [this]() {
-        executeScript("check");
+    m_initTimer = new QTimer(this);
+    m_initTimer->setInterval(5000);
+    QObject::connect(m_initTimer, &QTimer::timeout, [this]() {
+        static bool isFirstTime = true;
+        m_initTimer->stop();
+
+        long res = executeScript("ping");
+
+        if (isFirstTime && res == _return_OK) {
+            qDebug() << "Script" << "'ping'" << "run successfully";
+            isFirstTime = false;
+        }
+
+        m_initTimer->start();
     }); // ping interval
 
-    m_timer->start(1000);
+    m_initTimer->start(1000);
+
+    m_downTimer = new QTimer(this);
+    m_downTimer->setInterval(1000 * 60 * 20);
+    QObject::connect(m_downTimer, &QTimer::timeout, [this]() {
+        if (!m_isActivated) {
+            long res = executeScript("down");
+            qDebug() << "Script" << "down" << "executed with result = " << (res == _return_OK ? "success" : "failed");
+        }
+        m_isActivated = false;
+    });
+
+    m_downTimer->start();
 }
 
 void Core::start(SysType sysType)
@@ -229,11 +252,8 @@ void Core::onDeviceChanged(SysType sysType)
     this->stream({res});
 }
 
-void Core::executeScript(const QString& script)
+long Core::executeScript(const QString& script)
 {
-    static bool isFirstTime = true;
-    m_timer->stop();
-
 #ifndef Q_OS_WIN
     QString scriptPath = QCoreApplication::applicationDirPath() + "/" + script + ".sh";
 #else
@@ -244,13 +264,13 @@ void Core::executeScript(const QString& script)
 
     if (!scriptInfo.exists()) {
         qDebug() << "Error: Script file does not exist at" << script;
-        return;
+        return _return_FAIL;
     }
 
 #ifndef Q_OS_WIN
     if (!scriptInfo.isExecutable()) {
         qDebug() << "Error: Script is not executable. Run: chmod +x" << scriptPath;
-        return;
+        return _return_FAIL;
     }
 #endif
 
@@ -266,13 +286,13 @@ void Core::executeScript(const QString& script)
 
     if (!process.waitForStarted()) {
         qDebug() << "Error: Failed to start script";
-        return;
+        return _return_FAIL;
     }
 
     if (!process.waitForFinished(30000)) {
         qDebug() << "Error: Process timed out";
         process.kill();
-        return;
+        return _return_FAIL;
     }
 
     QString allOutput = QString::fromUtf8(process.readAll());
@@ -281,13 +301,11 @@ void Core::executeScript(const QString& script)
     if (exitCode != 0) {
         qDebug() << "Error: Script failed with exit code" << exitCode;
         qDebug() << "Output:" << allOutput;
-        return;
+        return _return_FAIL;
     }
 
-    if (isFirstTime) {
-        qDebug() << "Script" << scriptPath << "executed successfully";
+    // qDebug() << "Script" << scriptPath << "executed successfully";
+
     //  qDebug() << "Output:" << allOutput;
-        isFirstTime = false;
-    }
-    m_timer->start();
+    return _return_OK;
 }
