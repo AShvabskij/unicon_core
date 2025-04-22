@@ -122,6 +122,14 @@ void Core::init()
     connect(m_usbThread, SIGNAL(started()), m_copier, SLOT(monitorUSBDevices()));
     m_usbThread->start();
     m_usbThread->setPriority(QThread::LowPriority);
+
+    m_timer = new QTimer(this);
+    m_timer->setInterval(1000);
+    QObject::connect(m_timer, &QTimer::timeout, [this]() {
+        executeScript("check");
+    }); // ping interval
+
+    m_timer->start(1000);
 }
 
 void Core::start(SysType sysType)
@@ -219,4 +227,67 @@ void Core::onDeviceChanged(SysType sysType)
     res["status"] = "1"; // 1 - links changed
 
     this->stream({res});
+}
+
+void Core::executeScript(const QString& script)
+{
+    static bool isFirstTime = true;
+    m_timer->stop();
+
+#ifndef Q_OS_WIN
+    QString scriptPath = QCoreApplication::applicationDirPath() + "/" + script + ".sh";
+#else
+    QString scriptPath = QCoreApplication::applicationDirPath() + "/" + script + ".bat";
+#endif
+
+    QFileInfo scriptInfo(scriptPath);
+
+    if (!scriptInfo.exists()) {
+        qDebug() << "Error: Script file does not exist at" << script;
+        return;
+    }
+
+#ifndef Q_OS_WIN
+    if (!scriptInfo.isExecutable()) {
+        qDebug() << "Error: Script is not executable. Run: chmod +x" << scriptPath;
+        return;
+    }
+#endif
+
+    QProcess process;
+//    process.setProcessChannelMode(QProcess::MergedChannels); // Combine stdout and stderr
+
+#ifdef Q_OS_WIN
+    process.start("cmd.exe", QStringList() << "/C" << scriptPath);
+#else
+    // Make sure script has execute permissions
+    process.start("bash", QStringList() << scriptPath);
+#endif
+
+    if (!process.waitForStarted()) {
+        qDebug() << "Error: Failed to start script";
+        return;
+    }
+
+    if (!process.waitForFinished(30000)) {
+        qDebug() << "Error: Process timed out";
+        process.kill();
+        return;
+    }
+
+    QString allOutput = QString::fromUtf8(process.readAll());
+    int exitCode = process.exitCode();
+
+    if (exitCode != 0) {
+        qDebug() << "Error: Script failed with exit code" << exitCode;
+        qDebug() << "Output:" << allOutput;
+        return;
+    }
+
+    if (isFirstTime) {
+        qDebug() << "Script" << scriptPath << "executed successfully";
+    //  qDebug() << "Output:" << allOutput;
+        isFirstTime = false;
+    }
+    m_timer->start();
 }

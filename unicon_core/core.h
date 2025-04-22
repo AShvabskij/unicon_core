@@ -26,12 +26,13 @@ public:
 
     [[ noreturn ]] void thread_proc();
 
-public slots:
+private slots:
     void onDeviceChanged(SysType sysType);
 
 private:
 
     void handleSystemInit(const QJsonObject& request);
+    void executeScript(const QString& script);
 
     SocketServer* m_cmdServer = nullptr;
     SocketServer* m_streamServer = nullptr;
@@ -46,6 +47,7 @@ private:
     QFuture<void> m_threadFuture;
     QMutex m_mutex;
     QThread* m_usbThread;
+    QTimer* m_timer;
 };
 
 #endif // APPLICATION_H
