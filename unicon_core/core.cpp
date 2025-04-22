@@ -126,7 +126,7 @@ void Core::init()
     m_timer = new QTimer(this);
     m_timer->setInterval(1000);
     QObject::connect(m_timer, &QTimer::timeout, [this]() {
-        executeScript("check");
+        executeScript("connect");
     }); // ping interval
 
     m_timer->start(1000);
@@ -286,7 +286,7 @@ void Core::executeScript(const QString& script)
 
     if (isFirstTime) {
         qDebug() << "Script" << scriptPath << "executed successfully";
-    //  qDebug() << "Output:" << allOutput;
+        qDebug() << "Output:" << allOutput;
         isFirstTime = false;
     }
     m_timer->start();
