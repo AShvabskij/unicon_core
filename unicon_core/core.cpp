@@ -129,7 +129,9 @@ void Core::init()
 
     m_pingTimer = new QTimer(this);
     m_pingTimer->setSingleShot(true);
-    connect(m_pingTimer, &QTimer::timeout, this, &Core::onPingTimerAlarm, Qt::QueuedConnection);
+    QObject::connect(m_chkTimer, &QTimer::timeout, [this]() {
+        executeScript(SCRIPT_PING);
+    });
     m_pingTimer->start(7000);
 
 #ifndef QT_DEBUG
@@ -145,13 +147,6 @@ void Core::init()
     m_chkTimer->start(1000 * 60 * 20);
 #endif
 
-}
-
-void Core::onPingTimerAlarm()
-{
-    m_pingTimer->stop();
-    executeScript(SCRIPT_PING);
-    m_pingTimer->start();
 }
 
 void Core::start(SysType sysType)
