@@ -130,31 +130,22 @@ void Core::init()
     m_pingTimer = new QTimer(this);
     m_pingTimer->setInterval(5000);
     QObject::connect(m_pingTimer, &QTimer::timeout, [this]() {
-        m_pingTimer->stop();
-
         executeScript(SCRIPT_PING);
-
-        m_pingTimer->start();
-    }); // ping interval
+    });
 
     m_pingTimer->start(1000);
 
 #ifndef QT_DEBUG
     m_chkTimer = new QTimer(this);
-    m_chkTimer->setInterval(1000 * 60 * 20);
     QObject::connect(m_chkTimer, &QTimer::timeout, [this]() {
+        m_chkTimer->stop();
+
         if (!m_isActivated) {
-            long res = executeScript(SCRIPT_NETWORK_DOWN);
-            if (res == _return_OK) {
-                m_chkTimer->stop();
-                return;
-            }
+            executeScript(SCRIPT_NETWORK_DOWN);
         }
-        m_isActivated = false;
-        m_chkTimer->start();
     });
 
-    m_chkTimer->start();
+    m_chkTimer->start(1000 * 60 * 20);
 #endif
 
 }
