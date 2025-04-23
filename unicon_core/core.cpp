@@ -129,7 +129,7 @@ void Core::init()
 
     m_pingTimer = new QTimer(this);
     m_pingTimer->setSingleShot(true);
-    QObject::connect(m_chkTimer, &QTimer::timeout, [this]() {
+    QObject::connect(m_pingTimer, &QTimer::timeout, [this]() {
         executeScript(SCRIPT_PING);
     });
     m_pingTimer->start(7000);
