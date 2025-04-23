@@ -28,6 +28,7 @@ public:
 
 private slots:
     void onDeviceChanged(SysType sysType);
+    void onPingTimerAlarm();
 
 private:
 
