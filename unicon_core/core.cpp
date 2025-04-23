@@ -17,6 +17,8 @@
 // #define NO_DEMO
 
 const QString CMD_SYSTEM_INIT = "system_init";
+const QString SCRIPT_PING = "ping";
+const QString SCRIPT_NETWORK_DOWN = "net_down";
 
 Core::Core(): BaseReqHandler()
 {
@@ -30,9 +32,10 @@ Core::~Core()
 
 int Core::handle(const QJsonObject &request)
 {
-    m_isActivated = true;
     QJsonObject cmdObj = request.value("cmd").toObject();
     QString cmdName = cmdObj.value("name").toString();
+
+    m_isActivated = true;
 
     if (cmdName == CMD_SYSTEM_INIT) {
         handleSystemInit(request);
@@ -124,35 +127,36 @@ void Core::init()
     m_usbThread->start();
     m_usbThread->setPriority(QThread::LowPriority);
 
-    m_initTimer = new QTimer(this);
-    m_initTimer->setInterval(5000);
-    QObject::connect(m_initTimer, &QTimer::timeout, [this]() {
-        static bool isFirstTime = true;
-        m_initTimer->stop();
+    m_pingTimer = new QTimer(this);
+    m_pingTimer->setInterval(5000);
+    QObject::connect(m_pingTimer, &QTimer::timeout, [this]() {
+        m_pingTimer->stop();
 
-        long res = executeScript("ping");
+        executeScript(SCRIPT_PING);
 
-        if (isFirstTime && res == _return_OK) {
-            qDebug() << "Script" << "'ping'" << "run successfully";
-            isFirstTime = false;
-        }
-
-        m_initTimer->start();
+        m_pingTimer->start();
     }); // ping interval
 
-    m_initTimer->start(1000);
+    m_pingTimer->start(1000);
 
-    m_downTimer = new QTimer(this);
-    m_downTimer->setInterval(1000 * 60 * 20);
-    QObject::connect(m_downTimer, &QTimer::timeout, [this]() {
+#ifndef QT_DEBUG
+    m_chkTimer = new QTimer(this);
+    m_chkTimer->setInterval(1000 * 60 * 20);
+    QObject::connect(m_chkTimer, &QTimer::timeout, [this]() {
         if (!m_isActivated) {
-            long res = executeScript("down");
-            qDebug() << "Script" << "down" << "executed with result = " << (res == _return_OK ? "success" : "failed");
+            long res = executeScript(SCRIPT_NETWORK_DOWN);
+            if (res == _return_OK) {
+                m_chkTimer->stop();
+                return;
+            }
         }
         m_isActivated = false;
+        m_chkTimer->start();
     });
 
-    m_downTimer->start();
+    m_chkTimer->start();
+#endif
+
 }
 
 void Core::start(SysType sysType)
@@ -277,6 +281,11 @@ long Core::executeScript(const QString& script)
     QProcess process;
 //    process.setProcessChannelMode(QProcess::MergedChannels); // Combine stdout and stderr
 
+    static QString SCRIPT_NAME = "";
+    if (SCRIPT_NAME != script) {
+        qDebug() << "Running " << scriptPath << "...";
+    }
+
 #ifdef Q_OS_WIN
     process.start("cmd.exe", QStringList() << "/C" << scriptPath);
 #else
@@ -304,8 +313,12 @@ long Core::executeScript(const QString& script)
         return _return_FAIL;
     }
 
-    // qDebug() << "Script" << scriptPath << "executed successfully";
+    if (SCRIPT_NAME != script) {
+        qDebug() << "Script" << scriptPath << "executed successfully";
+    }
 
     //  qDebug() << "Output:" << allOutput;
+    SCRIPT_NAME = script;
+
     return _return_OK;
 }

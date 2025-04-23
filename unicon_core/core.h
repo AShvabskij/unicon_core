@@ -47,8 +47,8 @@ private:
     QFuture<void> m_threadFuture;
     QMutex m_mutex;
     QThread* m_usbThread;
-    QTimer* m_initTimer;
-    QTimer* m_downTimer;
+    QTimer* m_pingTimer;
+    QTimer* m_chkTimer;
     bool m_isActivated = false;
 };
 
