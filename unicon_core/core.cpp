@@ -128,9 +128,8 @@ void Core::init()
     m_usbThread->setPriority(QThread::LowPriority);
 
     m_pingTimer = new QTimer(this);
-    m_pingTimer->setInterval(5000);
-    connect(m_pingTimer, &QTimer::timeout, this, &Core::onPingTimerAlarm, Qt::QueuedConnection);
-    m_pingTimer->start();
+    connect(m_pingTimer, &QTimer::timeout, this, &Core::onPingTimerAlarm, Qt::SingleShotConnection);
+    m_pingTimer->start(7000);
 
 #ifndef QT_DEBUG
     m_chkTimer = new QTimer(this);
