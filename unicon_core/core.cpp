@@ -17,7 +17,7 @@
 // #define NO_DEMO
 
 const QString CMD_SYSTEM_INIT = "system_init";
-const QString SCRIPT_PING = "ping";
+const QString SCRIPT_NETWORK_UP = "net_up";
 const QString SCRIPT_NETWORK_DOWN = "net_down";
 
 Core::Core(): BaseReqHandler()
@@ -127,24 +127,24 @@ void Core::init()
     m_usbThread->start();
     m_usbThread->setPriority(QThread::LowPriority);
 
-    m_pingTimer = new QTimer(this);
-    m_pingTimer->setSingleShot(true);
-    QObject::connect(m_pingTimer, &QTimer::timeout, [this]() {
-        executeScript(SCRIPT_PING);
+    m_startTimer = new QTimer(this);
+    m_startTimer->setSingleShot(true);
+    QObject::connect(m_startTimer, &QTimer::timeout, [this]() {
+        executeScript(SCRIPT_NETWORK_UP);
     });
-    m_pingTimer->start(7000);
+    m_startTimer->start(7000);
 
 #ifndef QT_DEBUG
-    m_chkTimer = new QTimer(this);
-    QObject::connect(m_chkTimer, &QTimer::timeout, [this]() {
-        m_chkTimer->stop();
+    m_downTimer = new QTimer(this);
+    QObject::connect(m_downTimer, &QTimer::timeout, [this]() {
+        m_downTimer->stop();
 
         if (!m_isActivated) {
             executeScript(SCRIPT_NETWORK_DOWN);
         }
     });
 
-    m_chkTimer->start(1000 * 60 * 20);
+    m_downTimer->start(1000 * 60 * 20);
 #endif
 
 }
@@ -248,11 +248,13 @@ void Core::onDeviceChanged(SysType sysType)
 
 long Core::executeScript(const QString& script)
 {
+
 #ifndef Q_OS_WIN
-    QString scriptPath = "~/projects/scripts/" + script + ".sh";
+    QString scriptPath = QDir::homePath() + "/projects/scripts/" + script + ".sh";
 #else
     QString scriptPath = QCoreApplication::applicationDirPath() + "/" + script + ".bat";
 #endif
+
 
     QFileInfo scriptInfo(scriptPath);
 
