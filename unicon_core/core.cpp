@@ -249,7 +249,7 @@ void Core::onDeviceChanged(SysType sysType)
 long Core::executeScript(const QString& script)
 {
 #ifndef Q_OS_WIN
-    QString scriptPath = QCoreApplication::applicationDirPath() + "/" + script + ".sh";
+    QString scriptPath = "~/projects/scripts/" + script + ".sh";
 #else
     QString scriptPath = QCoreApplication::applicationDirPath() + "/" + script + ".bat";
 #endif
