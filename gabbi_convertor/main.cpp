@@ -54,6 +54,7 @@ OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
         chVar.offset = var.offset;
         chVar.firstBit = var.firstBit;
         chVar.lastBit = var.lastBit;
+        chVar.color = var.var.color;
 
         if (var.setLn == 0 && var.setCh == 0) {
             int chNumOfSet = (var.chNum + 1) - (numOfSet - 1) * SET_SIZE;
@@ -73,14 +74,19 @@ OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
     return buff;
 }
 
-int denormalizeValue(float value)
+int denormalizeValue(int value)
 {
+    int res = value;
     if (value > MAX_VALUE) {
-        value = MAX_VALUE;
+        res = MAX_VALUE;
     }
 
-    uint16_t zeroLevel = 0x7FFF;
-    int res = value + zeroLevel;
+    // uint16_t zeroLevel = 0x7FFF;
+    // int res = value + zeroLevel;
+    // if (res == 0xFFFF) { // gabbi format doesn't allow 0xFFFF
+    //     res = 0xFFFE;
+    // }
+
     return res;
 }
 
@@ -129,7 +135,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
              << QString("D") + QString::number(var.firstBit).rightJustified(2, '0')
              << QString("D") + QString::number(MAX_BIT_NUM).rightJustified(2, '0')
              << QString::number(gain)
-             << QString::number(var.offset)
+             << QString::number(0/*var.offset*/)
              << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
              << "TRUE";
 
@@ -200,7 +206,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
 
             if (analogChannels.contains(chNum)) {
                 auto rawVal = chDat.value(i);
-                int val = denormalizeValue(rawVal.toFloat());
+                int val = denormalizeValue(rawVal.toInt());
                 rec << QString::number(val);
             } else if (discreteChannels.contains(chNum)) {
                 int discrValue = chDat.value(i).toInt();
@@ -296,7 +302,7 @@ int main(int argc, char *argv[])
     if (fileFrom.isEmpty() || fileTo.isEmpty()) {
         QTextStream(stdout) << "Error: Missing command line argument(s)." << ENDL;
         parser.showHelp(-2);
-        return -2;
+        return EXIT_FAILURE;
     }
 
     QString path = QFileInfo(fileTo).absolutePath();
@@ -313,9 +319,11 @@ int main(int argc, char *argv[])
 
     long res = doConvert(fileFrom, fileTo);
 
-    if (res > 0) {
-        QTextStream(stdout) << "Convertion Completed successfully!" << ENDL;
+    if (res <= 0) {
+        return EXIT_FAILURE;
     }
 
-    return res;
+    QTextStream(stdout) << "Convertion Completed successfully!" << ENDL;
+    return EXIT_SUCCESS;
+
 }
