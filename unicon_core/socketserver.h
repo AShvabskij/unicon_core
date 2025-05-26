@@ -57,7 +57,6 @@
 
 #include "requestmanager.h"
 #include "responsemanager.h"
-#include "streammanager.h"
 
 QT_FORWARD_DECLARE_CLASS(QWebSocketServer)
 QT_FORWARD_DECLARE_CLASS(QWebSocket)

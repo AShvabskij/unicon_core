@@ -1,6 +1,8 @@
 #ifndef OSCHANDLER_H
 #define OSCHANDLER_H
 
+#include <QAtomicInt>
+
 #include "basereqhandler.h"
 #include "DDE_TOP.h"
 #include "osc_types.h"
@@ -52,7 +54,7 @@ private:
     OscType::OscHeader m_capturedOsc;
     QVector<int> m_capturedVars;
     int m_streamValCount = 0;
-    bool m_streaming = false;
+    QAtomicInt m_streamingFlag;
     OscHistoryService* m_historySrv;
     IOscDataService* m_dataSrv;
     QFuture<void> m_future;

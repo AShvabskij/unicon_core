@@ -116,9 +116,7 @@ void OscHandler::setService(OscHistoryService *s)
 
 void OscHandler::handleClose()
 {
-    if (m_capturedOsc.deviceID.id > 0) {
-        stopStreamData();
-    }
+    stopStreamData();
 
     m_historySrv->reset();
 }
@@ -175,6 +173,8 @@ int OscHandler::handleGetHeader(const QJsonObject &request)
     OscHeader header;
     DevID devID = {sysType, static_cast<uint16_t>(deviceId)};
     header.deviceID = devID;
+
+    stopStreamData();
 
     try {
 
@@ -307,9 +307,7 @@ int OscHandler::handleOpenStream(const QJsonObject& request)
         capturedVars << val.toInt();
     }
 
-    if (m_capturedOsc.deviceID.id > 0) {
-        stopStreamData();
-    }
+    stopStreamData();
 
     DevID devID = {sysType, static_cast<uint16_t>(deviceId)};
     long ret = _return_OK;
@@ -341,9 +339,7 @@ int OscHandler::handleCloseStream(const QJsonObject &request)
         return -1;
     }
 
-    if (m_capturedOsc.deviceID.id == deviceId && m_capturedOsc.deviceID.type == sysType) {
-        stopStreamData();
-    }
+    stopStreamData();
 
     DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
     QJsonObject response = createAnswerObj(requestId, devId);
@@ -394,7 +390,7 @@ long OscHandler::startStreamData(const DevID &devID, QVector<int> oscVars)
 
     m_capturedOsc = header;
     m_capturedVars = oscVars;
-    m_streaming = true;
+    m_streamingFlag = 1;
 
     QObject* src = dynamic_cast<QObject*>(m_dataSrv);
     Q_ASSERT(src);
@@ -419,7 +415,7 @@ long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDat
     convertHeader(dde_hdr, &m_capturedOsc);
 
     m_capturedVars = oscVars;
-    m_streaming = true;
+    m_streamingFlag = 1;
 
     QObject* src = dynamic_cast<QObject*>(m_historySrv->getDataSrv());
     Q_ASSERT(src);
@@ -438,7 +434,10 @@ long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDat
 
 void OscHandler::stopStreamData()
 {
-    m_streaming = false;
+    if (!m_capturedOsc.deviceID.isValid())
+        return;
+
+    m_streamingFlag = 0;
     m_future.waitForFinished(); // wait for current osc loading and sending is finished
 
     m_capturedOsc = OscHeader();
@@ -468,7 +467,7 @@ void OscHandler::th_streamData()
             break;
         }
 
-        if (!m_streaming) {
+        if (m_streamingFlag == 0) {
             qDebug() << "Streaming braked, dev id = " << m_capturedOsc.deviceID.id;
             break;
         }
@@ -481,6 +480,8 @@ void OscHandler::th_streamData()
         if (isEof) {
             break;
         }
+
+        QThread::msleep(100);
     }
 
     qDebug() << "Emit osc data, dev id =" << m_capturedOsc.deviceID.id
@@ -509,7 +510,7 @@ void OscHandler::th_streamHistoryData()
             break;
         }
 
-        if (!m_streaming) {
+        if (m_streamingFlag == 0) {
             qDebug() << "Streaming braked, dev id = " << m_capturedOsc.deviceID.id;
             break;
         }
@@ -525,6 +526,7 @@ void OscHandler::th_streamHistoryData()
 
 
         obj_count = std::min((int)(obj_count * 1.1), SEND_HISTORY_COUNT_MAX);
+        QThread::msleep(100);
     }
 
     qDebug() << "Emit all history data, dev id = " << m_capturedOsc.deviceID.id
