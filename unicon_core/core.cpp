@@ -5,6 +5,7 @@
 #include "datausbcopier.h"
 #include "requestmanager.h"
 #include "responsemanager.h"
+#include "streammanager.h"
 
 #include "oscdataservice.h"
 #include "oscdatalogger.h"
@@ -144,7 +145,7 @@ void Core::init()
         }
     });
 
-    m_downTimer->start(1000 * 60 * 20);
+    m_downTimer->start(1000 * 60 * 10);
 #endif
 
 }
