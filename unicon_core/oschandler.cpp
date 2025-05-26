@@ -227,6 +227,8 @@ int OscHandler::handleSetHeader(const QJsonObject &request)
 
     Q_ASSERT(deviceId >= 0);
 
+    stopStreamData();
+
     try {
 
         OscHeader header;
@@ -273,6 +275,8 @@ int OscHandler::handleGetChannel(const QJsonObject &request)
     int deviceId = cmdBody.value("device_id").toInt();
     int chNum = cmdBody.value("channel_num").toInt();
     Q_ASSERT(deviceId >= 0);
+
+    stopStreamData();
 
     OscHeader header;
     DevID devId = {sysType, static_cast<uint16_t>(deviceId)};
