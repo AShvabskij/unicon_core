@@ -9,9 +9,9 @@ const QString CMD_TYPE_GET = "get";
 const QString CMD_TYPE_SET = "set";
 const QString CMD_OSC_DATA = "osc_data";
 
-const int SEND_OBJ_COUNT_MAX = 1000;// 65536;
-const int SEND_HISTORY_COUNT_MAX = 5000;
-const int SEND_HISTORY_COUNT_MIN = 500;
+const int SEND_CHUNK_COUNT_MAX = 1000;// 65536;
+const int SEND_HISTORY_CHUNK_MAX = 5000;
+const int SEND_HISTORY_CHUNK_MIN = 1000;
 const int SET_SIZE = 16;
 
 using namespace OscType;
@@ -461,7 +461,9 @@ void OscHandler::th_streamData()
     timer.start();
 
     int valCount = 0;
-    int obj_count = SEND_OBJ_COUNT_MAX; // todo: it is better to specify a percentage of the total amount of data
+    int obj_count = SEND_CHUNK_COUNT_MAX; // todo: it is better to specify a percentage of the total amount of data
+
+    // Send data splitted by chunks
     while (true) {
 
         bool isEof = false;
@@ -503,12 +505,14 @@ void OscHandler::th_streamHistoryData()
     timer.start();
 
     int valCount = 0;
-    int obj_count = SEND_HISTORY_COUNT_MIN;
+    int chunk_count = SEND_HISTORY_CHUNK_MIN;
     IOscDataService* dataSrv = m_historySrv->getDataSrv();
+
+    // Send data splitted by chunks
     while (true) {
         bool isEof = false;
         qlonglong trig_time = m_capturedOsc.settings.trigDTime.toMSecsSinceEpoch();
-        QJsonObject response = dataSrv->jsonData(m_capturedOsc.deviceID, trig_time, m_capturedVars, obj_count, isEof);
+        QJsonObject response = dataSrv->jsonData(m_capturedOsc.deviceID, trig_time, m_capturedVars, chunk_count, isEof);
 
         if (response.empty()) {
             break;
@@ -522,14 +526,14 @@ void OscHandler::th_streamHistoryData()
         response["type"] = "osc";
         emit stream(QList<QJsonObject>() << response);
 
-        valCount += obj_count;
+        valCount += chunk_count;
 
         if (isEof) {
             break;
         }
 
 
-        obj_count = std::min((int)(obj_count * 1.1), SEND_HISTORY_COUNT_MAX);
+        chunk_count = std::min((int)(chunk_count * 1.1), SEND_HISTORY_CHUNK_MAX);
         QThread::msleep(100);
     }
 
