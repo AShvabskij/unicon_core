@@ -283,6 +283,8 @@ void ParamsHandler::handleOpenStream(const QJsonObject& request)
 
 long ParamsHandler::openParamStream(const Param& p, int freq)
 {
+    stopPooling();
+
     long res = captureParam(p);
 
     if (res != _return_OK) {
@@ -576,7 +578,7 @@ void ParamsHandler::streamParamsValue()
         if (!val.isActual()) {
             qlonglong currTimeMsec = QDateTime::currentMSecsSinceEpoch();
             QDateTime time = QDateTime::fromMSecsSinceEpoch(val.timestamp);
-            if (time.date().year() == 1970) {
+            if (time.date().year() <= 1980) {
                 val.timestamp = val.timestamp * 1000; // assume val.timestamp is in seconds, need to convert to msec
             }
 
