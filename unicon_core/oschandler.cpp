@@ -516,14 +516,18 @@ void OscHandler::th_streamHistoryData()
     QElapsedTimer timer;
     timer.start();
 
-    int valCount = 0;
-    int chunk_count = SEND_HISTORY_CHUNK_MIN;
+    int totalCount = 0;
+    qlonglong trig_time = m_capturedOsc.settings.trigDTime.toMSecsSinceEpoch();
+
+    m_dataSrv->dataCount(m_capturedOsc.deviceID, 0, totalCount);
+    int chunk_count = std::min((int)(totalCount * 0.1), SEND_HISTORY_CHUNK_MIN);
+    QList<QJsonObject> responseList;
+
     IOscDataService* dataSrv = m_historySrv->getDataSrv();
 
     // Send data splitted by chunks
     while (true) {
         bool isEof = false;
-        qlonglong trig_time = m_capturedOsc.settings.trigDTime.toMSecsSinceEpoch();
         QJsonObject response = dataSrv->jsonData(m_capturedOsc.deviceID, trig_time, m_capturedVars, chunk_count, isEof);
 
         if (response.empty()) {
@@ -536,24 +540,27 @@ void OscHandler::th_streamHistoryData()
         }
 
         response["type"] = "osc";
-        emit stream(QList<QJsonObject>() << response);
-
-        valCount += chunk_count;
+        responseList << response;
 
         if (isEof) {
             break;
         }
 
-
         chunk_count = std::min((int)(chunk_count * 1.1), SEND_HISTORY_CHUNK_MAX);
-        QThread::msleep(100);
+        QThread::msleep(10);
+    }
+
+    if (m_streamingFlag == 1) {
+        emit stream(responseList);
+    } else {
+        emit stop_stream();
     }
 
     qDebug() << "Emit all history data, dev id = " << m_capturedOsc.deviceID.id
              << "trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
              << "reason =" << m_capturedOsc.settings.reason
              << "channels =" <<  m_capturedVars.count()
-             << "Count =" << valCount
+             << "Count =" << totalCount
              << "took" << timer.elapsed() << "ms";
 }
 
