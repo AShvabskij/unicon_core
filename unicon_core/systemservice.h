@@ -19,7 +19,7 @@ class SystemService: public QObject
 public:
     SystemService(SysType sysType, IDDE_Dispatcher *dde_disp);
     DeviceIndList linkedDevices(SysType sysType);
-    void start(SysType sysType);
+    void start();
     void startWatching();
     void stop();
     void update();
@@ -35,6 +35,7 @@ private:
     long requestDeviceLinks(DeviceIndList& links);
 
     SysType m_sysType = SysType::SysType_Undefined;
+    bool m_isStarted = false;
     QList<DevInd> m_deviceList;
     QTimer* m_timer;
     IDDE_Dispatcher* m_ddeDisp = nullptr;

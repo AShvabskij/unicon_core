@@ -18,6 +18,7 @@ public:
 
     Q_SIGNAL void send(const QJsonObject& response);
     Q_SIGNAL void stream(const QList<QJsonObject>& valueList);
+    Q_SIGNAL void stop_stream();
 };
 
 #endif // ICMDHANDLER_H

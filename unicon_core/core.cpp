@@ -181,13 +181,13 @@ void Core::start(SysType sysType)
 
         IOscDataService* oscData = sysService->getOscDataService();
         connect((OscDataService*)oscData, &OscDataService::dataSaved, m_copier, &DataUsbCopier::onDataSaved, Qt::AutoConnection);
-        sysService->start(sysType);
+        sysService->start();
 
         m_sysServices.insert(sysType, sysService);
     }
 
     if (sysType == SysType::FILE_IO) {
-        m_sysServices[FILE_IO]->start(FILE_IO);
+        m_sysServices[FILE_IO]->start();
     } else {
         if (m_sysServices.contains(FILE_IO)) {
             m_sysServices[FILE_IO]->stop();
@@ -244,7 +244,7 @@ void Core::onDeviceChanged(SysType sysType)
     res["links"] = jsLinks;
     res["status"] = "1"; // 1 - links changed
 
-    this->stream({res});
+    this->stream({res}); // todo: probable not the best realisation
 }
 
 long Core::executeScript(const QString& script)

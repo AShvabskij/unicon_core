@@ -25,12 +25,15 @@ public:
 
 public slots:
     int stream(const QList<QJsonObject> &valueList);
+    void stop_stream();
 
 private:
     void threadProcess();
 
     QQueue<QWebSocket*> m_clients;
     qint64 m_totalBytes = 0;
+    QAtomicInt m_streamingFlag;
+
 };
 
 #endif // STREAM_MANAGER_H

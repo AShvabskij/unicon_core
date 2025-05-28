@@ -337,6 +337,19 @@ qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastB
     return res;
 }
 */
+
+long OscDataService::dataCount(const DevID& deviceID, qlonglong trig_time, int &cnt)
+{
+    OscType::OscDataBuffer* buff = get(deviceID.id, trig_time);
+
+    if (!buff) {
+        return _return_FAIL;
+    }
+
+    cnt = buff->dataCount();
+    return _return_OK;
+}
+
 QJsonObject OscDataService::jsonData(const DevID& deviceID, qlonglong trig_time, QVector<int> vars, int &cnt, bool& isEof)
 {
     QElapsedTimer timer;

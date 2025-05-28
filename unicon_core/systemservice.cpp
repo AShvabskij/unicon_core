@@ -67,8 +67,13 @@ IOscDataService *SystemService::getOscDataService()
     return m_oscData;
 }
 
-void SystemService::start(SysType sysType)
+void SystemService::start()
 {
+    Q_ASSERT(m_sysType != SysType::SysType_Undefined);
+    if (m_sysType == SysType::SysType_Undefined) return;
+
+    if (m_isStarted) return;
+
     RequestManager::instance()->registerHandler(m_deviceHandler);
     RequestManager::instance()->registerHandler(m_paramsHandler);
     RequestManager::instance()->registerHandler(m_oscHandler);
@@ -78,14 +83,17 @@ void SystemService::start(SysType sysType)
     StreamManager::instance()->registerHandler(m_paramsHandler);
     StreamManager::instance()->registerHandler(m_oscHandler);
 
-    QList<DevInd> links = linkedDevices(sysType);
+    QList<DevInd> links = linkedDevices(m_sysType);
     m_oscState->init(links);
 
     startWatching();
+    m_isStarted = true;
 }
 
 void SystemService::stop()
 {
+    if (!m_isStarted) return;
+
     m_timer->stop();
 
     m_oscState->clear();
@@ -104,6 +112,8 @@ void SystemService::stop()
         m_deviceHandler->handleClose();
         m_oscHandler->handleClose();
     }
+
+    m_isStarted = false;
 }
 
 long SystemService::requestDeviceLinks(DeviceIndList& links)

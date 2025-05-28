@@ -23,6 +23,7 @@ public:
     ~OscDataService() override {}
 
     long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) override;
+    long dataCount(const DevID& deviceID, qlonglong trig_time, int &cnt) override;
     QJsonObject jsonData(const DevID& deviceID, qlonglong trig_time, QVector<int> vars, int &cnt, bool &isEof) override;
     void clear(DevInd device_id) override;
     void remove(DevInd device_id) override;

@@ -9,7 +9,7 @@ const QString CMD_TYPE_GET = "get";
 const QString CMD_TYPE_SET = "set";
 const QString CMD_OSC_DATA = "osc_data";
 
-const int SEND_CHUNK_COUNT_MAX = 1000;// 65536;
+const int SEND_CHUNK_COUNT_MAX = 10000;// 65536;
 const int SEND_HISTORY_CHUNK_MAX = 5000;
 const int SEND_HISTORY_CHUNK_MIN = 1000;
 const int SET_SIZE = 16;
@@ -443,6 +443,7 @@ void OscHandler::stopStreamData()
 
     m_streamingFlag = 0;
     m_future.waitForFinished(); // wait for current osc loading and sending is finished
+    emit stop_stream();
 
     m_capturedOsc = OscHeader();
     m_capturedVars.clear();
@@ -460,40 +461,51 @@ void OscHandler::th_streamData()
     QElapsedTimer timer;
     timer.start();
 
-    int valCount = 0;
-    int obj_count = SEND_CHUNK_COUNT_MAX; // todo: it is better to specify a percentage of the total amount of data
+    int all_count = 0;
+    m_dataSrv->dataCount(m_capturedOsc.deviceID, 0, all_count); // SEND_CHUNK_COUNT_MAX; // todo: it is better to specify a percentage of the total amount of data
+    int chunk_count = std::min((int)(all_count * 0.1), SEND_CHUNK_COUNT_MAX);
+    QList<QJsonObject> responseList;
 
     // Send data splitted by chunks
     while (true) {
-
-        bool isEof = false;
-        QJsonObject response = m_dataSrv->jsonData(m_capturedOsc.deviceID, 0, m_capturedVars, obj_count, isEof);
-
-        if (response.empty()) {
-            break;
-        }
 
         if (m_streamingFlag == 0) {
             qDebug() << "Streaming braked, dev id = " << m_capturedOsc.deviceID.id;
             break;
         }
 
-        response["type"] = "osc";
-        emit stream(QList<QJsonObject>() << response);
+        bool isEof = false;
+        QJsonObject response = m_dataSrv->jsonData(m_capturedOsc.deviceID, 0, m_capturedVars, chunk_count, isEof);
 
-        valCount += obj_count;
+        if (response.empty()) {
+            break;
+        }
+
+        response["type"] = "osc";
+        responseList << response;
+
+        // qDebug() << "Emit osc data, dev id =" << m_capturedOsc.deviceID.id
+        //          << "channels =" <<  m_capturedVars.count()
+        //          << "count =" << chunk_count;
 
         if (isEof) {
             break;
         }
 
-        QThread::msleep(100);
+        // QCoreApplication::processEvents();
+        QThread::msleep(10);
     }
 
-    qDebug() << "Emit osc data, dev id =" << m_capturedOsc.deviceID.id
+    if (m_streamingFlag == 1) {
+        emit stream(responseList);
+    } else {
+        emit stop_stream();
+    }
+
+    qDebug() << "Emit all osc data, dev id =" << m_capturedOsc.deviceID.id
              << "reason =" << m_capturedOsc.settings.reason
              << "channels =" <<  m_capturedVars.count()
-             << "count =" << valCount
+             << "count =" << all_count
              << "took" << timer.elapsed() << "ms";
 }
 
