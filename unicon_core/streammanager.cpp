@@ -49,7 +49,13 @@ public slots:
 
             emit sendMessage(dataToSend);
 
-//          QThread::msleep(50); // delay
+            int bytes = dataToSend.size();
+            qDebug() << " bytes to write = " << bytes << "\n" ;
+
+            if (bytes > 10000) {
+                int delay = bytes / 10000;
+                QThread::msleep(delay);
+            }
         }
     }
 
@@ -81,10 +87,6 @@ StreamManager::StreamManager()
             qint64 bytes = client->bytesToWrite();
             //              qDebug() << " bytes to write = " << bytes << "\n" ;
             m_totalBytes += bytes;
-            if (bytes > 10000) {
-                int delay = bytes / 10000;
-                QThread::msleep(delay);
-            }
         }
     });
 
