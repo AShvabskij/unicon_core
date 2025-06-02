@@ -519,11 +519,12 @@ void OscHandler::th_streamHistoryData()
     int totalCount = 0;
     qlonglong trig_time = m_capturedOsc.settings.trigDTime.toMSecsSinceEpoch();
 
-    m_dataSrv->dataCount(m_capturedOsc.deviceID, 0, totalCount);
+    IOscDataService* dataSrv = m_historySrv->getDataSrv();
+    Q_ASSERT(dataSrv);
+    dataSrv->dataCount(m_capturedOsc.deviceID, 0, totalCount);
     int chunk_count = std::min((int)(totalCount * 0.1), SEND_HISTORY_CHUNK_MIN);
     QList<QJsonObject> responseList;
 
-    IOscDataService* dataSrv = m_historySrv->getDataSrv();
 
     // Send data splitted by chunks
     while (true) {
