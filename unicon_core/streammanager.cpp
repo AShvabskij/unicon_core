@@ -1,88 +1,136 @@
+// streammanager.cpp
 #include "streammanager.h"
 
+#include <QJsonDocument>
 #include <QTextStream>
-#include <cstdio>
+#include <QTimer>
+#include <QDebug>
 #include <QCborValue>
 
+class StreamWorker : public QObject {
+    Q_OBJECT
+public:
+    StreamWorker(QObject* parent = nullptr)
+        : QObject(parent) {}
+
+    void enqueue(const QList<QJsonObject>& list) {
+        QMutexLocker locker(&m_mutex);
+        for (const QJsonObject& obj : list) {
+            m_queue.enqueue(obj);
+        }
+        m_waitCondition.wakeAll();
+    }
+
+    void clearQueue() {
+        if (m_queue.empty()) return;
+
+        QMutexLocker locker(&m_mutex);
+        m_queue.clear();
+    }
+
+public slots:
+    void process() {
+        int iCnt = 0;
+        while (true) {
+            QMutexLocker locker(&m_mutex);
+            if (m_queue.isEmpty()) {
+                qDebug() << "sent cnt" << iCnt;
+                iCnt = 0;
+                m_waitCondition.wait(&m_mutex);
+                continue;
+            }
+
+            iCnt = (iCnt == 0) ? m_queue.count() : iCnt;
+            QJsonObject obj = m_queue.dequeue();
+            locker.unlock();
+
+            QCborValue v = QCborValue::fromJsonValue(obj);
+            QByteArray dataToSend = v.toCbor(QCborValue::UseFloat);
+
+            emit sendMessage(dataToSend);
+
+//          QThread::msleep(50); // delay
+        }
+    }
+
+signals:
+    void sendMessage(const QByteArray& data);
+
+private:
+    QQueue<QJsonObject> m_queue;
+    QMutex m_mutex;
+    QWaitCondition m_waitCondition;
+};
+
+#include "streammanager.moc"
+
 StreamManager::StreamManager()
+    : m_totalBytes(0)
 {
+    m_worker = new StreamWorker();
+    m_workerThread = new QThread();
+    m_worker->moveToThread(m_workerThread);
+
+    connect(m_workerThread, &QThread::started, m_worker, &StreamWorker::process);
+    connect(m_worker, &StreamWorker::sendMessage, this, [this](const QByteArray& data){
+        if (!m_clients.isEmpty()) {
+            QWebSocket* client = m_clients.last();
+            client->sendBinaryMessage(data);
+            client->flush();
+
+            qint64 bytes = client->bytesToWrite();
+            //              qDebug() << " bytes to write = " << bytes << "\n" ;
+            m_totalBytes += bytes;
+            if (bytes > 10000) {
+                int delay = bytes / 10000;
+                QThread::msleep(delay);
+            }
+        }
+    });
+
+    m_workerThread->start();
 }
 
-StreamManager::~StreamManager()
-{
-    QTextStream(stdout) << " Total bytes sended = " << m_totalBytes << "\n" ;
+StreamManager::~StreamManager() {
+    m_workerThread->quit();
+    m_workerThread->wait();
+    delete m_worker;
+    QTextStream(stdout) << " Total bytes sended = " << m_totalBytes << "\n";
 }
 
-int StreamManager::stream(const QList<QJsonObject>& valueList)
-{
+int StreamManager::stream(const QList<QJsonObject>& valueList) {
     if (valueList.empty()) return 0;
 
     qDebug() << "Streaming data, count = " << valueList.count();
 
-    m_streamingFlag = 1;
-    for (QWebSocket *client : m_clients) {
-        if (client == m_clients.last()) {
-            for (const QJsonObject& value : valueList) {
-                if (m_streamingFlag == 0) {
-                    break;
-                }
+    Q_ASSERT(m_worker);
+    if (!m_worker) return -1;
 
-                QCborValue v = QCborValue::fromJsonValue(value);
-                QByteArray dataToSend = v.toCbor(QCborValue::UseFloat);
-                client->sendBinaryMessage(dataToSend);
-                qint64 bytes = client->bytesToWrite();
-//              qDebug() << " bytes to write = " << bytes << "\n" ;
-                m_totalBytes += bytes;
-                if (bytes > 10000) {
-                    int delay = bytes / 10000;
-                    QThread::msleep(delay);
-                }
-            }
-        } else {
-            // only one client have a right to receive stream messages, other - denied
-            QJsonObject answer;
-            answer["type"] = "sys";
-            answer["status"] = "2"; // disable web client
-
-            QJsonDocument doc(answer);
-
-            QString strJson(doc.toJson(QJsonDocument::Compact));
-            client->sendTextMessage(strJson);
-        }
-
-
-        client->flush();
+    if (!m_clients.isEmpty()) {
+        m_worker->enqueue(valueList);
     }
 
     return 0;
 }
 
-void StreamManager::stop_stream()
-{
-    m_streamingFlag = 0;
+void StreamManager::stop_stream() {
+    if (m_worker) {
+        m_worker->clearQueue();
+    }
     qDebug() << "Streaming stopped";
 }
 
-void StreamManager::registerClient(QWebSocket *client)
-{
-    if (m_clients.contains(client)) {
-        return;
+void StreamManager::registerClient(QWebSocket* client) {
+    if (!m_clients.contains(client)) {
+        m_clients.enqueue(client);
     }
-
-    m_clients.append(client);
 }
 
-void StreamManager::unregisterClient(QWebSocket *client)
-{
-    if (!m_clients.contains(client)) {
-        return;
-    }
-
+void StreamManager::unregisterClient(QWebSocket* client) {
     m_clients.removeAll(client);
 }
 
-int StreamManager::registerHandler(IReqHandler *handler)
-{
+int StreamManager::registerHandler(IReqHandler* handler) {
     QMetaObject::Connection con_stream = connect(handler, &IReqHandler::stream, this, &StreamManager::stream, Qt::QueuedConnection);
     QMetaObject::Connection con_stop_stream = connect(handler, &IReqHandler::stop_stream, this, &StreamManager::stop_stream, Qt::QueuedConnection);
 
@@ -91,7 +139,5 @@ int StreamManager::registerHandler(IReqHandler *handler)
         return -1;
     }
 
-
     return 0;
 }
-
