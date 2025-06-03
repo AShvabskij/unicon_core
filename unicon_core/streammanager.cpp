@@ -83,20 +83,36 @@ StreamManager::StreamManager()
     connect(m_workerThread, &QThread::started, m_worker, &StreamWorker::process);
     connect(m_worker, &StreamWorker::sendMessage, this, [this](const QByteArray& data){
         if (!m_isStarted) return;
+        if (m_clients.isEmpty()) return;
 
-        if (!m_clients.isEmpty()) {
-            QWebSocket* client = m_clients.last();
-            client->sendBinaryMessage(data);
-            client->flush();
+        QWebSocket* client = m_clients.last();
+        client->sendBinaryMessage(data);
+        client->flush();
 
-            qint64 bytes = client->bytesToWrite();
-            qDebug() << " bytes to write = " << bytes << "\n" ;
+        qint64 bytes = client->bytesToWrite();
+        qDebug() << " bytes to write = " << bytes << "\n" ;
 
-            m_totalBytes += bytes;
+        m_totalBytes += bytes;
 
-            if (bytes > 10000) {
-                int delay = bytes / 1000;
-                m_worker->pause(delay);
+        if (bytes > 10000) {
+            int delay = bytes / 1000;
+            m_worker->pause(delay);
+        }
+
+        if (m_clients.count() > 1) {
+            for (QWebSocket *client : m_clients) {
+                if (client == m_clients.last()) break;
+
+                // only one client have a right to receive stream messages, other - denied
+                QJsonObject answer;
+                answer["type"] = "sys";
+                answer["status"] = "2"; // disable web client
+
+                QJsonDocument doc(answer);
+
+                QString strJson(doc.toJson(QJsonDocument::Compact));
+                client->sendTextMessage(strJson);
+                client->close(QWebSocketProtocol::CloseCodePolicyViolated);
             }
         }
     });
