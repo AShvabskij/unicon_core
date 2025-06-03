@@ -53,7 +53,7 @@ public slots:
             qDebug() << " bytes to write = " << bytes << "\n" ;
 
             if (bytes > 10000) {
-                int delay = bytes / 10000;
+                int delay = bytes / 1000;
                 QThread::msleep(delay);
             }
         }
