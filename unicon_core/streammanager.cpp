@@ -82,16 +82,22 @@ StreamManager::StreamManager()
 
     connect(m_workerThread, &QThread::started, m_worker, &StreamWorker::process);
     connect(m_worker, &StreamWorker::sendMessage, this, [this](const QByteArray& data){
+        if (!m_isStarted) return;
+
         if (!m_clients.isEmpty()) {
             QWebSocket* client = m_clients.last();
             client->sendBinaryMessage(data);
             client->flush();
 
             qint64 bytes = client->bytesToWrite();
-            //              qDebug() << " bytes to write = " << bytes << "\n" ;
+            qDebug() << " bytes to write = " << bytes << "\n" ;
+
             m_totalBytes += bytes;
 
-            m_worker->pause(100);
+            if (bytes > 10000) {
+                int delay = bytes / 1000;
+                m_worker->pause(delay);
+            }
         }
     });
 
@@ -109,6 +115,7 @@ int StreamManager::stream(const QList<QJsonObject>& valueList) {
     if (valueList.empty()) return 0;
 
     qDebug() << "Streaming data, count = " << valueList.count();
+    m_isStarted = true;
 
     Q_ASSERT(m_worker);
     if (!m_worker) return -1;
@@ -121,6 +128,7 @@ int StreamManager::stream(const QList<QJsonObject>& valueList) {
 }
 
 void StreamManager::stop_stream() {
+    m_isStarted = false;
     if (m_worker) {
         m_worker->clearQueue();
     }

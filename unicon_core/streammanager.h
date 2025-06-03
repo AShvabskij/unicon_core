@@ -59,6 +59,7 @@ public slots:
 private:
     QQueue<QWebSocket*> m_clients;
     qint64 m_totalBytes;
+    bool m_isStarted = true;
 
     StreamWorker* m_worker;
     QThread* m_workerThread;
