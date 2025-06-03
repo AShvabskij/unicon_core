@@ -28,19 +28,22 @@ public:
         m_queue.clear();
     }
 
+    void pause(int delay) {
+        if (m_queue.empty()) return;
+
+        QMutexLocker locker(&m_mutex);
+        QThread::msleep(delay);
+    }
+
 public slots:
     void process() {
-        int iCnt = 0;
         while (true) {
             QMutexLocker locker(&m_mutex);
             if (m_queue.isEmpty()) {
-                qDebug() << "sent cnt" << iCnt;
-                iCnt = 0;
                 m_waitCondition.wait(&m_mutex);
                 continue;
             }
 
-            iCnt = (iCnt == 0) ? m_queue.count() : iCnt;
             QJsonObject obj = m_queue.dequeue();
             locker.unlock();
 
@@ -49,13 +52,13 @@ public slots:
 
             emit sendMessage(dataToSend);
 
-            int bytes = dataToSend.size();
-            qDebug() << " bytes to write = " << bytes << "\n" ;
+            // int bytes = dataToSend.size();
+            // qDebug() << " bytes to write = " << bytes << "\n" ;
 
-            if (bytes > 10000) {
-                int delay = bytes / 1000;
-                QThread::msleep(delay);
-            }
+            // if (bytes > 10000) {
+            //     int delay = bytes / 1000;
+            //     QThread::msleep(delay);
+            // }
         }
     }
 
@@ -87,6 +90,8 @@ StreamManager::StreamManager()
             qint64 bytes = client->bytesToWrite();
             //              qDebug() << " bytes to write = " << bytes << "\n" ;
             m_totalBytes += bytes;
+
+            m_worker->pause(100);
         }
     });
 
@@ -119,7 +124,7 @@ void StreamManager::stop_stream() {
     if (m_worker) {
         m_worker->clearQueue();
     }
-    qDebug() << "Streaming stopped";
+//  qDebug() << "Streaming stopped";
 }
 
 void StreamManager::registerClient(QWebSocket* client) {

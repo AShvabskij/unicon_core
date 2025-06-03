@@ -493,7 +493,6 @@ void OscHandler::th_streamData()
         }
 
         // QCoreApplication::processEvents();
-        QThread::msleep(10);
     }
 
     if (m_streamingFlag == 1) {
@@ -548,7 +547,6 @@ void OscHandler::th_streamHistoryData()
         }
 
         chunk_count = std::min((int)(chunk_count * 1.1), SEND_HISTORY_CHUNK_MAX);
-        QThread::msleep(10);
     }
 
     if (m_streamingFlag == 1) {
