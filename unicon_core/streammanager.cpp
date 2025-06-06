@@ -94,7 +94,8 @@ StreamManager::StreamManager()
 
         m_totalBytes += bytes;
 
-        if (bytes > 10000) {
+        // need to delay after sending big chunks, to avoid traffic overflow
+        if (bytes > 1000) {
             int delay = bytes / 1000;
             m_worker->pause(delay);
         }
@@ -112,7 +113,7 @@ StreamManager::StreamManager()
 
                 QString strJson(doc.toJson(QJsonDocument::Compact));
                 client->sendTextMessage(strJson);
-                client->close(QWebSocketProtocol::CloseCodePolicyViolated);
+//              client->close(QWebSocketProtocol::CloseCodePolicyViolated); // don't close the connection please
             }
         }
     });
