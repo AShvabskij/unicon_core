@@ -80,6 +80,10 @@ StreamManager::StreamManager()
     m_workerThread = new QThread();
     m_worker->moveToThread(m_workerThread);
 
+    m_speedMeasurementTimer = new QTimer(this);
+    connect(m_speedMeasurementTimer, &QTimer::timeout, this, &StreamManager::handlePing);
+    m_speedMeasurementTimer->start(10000);
+
     connect(m_workerThread, &QThread::started, m_worker, &StreamWorker::process);
     connect(m_worker, &StreamWorker::sendMessage, this, [this](const QByteArray& data){
         if (!m_isStarted) return;
@@ -87,16 +91,20 @@ StreamManager::StreamManager()
 
         QWebSocket* client = m_clients.last();
         client->sendBinaryMessage(data);
-        client->flush();
 
         qint64 bytes = client->bytesToWrite();
-        qDebug() << " bytes to write = " << bytes << "\n" ;
+        client->flush();
 
         m_totalBytes += bytes;
 
         // need to delay after sending big chunks, to avoid traffic overflow
-        if (bytes > 1000) {
-            int delay = bytes / 1000;
+        bool isLargeChunk = bytes > 1000;
+        StreamManager::NetworkSpeed currSpeed = getCurrentSpeed();
+
+        int NETWORK_COEF = (currSpeed == Fast) ? 1000 : 10000; // the delay depends on network speed: 1000 - for local connection , 10000 - for remote vpn connection
+
+        if (isLargeChunk) {
+            int delay = bytes / NETWORK_COEF;
             m_worker->pause(delay);
         }
 
@@ -155,10 +163,13 @@ void StreamManager::stop_stream() {
 void StreamManager::registerClient(QWebSocket* client) {
     if (!m_clients.contains(client)) {
         m_clients.enqueue(client);
+
+        connect(client, &QWebSocket::pong, this, &StreamManager::handlePong);
     }
 }
 
 void StreamManager::unregisterClient(QWebSocket* client) {
+    disconnect(client, &QWebSocket::pong, this, &StreamManager::handlePong);
     m_clients.removeAll(client);
 }
 
@@ -172,4 +183,40 @@ int StreamManager::registerHandler(IReqHandler* handler) {
     }
 
     return 0;
+}
+
+void StreamManager::handlePing()
+{
+    if (m_clients.isEmpty()) return;
+
+    QWebSocket *client = m_clients.last();
+    if (client->state() != QAbstractSocket::ConnectedState) return;
+
+    const int payloadSize = 120; // 120 B
+    QByteArray payload;
+    payload.reserve(payloadSize);
+
+    // Fill the payload with some data (could be random or pattern-based)
+    for (int i = 0; i < payloadSize; ++i) {
+        payload.append(static_cast<char>(i % 256)); // Simple repeating pattern
+    }
+
+    client->ping(payload);
+}
+
+void StreamManager::handlePong(quint64 elapsedTime, const QByteArray& payload) {
+    elapsedTime = (elapsedTime / 2) * 1000; // measure round trip time in seconds but want one-way speed
+    qDebug() << "elapsed ping time:" << elapsedTime << "ms";
+
+    int recievedPayloadsize = payload.size();
+    m_currentSpeed = elapsedTime > 0 ? (recievedPayloadsize / elapsedTime) : 10000000;
+    qDebug() << "Network speed:" << m_currentSpeed << "KB/s";
+}
+
+StreamManager::NetworkSpeed StreamManager::getCurrentSpeed() const {
+    if (m_currentSpeed <= 1) return Slow;
+    if (m_currentSpeed > 1 && m_currentSpeed <= 10) return Medium;
+    if (m_currentSpeed > 10) return Fast;
+
+    return Unknown;
 }

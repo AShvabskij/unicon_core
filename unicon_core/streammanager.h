@@ -12,33 +12,19 @@
 #include "responsemanager.h"
 
 class StreamWorker;
-// class StreamWorker : public QObject {
-//     Q_OBJECT
-// public:
-//     explicit StreamWorker(QAtomicInt* flag, qint64* totalBytes, QObject* parent = nullptr);
-
-//     void enqueue(const QList<QJsonObject>& list);
-//     void clearQueue();
-
-// public slots:
-//     void process();
-
-// signals:
-//     void sendMessage(const QByteArray& data);
-
-// private:
-//     QQueue<QJsonObject> m_queue;
-//     QMutex m_mutex;
-//     QWaitCondition m_waitCondition;
-//     QAtomicInt* m_streamingFlag;
-//     qint64* m_totalBytes;
-// };
 
 class StreamManager : public ResponseManager
 {
     Q_OBJECT
 
 public:
+    enum NetworkSpeed {
+        Unknown,
+        Slow,
+        Medium,
+        Fast
+    };
+
     StreamManager();
     ~StreamManager() override;
 
@@ -52,6 +38,10 @@ public:
 
     int registerHandler(IReqHandler* handler) override;
 
+    void handlePing();
+    void handlePong(quint64 elapsedTime, const QByteArray& payload);
+    NetworkSpeed getCurrentSpeed() const;
+
 public slots:
     int stream(const QList<QJsonObject>& valueList);
     void stop_stream();
@@ -59,8 +49,10 @@ public slots:
 private:
     QQueue<QWebSocket*> m_clients;
     qint64 m_totalBytes;
+    double m_currentSpeed = 0.0;  // in bytes per second
     bool m_isStarted = true;
 
+    QTimer* m_speedMeasurementTimer;
     StreamWorker* m_worker;
     QThread* m_workerThread;
 };

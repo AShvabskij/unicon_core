@@ -542,7 +542,7 @@ void OscHandler::th_streamHistoryData()
             break;
         }
 
-        chunk_count = std::min((int)(chunk_count * 1.1), SEND_HISTORY_CHUNK_MAX);
+//      chunk_count = std::min((int)(chunk_count * 1.1), SEND_HISTORY_CHUNK_MAX);
     }
 
     if (m_streamingFlag == 0) {
