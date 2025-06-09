@@ -105,7 +105,7 @@ StreamManager::StreamManager()
 
         if (isLargeChunk) {
             int delay = bytes / NETWORK_COEF;
-            delay = (delay <= 100) ? delay : 100 // delay not more than 100 ms
+            delay = (delay <= 100) ? delay : 100; // delay not more than 100 ms
             m_worker->pause(delay);
         }
 
@@ -205,8 +205,14 @@ void StreamManager::handlePing()
 }
 
 void StreamManager::handlePong(quint64 elapsedTime, const QByteArray& payload) {
-    m_currentPingTime = elapsedTime;
-    qDebug() << "elapsed ping time" << elapsedTime << "ms";
+    Q_UNUSED(payload);
+    if (m_currentPingTime != elapsedTime) {
+        if ((m_currentPingTime - elapsedTime) /elapsedTime > 0.1) {
+            qDebug() << "Streaming ping time" << elapsedTime << "ms";
+        }
+
+        m_currentPingTime = elapsedTime;
+    }
 }
 
 StreamManager::NetworkSpeed StreamManager::getCurrentSpeed() const {
