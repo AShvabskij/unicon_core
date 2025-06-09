@@ -49,7 +49,7 @@ public slots:
 private:
     QQueue<QWebSocket*> m_clients;
     qint64 m_totalBytes;
-    double m_currentSpeed = 0.0;  // in bytes per second
+    qint64 m_currentPingTime = 0;
     bool m_isStarted = true;
 
     QTimer* m_speedMeasurementTimer;

@@ -101,10 +101,11 @@ StreamManager::StreamManager()
         bool isLargeChunk = bytes > 1000;
         StreamManager::NetworkSpeed currSpeed = getCurrentSpeed();
 
-        int NETWORK_COEF = (currSpeed == Fast) ? 1000 : 10000; // the delay depends on network speed: 1000 - for local connection , 10000 - for remote vpn connection
+        int NETWORK_COEF = (currSpeed == Fast) ? 10000 : 1000; // the delay depends on network speed: 1000 - for local connection , 10000 - for remote vpn connection
 
         if (isLargeChunk) {
             int delay = bytes / NETWORK_COEF;
+            delay = (delay <= 100) ? delay : 100 // delay not more than 100 ms
             m_worker->pause(delay);
         }
 
@@ -139,7 +140,6 @@ StreamManager::~StreamManager() {
 int StreamManager::stream(const QList<QJsonObject>& valueList) {
     if (valueList.empty()) return 0;
 
-    qDebug() << "Streaming data, count = " << valueList.count();
     m_isStarted = true;
 
     Q_ASSERT(m_worker);
@@ -205,18 +205,14 @@ void StreamManager::handlePing()
 }
 
 void StreamManager::handlePong(quint64 elapsedTime, const QByteArray& payload) {
-    elapsedTime = (elapsedTime / 2) * 1000; // measure round trip time in seconds but want one-way speed
-    qDebug() << "elapsed ping time:" << elapsedTime << "ms";
-
-    int recievedPayloadsize = payload.size();
-    m_currentSpeed = elapsedTime > 0 ? (recievedPayloadsize / elapsedTime) : 10000000;
-    qDebug() << "Network speed:" << m_currentSpeed << "KB/s";
+    m_currentPingTime = elapsedTime;
+    qDebug() << "elapsed ping time" << elapsedTime << "ms";
 }
 
 StreamManager::NetworkSpeed StreamManager::getCurrentSpeed() const {
-    if (m_currentSpeed <= 1) return Slow;
-    if (m_currentSpeed > 1 && m_currentSpeed <= 10) return Medium;
-    if (m_currentSpeed > 10) return Fast;
+    if (m_currentPingTime <= 10) return Fast;
+    if (m_currentPingTime > 10 && m_currentPingTime <=100) return Medium;
+    if (m_currentPingTime > 100) return Slow;
 
     return Unknown;
 }
