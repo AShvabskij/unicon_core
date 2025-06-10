@@ -93,19 +93,19 @@ StreamManager::StreamManager()
         client->sendBinaryMessage(data);
 
         qint64 bytes = client->bytesToWrite();
-        client->flush();
+        bool isSent = client->flush();
+        // qDebug() << "Bytes sent:" << bytes;
 
         m_totalBytes += bytes;
 
         // need to delay after sending big chunks, to avoid traffic overflow
-        bool isLargeChunk = bytes > 1000;
         StreamManager::NetworkSpeed currSpeed = getCurrentSpeed();
 
-        int NETWORK_COEF = (currSpeed == Fast) ? 10000 : 1000; // the delay depends on network speed: 1000 - for local connection , 10000 - for remote vpn connection
+        int NETWORK_COEF = (currSpeed == Fast) ? 10000 : (currSpeed == Medium) ? 1000 : 500; // the delay depends on network speed: 1000 - for local connection , 10000 - for remote vpn connection
 
-        if (isLargeChunk) {
+        if (!isSent) {
             int delay = bytes / NETWORK_COEF;
-            delay = (delay <= 100) ? delay : 100; // delay not more than 100 ms
+            // delay = (delay <= 100) ? delay : 100; // delay not more than 100 ms
             m_worker->pause(delay);
         }
 
@@ -207,10 +207,7 @@ void StreamManager::handlePing()
 void StreamManager::handlePong(quint64 elapsedTime, const QByteArray& payload) {
     Q_UNUSED(payload);
     if (m_currentPingTime != elapsedTime) {
-        if ((m_currentPingTime - elapsedTime) /elapsedTime > 0.1) {
-            qDebug() << "Streaming ping time" << elapsedTime << "ms";
-        }
-
+        qDebug() << "Streaming:" << "elapsed ping time" << elapsedTime << "ms";
         m_currentPingTime = elapsedTime;
     }
 }
