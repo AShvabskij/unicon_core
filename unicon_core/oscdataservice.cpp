@@ -387,7 +387,7 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
     QJsonArray varIdListObj;
 
     int timestamp = 0;
-    bool isNew = false;
+    bool isNew = true;
 
     for (OscChannelVar& chVar : data.vars) {
         if (chVar.type == UNDEFINED) continue;
@@ -421,7 +421,7 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
         int lastDataPos = startPos + cnt;
         data.lastDataPos[chVar.varId] = lastDataPos;
         isEof = (lastDataPos >= ch_val_count);
-        isNew = (isNew == false) ? startPos == 0 : true;
+        isNew = (isNew == true) ? startPos == 0 : false;
         timestamp = lastDataPos * data.resolution_us;
 
         varIdListObj << chVar.varId;
