@@ -164,6 +164,7 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
         OscChannelVar& chVar = buff->vars[ind];
         chVar.channelNum = var.chNum;
         chVar.varId = var.var.id;
+        chVar.varName = var.var.name;
         chVar.scale = var.gain;
         chVar.offset = var.offset;
         chVar.type = var.var.type;
@@ -402,6 +403,8 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
             continue;
         }
 
+
+        // A.S: This code is commented, because no need to multiply values by coefficient here, let's see OscChannelData::jsnValues()
         // QVariantList values = chVal.values(startPos, cnt);
         // if (values.isEmpty()) {
         //     continue;
@@ -411,7 +414,7 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
         //     values= multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
         // }
 
-        QJsonArray values = chVal.jsnValues(startPos, chVar, cnt);
+        QJsonArray values = chVal.jsnValues(startPos, chVar, cnt);  // get multiplyed values in json format
         if (values.isEmpty()) {
             continue;
         }

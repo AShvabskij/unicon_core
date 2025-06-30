@@ -51,14 +51,7 @@ public slots:
             QByteArray dataToSend = v.toCbor(QCborValue::UseFloat);
 
             emit sendMessage(dataToSend);
-
-            // int bytes = dataToSend.size();
-            // qDebug() << " bytes to write = " << bytes << "\n" ;
-
-            // if (bytes > 10000) {
-            //     int delay = bytes / 1000;
-            //     QThread::msleep(delay);
-            // }
+//          QThread::msleep(10); // warn: not allowed here, because of data fragmentation
         }
     }
 
