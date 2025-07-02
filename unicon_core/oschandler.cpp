@@ -190,7 +190,7 @@ int OscHandler::handleGetHeader(const QJsonObject &request)
         }
 
         if (ret != _return_OK) {
-            throw;
+            throw QException();
         }
 
     } catch (...) {
@@ -234,7 +234,7 @@ int OscHandler::handleSetHeader(const QJsonObject &request)
         OscHeader header;
         long ret = getHeader(devID, &header);
         if (ret != _return_OK) {
-            throw;
+            throw QException();
         }
 
         int displayResolution = cmdBody.value("display_resolution_ms").toInt();
