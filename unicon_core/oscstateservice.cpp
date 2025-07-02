@@ -138,6 +138,7 @@ void OscStateMachine::update(DevInd devId)
                     m_errCounter = 0;
                     m_eof = false;
                     m_sof = false;
+                    // m_state = Updated; // todo: discuss it with A.D. "Is there a need to reload the header (to update trig time) when data is eof"
                 }
 
                 if (m_ddeData.header_updated) {
