@@ -111,7 +111,7 @@ int init_tbl(const char* device_name, const char* device_description, uint8_t/*T
 
     if (!dbOpen) { //  Если база не открыта - выполняем операцию открытия
         struct passwd* pw = getpwuid(getuid());
-        const char* homedir = pw->pw_dir;
+        const char* homedir = "/home/pi/"; // pw->pw_dir;
         std::string path = std::string(homedir) + path_dbfile + "/" + name_dbfile;
 
         rc = sqlite3_open(path.c_str(), &dbc);
