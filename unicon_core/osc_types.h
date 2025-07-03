@@ -324,6 +324,7 @@ namespace OscType {
     struct OscDataBuffer
     {
         DevInd id;
+
         int valueCount = 0; // // number of points in the data buffer
         int valueDensity = 0; // number of points per millisec
         qlonglong timestamp = 0;

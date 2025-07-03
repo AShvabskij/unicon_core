@@ -481,6 +481,7 @@ void OscHandler::th_streamData()
         }
 
         response["type"] = "osc";
+        response["s_id"] = m_sysType; // determines which system type does the data belongs to
         emit stream(QList<QJsonObject>() << response);
 
         // qDebug() << "Emit osc data, dev id =" << m_capturedOsc.deviceID.id
@@ -535,6 +536,7 @@ void OscHandler::th_streamHistoryData()
         }
 
         response["type"] = "osc";
+        response["s_id"] = m_sysType;
 
         emit stream(QList<QJsonObject>() << response);
 
