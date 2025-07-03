@@ -373,6 +373,8 @@ long OscHandler::getAllData(const DevID &devID, QVector<int> oscVars)
     }
 
     response["type"] = "osc";
+    response["s_id"] = m_sysType;
+
     emit stream(QList<QJsonObject>() << response);
 
     qDebug() << "Emit all osc data, dev id =" << devID.id
@@ -698,6 +700,7 @@ QJsonObject OscHandler::createAnswerObj(int requestId, DevID deviceID, const QJs
 
     res["request_id"] = requestId;
     res["type"] = "osc";
+    res["s_id"] = m_sysType;
     res["d_id"] = deviceID.id;
     res["body"] = body;
     res["error"] = 0;
