@@ -71,6 +71,7 @@ OscStateMachine::OscStateMachine(IDDE* dde, IOscDataService *dataSrv)
     m_dde = dde;
     m_state = STATE::Normal;
     m_dataSrv = dataSrv;
+    m_sysType = DDE_TYPES::sysTypeFromString(dde->system_type());
 
     // memset(&m_ddeData, 0, sizeof(DDE_GET_OSC_DATA));
     // memset(&m_header, 0, sizeof(DDE_OSC_HEADER));
@@ -183,7 +184,7 @@ void OscStateMachine::update(DevInd devId)
     }
 
     case Saving: {
-        m_dataSrv->save(m_header);
+        m_dataSrv->save(m_header, m_sysType);
         m_state = Getting;
         break;
     }

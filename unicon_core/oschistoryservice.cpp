@@ -7,9 +7,9 @@ OscHistoryService::OscHistoryService(IOscDataService *dataSrv, IOscDataLogger *d
     m_dataSaver = dataSaver;
 }
 
-long OscHistoryService::requestData(const DDE_OSC_HEADER& hdr)
+long OscHistoryService::requestData(const DevID& devID, const DDE_OSC_HEADER& hdr)
 {
-    long res = m_dataSrv->load(hdr);
+    long res = m_dataSrv->load(hdr, devID.type);
     return res;
 }
 
@@ -24,17 +24,14 @@ long OscHistoryService::requestHeader(const DevID& devID, QDate dateDate, int st
     while (res != _return_OK && days < MAX_DAYS_COUNT) {
         QDate date = startDate.addDays(-days);
         header.device_id = devID.id;
-        auto headers = m_dataSaver->headerList(date); // todo: optimization is needed
+        auto headers = m_dataSaver->headerList(devID, date); // todo: optimization is needed
         for (const DDE_OSC_HEADER& h: headers) {
-            if (h.device_id == devID.id ) // and what about sysType ? todo: May be we need to store systype in the header
-            {
-                if (s == step) {
-                    header = h;
-                    res = _return_OK;
-                    break;
-                }
-                s++;
+            if (s == step) {
+                header = h;
+                res = _return_OK;
+                break;
             }
+            s++;
         }
 
         days++;

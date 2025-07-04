@@ -16,7 +16,7 @@ class OscHistoryService: public QObject
 public:
     OscHistoryService(IOscDataService* dataSrv, IOscDataLogger* dataSaver);
 
-    long requestData(const DDE_OSC_HEADER &hdr);
+    long requestData(const DevID &devID, const DDE_OSC_HEADER &hdr);
     long requestHeader(const DevID &devID, QDate dateDate, int step, DDE_OSC_HEADER& header);
     void reset();
 

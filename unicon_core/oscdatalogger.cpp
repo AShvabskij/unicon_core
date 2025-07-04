@@ -69,15 +69,18 @@ namespace {
 
 using namespace OscType;
 
-long OscDataLogger::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data)
+long OscDataLogger::save(const DDE_OSC_HEADER &header, SysType type, const OscType::OscDataBuffer &data)
 {
     //  const char* home = getenv("HOME");
         QDateTime now = QDateTime::currentDateTime();
         QString path =  createFolder(now);
-        QJsonObject jsonObj = headerToJson(header);
+        QJsonObject jsonObj = headerToJson(header, type);
 
         QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, QTimeZone::systemTimeZone());
-        QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
+        QString baseFileName = QString("%1-%2-%3")
+                                   .arg(type)
+                                   .arg(header.device_id)
+                                   .arg(trigTime.toString("hh_mm_ss"));
 
         QString headerFile = path + "/" + baseFileName + ".hdr";
 
@@ -190,15 +193,15 @@ void OscDataLogger::cleanOldestData(const QString rootPath)
     qInfo() << "Cleaned oldest folder:" << dayDir.path();
 }
 
-long OscDataLogger::saveObj(const QString fileName, const QJsonObject &obj, bool useBinaryFormat)
+long OscDataLogger::saveObj(const QString filePath, const QJsonObject &obj, bool useBinaryFormat)
 {
     _dde_func_return_t res = _return_OK;
 
-    QFile file( fileName );
+    QFile file( filePath );
 
     if (useBinaryFormat) {
         if( !file.open( QIODevice::WriteOnly |  QIODevice::Truncate ) ) {
-            QTextStream(stdout) << "File open failed: " << fileName << ENDL;
+            QTextStream(stdout) << "File open failed: " << filePath << ENDL;
             return _return_FAIL;
         }
 
@@ -212,7 +215,7 @@ long OscDataLogger::saveObj(const QString fileName, const QJsonObject &obj, bool
     } else {
         if( !file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
         {
-            QTextStream(stdout) << "File open failed: " << fileName << ENDL;
+            QTextStream(stdout) << "File open failed: " << filePath << ENDL;
             return _return_FAIL;
         }
         QJsonDocument doc(obj);
@@ -232,12 +235,13 @@ long OscDataLogger::saveObj(const QString fileName, const QJsonObject &obj, bool
     return res;
 }
 
-QJsonObject OscDataLogger::headerToJson(const DDE_OSC_HEADER &h)
+QJsonObject OscDataLogger::headerToJson(const DDE_OSC_HEADER &h, SysType type)
 {
     QJsonObject res;
 
     res["version"] = DATA_VERSION;
     res["sub_version"] = DATA_SUBVERSION;
+    res["sys_id"] = type;
     res["device_id"] = h.device_id;
     res["id"] = h.device_id;
     res["trig_time"] = QString::number(h.settings.trig_time);
@@ -310,12 +314,21 @@ long OscDataLogger::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
     QString name = QFileInfo(fileFrom).baseName();
 
     QString headerFile = path + QDir::separator() + name + ".hdr";
-    QFile file( headerFile );
+
+    QJsonObject obj = loadObj(headerFile);
+    long ret = jsonToHeader(obj, header);
+
+    return ret;
+}
+
+QJsonObject OscDataLogger::loadObj(QString filePath)
+{
+    QFile file(filePath);
 
     if(!file.open( QIODevice::ReadOnly | QIODevice::Text ))
     {
-        QTextStream(stdout) << "file open failed: " << headerFile << ENDL;
-        return _return_FAIL;
+        QTextStream(stdout) << "file open failed: " << filePath << ENDL;
+        return QJsonObject();
     }
 
     QTextStream inStream( &file );
@@ -325,9 +338,9 @@ long OscDataLogger::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
     QJsonDocument d = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject obj = d.object();
 
-    long ret = jsonToHeader(obj, header);
+//    long ret = jsonToHeader(obj, header);
 
-    return ret;
+    return obj;
 }
 
 QByteArray decodeByteArray(QCborStreamReader &reader)
@@ -375,55 +388,70 @@ long OscDataLogger::loadData(QString fileFrom, OscType::OscDataBuffer& data)
     return ret;
 }
 
-long OscDataLogger::loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data)
+long OscDataLogger::load(const DDE_OSC_HEADER& header, SysType type, /*out*/OscType::OscDataBuffer& data)
 {
     QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, QTimeZone::systemTimeZone());
     QString path =  getFolderPath(trigTime);
-    QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
+    QString baseFileName = QString("%1-%2-%3")
+                               .arg(type)
+                               .arg(header.device_id)
+                               .arg(trigTime.toString("hh_mm_ss"));
 
     QString datFile = path + QDir::separator() + baseFileName + ".dat";
 
     long ret = loadData(datFile, data);
 
-    if (ret == _return_FAIL && header.settings.reason == 0) {
-        // Заплатка для случая, когда reason в заголовке (header.settings.reason) отсутствует
+    // if (ret == _return_FAIL && header.settings.reason == 0) {
+    //     // Заплатка для случая, когда reason в заголовке (header.settings.reason) отсутствует
 
-        QDir dir(path);
-        QStringList fileList = dir.entryList(QStringList() << "*.dat", QDir::Files);
-        for (QString fileName: fileList) {
-            QString firstPart = QString("%1-").arg(header.device_id);
-            int pos = fileName.indexOf(firstPart);
-            if (fileName.contains(trigTime.toString("hh_mm_ss")) && pos == 0) {
-                datFile = path + QDir::separator() + fileName;
-                break;
-            }
-        }
+    //     QDir dir(path);
+    //     QStringList fileList = dir.entryList(QStringList() << "*.dat", QDir::Files);
+    //     for (QString fileName: fileList) {
+    //         QString firstPart = QString("%1-").arg(header.device_id);
+    //         int pos = fileName.indexOf(firstPart);
+    //         if (fileName.contains(trigTime.toString("hh_mm_ss")) && pos == 0) {
+    //             datFile = path + QDir::separator() + fileName;
+    //             break;
+    //         }
+    //     }
 
-        qDebug() << "datFile = " << datFile;
-        if (!datFile.isEmpty()) {
-            ret = loadData(datFile, data);
-        }
-    }
+    //     qDebug() << "datFile = " << datFile;
+    //     if (!datFile.isEmpty()) {
+    //         ret = loadData(datFile, data);
+    //     }
+    // }
 
     return ret;
 }
 
-QList<DDE_OSC_HEADER> OscDataLogger::headerList(QDate date)
+QList<DDE_OSC_HEADER> OscDataLogger::headerList(const DevID& devID, QDate date)
 {
     QList<DDE_OSC_HEADER> headers;
     QString path =  getFolderPath(QDateTime(date, QTime()));
 
-    QStringList fileList = getSortedFilesByCreationDate(path, "*.hdr");
+    QString mask = "*.hdr";
+    QStringList fileList = getSortedFilesByCreationDate(path, mask);
 
     for (QString file: fileList) {
-        DDE_OSC_HEADER hdr;
+        DDE_OSC_HEADER header;
         file = path + QDir::separator() + file;
-        long res = loadHeader(file, hdr);
+        QJsonObject obj = loadObj(file);
+
+        if (obj.contains("device_id") && obj.value("device_id").toInteger() != devID.id) {
+            continue;
+        }
+
+        if (obj.contains("sys_id") && obj.value("sys_id").toInteger() != devID.type) {
+            continue;
+        }
+
+        long res = jsonToHeader(obj, header);
+
         if (res != _return_OK) {
             continue;
         }
 
-        headers.append(hdr);
+        headers.append(header);
     }
 
     return headers;
@@ -524,6 +552,8 @@ long OscDataLogger::checkVersion(int ver, int subVer)
 
 long OscDataLogger::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
 {
+    if (obj.isEmpty()) return _return_FAIL;
+
     h.device_id = obj["device_id"].toVariant().toInt();
     h.settings.reason = obj["reason"].toVariant().toInt();
     h.settings.trig_time = obj["trig_time"].toVariant().toInt();

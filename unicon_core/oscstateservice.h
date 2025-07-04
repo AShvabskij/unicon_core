@@ -63,6 +63,7 @@ private:
     int m_errCounter = 0;
     int m_busyCounter = 0;
     int m_idleCounter = 0;
+    SysType m_sysType;
 
     IOscDataService* m_dataSrv = nullptr;
 };

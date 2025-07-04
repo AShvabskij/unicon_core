@@ -428,7 +428,7 @@ long OscHandler::startHistoryData(const DevID& devID, QVector<int> oscVars, QDat
 
     auto con = connect(src, SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)), Qt::UniqueConnection);
 
-    res = m_historySrv->requestData(dde_hdr);
+    res = m_historySrv->requestData(devID, dde_hdr);
 
     if (res != _return_OK) {
         qWarning() << "No OSC data is found for requested header";

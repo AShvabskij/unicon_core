@@ -80,7 +80,7 @@ void Core::init()
     m_supportedSysTypes.append(SysType::FILE_IO);
 
     IDDE* dde = new DDE_EMUL();
-    dde->init(sysTypeToString(SysType::FILE_IO));
+    dde->init(DDE_TYPES::sysTypeToString(SysType::FILE_IO));
     m_ddeDisp->registerDDE(SysType::FILE_IO, dde);
     m_ddeDisp->setDefaultDDE(dde);
 
@@ -91,7 +91,7 @@ void Core::init()
 
     for(SysType sysType: m_supportedSysTypes) {
         IDDE* dde = new DDE_TOP();
-    //    dde_uavcan->init(sysTypeToString(SysType::UAVCAN)); // TODO: replace arg to const char*
+    //    dde_uavcan->init(SYS_TYPE::sysTypeToString(SysType::UAVCAN)); // TODO: replace arg to const char*
         m_ddeDisp->registerDDE(sysType, dde);
     }
 
@@ -162,12 +162,12 @@ void Core::start(SysType sysType)
             qWarning() << "The DEMO mode is not supported" << sysType;
 
         } else {
-            qWarning() << "The system type is not supported, sysType =  " << sysTypeToString(sysType);
+            qWarning() << "The system type is not supported, sysType =  " << DDE_TYPES::sysTypeToString(sysType);
         }
         return;
     }
 
-    dde->init(sysTypeToString(sysType));
+    dde->init(DDE_TYPES::sysTypeToString(sysType));
 
     m_sysType = sysType;
     m_ddeDisp->setDefaultDDE(dde);

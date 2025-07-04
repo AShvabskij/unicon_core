@@ -442,11 +442,11 @@ public:
     virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
     virtual QJsonObject jsonData(const DevID& deviceID, qlonglong trig_time, QVector<int> vars, int &cnt, bool& isEof) = 0;
     virtual long dataCount(const DevID& deviceID, qlonglong trig_time, int &cnt) = 0 ;
-    virtual long load(const DDE_OSC_HEADER& hdr) = 0;
+    virtual long load(const DDE_OSC_HEADER& hdr, SysType sysType) = 0;
     virtual void clear(DevInd device_id) = 0;
     virtual void remove(DevInd device_id) = 0;
     virtual void removeAll() = 0;
-    virtual long save(const DDE_OSC_HEADER& hdr) = 0;
+    virtual long save(const DDE_OSC_HEADER& hdr, SysType type) = 0;
 
 // signals:
     virtual void dataReceived(quint16 device_id) = 0;
@@ -458,12 +458,13 @@ class IOscDataLogger
 {
 public:
     virtual ~IOscDataLogger() {}
-    virtual long save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data) = 0;
+    virtual long save(const DDE_OSC_HEADER& header, SysType type, const OscType::OscDataBuffer& data) = 0;
+    virtual long load(const DDE_OSC_HEADER& header, SysType type, /*out*/OscType::OscDataBuffer& data) = 0;
+
     virtual long checkVersion(QString fileFrom) = 0;
-    virtual QList<DDE_OSC_HEADER> headerList(QDate date)  = 0;
+    virtual QList<DDE_OSC_HEADER> headerList( const DevID& devID, QDate date)  = 0;
     virtual long loadHeader(QString fileFrom, DDE_OSC_HEADER &header) = 0;
     virtual long loadData(QString fileFrom, OscType::OscDataBuffer& data) = 0;
-    virtual long loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data) = 0;
     virtual QString getFolderPath(const QDateTime dateTime) = 0;
     virtual QString getDataLoggerRootPath() = 0;
     virtual void cleanOldestData(const QString rootPath) = 0;

@@ -17,7 +17,7 @@ class OscDataService: public QObject,
 public:
     OscDataService(IOscDataLogger* s) {
         Q_ASSERT(s);
-        m_dataSaver = s;
+        m_dataLogger = s;
     };
 
     ~OscDataService() override {}
@@ -28,8 +28,8 @@ public:
     void clear(DevInd device_id) override;
     void remove(DevInd device_id) override;
     void removeAll() override;
-    long save(const DDE_OSC_HEADER &hdr) override;
-    long load(const DDE_OSC_HEADER& hdr) override;
+    long save(const DDE_OSC_HEADER &hdr, SysType sysType) override;
+    long load(const DDE_OSC_HEADER& hdr, SysType sysType) override;
 
 signals:
     void dataReceived(quint16 device_id) override;
@@ -48,7 +48,7 @@ private:
 
     QMultiMap<DevInd, OscType::OscDataBuffer*> m_repository;
     QMutex m_mutex;
-    IOscDataLogger* m_dataSaver = nullptr;
+    IOscDataLogger* m_dataLogger = nullptr;
 };
 
 #endif // OSCDATASERVICE_H

@@ -55,7 +55,7 @@ OscType::OscDataBuffer* OscDataService::get(DevInd device_id, qlonglong time)
     return nullptr;
 }
 
-long OscDataService::load(const DDE_OSC_HEADER &hdr)
+long OscDataService::load(const DDE_OSC_HEADER &hdr, SysType sysType)
 {
     OscType::OscDataBuffer* buff = get(hdr.device_id, hdr.settings.trig_time);
     long res = _return_OK;
@@ -71,7 +71,7 @@ long OscDataService::load(const DDE_OSC_HEADER &hdr)
 
     } else {
         buff = createDataBuffer(hdr);
-        res = m_dataSaver->loadData(hdr, *buff);
+        res = m_dataLogger->load(hdr, sysType, *buff);
         if (res != _return_OK) {
             delete buff;
             return res;
@@ -450,12 +450,12 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
     return res;
 }
 
-long OscDataService::save(const DDE_OSC_HEADER& hdr)
+long OscDataService::save(const DDE_OSC_HEADER& hdr, SysType sysType = SysType::SysType_Undefined)
 {
     OscType::OscDataBuffer* datBuff = get(hdr.device_id);
     Q_ASSERT(datBuff);
     m_mutex.lock();
-    long res = m_dataSaver->save(hdr, *datBuff);
+    long res = m_dataLogger->save(hdr, sysType, *datBuff);
     m_mutex.unlock();
 
     emit dataSaved(hdr.device_id);
