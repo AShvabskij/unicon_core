@@ -24,7 +24,7 @@ long OscHistoryService::requestHeader(const DevID& devID, QDate dateDate, int st
     while (res != _return_OK && days < MAX_DAYS_COUNT) {
         QDate date = startDate.addDays(-days);
         header.device_id = devID.id;
-        auto headers = m_dataSaver->headerList(devID, date); // todo: optimization is needed
+        auto headers = m_dataSaver->headerList(devID, date); // todo: it would be nice to optimize
         for (const DDE_OSC_HEADER& h: headers) {
             if (s == step) {
                 header = h;

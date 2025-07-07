@@ -401,25 +401,18 @@ long OscDataLogger::load(const DDE_OSC_HEADER& header, SysType type, /*out*/OscT
 
     long ret = loadData(datFile, data);
 
-    // if (ret == _return_FAIL && header.settings.reason == 0) {
-    //     // Заплатка для случая, когда reason в заголовке (header.settings.reason) отсутствует
+    if (ret == _return_FAIL) {
+        // Заплатка для файлов до 07.07.2025
+        QString baseFileName = QString("%1-%2-%3")
+                                   .arg(header.device_id)
+                                   .arg(header.settings.reason)
+                                   .arg(trigTime.toString("hh_mm_ss"));
 
-    //     QDir dir(path);
-    //     QStringList fileList = dir.entryList(QStringList() << "*.dat", QDir::Files);
-    //     for (QString fileName: fileList) {
-    //         QString firstPart = QString("%1-").arg(header.device_id);
-    //         int pos = fileName.indexOf(firstPart);
-    //         if (fileName.contains(trigTime.toString("hh_mm_ss")) && pos == 0) {
-    //             datFile = path + QDir::separator() + fileName;
-    //             break;
-    //         }
-    //     }
+        QString datFile = path + QDir::separator() + baseFileName + ".dat";
 
-    //     qDebug() << "datFile = " << datFile;
-    //     if (!datFile.isEmpty()) {
-    //         ret = loadData(datFile, data);
-    //     }
-    // }
+        ret = loadData(datFile, data);
+
+    }
 
     return ret;
 }
@@ -437,11 +430,11 @@ QList<DDE_OSC_HEADER> OscDataLogger::headerList(const DevID& devID, QDate date)
         file = path + QDir::separator() + file;
         QJsonObject obj = loadObj(file);
 
-        if (obj.contains("device_id") && obj.value("device_id").toInteger() != devID.id) {
+        if (obj.contains("device_id") && obj.value("device_id").toInt() != devID.id) {
             continue;
         }
 
-        if (obj.contains("sys_id") && obj.value("sys_id").toInteger() != devID.type) {
+        if (obj.contains("sys_id") && obj.value("sys_id").toInt() != devID.type) {
             continue;
         }
 
