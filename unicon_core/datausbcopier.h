@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include <QStorageInfo>
 #include <QFileSystemWatcher>
+#include <QTimer>
 
 class IOscDataLogger;
 
@@ -42,7 +43,7 @@ private:
     QString m_sourceDirPath = "";
     QString m_usbMountPath = "";
     QFileSystemWatcher m_watcher;
-
+    QTimer* m_timer;
     IOscDataLogger* m_storage;
 };
 

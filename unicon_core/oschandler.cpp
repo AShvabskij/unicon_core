@@ -11,7 +11,7 @@ const QString CMD_OSC_DATA = "osc_data";
 
 const int SEND_CHUNK_COUNT_MAX = 10000;// 65536;
 const int SEND_HISTORY_CHUNK_MAX = 5000;
-const int SEND_HISTORY_CHUNK_MIN = 1000;
+const int SEND_HISTORY_CHUNK_MIN = 5000;
 const int SET_SIZE = 16;
 
 using namespace OscType;

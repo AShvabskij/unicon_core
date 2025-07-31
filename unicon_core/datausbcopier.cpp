@@ -28,11 +28,14 @@ void DataUsbCopier::startWatching()
 
     connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, &DataUsbCopier::onMediaChanged, Qt::QueuedConnection);
 
-//    m_timer = new QTimer(this);
-//    QObject::connect(m_timer, &QTimer::timeout, this, [this]() {
-//        qDebug() << "monitor usb devices";
-//        this->monitorUSBDevices();
-//    });
+    m_timer = new QTimer(this);
+    m_timer->setInterval(10000);
+    QObject::connect(m_timer, &QTimer::timeout, this, [this]() {
+        qDebug() << "monitor usb devices";
+        this->monitorUSBDevices();
+    });
+
+    m_timer->start();
 
     connect(this, SIGNAL(usbConnected(const QString&)), this, SLOT(onUsbConnected(const QString&)), Qt::QueuedConnection);
     connect(this, SIGNAL(errorDiskFull(const QString&)), this, SLOT(onDiskFullError(const QString&)), Qt::QueuedConnection);
