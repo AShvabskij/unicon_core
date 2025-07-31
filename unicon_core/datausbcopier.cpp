@@ -31,7 +31,6 @@ void DataUsbCopier::startWatching()
     m_timer = new QTimer(this);
     m_timer->setInterval(10000);
     QObject::connect(m_timer, &QTimer::timeout, this, [this]() {
-        qDebug() << "monitor usb devices";
         this->monitorUSBDevices();
     });
 
@@ -61,13 +60,13 @@ void DataUsbCopier::monitorUSBDevices()
         }
 
         m_usbMountPath = usbPath;
-        qDebug() << "usb is inserted, path:" << usbPath;
+        qInfo() << "usb is inserted, path:" << usbPath;
 
         emit usbConnected(usbPath);
     } else {
         if (m_usbMountPath != "") {
             m_usbMountPath = "";
-            qDebug() << "usb is removed";
+            qInfo() << "usb is removed";
         }
     }
 }
@@ -174,7 +173,7 @@ bool DataUsbCopier::isUsbDrive(const QStorageInfo &storage)
 #else
     // Check the root path for hints (Linux-specific)
 
-    if (!device.startsWith("/dev/sdb") && !device.startsWith("/dev/sda")) {
+    if (!device.startsWith("/dev/sd")) {
         return false;
     }
 
