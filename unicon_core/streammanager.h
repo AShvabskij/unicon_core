@@ -40,7 +40,8 @@ public:
 
     void handlePing();
     void handlePong(quint64 elapsedTime, const QByteArray& payload);
-    NetworkSpeed getCurrentSpeed() const;
+    NetworkSpeed checkCurrentSpeed();
+    void checkSingleConnection();
 
 public slots:
     int stream(const QList<QJsonObject>& valueList);
@@ -55,6 +56,7 @@ private:
     QTimer* m_speedMeasurementTimer;
     StreamWorker* m_worker;
     QThread* m_workerThread;
+    StreamManager::NetworkSpeed m_currSpeed;
 };
 
 #endif // STREAM_MANAGER_H

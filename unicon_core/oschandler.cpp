@@ -466,6 +466,7 @@ void OscHandler::th_streamData()
     int all_count = 0;
     m_dataSrv->dataCount(m_capturedOsc.deviceID, 0, all_count); // SEND_CHUNK_COUNT_MAX; // todo: it is better to specify a percentage of the total amount of data
     int chunk_count = std::min((int)(all_count * 0.1), SEND_CHUNK_COUNT_MAX);
+    emit stream(QList<QJsonObject>()); // prepare to stream for a new data
 
     // Send data splitted by chunks
     while (true) {
@@ -522,6 +523,7 @@ void OscHandler::th_streamHistoryData()
     Q_ASSERT(dataSrv);
     dataSrv->dataCount(m_capturedOsc.deviceID, 0, totalCount);
     int chunk_count = std::min((int)(totalCount * 0.1), SEND_HISTORY_CHUNK_MIN);
+    emit stream(QList<QJsonObject>()); // prepare to stream for a new data
 
     // Send data splitted by chunks
     while (true) {
@@ -546,7 +548,7 @@ void OscHandler::th_streamHistoryData()
             break;
         }
 
-//      chunk_count = std::min((int)(chunk_count * 1.1), SEND_HISTORY_CHUNK_MAX);
+        chunk_count = std::min((int)(chunk_count * 1.1), SEND_HISTORY_CHUNK_MAX);
     }
 
     if (m_streamingFlag == 0) {

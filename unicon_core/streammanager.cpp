@@ -75,7 +75,7 @@ StreamManager::StreamManager()
 
     m_speedMeasurementTimer = new QTimer(this);
     connect(m_speedMeasurementTimer, &QTimer::timeout, this, &StreamManager::handlePing);
-    m_speedMeasurementTimer->start(10000);
+//  m_speedMeasurementTimer->start(10000);
 
     connect(m_workerThread, &QThread::started, m_worker, &StreamWorker::process);
     connect(m_worker, &StreamWorker::sendMessage, this, [this](const QByteArray& data){
@@ -89,34 +89,27 @@ StreamManager::StreamManager()
         bool isSent = client->flush();
         // qDebug() << "Bytes sent:" << bytes;
 
-        m_totalBytes += bytes;
+        int NETWORK_COEF = (m_currSpeed == Fast) ? 100000 : (m_currSpeed == Medium) ? 1000 : 500; // the delay depends on network speed: 1000 - for local connection , 10000 - for remote vpn connection
+
+        int delay = bytes / NETWORK_COEF;
+        delay = (delay <= 100) ? delay : 100; // delay not more than 100 ms
 
         // need to delay after sending big chunks, to avoid traffic overflow
-        StreamManager::NetworkSpeed currSpeed = getCurrentSpeed();
-
-        int NETWORK_COEF = (currSpeed == Fast) ? 10000 : (currSpeed == Medium) ? 1000 : 500; // the delay depends on network speed: 1000 - for local connection , 10000 - for remote vpn connection
-
-        if (!isSent) {
-            int delay = bytes / NETWORK_COEF;
-            // delay = (delay <= 100) ? delay : 100; // delay not more than 100 ms
-            m_worker->pause(delay);
+        if (delay < 10 || bytes < 1000) {
+            return;
         }
 
-        if (m_clients.count() > 1) {
-            for (QWebSocket *client : m_clients) {
-                if (client == m_clients.last()) break;
+        qDebug() << "Streaming: " << "send bytes" << bytes << "with delay:" << delay;
+        m_worker->pause(delay);
+        QThread::msleep(delay);
 
-                // only one client have a right to receive stream messages, other - denied
-                QJsonObject answer;
-                answer["type"] = "sys";
-                answer["status"] = "2"; // disable web client
+        while (!isSent && bytes > 0) {
+            bytes = client->bytesToWrite();
+            isSent = client->flush();
 
-                QJsonDocument doc(answer);
-
-                QString strJson(doc.toJson(QJsonDocument::Compact));
-                client->sendTextMessage(strJson);
-//              client->close(QWebSocketProtocol::CloseCodePolicyViolated); // don't close the connection please
-            }
+            m_worker->pause(delay);
+            QThread::msleep(delay);
+            qDebug() << "Streaming: " << "again send bytes" << bytes << "with delay:" << delay << "isSent" << isSent;
         }
     });
 
@@ -131,7 +124,10 @@ StreamManager::~StreamManager() {
 }
 
 int StreamManager::stream(const QList<QJsonObject>& valueList) {
-    if (valueList.empty()) return 0;
+    if (valueList.isEmpty()) {
+
+        m_currSpeed = checkCurrentSpeed();
+    }
 
     m_isStarted = true;
 
@@ -147,10 +143,12 @@ int StreamManager::stream(const QList<QJsonObject>& valueList) {
 
 void StreamManager::stop_stream() {
     m_isStarted = false;
+    m_currSpeed = Unknown;
+
     if (m_worker) {
         m_worker->clearQueue();
     }
-//  qDebug() << "Streaming stopped";
+    qDebug() << "Streaming: stopped";
 }
 
 void StreamManager::registerClient(QWebSocket* client) {
@@ -158,6 +156,8 @@ void StreamManager::registerClient(QWebSocket* client) {
         m_clients.enqueue(client);
 
         connect(client, &QWebSocket::pong, this, &StreamManager::handlePong);
+
+        checkSingleConnection();
     }
 }
 
@@ -200,15 +200,40 @@ void StreamManager::handlePing()
 void StreamManager::handlePong(quint64 elapsedTime, const QByteArray& payload) {
     Q_UNUSED(payload);
     if (m_currentPingTime != elapsedTime) {
-        qDebug() << "Streaming:" << "elapsed ping time" << elapsedTime << "ms";
         m_currentPingTime = elapsedTime;
     }
+
+    if (m_currentPingTime <= 10) m_currSpeed = Fast;
+    if (m_currentPingTime > 100 && m_currentPingTime <= 1000) m_currSpeed = Medium;
+    if (m_currentPingTime > 1000) m_currSpeed = Slow;
+
+    QString currSpeed = (m_currSpeed == Fast) ? "Fast" : (m_currSpeed == Medium) ? "Medium" : "Slow";
+    qDebug() << "Streaming: " << "ping time" << elapsedTime << "ms" << "network speed = " << currSpeed;
+
 }
 
-StreamManager::NetworkSpeed StreamManager::getCurrentSpeed() const {
-    if (m_currentPingTime <= 10) return Fast;
-    if (m_currentPingTime > 10 && m_currentPingTime <=100) return Medium;
-    if (m_currentPingTime > 100) return Slow;
+StreamManager::NetworkSpeed StreamManager::checkCurrentSpeed() {
+    qDebug() << "check current speed: ";
+    handlePing();
 
-    return Unknown;
+    return m_currSpeed;
+}
+
+void StreamManager::checkSingleConnection() {
+    if (m_clients.count() > 1) {
+        for (QWebSocket *client : m_clients) {
+            if (client == m_clients.last()) break;
+
+            // only one client have a right to receive stream messages, other - denied
+            QJsonObject answer;
+            answer["type"] = "sys";
+            answer["status"] = "2"; // disable web client
+
+            QCborValue v = QCborValue::fromJsonValue(answer);
+            QByteArray dataToSend = v.toCbor(QCborValue::UseFloat);
+            client->sendBinaryMessage(dataToSend);
+        }
+    }
+
+    return;
 }

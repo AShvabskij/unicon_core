@@ -14,7 +14,7 @@
 
 namespace OscType {
 
-    const int MAX_DATA_COUNT = 1000000;
+    const int MAX_DATA_COUNT = 5000000;
 
     enum TriggerModeEnum {
         Single = 1, Continues = 2, Stream = 3
