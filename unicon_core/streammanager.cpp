@@ -203,7 +203,7 @@ void StreamManager::handlePong(quint64 elapsedTime, const QByteArray& payload) {
         m_currentPingTime = elapsedTime;
     }
 
-    if (m_currentPingTime <= 10) m_currSpeed = Fast;
+    if (m_currentPingTime <= 100) m_currSpeed = Fast;
     if (m_currentPingTime > 100 && m_currentPingTime <= 1000) m_currSpeed = Medium;
     if (m_currentPingTime > 1000) m_currSpeed = Slow;
 
