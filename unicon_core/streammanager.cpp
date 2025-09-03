@@ -91,11 +91,20 @@ StreamManager::StreamManager()
 
         int NETWORK_COEF = (m_currSpeed == Fast) ? 100000 : (m_currSpeed == Medium) ? 1000 : 500; // the delay depends on network speed: 1000 - for local connection , 10000 - for remote vpn connection
 
-        int delay = bytes / NETWORK_COEF;
-        delay = (delay <= 100) ? delay : 100; // delay not more than 100 ms
+        static int delay = bytes / NETWORK_COEF;
+        if (isSent == true) {
+            delay = delay - 0.1 * delay;
+            delay = (delay <= 0) ? 0 : delay;
+        } else {
+            if (delay <= 0) {
+                delay = bytes / NETWORK_COEF;
+            }
+            delay = delay + 0.1 * delay;
+            delay = (delay <= 500) ? delay : 500; // delay not more than 500 ms
+        }
 
         // need to delay after sending big chunks, to avoid traffic overflow
-        if (delay < 10 || bytes < 1000) {
+        if (delay < 10 || bytes < 1000 || isSent) {
             return;
         }
 
@@ -107,9 +116,14 @@ StreamManager::StreamManager()
             bytes = client->bytesToWrite();
             isSent = client->flush();
 
+            if (isSent == false) {
+                delay = delay + 0.1 * delay;
+            }
+
             m_worker->pause(delay);
             QThread::msleep(delay);
             qDebug() << "Streaming: " << "again send bytes" << bytes << "with delay:" << delay << "isSent" << isSent;
+
         }
     });
 
@@ -204,7 +218,7 @@ void StreamManager::handlePong(quint64 elapsedTime, const QByteArray& payload) {
     }
 
     if (m_currentPingTime <= 100) m_currSpeed = Fast;
-    if (m_currentPingTime > 100 && m_currentPingTime <= 1000) m_currSpeed = Medium;
+    if (m_currentPingTime > 100 && m_currentPingTime <=1000) m_currSpeed = Medium;
     if (m_currentPingTime > 1000) m_currSpeed = Slow;
 
     QString currSpeed = (m_currSpeed == Fast) ? "Fast" : (m_currSpeed == Medium) ? "Medium" : "Slow";

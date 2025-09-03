@@ -10,7 +10,7 @@ const QString CMD_TYPE_SET = "set";
 const QString CMD_OSC_DATA = "osc_data";
 
 const int SEND_CHUNK_COUNT_MAX = 10000;// 65536;
-const int SEND_HISTORY_CHUNK_MAX = 5000;
+const int SEND_HISTORY_CHUNK_MAX = 10000;
 const int SEND_HISTORY_CHUNK_MIN = 5000;
 const int SET_SIZE = 16;
 
@@ -452,114 +452,70 @@ void OscHandler::stopStreamData()
     disconnect(dynamic_cast<QObject*>(m_dataSrv), SIGNAL(dataReceived(quint16)), this, SLOT(onReceivedData(quint16)));
     disconnect(dynamic_cast<QObject*>(m_historySrv), SIGNAL(historyReceived(quint16)), this, SLOT(onReceivedHistoryData(quint16)));
 
-
     qDebug() << "Stop stream data, device id = " << m_capturedOsc.deviceID.id;
 }
 
 void OscHandler::th_streamData()
 {
-    Q_ASSERT(m_capturedOsc.deviceID.isValid());
-
-    QElapsedTimer timer;
-    timer.start();
-
-    int all_count = 0;
-    m_dataSrv->dataCount(m_capturedOsc.deviceID, 0, all_count); // SEND_CHUNK_COUNT_MAX; // todo: it is better to specify a percentage of the total amount of data
-    int chunk_count = std::min((int)(all_count * 0.1), SEND_CHUNK_COUNT_MAX);
-    emit stream(QList<QJsonObject>()); // prepare to stream for a new data
-
-    // Send data splitted by chunks
-    while (true) {
-
-        if (m_streamingFlag == 0) {
-            qDebug() << "Streaming braked, dev id = " << m_capturedOsc.deviceID.id;
-            break;
-        }
-
-        bool isEof = false;
-        QJsonObject response = m_dataSrv->jsonData(m_capturedOsc.deviceID, 0, m_capturedVars, chunk_count, isEof);
-
-        if (response.empty()) {
-            break;
-        }
-
-        response["type"] = "osc";
-        response["s_id"] = m_sysType; // determines which system type does the data belongs to
-        emit stream(QList<QJsonObject>() << response);
-
-        // qDebug() << "Emit osc data, dev id =" << m_capturedOsc.deviceID.id
-        //          << "channels =" <<  m_capturedVars.count()
-        //          << "count =" << chunk_count;
-
-        if (isEof) {
-            break;
-        }
-
-        // QCoreApplication::processEvents();
-    }
-
-    if (m_streamingFlag == 0) {
-        emit stop_stream();
-    }
-
-    qDebug() << "Emit all osc data, dev id =" << m_capturedOsc.deviceID.id
-             << "reason =" << m_capturedOsc.settings.reason
-             << "channels =" <<  m_capturedVars.count()
-             << "count =" << all_count
-             << "took" << timer.elapsed() << "ms";
+    streamDataInternal(m_dataSrv, m_capturedOsc.deviceID, 0, m_capturedVars, SEND_CHUNK_COUNT_MAX, SEND_CHUNK_COUNT_MAX);
 }
 
 void OscHandler::th_streamHistoryData()
 {
-    Q_ASSERT(m_capturedOsc.deviceID.isValid());
+    qlonglong trig_time = m_capturedOsc.settings.trigDTime.toMSecsSinceEpoch();
+    streamDataInternal(m_historySrv->getDataSrv(), m_capturedOsc.deviceID, trig_time, m_capturedVars, SEND_HISTORY_CHUNK_MIN, SEND_HISTORY_CHUNK_MAX);
+}
+
+
+void OscHandler::streamDataInternal(IOscDataService* dataService, DevID deviceID, qlonglong trig_time,
+                                    QVector<int> capturedVars, int initChunkSize, int maxChunkSize)
+{
+    Q_ASSERT(deviceID.isValid());
+    Q_ASSERT(dataService);
 
     QElapsedTimer timer;
     timer.start();
 
     int totalCount = 0;
-    qlonglong trig_time = m_capturedOsc.settings.trigDTime.toMSecsSinceEpoch();
+    dataService->dataCount(deviceID, trig_time, totalCount);
 
-    IOscDataService* dataSrv = m_historySrv->getDataSrv();
-    Q_ASSERT(dataSrv);
-    dataSrv->dataCount(m_capturedOsc.deviceID, 0, totalCount);
-    int chunk_count = std::min((int)(totalCount * 0.1), SEND_HISTORY_CHUNK_MIN);
+    int chunk_count = std::min((int)(totalCount * 0.1), initChunkSize);
+
     emit stream(QList<QJsonObject>()); // prepare to stream for a new data
 
     // Send data splitted by chunks
     while (true) {
+        if (m_streamingFlag == 0) {
+            qDebug() << "Streaming braked, dev id = " << deviceID.id;
+            break;
+        }
+
         bool isEof = false;
-        QJsonObject response = dataSrv->jsonData(m_capturedOsc.deviceID, trig_time, m_capturedVars, chunk_count, isEof);
+        QJsonObject response = dataService->jsonData(m_capturedOsc.deviceID, trig_time,
+                                                     capturedVars, chunk_count, isEof);
 
         if (response.empty()) {
             break;
         }
 
-        if (m_streamingFlag == 0) {
-            qDebug() << "Streaming braked, dev id = " << m_capturedOsc.deviceID.id;
-            break;
-        }
-
         response["type"] = "osc";
         response["s_id"] = m_sysType;
-
         emit stream(QList<QJsonObject>() << response);
 
         if (isEof) {
             break;
         }
 
-        chunk_count = std::min((int)(chunk_count * 1.1), SEND_HISTORY_CHUNK_MAX);
+        chunk_count = std::min(static_cast<int>(chunk_count * 1.1), maxChunkSize);
     }
 
     if (m_streamingFlag == 0) {
         emit stop_stream();
     }
 
-    qDebug() << "Emit all history data, dev id = " << m_capturedOsc.deviceID.id
-             << "trigger time =" << m_capturedOsc.settings.trigDTime.toString("yyyy-MM-dd hh:mm:ss")
-             << "reason =" << m_capturedOsc.settings.reason
-             << "channels =" <<  m_capturedVars.count()
-             << "Count =" << totalCount
+    qDebug() << "Emit all osc data, dev id =" << deviceID.id
+             << "vars =" << capturedVars.count()
+             << "count =" << totalCount
              << "took" << timer.elapsed() << "ms";
 }
 
@@ -613,7 +569,7 @@ long OscHandler::convertHeader(const DDE_OSC_HEADER& header, OscHeader *res)
     settings.reason = (ReasonEnum)header.settings.reason;
     settings.timeResolution_us = header.settings.time_resolution_us;
     settings.displayResolution_ms = header.settings.display_resolution_ms > 0 ? header.settings.display_resolution_ms : settings.displayResolution_ms;
-    std::time_t time = header.settings.trig_time;
+    qlonglong time = header.settings.trig_time;
 
     if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
         time = time * 1000; // assume time is in seconds, need to convert to msec

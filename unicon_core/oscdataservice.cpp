@@ -59,6 +59,7 @@ long OscDataService::load(const DDE_OSC_HEADER &hdr, SysType sysType)
 {
     OscType::OscDataBuffer* buff = get(hdr.device_id, hdr.settings.trig_time);
     long res = _return_OK;
+
     if (buff) {
 
         m_mutex.lock();
@@ -77,6 +78,7 @@ long OscDataService::load(const DDE_OSC_HEADER &hdr, SysType sysType)
             return res;
         }
 
+        buff->eof = true; // ??
         res = appendBuffer(std::move(*buff));
     }
 
@@ -149,7 +151,7 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
     buff->reason = hdr.settings.reason;
     buff->resolution_us = hdr.settings.time_resolution_us;
 
-    std::time_t time = hdr.settings.trig_time;
+    qlonglong time = hdr.settings.trig_time;
     if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
         time = time * 1000; // assume time is in seconds, need to convert to msec
     }

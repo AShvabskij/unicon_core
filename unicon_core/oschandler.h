@@ -50,6 +50,8 @@ private:
     void stopStreamData();
     void th_streamData();
     void th_streamHistoryData();
+    void streamDataInternal(IOscDataService* dataService, DevID deviceID, qlonglong trig_time, QVector<int> capturedVars,
+                            int initChunkSize, int maxChunkSize);
 
     OscType::OscHeader m_capturedOsc;
     QVector<int> m_capturedVars;

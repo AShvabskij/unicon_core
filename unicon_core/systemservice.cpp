@@ -132,11 +132,11 @@ long SystemService::requestDeviceLinks(DeviceIndList& links)
         return res;
     }
 
-    time_t timeMs = QDateTime::currentMSecsSinceEpoch();
+    qint64 timeMs = QDateTime::currentMSecsSinceEpoch();
     const int LINK_TIME_OUT = 2000; // only for master device
 
     for (quint16 i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ++i) {
-        time_t diffTime = (dat.el[i].timestamp != 0) ? timeMs - dat.el[i].timestamp : 0;
+        int diffTime = (dat.el[i].timestamp != 0) ? timeMs - dat.el[i].timestamp : 0;
         if (dat.el[i].ivalue == 1 ) {
             if (i == DDE_DEV0_MASTER_IND && diffTime > LINK_TIME_OUT) {
                 break;
