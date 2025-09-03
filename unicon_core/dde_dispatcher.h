@@ -16,7 +16,7 @@ public:
     virtual SysType getType(IDDE* dde) = 0;
     virtual SysType getDefaultType() = 0;
 
-    virtual IDDE* operator() (SysType sysInterface = SysType::Undefined) = 0;
+    virtual IDDE* operator() (SysType sysInterface = SysType::SysType_Undefined) = 0;
 };
 
 class DDE_Dispatcher : public IDDE_Dispatcher
@@ -34,7 +34,7 @@ public:
         m_defDDE = dde;
     }
 
-    IDDE* operator() (SysType sysType = SysType::Undefined) {
+    IDDE* operator() (SysType sysType = SysType::SysType_Undefined) {
         if (m_ddeList.contains(sysType)) {
             return m_ddeList.value(sysType);
         } else {

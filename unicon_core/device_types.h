@@ -3,40 +3,16 @@
 
 #define MAX_DEV_SUPPORT  (32+1)
 
-//#include <QtTypes>
 #include <QVariantList>
 #include <QVector>
 #include <QDateTime>
 #include <QJsonObject>
 
+#pragma once
+#include "DDE_TYPES.h"
+
 typedef quint16 DevInd;
 typedef QList<quint16> DeviceIndList;
-
-enum SysType
-{
-    Undefined = 0,
-    Default = 0,
-    FILE_IO = 1,
-    UAVCAN = 2,
-    CANOPEN = 3,
-    MODBUS = 4,
-    DLOG_CPLOT = 5,
-    DLOG_ISTART = 6,
-    Unknown
-};
-
-constexpr const char* sysTypeToString(SysType type) {
-    switch (type) {
-    case FILE_IO: return "FILE_IO"; // only for demo mode
-    case UAVCAN: return "UAVCAN";
-    case CANOPEN: return "CANOPEN";
-    case MODBUS: return "MODBUS";
-    case DLOG_CPLOT: return "DLOG_CPLOT";
-    case DLOG_ISTART: return "DLOG_ISTART";
-    case Unknown: return "Unknown";
-    default: return "";
-    }
-}
 
 struct DevID
 {
@@ -44,7 +20,7 @@ struct DevID
     DevInd id; // todo rename to 'ind'
 
     bool isValid() const {
-        return id <= MAX_DEV_SUPPORT && type != SysType::Undefined;
+        return id <= MAX_DEV_SUPPORT && type != SysType::SysType_Undefined;
     }
 };
 
@@ -130,11 +106,11 @@ typedef QVector<Module> ModuleList;
 
 struct Device
 {
-    DevID ID = {SysType::Undefined, 0};
+    DevID ID = {SysType::SysType_Undefined, 0};
     QString name; // name of similar devices : DEVICE_NAME + HW_REV + SW_REV, f.e. "DCDC00010002"
     QString instanceName; // unique device instance name: name + ID
     QString desc;
-    SysType sysType  = Undefined;
+    SysType sysType  = SysType_Undefined;
     ModuleList modules;
 
     Device() = default;

@@ -14,7 +14,7 @@
 
 namespace OscType {
 
-    const int MAX_DATA_COUNT = 1000000;
+    const int MAX_DATA_COUNT = 5000000;
 
     enum TriggerModeEnum {
         Single = 1, Continues = 2, Stream = 3
@@ -23,23 +23,6 @@ namespace OscType {
     enum ReasonEnum {
         First, Second
     };
-    struct OscChannelDescr
-    {
-        int channelNum = 0;
-        quint16 varId = 0;
-        QString varName = "";
-        float scale = 0.0;
-        float min = 0.0;
-        float max = 0.0;
-
-        bool isDigital = false;
-        bool isDiscrete = false;
-
-        qint8 firstBit = 0;
-        qint8 lastBit = 0;
-
-        int color;
-    };
 
     union Number32
     {
@@ -47,21 +30,34 @@ namespace OscType {
         int i = 0;
     };
 
-    struct OscChannelValues
+    struct OscChannelVar
     {
+        OSC_VAR_TYPE type = UNDEFINED;
+
         int channelNum = 0;
         quint16 varId = 0;
+        QString varName = "";
+
+        uint16_t setLn = 0; // set number: L1, L2, L3 ...
+        uint16_t setCh = 0; // set channel: 0, 1, 2
 
         float scale = 0.0;
         float offset = 0.0;
 
-        OSC_VAR_TYPE type = OSC_VAR_FLOAT;
+        qint8 firstBit = 0;
+        qint8 lastBit = 0;
+
+        int color = 0;
+
+        bool isValid() const { return type != UNDEFINED && channelNum >= 0;}
+    };
+
+    struct OscChannelData
+    {
+        OSC_VAR_TYPE type = UNDEFINED;
 
         QVector<float> fltValues;
         QVector<int> intValues;
-        QVector<qint8> discrValues;
-
-        int lastDataPos = 0;
 
         QVariant value(int pos) const {
             switch (type) {
@@ -71,13 +67,13 @@ namespace OscType {
                 return QVariant::fromValue(fltValues.value(pos));
             } break;
             case OSC_VAR_DISCRETE: {
-                return QVariant::fromValue(discrValues.value(pos));
+                return QVariant::fromValue(intValues.value(pos));
             } break;
             default: return QVariant();
             }
         };
 
-        QVariantList values(int startPos, int cnt = -1) const {
+        QVariantList values(int startPos = 0, int cnt = -1) const {
             QVariantList res;
 
             cnt = cnt >= 0 ? cnt : -1;
@@ -103,7 +99,7 @@ namespace OscType {
 
             } break;
             case OSC_VAR_DISCRETE: {
-                auto values = discrValues.mid(startPos,  cnt);
+                auto values = intValues.mid(startPos,  cnt);
                 res = vList(values);
 
             } break;
@@ -113,16 +109,43 @@ namespace OscType {
             return res;
         }
 
-        QJsonArray jsnValues(int startPos, int cnt = -1) const {
+        QJsonArray jsnValues(int startPos, const OscChannelVar& var, int cnt = -1) const {
 
             cnt = cnt >= 0 ? cnt : -1;
 
             auto jsonList = [](const auto& vector, float scale, float offset) {
                 QJsonArray list;
                 std::for_each(vector.begin(), vector.end(), [&list, scale, offset](auto value) {
-                    QJsonValue lVal = (scale != 0.0 && scale != 1.0) ? value * scale + offset : value;
+                    QJsonValue lVal = (scale != 0.0 && scale != 1.0) ? (value + offset) * scale : value;
                     list.append(lVal);
                 });
+                return list;
+            };
+
+            auto jsonDiscrList = [](const auto& vector, qint8 firstBit, qint8 lastBit) {
+                QJsonArray list;
+                std::for_each(vector.begin(), vector.end(), [&list, firstBit, lastBit](auto rawValue) {
+                    qint8 res = 0;
+                    if (firstBit == lastBit)
+                    {
+                        // Extract a single bit at the position specified by firstBit
+                        res = (rawValue >> firstBit) & 0x01;
+                    }
+                    else if (lastBit > firstBit)
+                    {
+                        // Calculate the number of bits to extract
+                        qint8 numBits = lastBit - firstBit + 1;
+
+                        // Create a mask with the required number of bits set to 1
+                        qint32 mask = (1 << numBits) - 1;
+
+                        // Shift the rawValue to the right by firstBit and apply the mask
+                        res = (rawValue >> firstBit) & mask;
+                    }
+
+                    list.append(res);
+                });
+
                 return list;
             };
 
@@ -130,17 +153,17 @@ namespace OscType {
             switch (type) {
             case OSC_VAR_INT: {
                 auto values = intValues.mid(startPos,  cnt);
-                res = jsonList(values, scale, offset);
+                res = jsonList(values, var.scale, var.offset);
 
             } break;
             case OSC_VAR_FLOAT: {
                 auto values = fltValues.mid(startPos,  cnt);
-                res = jsonList(values, scale, offset);
+                res = jsonList(values, var.scale, var.offset);
 
             } break;
             case OSC_VAR_DISCRETE: {
-                auto values = discrValues.mid(startPos,  cnt);
-                res = jsonList(values, scale, offset);
+                auto values = intValues.mid(startPos,  cnt);
+                res = jsonDiscrList(values, var.firstBit, var.lastBit);
             } break;
             case UNDEFINED: {}
             }
@@ -157,7 +180,7 @@ namespace OscType {
                  fltValues.append(value);
              } break;
              case OSC_VAR_DISCRETE: {
-                 discrValues.append(value);
+                 intValues.append(value);
              } break;
              case UNDEFINED: {}
              }
@@ -172,7 +195,7 @@ namespace OscType {
                 fltValues.append(value.toFloat());
             } break;
             case OSC_VAR_DISCRETE: {
-                discrValues.append(value.toInt());
+                intValues.append(value.toInt());
             } break;
             case UNDEFINED: {}
             }
@@ -195,8 +218,8 @@ namespace OscType {
                 });
             } break;
             case OSC_VAR_DISCRETE: {
-                discrValues.reserve(values.count() + 1);
-                auto& list = discrValues;
+                intValues.reserve(values.count() + 1);
+                auto& list = intValues;
                 std::for_each(values.begin(), values.end(), [&list](QVariant val) {
                     list.append(val.toInt());
                 });
@@ -223,8 +246,8 @@ namespace OscType {
 
             } break;
             case OSC_VAR_DISCRETE: {
-                discrValues.reserve(values.count() + 1);
-                auto& list = discrValues;
+                intValues.reserve(values.count() + 1);
+                auto& list = intValues;
                 std::for_each(values.begin(), values.end(), [&list](QJsonValue val) {
                     list.append(val.toInt());
                 });
@@ -238,22 +261,22 @@ namespace OscType {
             case OSC_VAR_INT: {
                 intValues.reserve(values.size() + 1);
                 auto& list = intValues;
-                std::for_each(values.begin(), values.end(), [&list](QCborValue val) {
+                std::for_each(values.begin(), values.end(), [&list](const QCborValue& val) {
                     list.append(val.toInteger());
                 });
             } break;
             case OSC_VAR_FLOAT: {
                 fltValues.reserve(values.size() + 1);
                 auto& list = fltValues;
-                std::for_each(values.begin(), values.end(), [&list](QCborValue val) {
+                std::for_each(values.begin(), values.end(), [&list](const QCborValue& val) {
                     list.append(val.toDouble());
                 });
 
             } break;
             case OSC_VAR_DISCRETE: {
-                discrValues.reserve(values.size() + 1);
-                auto& list = discrValues;
-                std::for_each(values.begin(), values.end(), [&list](QCborValue val) {
+                intValues.reserve(values.size() + 1);
+                auto& list = intValues;
+                std::for_each(values.begin(), values.end(), [&list](const QCborValue& val) {
                     list.append(val.toInteger());
                 });
             } break;
@@ -271,13 +294,8 @@ namespace OscType {
             std::copy(arr, arr + size, std::back_inserter(fltValues));
         }
 
-        void append(const qint8* arr, size_t size) {
-            discrValues.reserve(size);
-            std::copy(arr, arr + size, std::back_inserter(discrValues));
-        }
-
         int count() const {
-            return std::max(std::max(intValues.count(), fltValues.count()), discrValues.count());
+            return std::max(intValues.count(), fltValues.count());
         }
 
         void reserve(int count) {
@@ -289,10 +307,10 @@ namespace OscType {
                 fltValues.reserve(count);
             } break;
             case OSC_VAR_TYPE::OSC_VAR_DISCRETE: {
-                discrValues.reserve(count);
+                intValues.reserve(count);
             } break;
             case UNDEFINED: {
-                qWarning() << "Undefined var type" << ", id = " << varId << ", ch num = " << channelNum;
+                qWarning() << "Undefined var type";
             }
             }
         }
@@ -300,17 +318,15 @@ namespace OscType {
         void clear() {
             intValues.clear();
             fltValues.clear();
-            discrValues.clear();
-            lastDataPos = 0;
         }
     };
 
     struct OscDataBuffer
     {
         DevInd id;
-        int valueCount = 0; // // number of points in values buffer
+
+        int valueCount = 0; // // number of points in the data buffer
         int valueDensity = 0; // number of points per millisec
-        int lastDataPos = 0;
         qlonglong timestamp = 0;
         qlonglong trig_time = 0;
         qlonglong resolution_us;
@@ -318,7 +334,18 @@ namespace OscType {
         bool eof = false;
         bool sof = false;
 
-        OscChannelValues chArray[OSC_MAX_VARS + 1];
+        OscChannelVar vars[OSC_MAX_VARS + 1];
+        OscChannelData data[OSC_MAX_CHANNELS + 1];
+        QMap<int/*varId*/, int/*pos*/>lastDataPos;
+
+        OscChannelVar var(int varId) {
+            for (const OscChannelVar& var: vars) {
+                if (!var.isValid()) continue;
+                if (var.varId == varId) return var;
+            };
+
+            return OscChannelVar();
+        };
 
         bool isOversized() {
             if (valueCount > MAX_DATA_COUNT)
@@ -336,11 +363,13 @@ namespace OscType {
         }
 
         void resetPos() {
-            lastDataPos = 0;
-            for (OscChannelValues& chVal : chArray) {
-                chVal.lastDataPos = 0;
-            }
+            lastDataPos.clear();
         }
+
+        int dataCount() {
+            return valueCount;
+        }
+
     };
 
     struct OscSettings
@@ -357,34 +386,47 @@ namespace OscType {
     struct OscHeader
     {
         DevInd id = 0;
-        DevID deviceID = {SysType::Undefined, 0};
+        DevID deviceID = {SysType::SysType_Undefined, 0};
         QString name = "";
         QString desc = "";
 
-        QMap<quint8/*channel index*/, OscChannelDescr> analogChannels; // todo: replace to QList, get rid of "channel index" key
-        QMap<quint8/*channel index*/, OscChannelDescr> discreteChannels;
+        QList<OscChannelVar> analogChannels;
+        QList<OscChannelVar> discreteChannels;
         OscSettings settings;
 
         bool operator == (const OscHeader& o) const {
             return this->id == o.id && this->deviceID == o.deviceID;
         }
 
-        OscChannelDescr channel(int chNum) const
+        OscChannelVar chVar(int chNum) const
         {
-            for (quint8 chInd : analogChannels.keys()) {
-                const OscChannelDescr& ch = analogChannels.value(chInd);
-                if (ch.channelNum == chNum) {
-                    return ch;
+            for (const OscChannelVar& v : analogChannels) {
+                if (v.channelNum == chNum) {
+                    return v;
                 }
             }
-            for (quint8 chInd : discreteChannels.keys()) {
-                const OscChannelDescr& ch = discreteChannels.value(chInd);
-                if (ch.channelNum == chNum) {
-                    return ch;
+            for (const OscChannelVar& v : discreteChannels) {
+                if (v.channelNum == chNum) {
+                    return v;
                 }
             }
 
-            return OscChannelDescr();
+            return OscChannelVar();
+        }
+
+        void append(const OscChannelVar& var) {
+            switch(var.type) {
+                case OSC_VAR_FLOAT:
+                case OSC_VAR_INT: {
+                    this->analogChannels.append(var);
+                } break;
+                case OSC_VAR_DISCRETE: {
+                    this->discreteChannels.append(var);
+                } break;
+                default: break;
+                }
+
+                return;
         }
     };
 
@@ -398,12 +440,13 @@ class IOscDataService
 public:
     virtual ~IOscDataService() {}
     virtual long appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DATA& dat) = 0;
-    virtual QJsonObject jsonData(OscType::OscHeader& h, QVector<int> vars, int &cnt, bool& isEof) = 0;
-    virtual long load(const DDE_OSC_HEADER& hdr) = 0;
+    virtual QJsonObject jsonData(const DevID& deviceID, qlonglong trig_time, QVector<int> vars, int &cnt, bool& isEof) = 0;
+    virtual long dataCount(const DevID& deviceID, qlonglong trig_time, int &cnt) = 0 ;
+    virtual long load(const DDE_OSC_HEADER& hdr, SysType sysType) = 0;
     virtual void clear(DevInd device_id) = 0;
     virtual void remove(DevInd device_id) = 0;
     virtual void removeAll() = 0;
-    virtual long save(const DDE_OSC_HEADER& hdr) = 0;
+    virtual long save(const DDE_OSC_HEADER& hdr, SysType type) = 0;
 
 // signals:
     virtual void dataReceived(quint16 device_id) = 0;
@@ -415,12 +458,13 @@ class IOscDataLogger
 {
 public:
     virtual ~IOscDataLogger() {}
-    virtual long save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data) = 0;
+    virtual long save(const DDE_OSC_HEADER& header, SysType type, const OscType::OscDataBuffer& data) = 0;
+    virtual long load(const DDE_OSC_HEADER& header, SysType type, /*out*/OscType::OscDataBuffer& data) = 0;
+
     virtual long checkVersion(QString fileFrom) = 0;
-    virtual QList<DDE_OSC_HEADER> headerList(QDate date)  = 0;
+    virtual QList<DDE_OSC_HEADER> headerList( const DevID& devID, QDate date)  = 0;
     virtual long loadHeader(QString fileFrom, DDE_OSC_HEADER &header) = 0;
     virtual long loadData(QString fileFrom, OscType::OscDataBuffer& data) = 0;
-    virtual long loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data) = 0;
     virtual QString getFolderPath(const QDateTime dateTime) = 0;
     virtual QString getDataLoggerRootPath() = 0;
     virtual void cleanOldestData(const QString rootPath) = 0;

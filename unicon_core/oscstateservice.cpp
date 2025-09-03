@@ -71,9 +71,10 @@ OscStateMachine::OscStateMachine(IDDE* dde, IOscDataService *dataSrv)
     m_dde = dde;
     m_state = STATE::Normal;
     m_dataSrv = dataSrv;
+    m_sysType = DDE_TYPES::sysTypeFromString(dde->system_type());
 
-    memset(&m_ddeData, 0, sizeof(DDE_GET_OSC_DATA));
-    memset(&m_header, 0, sizeof(DDE_OSC_HEADER));
+    // memset(&m_ddeData, 0, sizeof(DDE_GET_OSC_DATA));
+    // memset(&m_header, 0, sizeof(DDE_OSC_HEADER));
 }
 
 void OscStateMachine::update(DevInd devId)
@@ -138,6 +139,7 @@ void OscStateMachine::update(DevInd devId)
                     m_errCounter = 0;
                     m_eof = false;
                     m_sof = false;
+                    // m_state = Updated; // todo: discuss it with A.D. "Is there a need to reload the header (to update trig time) when data is eof"
                 }
 
                 if (m_ddeData.header_updated) {
@@ -182,7 +184,7 @@ void OscStateMachine::update(DevInd devId)
     }
 
     case Saving: {
-        m_dataSrv->save(m_header);
+        m_dataSrv->save(m_header, m_sysType);
         m_state = Getting;
         break;
     }
@@ -228,6 +230,7 @@ void OscStateMachine::finish()
 
 long OscStateMachine::getData(const DDE_OSC_HEADER &hdr, DDE_GET_OSC_DATA& getDat)
 {
+
     memset(&getDat, 0, sizeof(DDE_GET_OSC_DATA)); // this command results to compiler warning
     // getDat = DDE_GET_OSC_DATA(); // you must not do it so, because it results to memory corruption
     getDat.device_id = hdr.device_id;
@@ -243,7 +246,7 @@ DDE_OSC_HEADER OscStateMachine::getHeader(DevInd devId)
     hdr.device_id = devId;
     auto res = m_dde->get_osc_header(hdr);
     if (res == _return_FAIL) {
-        qWarning() << "Error getting header from osc, id = " << m_header.device_id;
+        qWarning() << "Error getting header from osc, id = " << devId;
         m_state = Error;
         return DDE_OSC_HEADER();
     }

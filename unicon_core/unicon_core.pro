@@ -21,7 +21,6 @@ SOURCES += \
         basereqhandler.cpp \
         devicehandler.cpp \
         oscdatalogger.cpp \
-        oscdatalogger_v1_2.cpp \
         oscdataservice.cpp \
         oschandler.cpp \
         oschistoryservice.cpp \
@@ -43,7 +42,6 @@ HEADERS += \
     ireqhandler.h \
     osc_types.h \
     oscdatalogger.h \
-    oscdatalogger_v1_2.h \
     oscdataservice.h \
     oschandler.h \
     oschistoryservice.h \

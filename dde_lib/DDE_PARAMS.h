@@ -3,6 +3,7 @@
 #include "DDE_TYPES.h"
 #include "DDE_PARAMS_TYPE.h"
 #include "DDE_INTERFACES.h"
+
 #include "cpp_inc.h"
 
 #include <mutex>
@@ -18,6 +19,8 @@
 #define DDE_PARAMS_NAME_LENGTH      64
 
 class ParamDescr;
+class ParamIPCService;
+
 class DDE_PARAMS : public IDDE_PARAMS
 {
 public:
@@ -31,6 +34,7 @@ public:
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p);
 
+    virtual _dde_func_return_t get_cmd(uint8_t device_id, DDE_PARAMS_CMD& cmd);
 
     //virtual int set(DDE_SET_PARAMS p, void* callback_func);
     virtual _dde_func_return_t direct_write(DDE_SET_PARAMS_DATA& p);
@@ -39,6 +43,7 @@ public:
     virtual _dde_func_return_t pop_read_request(DDE_GET_PARAMS_DATA& p);
     virtual _dde_func_return_t pop_write_request(DDE_SET_PARAMS_DATA& p);
 
+    virtual _dde_func_return_t update_device_params(uint16_t device_id);
     void update();
 
 
@@ -51,8 +56,8 @@ protected:
     //void proceed_response_queue();
     uint32_t overflow = 0;
 
-    _dde_func_return_t update_data_descr(uint16_t device_id, GLIO_ELEMENT_DESCR& el);
-    _dde_func_return_t isValidData(const DDE_GET_PARAMS_DATA& p);
+    _dde_func_return_t update_param_header(uint16_t device_id, const GLIO_ELEMENT_DESCR &el);
+    bool isValidData(const DDE_GET_PARAMS_DATA& p);
 
 private:
     void addTestDevice();
@@ -62,8 +67,8 @@ private:
 
     _dde_func_return_t write_cmd_array(uint8_t device_id, DDE_PARAMS_CMD* cmdArray, int cmd_cnt);
 
-    std::thread *thr_params;
     ParamDescr* _paramDescr;
+    ParamIPCService* _paramiPC;
 
     std::deque <DDE_GET_PARAMS_DATA> list_read;
     std::deque <DDE_SET_PARAMS_DATA> list_write;

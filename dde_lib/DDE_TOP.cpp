@@ -8,13 +8,10 @@
 #include "cstdint"
 #include "stdlib.h"
 
-//#include "ipcmem_lib.h"
-//#include "db_sqlib.h"
-
 DDE_TOP::DDE_TOP()
 {
-
-
+    m_params = new DDE_PARAMS();
+    m_osc = new DDE_OSC_DISPATCHER();
 }
 
 DDE_TOP::~DDE_TOP()
@@ -51,6 +48,7 @@ _dde_func_return_t DDE_TOP::get_params_header(DDE_GET_PARAMS_HEADER& p)
 _dde_func_return_t DDE_TOP::get_params_data(DDE_GET_PARAMS_DATA& p)
 {
     _dde_func_return_t res = m_params->get(p);
+
     return res;
 
 }
@@ -100,13 +98,13 @@ _dde_func_return_t DDE_TOP::init(const char* system_type)
 {
     m_sysType = system_type;
 
-    m_params = new DDE_PARAMS();
     m_params->init(system_type);
 
-    m_osc = new DDE_OSC_DISPATCHER();
     m_osc->init(system_type);
 
-    m_updThread = new std::thread(&DDE_TOP::thread_proc, this);
+    if (m_updThread == nullptr) {
+        m_updThread = new std::thread(&DDE_TOP::thread_proc, this);
+    }
 
     return 0;
 }

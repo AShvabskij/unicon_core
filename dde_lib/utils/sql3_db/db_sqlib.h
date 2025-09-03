@@ -1,5 +1,7 @@
 #pragma once
 #include "DDE_TYPES.h"
+#include "DDE_PARAMS_TYPE.h"
+
 #include <string>
 
 enum db_type

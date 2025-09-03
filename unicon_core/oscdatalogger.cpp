@@ -25,7 +25,9 @@
 #define ENDL "\n"
 #endif
 
-const int DATA_VERSION = 1;
+#include <QTimeZone>
+
+const int DATA_VERSION = 2;
 const int DATA_SUBVERSION = 1;
 
 namespace {
@@ -67,15 +69,18 @@ namespace {
 
 using namespace OscType;
 
-long OscDataLogger::save(const DDE_OSC_HEADER &header, const OscType::OscDataBuffer &data)
+long OscDataLogger::save(const DDE_OSC_HEADER &header, SysType type, const OscType::OscDataBuffer &data)
 {
     //  const char* home = getenv("HOME");
         QDateTime now = QDateTime::currentDateTime();
         QString path =  createFolder(now);
-        QJsonObject jsonObj = headerToJson(header);
+        QJsonObject jsonObj = headerToJson(header, type);
 
-        QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, Qt::LocalTime);
-        QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
+        QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, QTimeZone::systemTimeZone());
+        QString baseFileName = QString("%1-%2-%3")
+                                   .arg(type)
+                                   .arg(header.device_id)
+                                   .arg(trigTime.toString("hh_mm_ss"));
 
         QString headerFile = path + "/" + baseFileName + ".hdr";
 
@@ -194,15 +199,15 @@ void OscDataLogger::cleanOldestData(const QString rootPath)
     qInfo() << "Cleaned oldest folder:" << dayDir.path();
 }
 
-long OscDataLogger::saveObj(const QString fileName, const QJsonObject &obj, bool useBinaryFormat)
+long OscDataLogger::saveObj(const QString filePath, const QJsonObject &obj, bool useBinaryFormat)
 {
     _dde_func_return_t res = _return_OK;
 
-    QFile file( fileName );
+    QFile file( filePath );
 
     if (useBinaryFormat) {
         if( !file.open( QIODevice::WriteOnly |  QIODevice::Truncate ) ) {
-            QTextStream(stdout) << "File open failed: " << fileName << ENDL;
+            QTextStream(stdout) << "File open failed: " << filePath << ENDL;
             return _return_FAIL;
         }
 
@@ -216,7 +221,7 @@ long OscDataLogger::saveObj(const QString fileName, const QJsonObject &obj, bool
     } else {
         if( !file.open( QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate ) )
         {
-            QTextStream(stdout) << "File open failed: " << fileName << ENDL;
+            QTextStream(stdout) << "File open failed: " << filePath << ENDL;
             return _return_FAIL;
         }
         QJsonDocument doc(obj);
@@ -236,12 +241,13 @@ long OscDataLogger::saveObj(const QString fileName, const QJsonObject &obj, bool
     return res;
 }
 
-QJsonObject OscDataLogger::headerToJson(const DDE_OSC_HEADER &h)
+QJsonObject OscDataLogger::headerToJson(const DDE_OSC_HEADER &h, SysType type)
 {
     QJsonObject res;
 
     res["version"] = DATA_VERSION;
     res["sub_version"] = DATA_SUBVERSION;
+    res["sys_id"] = type;
     res["device_id"] = h.device_id;
     res["id"] = h.device_id;
     res["trig_time"] = QString::number(h.settings.trig_time);
@@ -249,25 +255,27 @@ QJsonObject OscDataLogger::headerToJson(const DDE_OSC_HEADER &h)
     res["resolution_us"] = QString::number(h.settings.time_resolution_us);
 
     QJsonArray channelsObj;
-    for (int chInd = 0; chInd < h.settings.channels_count; chInd++) {
-        const OSC_CHANNEL& ch = h.channels[chInd];
+    for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
+        const OSC_VAR& var = h.vars[ind];
+
+        if (!var.isValid()) continue;
+
         QJsonObject obj;
-        obj["ch_num"] = ch.chNum;
-        obj["first_bit"] = ch.firstBit;
-        obj["last_bit"] = ch.lastBit;
-        obj["gain"] = ch.gain;
-        obj["offset"] = ch.offset;
+        obj["ch_num"] = var.chNum;
+        obj["first_bit"] = var.firstBit;
+        obj["last_bit"] = var.lastBit;
+        obj["gain"] = var.gain;
+        obj["offset"] = var.offset;
 
 
-        obj["var_id"] = ch.var.id;
-        obj["name"] = ch.var.name;
-        obj["dim"] = ch.var.dim;
-        obj["scale"] = ch.var.scale;
-        obj["min"] = ch.var.min;
-        obj["max"] = ch.var.max;
-        obj["color"] = colorToString(ch.var.color);
+        obj["var_id"] = var.var.id;
+        obj["name"] = var.var.name;
+        obj["dim"] = var.var.dim;
+        obj["min"] = var.var.__rm__min;
+        obj["max"] = var.var.__rm__max;
+        obj["color"] = colorToString(var.var.color);
 
-        obj["type"] = OSC_VAR_TYPE_TO_STRING(ch.var.type);
+        obj["type"] = OSC_VAR_TYPE_TO_STRING(var.var.type);
 
         channelsObj << obj;
     }
@@ -312,12 +320,21 @@ long OscDataLogger::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
     QString name = QFileInfo(fileFrom).baseName();
 
     QString headerFile = path + QDir::separator() + name + ".hdr";
-    QFile file( headerFile );
+
+    QJsonObject obj = loadObj(headerFile);
+    long ret = jsonToHeader(obj, header);
+
+    return ret;
+}
+
+QJsonObject OscDataLogger::loadObj(QString filePath)
+{
+    QFile file(filePath);
 
     if(!file.open( QIODevice::ReadOnly | QIODevice::Text ))
     {
-        QTextStream(stdout) << "file open failed: " << headerFile << ENDL;
-        return _return_FAIL;
+        QTextStream(stdout) << "file open failed: " << filePath << ENDL;
+        return QJsonObject();
     }
 
     QTextStream inStream( &file );
@@ -327,9 +344,9 @@ long OscDataLogger::loadHeader(QString fileFrom, DDE_OSC_HEADER &header)
     QJsonDocument d = QJsonDocument::fromJson(content.toUtf8());
     QJsonObject obj = d.object();
 
-    long ret = jsonToHeader(obj, header);
+//    long ret = jsonToHeader(obj, header);
 
-    return ret;
+    return obj;
 }
 
 QByteArray decodeByteArray(QCborStreamReader &reader)
@@ -377,55 +394,63 @@ long OscDataLogger::loadData(QString fileFrom, OscType::OscDataBuffer& data)
     return ret;
 }
 
-long OscDataLogger::loadData(const DDE_OSC_HEADER& header, OscType::OscDataBuffer& data)
+long OscDataLogger::load(const DDE_OSC_HEADER& header, SysType type, /*out*/OscType::OscDataBuffer& data)
 {
-    QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, Qt::LocalTime);
+    QDateTime trigTime = QDateTime::fromSecsSinceEpoch(header.settings.trig_time, QTimeZone::systemTimeZone());
     QString path =  getFolderPath(trigTime);
-    QString baseFileName = QString("%1-%2-%3").arg(header.device_id).arg(header.settings.reason).arg(trigTime.toString("hh_mm_ss"));
+    QString baseFileName = QString("%1-%2-%3")
+                               .arg(type)
+                               .arg(header.device_id)
+                               .arg(trigTime.toString("hh_mm_ss"));
 
     QString datFile = path + QDir::separator() + baseFileName + ".dat";
 
     long ret = loadData(datFile, data);
 
-    if (ret == _return_FAIL && header.settings.reason == 0) {
-        // Заплатка для случая, когда reason в заголовке (header.settings.reason) отсутствует
+    if (ret == _return_FAIL) {
+        // Заплатка для файлов до 07.07.2025
+        QString baseFileName = QString("%1-%2-%3")
+                                   .arg(header.device_id)
+                                   .arg(header.settings.reason)
+                                   .arg(trigTime.toString("hh_mm_ss"));
 
-        QDir dir(path);
-        QStringList fileList = dir.entryList(QStringList() << "*.dat", QDir::Files);
-        for (QString fileName: fileList) {
-            QString firstPart = QString("%1-").arg(header.device_id);
-            int pos = fileName.indexOf(firstPart);
-            if (fileName.contains(trigTime.toString("hh_mm_ss")) && pos == 0) {
-                datFile = path + QDir::separator() + fileName;
-                break;
-            }
-        }
+        QString datFile = path + QDir::separator() + baseFileName + ".dat";
 
-        qDebug() << "datFile = " << datFile;
-        if (!datFile.isEmpty()) {
-            ret = loadData(datFile, data);
-        }
+        ret = loadData(datFile, data);
+
     }
 
     return ret;
 }
 
-QList<DDE_OSC_HEADER> OscDataLogger::headerList(QDate date)
+QList<DDE_OSC_HEADER> OscDataLogger::headerList(const DevID& devID, QDate date)
 {
     QList<DDE_OSC_HEADER> headers;
     QString path =  getFolderPath(QDateTime(date, QTime()));
 
-    QStringList fileList = getSortedFilesByCreationDate(path, "*.hdr");
+    QString mask = "*.hdr";
+    QStringList fileList = getSortedFilesByCreationDate(path, mask);
 
     for (QString file: fileList) {
-        DDE_OSC_HEADER hdr;
+        DDE_OSC_HEADER header;
         file = path + QDir::separator() + file;
-        long res = loadHeader(file, hdr);
+        QJsonObject obj = loadObj(file);
+
+        if (obj.contains("device_id") && obj.value("device_id").toInt() != devID.id) {
+            continue;
+        }
+
+        if (obj.contains("sys_id") && obj.value("sys_id").toInt() != devID.type) {
+            continue;
+        }
+
+        long res = jsonToHeader(obj, header);
+
         if (res != _return_OK) {
             continue;
         }
 
-        headers.append(hdr);
+        headers.append(header);
     }
 
     return headers;
@@ -468,8 +493,7 @@ QJsonObject OscDataLogger::serializeToJSon(const OscDataBuffer& dat) const
 {
     QJsonObject res;
     QJsonArray allValues;
-    QList<int> varIdList;
-    QJsonArray varIdListObj;
+    QJsonArray chNumList;
 
     res["version"] = DATA_VERSION;
     res["sub_version"] = DATA_SUBVERSION;
@@ -477,42 +501,38 @@ QJsonObject OscDataLogger::serializeToJSon(const OscDataBuffer& dat) const
     res["d_id"] = dat.id;
     res["time"] = dat.timestamp;
 
-    for (const OscChannelValues& chVal : dat.chArray) {
-        if (chVal.varId == 0) continue;
+    for (const OscChannelVar& chVar : dat.vars) {
+        if (!chVar.isValid()) continue;
 
-        varIdList << chVal.varId;
-        varIdListObj << chVal.varId;
-    }
-    res["vars"] = varIdListObj;
+        if (chNumList.contains(chVar.channelNum)) continue;
 
-    for (const OscChannelValues& chVal : dat.chArray) {
+        chNumList << chVar.channelNum;
+
         QJsonArray valuesObj;
-
-        if (!varIdList.contains(chVal.varId))
-                continue;
+        const OscChannelData& chVal = dat.data[chVar.channelNum];
 
         switch (chVal.type) {
             case OSC_VAR_INT:
-                for (int i=0; i< chVal.intValues.count(); i++) {
+                for (int i = 0; i< chVal.intValues.count(); i++) {
                     valuesObj << chVal.intValues[i];
                 } break;
             case OSC_VAR_FLOAT:
-                for (int i=0; i< chVal.fltValues.count(); i++) {
+                for (int i = 0; i< chVal.fltValues.count(); i++) {
                     valuesObj << chVal.fltValues[i];
                 } break;
 
             case OSC_VAR_DISCRETE:
-                for (int i=0; i< chVal.discrValues.count(); i++) {
-                    valuesObj << chVal.discrValues[i];
-                }
+                for (int i = 0; i< chVal.intValues.count(); i++) {
+                    valuesObj << chVal.intValues[i];
+                } break;
             case UNDEFINED: {}
         };
 
         allValues.append(valuesObj);
     }
 
+    res["channels"] = chNumList;
     res["values"] = allValues;
-
     return res;
 }
 
@@ -531,6 +551,8 @@ long OscDataLogger::checkVersion(int ver, int subVer)
 
 long OscDataLogger::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
 {
+    if (obj.isEmpty()) return _return_FAIL;
+
     h.device_id = obj["device_id"].toVariant().toInt();
     h.settings.reason = obj["reason"].toVariant().toInt();
     h.settings.trig_time = obj["trig_time"].toVariant().toInt();
@@ -538,25 +560,22 @@ long OscDataLogger::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
     h.settings.time_resolution_us = obj["resolution_us"].toVariant().toInt();
 
     QJsonArray arr = obj["channels"].toArray();
-    h.settings.channels_count = arr.count();
-    for (int ind = 0; ind < h.settings.channels_count; ind++) {
+    int var_count = arr.count();
+    for (int ind = 0; ind < var_count; ind++) {
         QJsonObject elem = arr[ind].toObject();
-        auto& ch = h.channels[ind];
+        auto& var = h.vars[ind];
 
-        ch.chNum = elem["ch_num"].toInt();
-        ch.firstBit = elem["first_bit"].toInt();
-        ch.lastBit = elem["last_bit"].toInt();
-        ch.gain = elem["gain"].toInt();
-        ch.offset = elem["offset"].toInt();
+        var.chNum = elem["ch_num"].toInt();
+        var.firstBit = elem["first_bit"].toInt();
+        var.lastBit = elem["last_bit"].toInt();
+        var.gain = elem["gain"].toDouble(0);
+        var.offset = elem["offset"].toInt();
 
-        ch.var.id = elem["var_id"].toInt();
-        strcpy(ch.var.name, elem["name"].toString().toStdString().c_str());
-        strcpy(ch.var.dim, elem["dim"].toString().toStdString().c_str());
-        ch.var.scale = elem["scale"].toDouble(0);
-        ch.var.min = elem["min"].toDouble(0);
-        ch.var.max = elem["max"].toDouble(0);
-        ch.var.color = stringToColor(elem["color"].toString());
-        ch.var.type = OSC_VAR_TYPE_FROM_STRING(elem["type"].toString());
+        var.var.id = elem["var_id"].toInt();
+        strcpy(var.var.name, elem["name"].toString().toStdString().c_str());
+        strcpy(var.var.dim, elem["dim"].toString().toStdString().c_str());
+        var.var.color = stringToColor(elem["color"].toString());
+        var.var.type = OSC_VAR_TYPE_FROM_STRING(elem["type"].toString());
     }
 
     return _return_OK;
@@ -578,20 +597,19 @@ long OscDataLogger::jsonToData(const QJsonObject& obj,  OscType::OscDataBuffer &
 
     data.id =  obj["d_id"].toInt();
     data.timestamp = obj["time"].toVariant().toLongLong();
-    QJsonArray vars = obj["vars"].toArray();
+    QJsonArray channels = obj["channels"].toArray();
     QJsonArray values = obj["values"].toArray();
 
     int maxValueCount = 0;
 
-    for (int i = 0; i < vars.count(); ++i) {
-        data.chArray[i].varId = vars[i].toInt();
+    for (int i = 0; i < channels.count(); ++i) {
         int valueCount = 0;
-        data.chArray[i].append(values[i].toArray().toVariantList());
-        valueCount = data.chArray[i].count();
+        int chNum = channels[i].toInt();
+        data.data[chNum].append(values[i].toArray().toVariantList());
+        valueCount = data.data[i].count();
 
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
-
 
     data.valueCount = maxValueCount;
 
@@ -602,7 +620,7 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
 {
     QCborMap obj = sourceDat.toMap();
     uint8_t ver = obj.value("version").toVariant().toUInt();
-    uint8_t sub_ver = obj.value("version").toVariant().toUInt();
+    uint8_t sub_ver = obj.value("sub_version").toVariant().toUInt();
 
     if (ver != DATA_VERSION) {
         QTextStream(stdout) << "The json data version " <<  ver << " is not supported" <<  ", the current supported version is " << DATA_VERSION << ENDL;
@@ -615,22 +633,23 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
 
     data.id =  obj.value("d_id").toInteger();
     data.timestamp = obj.value("time").toVariant().toLongLong();
-    QCborArray vars = obj.value("vars").toArray();
+    QCborArray channels = obj.value("channels").toArray();
     QCborArray values = obj.value("values").toArray();
 
     QElapsedTimer timer;
     timer.start();
 
     int maxValueCount = 0;
-    for (int i = 0; i < vars.size(); ++i) {
-        data.chArray[i].varId = vars[i].toInteger();
+    for (int i = 0; i < channels.size(); ++i) {
         int valueCount = 0;
-        data.chArray[i].append(values[i].toArray());
-        valueCount = data.chArray[i].count();
-/*
-        if (data.chArray[i].type == OSC_VAR_DISCRETE)
-            break;
-*/
+        int chNum = channels[i].toInteger();
+        const QCborArray& chValues = values[i].toArray();
+        data.data[chNum].clear();
+        data.data[chNum].append(chValues);
+        valueCount = data.data[chNum].count();
+
+//      qDebug() << "Append values to channel =" << chNum << "size =" << valueCount << "took" << timer.elapsed() << "ms";
+
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
 
@@ -640,7 +659,7 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
              << "device ind =" << data.id
              << "timestamp =" << data.trig_time
              << "reason =" << data.reason
-             << "vars =" << vars.size()
+             << "channels =" << channels.size()
              << "values =" << data.valueCount
              << "took" << timer.elapsed() << "ms";
 
@@ -648,3 +667,31 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
     return _return_OK;
 }
 
+qint32 OscDataLogger::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit) const
+{
+    Q_ASSERT(lastBit >= firstBit);
+
+    qint32 res = 0;
+    if (firstBit == lastBit)
+    {
+        // Extract a single bit at the position specified by firstBit
+        res = (rawValue >> firstBit) & 0x01;
+    }
+    else if (lastBit > firstBit)
+    {
+        // Calculate the number of bits to extract
+        qint8 numBits = lastBit - firstBit + 1;
+
+        // Create a mask with the required number of bits set to 1
+        qint32 mask = (1 << numBits) - 1;
+
+        // Shift the rawValue to the right by firstBit and apply the mask
+        res = (rawValue >> firstBit) & mask;
+    }
+    else
+    {
+        res = 0;
+    }
+
+    return res;
+}

@@ -15,7 +15,7 @@ void DDE_Dispatcher::registerDDE(SysType sysInterface, IDDE *dde)
 
 IDDE* DDE_Dispatcher::dde(SysType sysInterface)
 {
-    if (sysInterface == SysType::Undefined) {
+    if (sysInterface == SysType::SysType_Undefined) {
         return m_defDDE;
     }
 

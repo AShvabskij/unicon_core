@@ -2,6 +2,8 @@
 
 #include <DDE_PARAMS_TYPE.h>
 
+#include <pthread.h>
+
 #define MAX_DEV_SUPPORT  (32+1)
 #define MAX_DEV_CMD_CNT  5 // Maximum device command buffer size per iteration
 #define ELEMENTS_ID_MAX		0xFFF
@@ -36,9 +38,6 @@ typedef struct
 } DEVICE_ELEMENTS;
 #pragma pack(pop)
 
-
-#ifdef __linux__
-#include <pthread.h>
 typedef struct
 {
     pthread_mutex_t shm_mutex[MAX_DEV_SUPPORT];
@@ -47,7 +46,7 @@ typedef struct
 
 } DEVICE_COMMANDS;
 
-#endif
+
 #pragma pack(push,1)
 
 #pragma pack(pop)

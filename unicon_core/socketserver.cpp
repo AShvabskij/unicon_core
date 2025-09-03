@@ -55,8 +55,6 @@
 #include <cstdio>
 #include <QRandomGenerator>
 
-#include "paramshandler.h"
-#include "devicehandler.h"
 #include <QTcpSocket>
 
 using namespace std;
@@ -108,7 +106,6 @@ void SocketServer::start()
     }
 
     m_request->start();
-
 }
 
 void SocketServer::stop()

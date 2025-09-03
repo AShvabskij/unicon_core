@@ -37,13 +37,13 @@ extern "C" {
 	//#define SET_NEW_IPC
 
 	#define MAX_FNAME_LEN 128
-
-	//-----------------------------------------------------------------
+    #define MAX_DEV_SUPPORT  (32+1)
+    //-----------------------------------------------------------------
 
 	int osc_mem_init(const char* sys_name, int blkSize);
-	int osc_mem_deinit(const char* sys_name, int blkSize);
-    unsigned char* osc_mem_getData(uint16_t id);
-    int osc_mem_setData(uint16_t ind, unsigned char* data, size_t sz);
+    int osc_mem_deinit(const char* sys_name, uintptr_t *blkPtr, int blkSize);
+    uintptr_t osc_mem_getData(uint16_t id);
+    int osc_mem_setData(uint16_t ind, uintptr_t data, size_t sz);
 
 #ifdef SET_DEBUG
 #define BUF_TMP 1024

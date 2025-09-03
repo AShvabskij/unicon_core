@@ -1,7 +1,7 @@
 
 #include "DDE_PARAMS.h"
+#include "paramipcservice.h"
 
-#include "ipcmem_lib.h"
 #include "db_sqlib.h"
 
 #include <string>
@@ -16,6 +16,7 @@ using namespace std;
 DDE_PARAMS::DDE_PARAMS()
 {
     _paramDescr = new ParamDescr();
+    _paramiPC = new ParamIPCService();
 }
 
 //------------------------------------------------------------------------------
@@ -24,15 +25,16 @@ DDE_PARAMS::DDE_PARAMS()
 DDE_PARAMS::~DDE_PARAMS()
 {
     delete _paramDescr;
+    delete _paramiPC;
 }
 
 _dde_func_return_t DDE_PARAMS::init(const char* sys_type)
 {
-    //	std::thread*thr_params = new std::thread(&DDE_PARAMS::thread_proc, this);
     int res = _return_OK;
     if (string(sys_type) != "") {
-        res = PARAMS_DATA_init(const_cast<char*>(sys_type));
+        res = _paramiPC->init(sys_type);
     }
+
 
     /*
         addTestDevice();
@@ -40,6 +42,10 @@ _dde_func_return_t DDE_PARAMS::init(const char* sys_type)
         addTestData();
         checkTestData();
     */
+
+    for (int ii = 0; ii < DEVICE_ID_MAX; ii++) {
+        update_device_params(ii);
+    }
 
     return res;
 }
@@ -67,7 +73,7 @@ void DDE_PARAMS::addTestDevice()
             break;
         }
 
-        PARAMS_DATA_direct_write(setDat);
+        _paramiPC->write_data(setDat);
     }
 }
 
@@ -95,7 +101,7 @@ void DDE_PARAMS::addTestLinks()
         default: setDat.ivalue = 0;
         }
 
-        PARAMS_DATA_direct_write(setDat);
+        _paramiPC->write_data(setDat);
     }
 }
 
@@ -123,7 +129,7 @@ void DDE_PARAMS::addTestData()
         default: setDat.ivalue = ii;
         }
 
-        PARAMS_DATA_direct_write(setDat);
+        _paramiPC->write_data(setDat);
     }
 }
 
@@ -134,7 +140,7 @@ void DDE_PARAMS::checkTestData()
     for (int ii = 0; ii < 64; ii++) {
         get.module_id = ii;
         get.param_id = 0;
-        PARAMS_DATA_direct_read(get);
+        _paramiPC->read_data(get);
         printf("module=%d ", ii);
         for (int yy = 0; yy < 64; yy++)
             printf("%d ", get.el[yy].ivalue);
@@ -158,7 +164,7 @@ std::string DDE_PARAMS::create_device_name(const uint8_t device_id)//0x6D766370
     for (int i = DDE_DEV0_MODULE0_PARAM1_DEVICE_NAME; i <= DDE_DEV0_MODULE0_PARAM3_SW_REV; i++)
     {
         dat.param_id = i;
-        PARAMS_DATA_direct_read(dat); // read one of name part for the given device from ipc
+        _paramiPC->read_data(dat); // read one of name part for the given device from ipc
 
         sub_name = "";
         if (dat.el->ivalue != 0) {
@@ -170,8 +176,10 @@ std::string DDE_PARAMS::create_device_name(const uint8_t device_id)//0x6D766370
         res += sub_name; // forming full device name as combination of all parts
     }
 
+    if (res == "") return res;
+
     dat.param_id = DDE_DEV0_MODULE0_PARAM4_HASH;
-    PARAMS_DATA_direct_read(dat); // read one of name part for the given device from ipc
+    _paramiPC->read_data(dat); // read one of name part for the given device from ipc
 
     char hexCode[9] = "";
     uint32_t hashValue = dat.el->ivalue;
@@ -191,7 +199,6 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
 
     int res = _paramDescr->init(dev_name.c_str(), ""); // we need to look in db for correct table according device_name and device_revision
     if (res == _return_OK) {
-
         p.timeout = 0;
         p.timeout_flg = 0;
         p.el_count = 0;
@@ -205,6 +212,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
         int el_count = p.el_count;
         for (int ii = 0; ii < el_count; ii++) {
             std::fill_n(p.el_descr[ii].txtValues, DDE_PARAMS_TXTVALUES_MAX_COUNT, nullptr);
+            std::fill_n(p.el_descr[ii].txtSubIndexes, DDE_PARAMS_TXTVALUES_MAX_COUNT, 0);
 
             if (p.el_descr[ii].format == 5) {
                 p.param_id = ii;
@@ -222,6 +230,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
     }
      else  {
         std::fill_n(p.el_descr[0].txtValues, DDE_PARAMS_TXTVALUES_MAX_COUNT, nullptr);
+        std::fill_n(p.el_descr[0].txtSubIndexes, DDE_PARAMS_TXTVALUES_MAX_COUNT, 0);
 
         if (p.el_descr[0].format == 5) //Single element always return in 0 item
             res = _paramDescr->get(&p, db_type::txt);
@@ -235,7 +244,7 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_HEADER& p)
 
 _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
 {
-    //assert(p.el.device_id < DEVICE_ID_MAX);
+    assert(p.device_id <= DEVICE_ID_MAX);
     assert(p.module_id <= MODULES_ID_MAX);
     assert(p.param_id <= PARAMS_ID_MAX);
 
@@ -271,14 +280,14 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_HEADER& p)
     el.writable = p.writable;
     strncpy(el.dim, p.dim, DIM_SIZE);
 
-    update_data_descr(p.device_id, el);
+    update_param_header(p.device_id, el);
 
     return _return_OK;
 }
 
 //
 //------------------------------------------------------------------------------
-_dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
+bool DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
 {
     _dde_func_return_t res = _return_OK;
     if (p.el_count > PARAMS_COUNT_MAX) res = _return_FAIL;
@@ -289,12 +298,12 @@ _dde_func_return_t DDE_PARAMS::isValidData(const DDE_GET_PARAMS_DATA& p)
     if (p.header_reset != 0 && p.header_reset != 1) res = _return_FAIL;
 
     if (res == _return_FAIL) {
-        string err = "The data is not valid: id = " + std::to_string(p.module_id) + "."
+        string err = "The param data is not valid: id = " + std::to_string(p.device_id) + "." + std::to_string(p.module_id) + "."
                 + std::to_string(p.param_id) + ", el count = " + std::to_string(p.el_count);
         std::cout << err.c_str();
     }
 
-    return res;
+    return res == _return_OK ? true : false;
 }
 
 _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
@@ -336,9 +345,6 @@ _dde_func_return_t DDE_PARAMS::get(DDE_GET_PARAMS_DATA& p)
     return _return_OK;
 }
 
-//------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------
 _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
 {
     //1) Add request to queue
@@ -357,13 +363,56 @@ _dde_func_return_t DDE_PARAMS::set(DDE_SET_PARAMS_DATA& p)
     return _return_OK;
 }
 
+_dde_func_return_t DDE_PARAMS::get_cmd(uint8_t device_id, DDE_PARAMS_CMD& cmd)
+{
+    auto res = _paramiPC->read_cmd(device_id, &cmd);
+    return res;
+}
+
+_dde_func_return_t DDE_PARAMS::update_device_params(uint16_t device_id)
+{
+    _dde_func_return_t res = _return_OK;
+
+    string dev_name = create_device_name(device_id);
+    if (dev_name == "") return _return_FAIL;
+
+    res = _paramDescr->init(dev_name.c_str(), "");
+    if (res != _return_OK) return res;
+
+    for (int ii = 0; ii <= MODULES_ID_MAX; ii++) {
+        DDE_GET_PARAMS_HEADER headers;
+        headers.device_id = device_id;
+        headers.module_id = ii;
+        headers.param_id = 0;
+        headers.el_count = 0;
+
+        res = _paramDescr->get(&headers, db_type::usual);
+
+        if (res != _return_OK) continue;
+        if (headers.el_count == 0) continue;
+
+        for (int ind = 0; ind < headers.el_count; ind++) {
+            const GLIO_ELEMENT_DESCR& el = headers.el_descr[ind];
+            res = update_param_header(device_id, el);
+            if (res != _return_OK) break;
+        }
+    }
+
+    return res;
+}
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+
 _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
 {
     //DDE_GET_PARAMS_DATA p_data;
 
-    if (list_read.empty()) return _return_FAIL;
-
     std::lock_guard<std::mutex> lock{ m_guardMutex };
+
+    if (list_read.empty()) return _return_FAIL; // todo: may be lock before ???
+
     p = std::move(list_read.front());
     list_read.pop_front();
 
@@ -372,9 +421,10 @@ _dde_func_return_t DDE_PARAMS::pop_read_request(DDE_GET_PARAMS_DATA& p)
 
 _dde_func_return_t DDE_PARAMS::pop_write_request(DDE_SET_PARAMS_DATA& p)
 {
+    std::lock_guard<std::mutex> lock{ m_guardMutex };
+
     if (list_write.empty()) return _return_FAIL;
 
-    std::lock_guard<std::mutex> lock{ m_guardMutex };
     p = std::move(list_write.front());
     list_write.pop_front();
 
@@ -390,9 +440,9 @@ _dde_func_return_t DDE_PARAMS::direct_write(DDE_SET_PARAMS_DATA& set)
         set.timestamp = time;
     }
 
-    PARAMS_DATA_direct_write(set);
+    auto res = _paramiPC->write_data(set);
 
-    return _return_OK;
+    return res;
 }
 //------------------------------------------------------------------------------
 //
@@ -400,20 +450,15 @@ _dde_func_return_t DDE_PARAMS::direct_write(DDE_SET_PARAMS_DATA& set)
 //wrapper for IPCMEM
 _dde_func_return_t DDE_PARAMS::direct_read(DDE_GET_PARAMS_DATA& get_params)
 {
-    int res = PARAMS_DATA_direct_read(get_params);
-    if (res < 0) return _return_FAIL;
-
-    return _return_OK;
+    auto res = _paramiPC->read_data(get_params);
+    return res;
 }
 
-_dde_func_return_t DDE_PARAMS::update_data_descr(uint16_t device_id, GLIO_ELEMENT_DESCR& el)
+_dde_func_return_t DDE_PARAMS::update_param_header(uint16_t device_id, const GLIO_ELEMENT_DESCR& el)
 {
-    int res = PARAMS_DATA_update_descr(device_id, el);
-    if (res < 0) return _return_FAIL;
-
-    return _return_OK;
+    auto res = _paramiPC->update_elem_descr(device_id, el);
+    return res;
 }
-
 
 //------------------------------------------------------------------------------
 //
@@ -474,6 +519,10 @@ void DDE_PARAMS::update()
 
         uint16_t device_id = get_params.device_id;
         int cmd_ind = cmd_ind_arr[device_id]++;
+        if (!isValidData(get_params)) {
+            break;
+        }
+
         assert(cmd_ind < MAX_DEV_CMD_CNT);
         assert(device_id < MAX_DEV_SUPPORT);
 
@@ -524,7 +573,7 @@ _dde_func_return_t DDE_PARAMS::write_cmd_array(uint8_t device_id, DDE_PARAMS_CMD
     const int WAIT_TIMEOUT_MSC = 100;
 
     while ((res != _return_OK) && (!timeout)) {
-        res = PARAMS_DATA_write_cmd(device_id, cmdArray, cmd_cnt);
+        res = _paramiPC->write_cmd(device_id, cmdArray, cmd_cnt);
 
         if (res != _return_OK) {
             attempts++;
@@ -541,12 +590,15 @@ _dde_func_return_t DDE_PARAMS::write_cmd_array(uint8_t device_id, DDE_PARAMS_CMD
                 direct_write(set_err);
 
                 DDE_PARAMS_CMD& cmd = cmdArray[0];
-                std::cout << "Error remote reading cmd! dev_id=" + std::to_string(device_id)
-                          << " mod_id=" + std::to_string(cmd.module_id)
-                          << " par_id=" + std::to_string(cmd.param_id)
-                          << " nRW=" + std::to_string(cmd.nRW)
-                          << ". Check if a remote device proccess is working!"
-                          << std::endl;
+                bool isLinkedCmd = (device_id == 0 && cmd.module_id == DDE_DEV0_MODULE1_DEVS_LINK);
+                if (!isLinkedCmd) {
+                    std::cout << "Error remote reading cmd! dev_id=" + std::to_string(device_id)
+                              << " mod_id=" + std::to_string(cmd.module_id)
+                              << " par_id=" + std::to_string(cmd.param_id)
+                              << " nRW=" + std::to_string(cmd.nRW)
+                              << ". Check if a remote device proccess is working!"
+                              << std::endl;
+                }
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIMEOUT_MSC));

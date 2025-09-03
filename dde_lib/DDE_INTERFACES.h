@@ -2,6 +2,8 @@
 #define DDE_INTERFACES_H
 
 #include "DDE_TYPES.h"
+#include "DDE_DEVICES_TYPE.h"
+#include "DDE_PARAMS_TYPE.h"
 #include "DDE_OSC_TYPES.h"
 #include "DDE_EVLOG_TYPES.h"
 
@@ -41,8 +43,9 @@ public:
     virtual _dde_func_return_t set(DDE_SET_PARAMS_HEADER& p) = 0;
     virtual _dde_func_return_t get(DDE_GET_PARAMS_DATA& p) = 0;
     virtual _dde_func_return_t set(DDE_SET_PARAMS_DATA& p) = 0;
+    virtual _dde_func_return_t get_cmd(uint8_t device_id, DDE_PARAMS_CMD& cmd) = 0;
 
-
+    virtual _dde_func_return_t update_device_params(uint16_t device_id) = 0;
     virtual void update() = 0;
 };
 
@@ -126,7 +129,7 @@ public:
     virtual ~IOscHeaderService() {}
 
     virtual _dde_func_return_t init(const char* sysName) = 0;
-    virtual _dde_func_return_t deInit(const char* sysName) = 0;
+    virtual _dde_func_return_t deInit() = 0;
 
     virtual _dde_func_return_t get_header(uint16_t id, DDE_OSC_HEADER&) = 0;
     virtual _dde_func_return_t set_header(uint16_t id, const DDE_OSC_HEADER&) = 0;

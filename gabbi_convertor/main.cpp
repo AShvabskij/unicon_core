@@ -11,10 +11,8 @@
 #include <QCommandLineOption>
 #include <QTextStream>
 
-#include <iostream>
-#include <memory>
-
 #include <oscdatalogger.h>
+#include <oscdatalogger_v1_1.h>
 #include <oscdatalogger_v1_2.h>
 
 #include "DDE_TYPES.h"
@@ -40,35 +38,64 @@ OscType::OscDataBuffer* createDataBuffer(const DDE_OSC_HEADER &hdr)
     buff->timestamp = hdr.settings.trig_time;
     buff->trig_time = hdr.settings.trig_time;
 
-    for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
-        const OSC_CHANNEL& channel = hdr.channels[chInd];
-        if (channel.var.id <= 0) {
-            continue;
+    int numOfSet = 1;
+
+    for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
+        const OSC_VAR& var = hdr.vars[ind];
+
+        if (!var.isValid()) continue;
+
+        OscType::OscChannelVar& chVar = buff->vars[ind];
+        chVar.varName = var.var.name;
+        chVar.channelNum = var.chNum;
+        chVar.varId = var.var.id;
+        chVar.type = var.var.type;
+        chVar.scale = var.gain;
+        chVar.offset = var.offset;
+        chVar.firstBit = var.firstBit;
+        chVar.lastBit = var.lastBit;
+        chVar.color = var.var.color;
+
+        if (var.setLn == 0 && var.setCh == 0) {
+            int chNumOfSet = (var.chNum + 1) - (numOfSet - 1) * SET_SIZE;
+            chVar.setLn = numOfSet;
+            chVar.setCh = chNumOfSet;
+        } else {
+            chVar.setLn = var.setLn;
+            chVar.setCh = var.setCh;
         }
 
-        OscType::OscChannelValues& chValues = buff->chArray[chInd];
-        chValues.channelNum = channel.chNum;
-        chValues.varId = channel.var.id;
-        chValues.type = channel.var.type;
-        chValues.scale = channel.gain;
-        chValues.offset = channel.offset;
+        OscChannelData& chValues = buff->data[var.chNum];
+        chValues.type = var.var.type;
+
+        chValues.reserve(MAX_DATA_COUNT);
     }
 
     return buff;
 }
 
-int denormalizeValue(float value)
+int denormalizeValue(int value)
 {
+    int res = value;
     if (value > MAX_VALUE) {
-        value = MAX_VALUE;
+        res = MAX_VALUE;
     }
 
-    uint16_t zeroLevel = 0x7FFF;
-    int res = value + zeroLevel;
+    // uint16_t zeroLevel = 0x7FFF;
+    // int res = value + zeroLevel;
+    // if (res == 0xFFFF) { // gabbi format doesn't allow 0xFFFF
+    //     res = 0xFFFE;
+    // }
+
     return res;
 }
 
-long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& data, QTextStream& stream)
+bool hasOnlyOneBit(int n)
+{
+    return n != 0 && (n & (n - 1)) == 0;
+}
+
+long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& datBuff, QTextStream& stream)
 {
     QTextStream& res = stream;
 
@@ -80,108 +107,111 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
     QDateTime date = QDateTime::fromSecsSinceEpoch(hdr.settings.trig_time);
     res << ".Date," << date.date().toString("yyyy-MM-dd") << "," << ENDL;
     res << ".Time," << date.time().toString("hh:mm:ss:zzz") << "," << ENDL;
-    res << ".Ts," << resolution_sec << ","  << ENDL;
+    res << ".Ts," << QString::number(resolution_sec, 'f') << ","  << ENDL;
 
     res << ENDL;
 
-    int numOfSet = 1;
     QStringList varIndexes;
     QStringList varNames;
-    QStringList varNumOfSets;
-    QMap<int/*var_id*/, int/*bitNum*/> discrVarsBits;
+    QMap<QString/*set*/, int/*chNum*/> varSets;
+    QList<int> analogChannels;
+    QList<int> discreteChannels;
 
-    for (int i= 0; i < hdr.settings.channels_count; ++i) {
-        auto& ch = hdr.channels[i];
+    for (int i= 0; i < OSC_MAX_VARS; ++i) {
+        auto& var = datBuff.vars[i];
 
-        if (ch.var.id <= 0)
-            continue;
+        if (!var.isValid()) continue;
 
-        int chNumOfSet = (ch.chNum + 1) - (numOfSet - 1) * SET_SIZE;
+        if (var.type == OSC_VAR_DISCRETE) continue;
 
         QStringList line;
 
-        QRgb rgb = ch.var.color;
+        QRgb rgb = var.color;
+        float gain = var.scale;
 
-        if (ch.var.type == OSC_VAR_FLOAT || ch.var.type == OSC_VAR_INT) {
-            int lastBit = (ch.lastBit > 0 && ch.lastBit < MAX_BIT_NUM) ? ch.lastBit : MAX_BIT_NUM;
-            float gain = (ch.gain != 0.0 && ch.gain != 1.0) ? ch.gain : ch.var.scale;
-
-            line << QString("@") + QString(ch.var.name)
-                 << QString("L") + QString::number(numOfSet)
-                 << QString::number(chNumOfSet).rightJustified(2, '0')
-                 << QString("D") + QString::number(ch.firstBit).rightJustified(2, '0')
-                 << QString("D") + QString::number(lastBit).rightJustified(2, '0')
-                 << QString::number(gain) << QString::number(ch.offset)
-                 << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
-                 << "TRUE";
-        } else if (ch.var.type == OSC_VAR_DISCRETE) {
-            discrVarsBits[ch.var.id] = ch.firstBit;
-
-            line << QString("&") + QString(ch.var.name)
-                 << QString("L") + QString::number(numOfSet)
-                 << QString::number(chNumOfSet).rightJustified(2, '0')
-                 << QString("D") + QString::number(ch.firstBit).rightJustified(2, '0')
-                 << QString("BIT")
-                 << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
-                 << "TRUE";
-        }
+        line << QString("@") + QString(var.varName)
+             << QString("L") + QString::number(var.setLn)
+             << QString::number(var.setCh).rightJustified(2, '0')
+             << QString("D") + QString::number(var.firstBit).rightJustified(2, '0')
+             << QString("D") + QString::number(MAX_BIT_NUM).rightJustified(2, '0')
+             << QString::number(gain)
+             << QString::number(0/*var.offset*/)
+             << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
+             << "TRUE";
 
         res << line.join(SEP) << ENDL;
 
         varIndexes << QString::number(i);
-        varNames << ch.var.name;
-        varNumOfSets <<  QString("L") + QString::number(numOfSet) + "_" + QString::number(chNumOfSet).rightJustified(2, '0');
+        varNames << var.varName;
+        QString set = QString("L") + QString::number(var.setLn) + "_" + QString::number(var.setCh).rightJustified(2, '0');
+        varSets.insert(set, var.channelNum);
+        analogChannels << var.channelNum;
+    }
+
+    for (int i= 0; i < OSC_MAX_VARS; ++i) {
+        auto& var = datBuff.vars[i];
+
+        if (!var.isValid())
+            continue;
+
+        if (var.type != OSC_VAR_DISCRETE) continue;
+
+        QStringList line;
+
+        QRgb rgb = var.color;
+
+        line << QString("&") + QString(var.varName)
+             << QString("L") + QString::number(var.setLn)
+             << QString::number(var.setCh).rightJustified(2, '0')
+             << QString("D") + QString::number(var.firstBit).rightJustified(2, '0')
+             << QString("BIT")
+             << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
+             << "TRUE";
+
+        res << line.join(SEP) << ENDL;
+
+        varIndexes << QString::number(i);
+        varNames << var.varName;
+
+        QString set = QString("L") + QString::number(var.setLn) + "_" + QString::number(var.setCh).rightJustified(2, '0');
+        varSets.insert(set, var.channelNum);
+
+        if (!discreteChannels.contains(var.channelNum)) {
+            discreteChannels << var.channelNum;
+        }
     }
 
     res << ENDL << ENDL;
 
-    res << "* " << SEP << varIndexes.join(SEP) << ENDL;
+    QStringList stringChannelList;
+    for (int i = 0; i < analogChannels.size(); ++i) {
+        stringChannelList.append(QString::number(analogChannels.at(i)));
+    }
+
+    for (int i = 0; i < discreteChannels.size(); ++i) {
+        stringChannelList.append(QString::number(discreteChannels.at(i)));
+    }
+
+    res << "* " << SEP << stringChannelList.join(SEP) << ENDL;
     res << "* " << SEP << varNames.join(SEP)  << ENDL;
-    res << "* " << SEP << varNumOfSets.join(SEP)  << ENDL;
+    res << "* " << SEP << varSets.keys().join(SEP)  << ENDL;
 
-    QMap<int/*channel*/, QVariant/*value*/> chValues;
-
-    for (int i = 0; i < data.valueCount; i++) {
+    for (int i = 0; i < datBuff.valueCount; i++) {
         QStringList rec;
         rec << QString::number(i + 1);
 
-        for (int ind = 0; ind <= OSC_MAX_VARS; ind++) {
-            const OscType::OscChannelValues& var = data.chArray[ind];
+        for (auto key: varSets.keys()) {
+            int chNum = varSets[key];
+            const OscType::OscChannelData& chDat = datBuff.data[chNum];
 
-            if (var.varId == 0)
-                continue;
-
-            if (i >= var.count()) {
-                break;
+            if (analogChannels.contains(chNum)) {
+                auto rawVal = chDat.value(i);
+                int val = denormalizeValue(rawVal.toInt());
+                rec << QString::number(val);
+            } else if (discreteChannels.contains(chNum)) {
+                int discrValue = chDat.value(i).toInt();
+                rec << QString::number(discrValue); // 04.2025 The decision for a newer version of the data buff
             }
-
-            switch (var.type) {
-            case OSC_VAR_INT:
-            case OSC_VAR_FLOAT: {
-                QVariant val = var.value(i);
-                int n = denormalizeValue(val.toFloat());
-                chValues[var.channelNum] = n;
-            } break;
-
-            case OSC_VAR_DISCRETE: {
-
-                int value = chValues[var.channelNum].toInt();
-                int bitNum = discrVarsBits[var.varId];
-                int bitMask = 1 << bitNum;
-                int bitValue = var.value(i).toInt();
-
-                value = (bitValue == 0) ? (value & ~bitMask) : (value | bitMask);
-
-                chValues[var.channelNum] = value;
-
-            } break;
-            case UNDEFINED: {}
-            };
-        }
-
-        for (int key : chValues.keys() ) {
-            QVariant value = chValues[key];
-            rec << QString::number(value.toInt());
         }
 
         res << rec.join(",") << ENDL;
@@ -194,6 +224,7 @@ long doConvert(QString fileFrom, QString fileTo)
 {
     QList<IOscDataLogger*> datServiceCollection;
     datServiceCollection.append(new OscDataLogger());
+    datServiceCollection.append(new OscDataLogger_v1_1());
     datServiceCollection.append(new OscDataLogger_v1_2());
 
     long res = _return_OK;
@@ -271,7 +302,7 @@ int main(int argc, char *argv[])
     if (fileFrom.isEmpty() || fileTo.isEmpty()) {
         QTextStream(stdout) << "Error: Missing command line argument(s)." << ENDL;
         parser.showHelp(-2);
-        return -2;
+        return EXIT_FAILURE;
     }
 
     QString path = QFileInfo(fileTo).absolutePath();
@@ -288,9 +319,11 @@ int main(int argc, char *argv[])
 
     long res = doConvert(fileFrom, fileTo);
 
-    if (res > 0) {
-        QTextStream(stdout) << "Convertion Completed successfully!" << ENDL;
+    if (res <= 0) {
+        return EXIT_FAILURE;
     }
 
-    return res;
+    QTextStream(stdout) << "Convertion Completed successfully!" << ENDL;
+    return EXIT_SUCCESS;
+
 }

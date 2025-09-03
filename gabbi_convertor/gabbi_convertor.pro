@@ -2,7 +2,7 @@ QT -= gui
 QT += widgets
 QT += concurrent
 
-CONFIG += c++11 console
+CONFIG += c++17 console
 CONFIG -= app_bundle
 
 # You can make your code fail to compile if it uses deprecated APIs.
@@ -15,6 +15,7 @@ INCLUDEPATH += $$PWD/../dde_lib
 
 SOURCES += \
         ../unicon_core/oscdatalogger.cpp \
+        ../unicon_core/oscdatalogger_v1_1.cpp \
         ../unicon_core/oscdatalogger_v1_2.cpp \
         main.cpp
 

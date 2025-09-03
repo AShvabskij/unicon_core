@@ -4,8 +4,7 @@
 
 char pathKey_[MAX_DEV_SUPPORT][MAX_FNAME_LEN];
 int shmBlk[MAX_DEV_SUPPORT] = { -1 };
-unsigned char* _blkPtr[MAX_DEV_SUPPORT] = { NULL };
-int _blkSize = 0;
+uintptr_t _blkPtr_t[MAX_DEV_SUPPORT] = { 0 };
 
 #ifdef SET_DEBUG_IPC
 char chap[BUF_TMP] = { 0 };
@@ -20,15 +19,15 @@ extern void Report(uint8_t addTime, const char* fmt, ...);
 int mem_initBlk(int ind, size_t blkSize, const char* blkName)
 {
     int ret = -1;
-    unsigned char* adr = MAP_FAILED;
+    void* adr = NULL;
     int flg = O_RDWR | O_CREAT;
 
     int key = shm_open(pathKey_[ind], flg, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);// | S_IROTH | S_IWOTH);
     if (key != -1) {
         ftruncate(key, blkSize);
-        adr = (unsigned char*)mmap(NULL, blkSize, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
+        adr = mmap(NULL, blkSize, PROT_READ | PROT_WRITE, MAP_SHARED, key, 0);
         if (adr != MAP_FAILED) {
-            _blkPtr[ind] = adr;
+            _blkPtr_t[ind] = adr;
             ret = key;
         }
     }
@@ -44,21 +43,18 @@ int mem_initBlk(int ind, size_t blkSize, const char* blkName)
 //
 int mem_mkKeyFiles(const char* path)
 {
-    int schet = 0, ret = -1;
+    int ret = 0;
     char namef[MAX_FNAME_LEN + 32] = { 0 };
     char named[MAX_FNAME_LEN] = { 0 };
 
     strcat(named, path);
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        int dl = sprintf(namef, "%s%02d", named, i);
+        int dl = sprintf(namef, "%s_OSC_%02d", named, i);
         if (dl > MAX_FNAME_LEN) dl = MAX_FNAME_LEN;
         memset(pathKey_[i], 0, MAX_FNAME_LEN);
         memcpy(pathKey_[i], namef, dl);
-        schet++;
     }
-
-    if (schet == MAX_DEV_SUPPORT) ret = 0;
 
     return ret;
 }
@@ -68,12 +64,8 @@ int mem_mkKeyFiles(const char* path)
 //
 int osc_mem_init(const char* sys_name, int blkSize)
 {
-    if (mem_mkKeyFiles(sys_name)) {
-#ifdef SET_DEBUG_IPC
-        Report(1, "Error: Can't create key files for support #%d device.\n", MAX_DEV_SUPPORT);
-#endif
-        return -1;
-    }
+    int res = mem_mkKeyFiles(sys_name);
+    if (res < 0) return res;
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
         shmBlk[i] = mem_initBlk(i, blkSize, sys_name);
@@ -88,15 +80,15 @@ int osc_mem_init(const char* sys_name, int blkSize)
     return 0;
 }
 //-----------------  Release All shared memory blocks  -----------------------
-int osc_mem_deinit(const char* sys_name, int blkSize)
+int osc_mem_deinit(const char* sys_name, uintptr_t* blkPtr, int blkSize)
 {
     int err = 0;
 
     for (int i = 0; i < MAX_DEV_SUPPORT; i++) {
-        if (_blkPtr[i] != NULL) {
-            if (!munmap(_blkPtr[i], blkSize)) {
+        if (blkPtr[i] != 0) {
+            if (!munmap((void*)blkPtr[i], blkSize)) {
                 shmBlk[i] = -1;
-                _blkPtr[i] = NULL;
+                blkPtr[i] = 0;
                 if (sys_name) {
                     if (shm_unlink(pathKey_[i]) != 0) {//error
                         err |= 2;
@@ -112,22 +104,22 @@ int osc_mem_deinit(const char* sys_name, int blkSize)
     return err;
 }
 
-unsigned char* osc_mem_getData(uint16_t ind)
+uintptr_t osc_mem_getData(uint16_t ind)
 {
     if (ind >= MAX_DEV_SUPPORT) {
-        return NULL;
+        return 0;
     }
 
-    return _blkPtr[ind];
+    return _blkPtr_t[ind];
 }
 
-int osc_mem_setData(uint16_t ind, unsigned char* data, size_t sz)
+int osc_mem_setData(uint16_t ind, uintptr_t data, size_t sz)
 {
     if (ind >= MAX_DEV_SUPPORT) {
         return -1;
     }
 
-    memcpy(_blkPtr[ind], data, sz);
+    _blkPtr_t[ind] = data;
 
     return _return_OK;
 }

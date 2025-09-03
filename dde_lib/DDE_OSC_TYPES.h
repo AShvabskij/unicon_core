@@ -35,7 +35,7 @@ enum OSC_VAR_TYPE
      OSC_VAR_DISCRETE = 3
 };
 
-struct OSC_VAR
+struct OSC_VAR_DESCR
 {
     uint16_t id = 0;
 
@@ -43,16 +43,19 @@ struct OSC_VAR
     char name[OSC_VAR_NAME_LENGTH] = "";
     char user_name[OSC_VAR_NAME_LENGTH] = "";
     char dim[6] = "";
-    float min = 0.0;
-    float max = 0.0;
-    float scale = 0.0;
+    float __rm__min = 0.0;
+    float __rm__max = 0.0;
+    float __rm__scale = 0.0;
     int color = 0;
 };
 
-struct OSC_CHANNEL
+struct OSC_VAR
 {
     uint16_t chNum = 0;
-    OSC_VAR var;
+    uint16_t setLn = 0; // set number: L1, L2, L3 ...
+    uint16_t setCh = 0; // set channel: 0, 1, 2
+
+    OSC_VAR_DESCR var;
 
     float gain = 0.0;
     float offset = 0.0;
@@ -60,13 +63,17 @@ struct OSC_CHANNEL
     // for discrete values only
     uint8_t firstBit = 0;
     uint8_t lastBit = 0;
+
+    bool isValid() const {
+        return var.type != OSC_VAR_TYPE::UNDEFINED;
+    }
 };
 
 union OSC_DATA
 {
-    float f_buff[OSC_DATA_BUFFER_SIZE];
+    float f_buff[OSC_DATA_BUFFER_SIZE] = {0};
     int32_t i_buff[OSC_DATA_BUFFER_SIZE];
-    uint32_t u_buff[OSC_DATA_BUFFER_SIZE];
+    //uint32_t u_buff[OSC_DATA_BUFFER_SIZE];
 };
 
 struct OSC_SETTING
@@ -94,8 +101,8 @@ struct DDE_OSC_HEADER
 {
     uint16_t device_id = 0; // todo rename to osc_id
 
-    OSC_CHANNEL channels[OSC_MAX_VARS + 1];
-
+    OSC_VAR vars[OSC_MAX_VARS + 1];
+    
     OSC_SETTING settings;
 };
 
@@ -110,7 +117,7 @@ struct DDE_GET_OSC_DATA
     bool eof = false;    // flag if it is the last frame
     bool sof = false;    // save-of-file - flag if it is the first frame
 
-    OSC_DATA data[OSC_MAX_VARS + 1];
+    OSC_DATA data[OSC_MAX_CHANNELS + 1];
 };
 
 struct DDE_SET_OSC_DATA
@@ -121,7 +128,7 @@ struct DDE_SET_OSC_DATA
     bool eof = false;
     bool sof = false; // mark start block to start saving
 
-    OSC_DATA data[OSC_MAX_VARS + 1];
+    OSC_DATA data[OSC_MAX_CHANNELS + 1];
 };
 
 struct DDE_OSC_DATA_HEADER
@@ -133,7 +140,7 @@ struct DDE_OSC_DATA_HEADER
     bool sof = false;
 };
 
-struct GLIO_OSC_CHANNEL
+struct GLIO_OSC_VAR
 {
     uint16_t chNum = 0;
 
@@ -159,7 +166,7 @@ typedef struct
     uint16_t id;
     OSC_STATE state;
     OSC_SETTING settings;
-    GLIO_OSC_CHANNEL channel[OSC_MAX_VARS + 1];
+    GLIO_OSC_VAR vars[OSC_MAX_VARS + 1];
 
 } GLIO_OSC_HEADER;
 #endif

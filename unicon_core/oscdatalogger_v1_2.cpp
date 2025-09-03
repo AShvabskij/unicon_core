@@ -62,10 +62,10 @@ long OscDataLogger_v1_2::decodeData(const QCborValue &sourceDat, OscType::OscDat
         for (int j = 0; j < valueCount; j++) {
             int ind = i*valueCount + j;
             QVariant val =  values[ind].toVariant();
-            data.chArray[i].append(val);
+            const auto& var = data.vars[i];
+            data.data[var.channelNum].append(val);
         }
 
-        data.chArray[i].varId = vars[i].toInteger();
         maxValueCount = maxValueCount < valueCount ? valueCount : maxValueCount;
     };
 

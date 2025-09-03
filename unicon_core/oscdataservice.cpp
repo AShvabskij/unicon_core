@@ -31,13 +31,15 @@
 //     float offset;
 // };
 
+const int SET_SIZE = 16;
+
 using namespace OscType;
 
 OscType::OscDataBuffer* OscDataService::get(DevInd device_id, qlonglong time)
 {
     QList<OscDataBuffer*> dev_buffers = m_repository.values(device_id);
     if (time == 0) {
-        return dev_buffers.count() > 0 ? dev_buffers.first() : nullptr;
+        return dev_buffers.count() > 0 ? dev_buffers.last() : nullptr;
     }
 
     if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
@@ -53,10 +55,11 @@ OscType::OscDataBuffer* OscDataService::get(DevInd device_id, qlonglong time)
     return nullptr;
 }
 
-long OscDataService::load(const DDE_OSC_HEADER &hdr)
+long OscDataService::load(const DDE_OSC_HEADER &hdr, SysType sysType)
 {
     OscType::OscDataBuffer* buff = get(hdr.device_id, hdr.settings.trig_time);
     long res = _return_OK;
+
     if (buff) {
 
         m_mutex.lock();
@@ -69,12 +72,13 @@ long OscDataService::load(const DDE_OSC_HEADER &hdr)
 
     } else {
         buff = createDataBuffer(hdr);
-        res = m_dataSaver->loadData(hdr, *buff);
+        res = m_dataLogger->load(hdr, sysType, *buff);
         if (res != _return_OK) {
             delete buff;
             return res;
         }
 
+        buff->eof = true; // ??
         res = appendBuffer(std::move(*buff));
     }
 
@@ -130,11 +134,12 @@ void OscDataService::clearDataBuffer(OscType::OscDataBuffer* buff)
     buff->sof = false;
     buff->valueCount= 0;
     buff->timestamp = 0;
-    buff->lastDataPos = 0;
 
-    for (OscChannelValues& chValues : buff->chArray) {
+    for (OscChannelData& chValues : buff->data) {
         chValues.clear();
     }
+
+    buff->resetPos();
 }
 
 OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
@@ -146,23 +151,39 @@ OscDataBuffer* OscDataService::createDataBuffer(const DDE_OSC_HEADER &hdr)
     buff->reason = hdr.settings.reason;
     buff->resolution_us = hdr.settings.time_resolution_us;
 
-    std::time_t time = hdr.settings.trig_time;
+    qlonglong time = hdr.settings.trig_time;
     if (QDateTime::fromMSecsSinceEpoch(time).date().year() <= 1980) {
         time = time * 1000; // assume time is in seconds, need to convert to msec
     }
     buff->trig_time = time;
 
-    for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
-        const OSC_CHANNEL& channel = hdr.channels[chInd];
+    int numOfSet = 1;
+    for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
+        const OSC_VAR& var = hdr.vars[ind];
 
-        if (channel.var.id == 0) continue;
+        if (!var.isValid()) continue; // TODO: may be break here
 
-        OscChannelValues& chValues = buff->chArray[chInd];
-        chValues.channelNum = channel.chNum;
-        chValues.varId = channel.var.id;
-        chValues.scale = channel.gain;
-        chValues.offset = channel.offset;
-        chValues.type = channel.var.type;
+        OscChannelVar& chVar = buff->vars[ind];
+        chVar.channelNum = var.chNum;
+        chVar.varId = var.var.id;
+        chVar.varName = var.var.name;
+        chVar.scale = var.gain;
+        chVar.offset = var.offset;
+        chVar.type = var.var.type;
+        chVar.firstBit = var.firstBit;
+        chVar.lastBit = var.lastBit;
+
+        if (var.setLn == 0 && var.setCh == 0) {
+            int chNumOfSet = (var.chNum + 1) - (numOfSet - 1) * SET_SIZE;
+            chVar.setLn = numOfSet;
+            chVar.setCh = chNumOfSet;
+        } else {
+            chVar.setLn = var.setLn;
+            chVar.setCh = var.setCh;
+        }
+
+        OscChannelData& chValues = buff->data[var.chNum];
+        chValues.type = var.var.type;
 
         chValues.reserve(MAX_DATA_COUNT);
     }
@@ -211,17 +232,21 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     }
 
     buff->valueCount += dat.data_length;
-    qint8 ival_arr[dat.data_length + 1];
 
-    for (int chInd = 0; chInd < hdr.settings.channels_count; chInd++) {
-        const OSC_CHANNEL& channel = hdr.channels[chInd];
+    int var_count = 0;
+    QList<int> chNums;
+    for (int ind = 0; ind < OSC_MAX_VARS; ind++) {
+        const OSC_VAR& var = hdr.vars[ind];
 
-        if (channel.var.id == 0) continue;
+        if (!var.isValid()) continue;
+        var_count++;
 
-        const OSC_DATA& chData = dat.data[channel.chNum];
-        OscChannelValues& chValues = buff->chArray[chInd];
+        if (chNums.contains(var.chNum)) continue;
 
-        switch (channel.var.type) {
+        const OSC_DATA& chData = dat.data[var.chNum];
+        OscChannelData& chValues = buff->data[var.chNum];
+
+        switch (var.var.type) {
         case OSC_VAR_TYPE::OSC_VAR_INT: {
             chValues.append(chData.i_buff, dat.data_length);
         } break;
@@ -230,17 +255,20 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
         } break;
 
         case OSC_VAR_TYPE::OSC_VAR_DISCRETE: {
-            for (int i = 0; i < dat.data_length; i++) {
-                int32_t rawValue = chData.i_buff[i];
-                ival_arr[i] = discreteValue(rawValue, channel.firstBit, channel.lastBit);
-            }
-            chValues.append(ival_arr, dat.data_length);
+            chValues.append(chData.i_buff, dat.data_length);
+
+            // for (int i = 0; i < dat.data_length; i++) {
+            //     int32_t rawValue = chData.i_buff[i];
+            //     ival_arr[i] = discreteValue(rawValue, var.firstBit, var.lastBit);
+            // }
+            // chValues.append(ival_arr, dat.data_length);
         } break;
         case UNDEFINED: {
-            qWarning() << "Undefined var type" << ", id = " << channel.var.id << ", name = " << channel.var.name;
+            qWarning() << "Undefined var type" << ", id = " << var.var.id << ", name = " << var.var.name;
         }
         }
 
+        chNums.append(var.chNum);
     }
 
     int resolution = static_cast<int>(hdr.settings.time_resolution_us);
@@ -249,8 +277,9 @@ long OscDataService::appendData(const DDE_OSC_HEADER& hdr, const DDE_GET_OSC_DAT
     m_mutex.unlock();
 
     qDebug() << "AppendData:"
-             << "channels =" << hdr.settings.channels_count
+             << "vars =" << var_count
              << "length =" << dat.data_length
+             << "channels =" << chNums.size()
              << "took" << timer.elapsed() << "ms";
 
     emit dataReceived(buff->id);
@@ -281,36 +310,55 @@ long OscDataService::appendBuffer(OscType::OscDataBuffer&& buff)
 
     return _return_OK;
 }
-
+/*
 qint8 OscDataService::discreteValue(qint32 rawValue, qint8 firstBit, qint8 lastBit)
 {
-    uint32_t mask = 0x0001;
-    qint32 res = rawValue >> firstBit;
+    Q_ASSERT(lastBit >= firstBit);
 
-    bool isBit = (firstBit == lastBit);
-    if (isBit) {
-        res &= mask;
-        return res;
+    qint8 res = 0;
+    if (firstBit == lastBit)
+    {
+        // Extract a single bit at the position specified by firstBit
+         res = (rawValue >> firstBit) & 0x01;
+    }
+    else if (lastBit > firstBit)
+    {
+        // Calculate the number of bits to extract
+        qint8 numBits = lastBit - firstBit + 1;
+
+        // Create a mask with the required number of bits set to 1
+        qint32 mask = (1 << numBits) - 1;
+
+        // Shift the rawValue to the right by firstBit and apply the mask
+        res = (rawValue >> firstBit) & mask;
+    }
+    else
+    {
+        res = 0;
     }
 
-    uint16_t tmpVal = 0x000;
-    for (int i = 0; i <= lastBit - firstBit; i++) {
-        tmpVal |= mask;
-        mask = mask << 1;
+    return res;
+}
+*/
+
+long OscDataService::dataCount(const DevID& deviceID, qlonglong trig_time, int &cnt)
+{
+    OscType::OscDataBuffer* buff = get(deviceID.id, trig_time);
+
+    if (!buff) {
+        return _return_FAIL;
     }
 
-    res &= tmpVal;
-
-    return static_cast<qint8>(res);
+    cnt = buff->dataCount();
+    return _return_OK;
 }
 
-QJsonObject OscDataService::jsonData(OscHeader &header, QVector<int> vars, int &cnt, bool& isEof)
+QJsonObject OscDataService::jsonData(const DevID& deviceID, qlonglong trig_time, QVector<int> vars, int &cnt, bool& isEof)
 {
     QElapsedTimer timer;
     timer.start();
 
-    qlonglong trig_time = header.settings.trigDTime.toMSecsSinceEpoch();
-    OscType::OscDataBuffer* buff = get(header.deviceID.id, trig_time);
+    OscType::OscDataBuffer* buff = get(deviceID.id, trig_time);
 
     if (!buff) {
         return QJsonObject();
@@ -324,8 +372,6 @@ QJsonObject OscDataService::jsonData(OscHeader &header, QVector<int> vars, int &
     if (res.isEmpty()) {
         cnt = 0;
     }
-
-    buff->lastDataPos = buff->lastDataPos + cnt;
 
     m_mutex.unlock();
 
@@ -344,18 +390,23 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
     QJsonArray varIdListObj;
 
     int timestamp = 0;
-    for (OscChannelValues& chVal : data.chArray) {
-        if (chVal.varId == 0) continue;
-        if (!vars.isEmpty() && !vars.contains(chVal.varId)) {
+    bool isNew = true;
+
+    for (OscChannelVar& chVar : data.vars) {
+        if (chVar.type == UNDEFINED) continue;
+        if (!vars.isEmpty() && !vars.contains(chVar.varId)) {
             continue;
         }
 
-        int startPos = chVal.lastDataPos;
+        const OscChannelData& chVal = data.data[chVar.channelNum];
+        int startPos = data.lastDataPos.value(chVar.varId, 0);
         int ch_val_count = chVal.count();
         if (startPos >= ch_val_count) {
             continue;
         }
 
+
+        // A.S: This code is commented, because no need to multiply values by coefficient here, let's see OscChannelData::jsnValues()
         // QVariantList values = chVal.values(startPos, cnt);
         // if (values.isEmpty()) {
         //     continue;
@@ -365,23 +416,23 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
         //     values= multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
         // }
 
-        QJsonArray values = chVal.jsnValues(startPos, cnt);
+        QJsonArray values = chVal.jsnValues(startPos, chVar, cnt);  // get multiplyed values in json format
         if (values.isEmpty()) {
             continue;
         }
 
         cnt = values.count();
 
-        chVal.lastDataPos = startPos + cnt;
-        isEof = (chVal.lastDataPos >= ch_val_count);
-        timestamp = chVal.lastDataPos * data.resolution_us;
+        int lastDataPos = startPos + cnt;
+        data.lastDataPos[chVar.varId] = lastDataPos;
+        isEof = (lastDataPos >= ch_val_count);
+        isNew = (isNew == true) ? startPos == 0 : false;
+        timestamp = lastDataPos * data.resolution_us;
 
-        varIdListObj << chVal.varId;
+        varIdListObj << chVar.varId;
         // valuesArr << QJsonArray::fromVariantList(values);
         valuesArr << values;
-
     }
-
 
     if (varIdListObj.isEmpty()) {
         return QJsonObject();
@@ -392,6 +443,7 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
     res["time"] = timestamp;
     res["trig_time"] = data.trig_time;
     res["reason"] = data.reason;
+    res["new"] = isNew ? "1" : "0";
     res["eof"] = data.eof && isEof ? "1" : "0";
     res["sof"] = data.sof ? "1" : "0";
     res["values"] = valuesArr;
@@ -400,12 +452,12 @@ QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int
     return res;
 }
 
-long OscDataService::save(const DDE_OSC_HEADER& hdr)
+long OscDataService::save(const DDE_OSC_HEADER& hdr, SysType sysType = SysType::SysType_Undefined)
 {
-    OscType::OscDataBuffer* datBuff = get(hdr.device_id, hdr.settings.trig_time);
+    OscType::OscDataBuffer* datBuff = get(hdr.device_id);
     Q_ASSERT(datBuff);
     m_mutex.lock();
-    long res = m_dataSaver->save(hdr, *datBuff);
+    long res = m_dataLogger->save(hdr, sysType, *datBuff);
     m_mutex.unlock();
 
     emit dataSaved(hdr.device_id);

@@ -54,17 +54,26 @@ SysType BaseReqHandler::sysTypeId(const QJsonObject& request)
     if (request.contains("sys_type_id")) {
         res = request.value("sys_type_id").toInt();
     } else {
-        return SysType::Undefined;
+        return SysType::SysType_Undefined;
 //        res = requestId / TIME_STAMP_MAX;
     }
 
     SysType sysType = (SysType)res;
 
-    if (sysType <= SysType::Undefined || sysType >= SysType::Unknown) {
+    if (sysType <= SysType::SysType_Undefined || sysType >= SysType::SysType_Unknown) {
         QTextStream(stdout) << "undefined system type in request id = " << requestId << "\n";
 
-        return SysType::Undefined;
+        return SysType::SysType_Undefined;
     }
 
     return sysType;
+}
+
+QJsonObject BaseReqHandler::createEmptyResponse(int requestId)
+{
+    QJsonObject res;
+    res["request_id"] = requestId;
+    res["body"] = QJsonArray();
+
+    return res;
 }

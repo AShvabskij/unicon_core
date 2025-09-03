@@ -4,7 +4,6 @@
 const QString CMD_DEVICE_HEADER = "device_header";
 const QString CMD_DEVICE_HEADERS = "device_headers";
 const QString CMD_SYSTEM_STATUS = "system_status";
-const QString CMD_SYSTEM_INIT = "system_init";
 const QString CMD_DEVICE_LINKS = "device_links";
 const QString CMD_MODULE_HEADER = "module_header";
 const QString CMD_TYPE_GET = "get";
@@ -39,9 +38,6 @@ int DeviceHandler::handle(const QJsonObject& request)
         handleReqDevices(sysType, requestId);
     } else if (cmdName == CMD_SYSTEM_STATUS && cmdType == CMD_TYPE_GET) {
         handleSystemStatus(request);
-    } else if (cmdName == CMD_SYSTEM_INIT) {
-        handleSystemInit(request);
-        BaseReqHandler::handle(request); // handle by a next handler
     } else if (cmdName == CMD_DEVICE_LINKS && cmdType == CMD_TYPE_GET) {
         handleDeviceLinks(request);
     } else {
@@ -106,17 +102,6 @@ void DeviceHandler::handleSystemStatus(const QJsonObject& request)
     return;
 }
 
-void DeviceHandler::handleSystemInit(const QJsonObject& request)
-{
-    int requestId = request.value("request_id").toInt();
-    if (requestId <= 0) return;
-
-    QJsonObject response = createEmptyResponse(requestId);
-    send(response);
-
-    return;
-}
-
 void DeviceHandler::handleDeviceLinks(const QJsonObject& request)
 {
     SysType sysType = sysTypeId(request);
@@ -143,18 +128,23 @@ long DeviceHandler::requestDeviceLinks(SysType sysType, QList<DevInd>& links)
     _dde_func_return_t res = (*m_dde)(sysType)->get_params_data(dat);
     if (res <= _return_FAIL) return res;
 
-    time_t timeMs = QDateTime::currentMSecsSinceEpoch();
+    qint64 timeMs = QDateTime::currentMSecsSinceEpoch();
     const int LINK_TIME_OUT = 2000; // only for master device
 
     for (quint16 i = DDE_DEV0_MODULE1_PARAM0_devs_link; i <= DDE_DEV0_MODULE1_PARAM63_dev63_link; ++i) {
-        time_t diffTime = (dat.el[i].timestamp != 0) ? timeMs - dat.el[i].timestamp : 0;
+        int diffTime = (dat.el[i].timestamp != 0) ? timeMs - dat.el[i].timestamp : 0;
         if (dat.el[i].ivalue == 1 ) {
             if (i == DDE_DEV0_MASTER_IND && diffTime > LINK_TIME_OUT) {
                 break;
             }
 
             links << i;
+            qInfo() << "link dev =" << i << "systype =" << DDE_TYPES::sysTypeToString(sysType);
         }
+    }
+
+    if (links.length() == 0) {
+        qInfo() << "No devices are linked to systype =" << DDE_TYPES::sysTypeToString(sysType);
     }
 
     return _return_OK;
@@ -164,7 +154,7 @@ void DeviceHandler::handleReqDevices(SysType sysType, int requestId)
 {
     QMap<SysType, QList<DevInd>> allLinks;
 
-    if (sysType == SysType::Undefined) {
+    if (sysType == SysType::SysType_Undefined) {
         sysType = m_dde->getDefaultType();
     }
 
@@ -253,6 +243,8 @@ long DeviceHandler::requestModule(SysType sysType, DevInd deviceId, int moduleId
     DevID devID = {sysType, static_cast<DevInd>(deviceId)};
 
     DDE_GET_PARAMS_HEADER header;
+    memset(&header, 0, sizeof(DDE_GET_PARAMS_HEADER));
+
     header.device_id = static_cast<uint16_t>(deviceId);
     header.module_id = static_cast<uint16_t>(moduleId);
     header.param_id = 0;
@@ -418,15 +410,6 @@ QJsonObject DeviceHandler::createResponse(int requestId, const QList<quint16>& l
     QJsonObject res;
     res["request_id"] = requestId;
     res["body"] = body;
-
-    return res;
-}
-
-QJsonObject DeviceHandler::createEmptyResponse(int requestId)
-{
-    QJsonObject res;
-    res["request_id"] = requestId;
-    res["body"] = QJsonArray();
 
     return res;
 }

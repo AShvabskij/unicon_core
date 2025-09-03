@@ -4,15 +4,12 @@
 #include "socketserver.h"
 
 #include "dde_dispatcher.h"
-#include "oscstateservice.h"
 #include "systemservice.h"
 
 #include "basereqhandler.h"
 
 class IDDE;
 class IDDE_Dispatcher;
-class OscDataService;
-class OscHistoryService;
 class DataUsbCopier;
 
 class Core: public BaseReqHandler
@@ -29,33 +26,30 @@ public:
 
     [[ noreturn ]] void thread_proc();
 
-public slots:
+private slots:
     void onDeviceChanged(SysType sysType);
 
 private:
 
+    void handleSystemInit(const QJsonObject& request);
+    long executeScript(const QString& script);
 
     SocketServer* m_cmdServer = nullptr;
     SocketServer* m_streamServer = nullptr;
 
     IDDE_Dispatcher* m_ddeDisp = nullptr;
-    SysType m_sysType = SysType::Undefined;
+    SysType m_sysType = SysType::SysType_Undefined;
+    QList<SysType> m_supportedSysTypes;
 
-    IReqHandler* m_paramsHandler = nullptr;
-    IReqHandler* m_deviceHandler = nullptr;
-    IReqHandler* m_oscHandler = nullptr;
-
-    OscDataService* m_hstDataService = nullptr;
-    OscHistoryService* m_oscHistoryService = nullptr;
-    SystemService* m_sysService = nullptr;
-
+    QMap<SysType, SystemService*> m_sysServices;
     DataUsbCopier* m_copier = nullptr;
-    QMap<SysType, OscStateService*> m_oscStates;
-    QMap<SysType, IOscDataService*> m_oscDatas;
 
     QFuture<void> m_threadFuture;
     QMutex m_mutex;
     QThread* m_usbThread;
+    QTimer* m_startTimer;
+    QTimer* m_downTimer;
+    bool m_isActivated = false;
 };
 
 #endif // APPLICATION_H

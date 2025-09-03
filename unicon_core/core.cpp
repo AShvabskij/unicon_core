@@ -1,18 +1,14 @@
 #include "core.h"
 
 #include "DDE_EMUL.h"
-#include "DDE_TOP.h"
 
 #include "datausbcopier.h"
 #include "requestmanager.h"
 #include "responsemanager.h"
-#include "paramshandler.h"
-#include "devicehandler.h"
-#include "oschandler.h"
+#include "streammanager.h"
 
 #include "oscdataservice.h"
 #include "oscdatalogger.h"
-#include "oschistoryservice.h"
 
 #include <QObject>
 #include <QtWebSockets>
@@ -21,8 +17,13 @@
 
 // #define NO_DEMO
 
+const QString CMD_SYSTEM_INIT = "system_init";
+const QString SCRIPT_NETWORK_UP = "net_up";
+const QString SCRIPT_NETWORK_DOWN = "net_down";
+
 Core::Core(): BaseReqHandler()
 {
+    m_ddeDisp = new DDE_Dispatcher();
 }
 
 Core::~Core()
@@ -32,37 +33,67 @@ Core::~Core()
 
 int Core::handle(const QJsonObject &request)
 {
-    SysType sysType = sysTypeId(request);
+    QJsonObject cmdObj = request.value("cmd").toObject();
+    QString cmdName = cmdObj.value("name").toString();
 
-    if (sysType != SysType::Undefined && m_sysType != sysType) {
-        start(sysType);
+    m_isActivated = true;
+
+    if (cmdName == CMD_SYSTEM_INIT) {
+        handleSystemInit(request);
+        return 1;
     }
 
     return BaseReqHandler::handle(request);
 }
 
+void Core::handleSystemInit(const QJsonObject& request)
+{
+    int requestId = request.value("request_id").toInt();
+    if (requestId <= 0) return;
+
+    SysType sysType = sysTypeId(request);
+    if (sysType == SysType::SysType_Undefined || sysType == SysType::SysType_Unknown) {
+        QJsonArray jsSysArr;
+        for(SysType sysType: m_supportedSysTypes) {
+            jsSysArr.append(sysType);
+        }
+
+        QJsonObject response;
+        response["request_id"] = requestId;
+        response["body"] = jsSysArr;
+        send(response);
+    }
+
+    if (sysType != SysType::SysType_Undefined) {
+        start(sysType);
+    }
+
+    QJsonObject response = createEmptyResponse(requestId);
+    send(response);
+
+    return;
+}
+
 void Core::init()
 {
-    m_ddeDisp = new DDE_Dispatcher();
-
 #ifdef __WIN32__
+    m_supportedSysTypes.append(SysType::FILE_IO);
+
     IDDE* dde = new DDE_EMUL();
-    dde->init(sysTypeToString(SysType::FILE_IO));
+    dde->init(DDE_TYPES::sysTypeToString(SysType::FILE_IO));
     m_ddeDisp->registerDDE(SysType::FILE_IO, dde);
     m_ddeDisp->setDefaultDDE(dde);
 
 #else
-    IDDE* dde_uavcan = new DDE_TOP();
-    dde_uavcan->init(sysTypeToString(SysType::UAVCAN)); // TODO: replace arg to const char*
-    m_ddeDisp->registerDDE(SysType::UAVCAN, dde_uavcan);
+    m_supportedSysTypes.append(SysType::UAVCAN);
+    m_supportedSysTypes.append(SysType::DLOG_CPLOT);
+    m_supportedSysTypes.append(SysType::DLOG_ISTART);
 
-    IDDE* dde_cplot = new DDE_TOP();
-    dde_cplot->init(sysTypeToString(SysType::DLOG_CPLOT));
-    m_ddeDisp->registerDDE(SysType::DLOG_CPLOT, dde_cplot);
-
-    IDDE* dde_istart = new DDE_TOP();
-    dde_istart->init(sysTypeToString(SysType::DLOG_ISTART));
-    m_ddeDisp->registerDDE(SysType::DLOG_ISTART, dde_istart);
+    for(SysType sysType: m_supportedSysTypes) {
+        IDDE* dde = new DDE_TOP();
+    //    dde_uavcan->init(SYS_TYPE::sysTypeToString(SysType::UAVCAN)); // TODO: replace arg to const char*
+        m_ddeDisp->registerDDE(sysType, dde);
+    }
 
     #ifndef NO_DEMO
         IDDE* dde_emul = new DDE_EMUL();
@@ -74,6 +105,8 @@ void Core::init()
 #endif
 
     RequestManager::instance()->registerHandler(this);
+    ResponseManager::instance()->registerHandler(this);
+    StreamManager::instance()->registerHandler(this);
 
     m_cmdServer = new SocketServer(1235);
     m_cmdServer->setRequestManager(RequestManager::instance());
@@ -94,6 +127,27 @@ void Core::init()
     connect(m_usbThread, SIGNAL(started()), m_copier, SLOT(monitorUSBDevices()));
     m_usbThread->start();
     m_usbThread->setPriority(QThread::LowPriority);
+
+    m_startTimer = new QTimer(this);
+    m_startTimer->setSingleShot(true);
+    QObject::connect(m_startTimer, &QTimer::timeout, [this]() {
+        executeScript(SCRIPT_NETWORK_UP);
+    });
+    m_startTimer->start(7000);
+
+#ifndef QT_DEBUG
+    m_downTimer = new QTimer(this);
+    QObject::connect(m_downTimer, &QTimer::timeout, [this]() {
+        m_downTimer->stop();
+
+        if (!m_isActivated) {
+            executeScript(SCRIPT_NETWORK_DOWN);
+        }
+    });
+
+    m_downTimer->start(1000 * 60 * 10);
+#endif
+
 }
 
 void Core::start(SysType sysType)
@@ -108,90 +162,37 @@ void Core::start(SysType sysType)
             qWarning() << "The DEMO mode is not supported" << sysType;
 
         } else {
-            qWarning() << "The system type is not supported, sysType =  " << sysTypeToString(sysType);
+            qWarning() << "The system type is not supported, sysType =  " << DDE_TYPES::sysTypeToString(sysType);
         }
         return;
     }
+
+    dde->init(DDE_TYPES::sysTypeToString(sysType));
 
     m_sysType = sysType;
     m_ddeDisp->setDefaultDDE(dde);
 
     m_mutex.lock();
 
-    if (sysType != SysType::FILE_IO) {
-        OscStateService* demoSrv = m_oscStates.value(FILE_IO, nullptr);
-        if (demoSrv) {
-            demoSrv->clear();
-            m_oscStates.remove(FILE_IO);
-            delete demoSrv;
+    SystemService* sysService = m_sysServices[sysType];
+    if (!sysService) {
+        sysService = new SystemService(sysType, m_ddeDisp);
+        connect(sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
+
+        IOscDataService* oscData = sysService->getOscDataService();
+        connect((OscDataService*)oscData, &OscDataService::dataSaved, m_copier, &DataUsbCopier::onDataSaved, Qt::AutoConnection);
+        sysService->start();
+
+        m_sysServices.insert(sysType, sysService);
+    }
+
+    if (sysType == SysType::FILE_IO) {
+        m_sysServices[FILE_IO]->start();
+    } else {
+        if (m_sysServices.contains(FILE_IO)) {
+            m_sysServices[FILE_IO]->stop();
         }
     }
-
-    if (m_sysService) {
-        m_sysService->stop();
-        delete m_sysService;
-        m_sysService = nullptr;
-    }
-
-    if (m_paramsHandler && m_deviceHandler && m_oscHandler) {
-        RequestManager::instance()->remove(m_paramsHandler);
-        RequestManager::instance()->remove(m_deviceHandler);
-        RequestManager::instance()->remove(m_oscHandler);
-        ResponseManager::instance()->unregisterHandler(m_deviceHandler);
-        ResponseManager::instance()->unregisterHandler(m_paramsHandler);
-        ResponseManager::instance()->unregisterHandler(m_oscHandler);
-        StreamManager::instance()->unregisterHandler(m_paramsHandler);
-        StreamManager::instance()->unregisterHandler(m_oscHandler);
-
-        delete m_paramsHandler;
-        delete m_deviceHandler;
-        delete m_oscHandler;
-
-        m_paramsHandler = nullptr;
-        m_deviceHandler = nullptr;
-        m_oscHandler = nullptr;
-    }
-
-    IOscDataService* oscData = m_oscDatas.value(sysType, nullptr);
-    if (!oscData) {
-        oscData = new OscDataService(OscDataLogger::instance());
-        m_oscDatas.insert(sysType, oscData);
-        connect((OscDataService*)oscData, &OscDataService::dataSaved, m_copier, &DataUsbCopier::onDataSaved, Qt::AutoConnection);
-    }
-
-    OscStateService* stateService = m_oscStates.value(sysType, nullptr);
-    if (!stateService) {
-        stateService = new OscStateService(m_ddeDisp->dde(m_sysType), oscData);
-        m_oscStates.insert(sysType, stateService);
-    }
-
-    if (!m_hstDataService && !m_oscHistoryService) {
-        m_hstDataService = new OscDataService(OscDataLogger::instance());
-        m_oscHistoryService = new OscHistoryService(m_hstDataService, OscDataLogger::instance());
-    }
-
-    m_paramsHandler = new ParamsHandler(m_ddeDisp, m_sysType);
-    m_deviceHandler = new DeviceHandler(m_ddeDisp, m_sysType);
-    m_oscHandler = new OscHandler(m_ddeDisp, m_sysType, oscData);
-    dynamic_cast<OscHandler*> (m_oscHandler)->setService(m_oscHistoryService);
-
-    RequestManager::instance()->registerHandler(m_deviceHandler);
-    RequestManager::instance()->registerHandler(m_paramsHandler);
-    RequestManager::instance()->registerHandler(m_oscHandler);
-    ResponseManager::instance()->registerHandler(m_deviceHandler);
-    ResponseManager::instance()->registerHandler(m_paramsHandler);
-    ResponseManager::instance()->registerHandler(m_oscHandler);
-    StreamManager::instance()->registerHandler(m_paramsHandler);
-    StreamManager::instance()->registerHandler(m_oscHandler);
-
-    if (!m_sysService) {
-        m_sysService = new SystemService(m_sysType, m_ddeDisp->dde(m_sysType));
-        connect(m_sysService, &SystemService::deviceLinkChanged, this, &Core::onDeviceChanged, Qt::AutoConnection);
-        m_sysService->start();
-    }
-
-    QList<DevInd> links = m_sysService->linkedDevices(m_sysType);
-    m_oscStates[m_sysType]->init(links);
 
 #ifdef __linux__
     if (!m_threadFuture.isRunning()) {
@@ -214,12 +215,12 @@ void Core::thread_proc()
     {
         m_mutex.lock();
 
-        for (const SysType sysType: m_oscStates.keys()) {
+        for (const SysType sysType: m_sysServices.keys()) {
             if (sysType == FILE_IO && sysType != m_sysType) { // no update demo if demo mode is OFF
                 continue;
             }
 
-            m_oscStates[sysType]->update();
+            m_sysServices[sysType]->update();
         }
 
         m_mutex.unlock();
@@ -230,12 +231,87 @@ void Core::thread_proc()
 
 void Core::onDeviceChanged(SysType sysType)
 {
-    DeviceIndList links = m_sysService->linkedDevices(sysType);
-    m_oscStates[sysType]->init(links);
+    DeviceIndList links = m_sysServices[sysType]->linkedDevices(sysType);
+
+    QJsonArray jsLinks;
+    for(auto dev_ind: links) {
+        jsLinks.append(dev_ind);
+    }
 
     QJsonObject res;
     res["type"] = "sys";
+    res["sys_type_id"] = sysType;
+    res["links"] = jsLinks;
     res["status"] = "1"; // 1 - links changed
 
-    StreamManager::instance()->stream({res});
+    this->stream({res}); // todo: probable not the best realisation
+}
+
+long Core::executeScript(const QString& script)
+{
+
+#ifndef Q_OS_WIN
+    QString scriptPath = QDir::homePath() + "/projects/scripts/" + script + ".sh";
+#else
+    QString scriptPath = QCoreApplication::applicationDirPath() + "/" + script + ".bat";
+#endif
+
+
+    QFileInfo scriptInfo(scriptPath);
+
+    if (!scriptInfo.exists()) {
+        qDebug() << "Error: Script file does not exist at" << script;
+        return _return_FAIL;
+    }
+
+#ifndef Q_OS_WIN
+    if (!scriptInfo.isExecutable()) {
+        qDebug() << "Error: Script is not executable. Run: chmod +x" << scriptPath;
+        return _return_FAIL;
+    }
+#endif
+
+    QProcess process;
+//    process.setProcessChannelMode(QProcess::MergedChannels); // Combine stdout and stderr
+
+    static QString SCRIPT_NAME = "";
+    if (SCRIPT_NAME != script) {
+        qDebug() << "Running " << scriptPath << "...";
+    }
+
+#ifdef Q_OS_WIN
+    process.start("cmd.exe", QStringList() << "/C" << scriptPath);
+#else
+    // Make sure script has execute permissions
+    process.start("bash", QStringList() << scriptPath);
+#endif
+
+    if (!process.waitForStarted()) {
+        qDebug() << "Error: Failed to start script";
+        return _return_FAIL;
+    }
+
+    if (!process.waitForFinished(30000)) {
+        qDebug() << "Error: Process timed out";
+        process.kill();
+        return _return_FAIL;
+    }
+
+    QString allOutput = QString::fromUtf8(process.readAll());
+    int exitCode = process.exitCode();
+
+    if (exitCode != 0) {
+        qDebug() << "Error: Script failed with exit code" << exitCode;
+        qDebug() << "Output:" << allOutput;
+        return _return_FAIL;
+    }
+
+    if (SCRIPT_NAME != script) {
+        qDebug() << "Script" << scriptPath << "executed successfully";
+    }
+
+    //  qDebug() << "Output:" << allOutput;
+    SCRIPT_NAME = script;
+
+    return _return_OK;
 }

@@ -11,10 +11,16 @@
 #include "oscipcservice.h"
 
 using namespace std;
+DDE_OSC::DDE_OSC()
+{
+    m_dataSrv = new OscPageBinService();
+    m_headerSrv = new OscIPCHeaderService();
+}
+
 DDE_OSC::~DDE_OSC()
 {
     if (m_sysName != "") {
-        m_headerSrv->deInit(m_sysName.c_str());
+        m_headerSrv->deInit();
     }
 
     delete m_dataSrv;
@@ -23,8 +29,8 @@ DDE_OSC::~DDE_OSC()
 
 _dde_func_return_t DDE_OSC::init(const char * sysName)
 {
-    m_dataSrv = new OscPageBinService();
-    m_headerSrv = new OscIPCHeaderService();
+    if (m_sysName == sysName) return _return_OK; // already inited
+
     m_sysName = sysName;
 
     _dde_func_return_t res = m_headerSrv->init(sysName);
@@ -116,14 +122,14 @@ _dde_func_return_t DDE_OSC::open(uint16_t device_id)
     colors[3] = 0x01ffff;
 
     for (int i = 0; i < OSC_MAX_VARS; i++) {
-        if (header.channels[i].var.color != 0) {
+        if (header.vars[i].var.color != 0) {
             continue;
         }
 
-        if (header.channels[i].var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
-            header.channels[i].var.color = colors[0];
+        if (header.vars[i].var.type == OSC_VAR_TYPE::OSC_VAR_DISCRETE) {
+            header.vars[i].var.color = colors[0];
         } else {
-            header.channels[i].var.color = colors[i % 4];
+            header.vars[i].var.color = colors[i % 4];
         }
     }
 

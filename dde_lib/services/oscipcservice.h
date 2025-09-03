@@ -1,4 +1,7 @@
 #pragma once
+
+#include <string>
+
 #include "DDE_TYPES.h"
 #include "DDE_OSC_TYPES.h"
 #include "DDE_INTERFACES.h"
@@ -7,7 +10,7 @@ class OscIPCHeaderService : public IOscHeaderService
 {
 public:
 	_dde_func_return_t init(const char* sysName);
-	_dde_func_return_t deInit(const char* sysName);
+    _dde_func_return_t deInit();
 
     _dde_func_return_t get_header(uint16_t id, DDE_OSC_HEADER& hdr);
     _dde_func_return_t set_header(uint16_t id, const DDE_OSC_HEADER& hdr);
@@ -24,9 +27,15 @@ public:
     _dde_func_return_t set_page_ready_to_read(uint16_t id, uint8_t pageNum);
 
 private:
+    GLIO_OSC_HEADER *get_ipc_data(uint16_t id);
+
+    GLIO_OSC_HEADER* _pOsc[MAX_DEV_SUPPORT] = { NULL };
+
+    std::string _sysName;
+
     _dde_func_return_t mutex_init();
     int get_page_state(uint16_t id, uint8_t pageNum);
     _dde_func_return_t set_page_state(uint16_t id, uint8_t pageNum, uint8_t state);
-    bool isValidOscChannel(const OSC_CHANNEL& ch);
+    bool isValidOscVar(const OSC_VAR& var);
 
 };
