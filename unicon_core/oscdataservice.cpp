@@ -353,6 +353,12 @@ long OscDataService::dataCount(const DevID& deviceID, qlonglong trig_time, int &
     return _return_OK;
 }
 
+/**
+ * @brief jsonData - Get data buffer and extract data in json format
+ * @param vars - set of vars to extract from buffer
+ * @param cnt - number of values to extract from buffer
+ * @return @param isEof - if all data has extracted then isEof return true else false
+ */
 QJsonObject OscDataService::jsonData(const DevID& deviceID, qlonglong trig_time, QVector<int> vars, int &cnt, bool& isEof)
 {
     QElapsedTimer timer;
@@ -366,12 +372,8 @@ QJsonObject OscDataService::jsonData(const DevID& deviceID, qlonglong trig_time,
 
     m_mutex.lock();
 
-
-    QJsonObject res = dataToJson(*buff, vars, cnt, isEof);
-
-    if (res.isEmpty()) {
-        cnt = 0;
-    }
+    QJsonObject res = buff->dataToJson(vars, cnt, isEof);
+    cnt = !res.isEmpty() ? res["values_count"].toInt() : 0;
 
     m_mutex.unlock();
 
@@ -383,74 +385,6 @@ QJsonObject OscDataService::jsonData(const DevID& deviceID, qlonglong trig_time,
 //     QVariantList res = QtConcurrent::blockingMapped(numberArray, MultiplyFunctor(scale, offset));
 //     return res;
 // }
-
-QJsonObject OscDataService::dataToJson(OscType::OscDataBuffer& data, QVector<int> vars, int& cnt, bool &isEof) const
-{
-    QJsonArray valuesArr;
-    QJsonArray varIdListObj;
-
-    int timestamp = 0;
-    bool isNew = true;
-
-    for (OscChannelVar& chVar : data.vars) {
-        if (chVar.type == UNDEFINED) continue;
-        if (!vars.isEmpty() && !vars.contains(chVar.varId)) {
-            continue;
-        }
-
-        const OscChannelData& chVal = data.data[chVar.channelNum];
-        int startPos = data.lastDataPos.value(chVar.varId, 0);
-        int ch_val_count = chVal.count();
-        if (startPos >= ch_val_count) {
-            continue;
-        }
-
-
-        // A.S: This code is commented, because no need to multiply values by coefficient here, let's see OscChannelData::jsnValues()
-        // QVariantList values = chVal.values(startPos, cnt);
-        // if (values.isEmpty()) {
-        //     continue;
-        // }
-
-        // if (chVal.scale != 0.0 && chVal.scale != 1.0) {
-        //     values= multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
-        // }
-
-        QJsonArray values = chVal.jsnValues(startPos, chVar, cnt);  // get multiplyed values in json format
-        if (values.isEmpty()) {
-            continue;
-        }
-
-        cnt = values.count();
-
-        int lastDataPos = startPos + cnt;
-        data.lastDataPos[chVar.varId] = lastDataPos;
-        isEof = (lastDataPos >= ch_val_count);
-        isNew = (isNew == true) ? startPos == 0 : false;
-        timestamp = lastDataPos * data.resolution_us;
-
-        varIdListObj << chVar.varId;
-        // valuesArr << QJsonArray::fromVariantList(values);
-        valuesArr << values;
-    }
-
-    if (varIdListObj.isEmpty()) {
-        return QJsonObject();
-    }
-
-    QJsonObject res;
-    res["d_id"] = data.id;
-    res["time"] = timestamp;
-    res["trig_time"] = data.trig_time;
-    res["reason"] = data.reason;
-    res["new"] = isNew ? "1" : "0";
-    res["eof"] = data.eof && isEof ? "1" : "0";
-    res["sof"] = data.sof ? "1" : "0";
-    res["values"] = valuesArr;
-    res["vars"] = varIdListObj;
-
-    return res;
-}
 
 long OscDataService::save(const DDE_OSC_HEADER& hdr, SysType sysType = SysType::SysType_Undefined)
 {

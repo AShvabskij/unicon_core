@@ -370,6 +370,80 @@ namespace OscType {
             return valueCount;
         }
 
+        /**
+         * @brief dataToJson - extract data in json format
+         * @param vars - set of vars to extract from buffer
+         * @param chunk_length - number of values to extract from buffer
+         * @return @param isEof - if all data has extracted then isEof return true else false
+         */
+        QJsonObject dataToJson(const QVector<int> vars, int chunk_length, /*out*/ bool &isEof)
+        {
+            QJsonArray valuesArr;
+            QJsonArray varIdListObj;
+
+            int timestamp = 0;
+            bool isNew = true;
+            int values_count = 0;
+
+            for (const OscChannelVar& chVar : this->vars) {
+                if (chVar.type == UNDEFINED) continue;
+                if (!vars.isEmpty() && !vars.contains(chVar.varId)) {
+                    continue;
+                }
+
+                const OscChannelData& chVal = this->data[chVar.channelNum];
+                int startPos = this->lastDataPos.value(chVar.varId, 0);
+                int ch_val_count = chVal.count();
+                if (startPos >= ch_val_count) {
+                    continue;
+                }
+
+
+                // A.S: This code is commented, because no need to multiply values by coefficient here, let's see OscChannelData::jsnValues()
+                // QVariantList values = chVal.values(startPos, cnt);
+                // if (values.isEmpty()) {
+                //     continue;
+                // }
+
+                // if (chVal.scale != 0.0 && chVal.scale != 1.0) {
+                //     values= multiplyArrayByCoefficient(values, chVal.scale, chVal.offset);
+                // }
+
+                QJsonArray values = chVal.jsnValues(startPos, chVar, chunk_length);  // get multiplyed values in json format
+                if (values.isEmpty()) {
+                    continue;
+                }
+
+                values_count = values.count();
+                int lastDataPos = startPos + values_count;
+                this->lastDataPos[chVar.varId] = lastDataPos;
+                isEof = (lastDataPos >= ch_val_count);
+                isNew = (isNew == true) ? startPos == 0 : false;
+                timestamp = lastDataPos * this->resolution_us;
+
+                varIdListObj << chVar.varId;
+                // valuesArr << QJsonArray::fromVariantList(values);
+                valuesArr << values;
+            }
+
+            if (varIdListObj.isEmpty()) {
+                return QJsonObject();
+            }
+
+            QJsonObject res;
+            res["d_id"] = this->id;
+            res["time"] = timestamp;
+            res["trig_time"] = this->trig_time;
+            res["reason"] = this->reason;
+            res["new"] = isNew ? "1" : "0";
+            res["eof"] = this->eof && isEof ? "1" : "0";
+            res["sof"] = this->sof ? "1" : "0";
+            res["values"] = valuesArr;
+            res["vars"] = varIdListObj;
+            res["values_count"] = values_count;
+
+            return res;
+        }
     };
 
     struct OscSettings

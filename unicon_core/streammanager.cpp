@@ -227,7 +227,6 @@ void StreamManager::handlePong(quint64 elapsedTime, const QByteArray& payload) {
 }
 
 StreamManager::NetworkSpeed StreamManager::checkCurrentSpeed() {
-    qDebug() << "check current speed: ";
     handlePing();
 
     return m_currSpeed;

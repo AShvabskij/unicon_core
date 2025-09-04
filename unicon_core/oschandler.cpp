@@ -479,6 +479,8 @@ void OscHandler::streamDataInternal(IOscDataService* dataService, DevID deviceID
     int totalCount = 0;
     dataService->dataCount(deviceID, trig_time, totalCount);
 
+    if (totalCount == 0) return; // buff is empty
+
     int chunk_count = std::min((int)(totalCount * 0.1), initChunkSize);
 
     emit stream(QList<QJsonObject>()); // prepare to stream for a new data
