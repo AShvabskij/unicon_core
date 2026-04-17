@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 #ifdef __WIN32__
     core.start(SysType::FILE_IO);
 #else
-    core.start(SysType::UAVCAN);
+    core.start(SysType::DLOG_CPLOT);
 
 #endif
 

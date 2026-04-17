@@ -7,13 +7,7 @@
 #include <QDebug>
 #include <QCborValue>
 
-class StreamWorker : public QObject {
-    Q_OBJECT
-public:
-    StreamWorker(QObject* parent = nullptr)
-        : QObject(parent) {}
-
-    void enqueue(const QList<QJsonObject>& list) {
+void StreamWorker::enqueue(const QList<QJsonObject>& list) {
         QMutexLocker locker(&m_mutex);
         for (const QJsonObject& obj : list) {
             m_queue.enqueue(obj);
@@ -21,22 +15,21 @@ public:
         m_waitCondition.wakeAll();
     }
 
-    void clearQueue() {
+void StreamWorker::clearQueue() {
         if (m_queue.empty()) return;
 
         QMutexLocker locker(&m_mutex);
         m_queue.clear();
     }
 
-    void pause(int delay) {
+void StreamWorker::pause(int delay) {
         if (m_queue.empty()) return;
 
         QMutexLocker locker(&m_mutex);
         QThread::msleep(delay);
     }
 
-public slots:
-    void process() {
+void StreamWorker::process() {
         while (true) {
             QMutexLocker locker(&m_mutex);
             if (m_queue.isEmpty()) {
@@ -55,16 +48,8 @@ public slots:
         }
     }
 
-signals:
-    void sendMessage(const QByteArray& data);
 
-private:
-    QQueue<QJsonObject> m_queue;
-    QMutex m_mutex;
-    QWaitCondition m_waitCondition;
-};
-
-#include "streammanager.moc"
+// #include "streammanager.moc"
 
 StreamManager::StreamManager()
     : m_totalBytes(0)

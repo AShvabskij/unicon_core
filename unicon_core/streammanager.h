@@ -11,7 +11,30 @@
 #include "ireqhandler.h"
 #include "responsemanager.h"
 
-class StreamWorker;
+class StreamWorker : public QObject
+{
+    Q_OBJECT
+public:
+    StreamWorker(QObject* parent = nullptr)
+        : QObject(parent) {}
+
+    void enqueue(const QList<QJsonObject>& list);
+
+    void clearQueue();
+
+    void pause(int delay);
+
+public slots:
+    void process();
+
+signals:
+    void sendMessage(const QByteArray& data);
+
+private:
+    QQueue<QJsonObject> m_queue;
+    QMutex m_mutex;
+    QWaitCondition m_waitCondition;
+};
 
 class StreamManager : public ResponseManager
 {
