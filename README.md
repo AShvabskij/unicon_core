@@ -68,13 +68,7 @@ IPC Shared Memory → Qt/C++ → WebSocket + CBOR → React
 ### 3.1. Общая схема
 
 #### Упрощённая схема (4 слоя)
-
-```mermaid
-flowchart LR
-    A["Frontend<br/>ReactJS + NodeJS"] <-->|WebSocket<br/>JSON / CBOR| B["Unicon Core<br/>Qt/C++17"]
-    B <-->|DDE API| C["DDE Library<br/>C/C++"]
-    C <-->|IPC Shared Memory| D["Оборудование<br/>UAVCAN / Modbus / DLOG"]
-```
+![Архитектура Unicon Core (упрощенная)](architecture_h_scheme.svg)
 
 #### Детальная схема
 ![Архитектура Unicon Core](architecture_v_scheme.svg)
