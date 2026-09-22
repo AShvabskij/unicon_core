@@ -66,7 +66,7 @@ IPC Shared Memory → Qt/C++ → WebSocket + CBOR → React
 ## 3. Архитектура
 
 #### Полная схема (все слои)
-![Архитектура (полная)](https://drive.google.com/file/d/15h1TmxbHSzXuewnEzo9B-2AHCBuya-ZV/view?usp=sharing)
+![Архитектура (полная)](Unicon-Архитектура.drawio.svg)
 
 #### Упрощённая схема (4 слоя)
 ![Архитектура Unicon Core (упрощенная)](architecture_h_scheme.svg)
