@@ -1,0 +1,86 @@
+flowchart TB
+    subgraph FE["Frontend (ReactJS + NodeJS)"]
+        UI["<b>Web UI</b><br/><i>параметры + осциллограф</i>"]
+    end
+
+    subgraph CORE["Unicon Core (Qt/C++17)"]
+        direction TB
+
+        subgraph NET["Сетевой слой"]
+            SS_CMD["<b>SocketServer :1235</b><br/><i>команды</i>"]
+            SS_STR["<b>SocketServer :1237</b><br/><i>поток данных</i>"]
+        end
+
+        subgraph DISP["Диспетчеризация"]
+            RM["<b>RequestManager</b><br/><i>парсинг запросов</i>"]
+            RESP["<b>ResponseManager</b><br/><i>отправка непотоковых данных</i>"]
+            SM["<b>StreamManager</b><br/><i>адаптивная отправка потока</i>"]
+        end
+
+        subgraph CHAIN["Chain of Responsibility"]
+            CORE_H["<b>Core</b><br/><i>обработчик system_init</i>"]
+            DH["<b>DeviceHandler</b><br/><i>запросы заголовков устройств</i>"]
+            PH["<b>ParamsHandler</b><br/><i>запросы к параметрам устройств</i>"]
+            OH["<b>OscHandler</b><br/><i>запросы к осциллографу</i>"]
+        end
+
+        subgraph SVC["Сервисы"]
+            SYS["<b>SystemService</b><br/><i>жизненный цикл системы<br/>UAVCAN / DLOG / MODBUS</i>"]
+            PSS["<b>ParamService</b><br/><i>чтение/запись параметров</i>"]
+            OSS["<b>OscStateService</b><br/><i>FSM-состояния</i>"]
+            ODS["<b>OscDataService</b><br/><i>буферизация осциллограмм</i>"]
+            OHS["<b>OscHistoryService</b><br/><i>история</i>"]
+        end
+    end
+
+    subgraph DDE["DDE Library (C/C++)<br/><i>интерфейс доступа и обмена данными</i>"]
+        DISPATCH["<b>DDE_Dispatcher</b>"]
+        DP["<b>DDE_PARAMS</b>"]
+        DO["<b>DDE_OSC</b>"]
+        DTOP["<b>DDE_TOP / DDE_EMUL</b><br/><i>DDE API</i>"]
+    end
+
+    subgraph IPC["IPC Shared Memory"]
+        PIPC["<b>ParamIPCService</b><br/><i>/dev/shm</i>"]
+        OIPC["<b>OscIPCHeaderService</b><br/><i>shm + pthread_mutex</i>"]
+        OPB["<b>OscPageBinService</b><br/><i>4 страницы кольцом</i>"]
+    end
+
+    subgraph HW["Оборудование"]
+        DEV["<b>UAVCAN / Modbus /<br/>DLOG-логгеры</b>"]
+    end
+
+    UI <-->|WebSocket JSON/CBOR| SS_CMD
+    UI <-->|WebSocket CBOR| SS_STR
+
+    SS_CMD --> RM
+    SM --> SS_STR
+    RM --> CORE_H
+    CORE_H --> DH
+    DH --> PH
+    PH --> OH
+
+    DH --> RESP
+    PH --> RESP
+    OH --> SM
+    RESP --> SS_CMD
+
+    CORE_H --> SYS
+    SYS --> OSS
+    SYS --> ODS
+    OH --> ODS
+    OH --> OHS
+
+    ODS --> DISPATCH
+    OHS --> DISPATCH
+    DISPATCH --> DP
+    DISPATCH --> DO
+    DISPATCH --> DTOP
+
+    DP --> PIPC
+    DO --> OIPC
+    DO --> OPB
+
+    PIPC --> DEV
+    OIPC --> DEV
+    OPB --> DEV
