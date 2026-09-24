@@ -569,7 +569,7 @@ long OscDataLogger::jsonToHeader(const QJsonObject& obj, DDE_OSC_HEADER &h)
         var.firstBit = elem["first_bit"].toInt();
         var.lastBit = elem["last_bit"].toInt();
         var.gain = elem["gain"].toDouble(0);
-        var.offset = elem["offset"].toInt();
+        var.offset = elem["offset"].toDouble(0);
 
         var.var.id = elem["var_id"].toInt();
         strcpy(var.var.name, elem["name"].toString().toStdString().c_str());
@@ -647,6 +647,7 @@ long OscDataLogger::decodeData(const QCborValue& sourceDat,  OscType::OscDataBuf
         data.data[chNum].clear();
         data.data[chNum].append(chValues);
         valueCount = data.data[chNum].count();
+
 
 //      qDebug() << "Append values to channel =" << chNum << "size =" << valueCount << "took" << timer.elapsed() << "ms";
 

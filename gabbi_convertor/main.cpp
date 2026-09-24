@@ -135,7 +135,7 @@ long generateContent(const DDE_OSC_HEADER& hdr, const OscType::OscDataBuffer& da
              << QString("D") + QString::number(var.firstBit).rightJustified(2, '0')
              << QString("D") + QString::number(MAX_BIT_NUM).rightJustified(2, '0')
              << QString::number(gain)
-             << QString::number(0/*var.offset*/)
+             << QString::number(static_cast<int>(var.offset * gain))
              << QString::number(qRed(rgb)) + " " + QString::number(qGreen(rgb)) + " " + QString::number(qBlue(rgb))
              << "TRUE";
 
