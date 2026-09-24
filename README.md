@@ -77,9 +77,16 @@
 | **12** | **Автоматический запуск** системы после перезагрузки ОС |
 
 
+## 3. Web-интерфейс
+![UnicoWeb_1](Screenshot_1.png)
+![UnicoWeb_2](Screenshot_2.png)
+![UnicoWeb_3](Screenshot_3.png)
+![UnicoWeb_4](Screenshot_4.png)
+![UnicoWeb_5](Screenshot_5.png)
+
 ---
 
-## 3. Архитектура
+## 4. Архитектура
 
 #### Полная схема (все слои)
 ![Архитектура (полная)](Unicon-Архитектура.drawio.svg)
@@ -90,7 +97,7 @@
 #### Детальная схема
 ![Архитектура Unicon Core](architecture_v_scheme.svg)
 
-### 3.2. Ключевые архитектурные решения
+### 4.2. Ключевые архитектурные решения
 
 #### Chain of Responsibility для обработки запросов
 
@@ -185,7 +192,7 @@ Normal → Idle → Getting → Busy → Saving → Updated → Finished / Error
 
 ---
 
-## 4. Технологический стек
+## 5. Технологический стек
  
 | Компонент | Технология |
 |-----------|------------|
